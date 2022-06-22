@@ -1,0 +1,4 @@
+var start = clock();
+print("Current time is: ");
+println(start);
+error("Trigger runtime error.");

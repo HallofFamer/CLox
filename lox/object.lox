@@ -1,0 +1,14 @@
+class Brioche { }
+print Brioche;
+print Brioche();
+
+class Pair { }
+var pair = Pair();
+pair.first = 1;
+pair.second = 2;
+print pair.first + pair.second;
+
+var object = Object();
+print object;
+print object.equals("Hello World");
+print object.getClass();

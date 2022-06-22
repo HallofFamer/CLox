@@ -1,0 +1,8 @@
+var hello = "Hello ";
+var world = "World ";
+
+var start = clock();
+for(var i = 0; i < 1000; i = i + 1){ 
+    print hello + world + toString(i);
+}
+print clock() - start;
