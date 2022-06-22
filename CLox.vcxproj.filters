@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Lox Files">
+      <UniqueIdentifier>{3e1ab4cd-65fe-4129-be74-ce321192ff22}</UniqueIdentifier>
+      <Extensions>lox</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="memory.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="value.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scanner.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="object.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="table.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="chunk.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="chunk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="memory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scanner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="lox\benchmark.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\closure.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\loop.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\method.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\object.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\receiver.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\sum.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\switch.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\initializer.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\invoke.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\super.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\string.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+    <None Include="lox\fibonacci.lox">
+      <Filter>Lox Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

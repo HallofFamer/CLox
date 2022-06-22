@@ -1,0 +1,12 @@
+class Nested { 
+    method(){ 
+        fun function(){ 
+            print this;
+        }
+
+        function();
+    }
+}
+
+//print this;
+Nested().method();
