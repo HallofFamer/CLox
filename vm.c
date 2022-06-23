@@ -12,16 +12,6 @@
 #include "vm.h"
 #include "std/lang.h"
 
-static Value equalsNative(VM* vm, Value receiver, int argCount, Value* args) {
-    printf("argument is: ");
-    printValue(args[0]);
-    printf("\n");
-    printf("receiver is: ");
-    printValue(receiver);
-    printf("\n");
-    return BOOL_VAL(valuesEqual(receiver, args[0]));
-}
-
 static void resetStack(VM* vm) {
     vm->stackTop = vm->stack;
     vm->frameCount = 0;
