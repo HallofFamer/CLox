@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="assert.c" />
     <ClCompile Include="chunk.c" />
     <ClCompile Include="compiler.c" />
     <ClCompile Include="debug.c" />
@@ -153,6 +154,7 @@
     <ClCompile Include="vm.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="assert.h" />
     <ClInclude Include="chunk.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="compiler.h" />
@@ -182,6 +184,7 @@
     <None Include="lox\sum.lox" />
     <None Include="lox\super.lox" />
     <None Include="lox\switch.lox" />
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,67 +3,54 @@
 #include <string.h>
 #include <time.h>
 
+#include "assert.h"
 #include "native.h"
 #include "object.h"
 #include "vm.h"
 
-static Value clockNativeFunction(VM* vm, int argCount, Value* args) {
-	if (argCount > 0) {
-		runtimeError(vm, "native function clock() expects 0 argument but got %d.", argCount);
-		return NIL_VAL;
-	}
-	return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+LOX_FUNCTION(clock){
+	assertArgCount(vm, "clock()", 0, argCount);
+	RETURN_NUMBER((double)clock() / CLOCKS_PER_SEC);
 }
 
-static Value errorNativeFunction(VM* vm, int argCount, Value* args) {
-	if (argCount != 1) {
-		runtimeError(vm, "native function error() expects 1 argument but got %d.", argCount);
-	}
-	else if (!IS_STRING(args[0])) {
-		runtimeError(vm, "native function error() expects argument 1 to be a string.");
-	}
-	else {
-		runtimeError(vm, AS_CSTRING(args[0]));
-		exit(70);
-	}
-	return NIL_VAL;
+LOX_FUNCTION(error){
+	assertArgCount(vm, "error(message)", 1, argCount);
+	assertArgIsString(vm, "error(message)", args, 0);
+    runtimeError(vm, AS_CSTRING(args[0]));
+	exit(70);
+	RETURN_NIL;
 }
 
-static Value printNativeFunction(VM* vm, int argCount, Value* args) {
-	if (argCount != 1) {
-		runtimeError(vm, "native function print() expects 1 argument but got %d.", argCount);
-		return NIL_VAL;
-	}
-
+LOX_FUNCTION(print){
+	assertArgCount(vm, "print(message)", 1, argCount);
 	printValue(args[0]);
-	return NIL_VAL;
+	RETURN_NIL;
 }
 
-static Value printlnNativeFunction(VM* vm, int argCount, Value* args) {
-	if (argCount != 1) {
-		runtimeError(vm, "native function print() expects 1 argument but got %d.", argCount);
-		return NIL_VAL;
-	}
-
+LOX_FUNCTION(println){
+	assertArgCount(vm, "println(message)", 1, argCount);
 	printValue(args[0]);
 	printf("\n");
-	return NIL_VAL;
+	RETURN_NIL;
 }
 
-static Value toStringNativeFunction(VM* vm, int argCount, Value* args) {
+LOX_FUNCTION(toString){
+	assertArgCount(vm, "toString(value)", 1, argCount);
+
 	if (IS_BOOL(args[0])) {
-		return OBJ_VAL(AS_BOOL(args[0]) ? copyString(vm, "true", 4) : copyString(vm, "false", 5));
+		if (AS_BOOL(args[0])) RETURN_STRING("true", 4);
+		else RETURN_STRING("false", 5);
 	}
 	else if (IS_NIL(args[0])) {
-		return OBJ_VAL(copyString(vm, "nil", 3));
+		RETURN_STRING("nil", 3);
 	}
 	else if (IS_NUMBER(args[0])) {
 		char chars[24];
 		int length = sprintf_s(chars, 24, "%.14g", AS_NUMBER(args[0]));
-		return OBJ_VAL(copyString(vm, chars, length));
+		RETURN_STRING(chars, length);
 	}
 	else {
-		return OBJ_VAL(copyString(vm, "object", 6));
+		RETURN_STRING("object", 6);
 	}
 }
 
@@ -98,9 +85,9 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, NativeMethod 
 }
 
 void registerNativeFunctions(VM* vm){
-	defineNativeFunction(vm, "clock", clockNativeFunction);
-	defineNativeFunction(vm, "error", errorNativeFunction);
-	defineNativeFunction(vm, "print", printNativeFunction);
-	defineNativeFunction(vm, "println", printlnNativeFunction);
-	defineNativeFunction(vm, "toString", toStringNativeFunction);
+	DEF_FUNCTION(clock);
+	DEF_FUNCTION(error);
+	DEF_FUNCTION(print);
+	DEF_FUNCTION(println);
+	DEF_FUNCTION(toString);
 }

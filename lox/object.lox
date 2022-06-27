@@ -11,4 +11,8 @@ print pair.first + pair.second;
 var object = Object();
 print object;
 print object.equals("Hello World");
+print object.hasField("length");
 print object.getClass();
+print object.instanceOf(Object);
+print object.memberOf(Object);
+print object.toString();

@@ -54,6 +54,9 @@
     <ClCompile Include="std\lang.c">
       <Filter>Std Files</Filter>
     </ClCompile>
+    <ClCompile Include="assert.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -94,6 +97,9 @@
     </ClInclude>
     <ClInclude Include="std\lang.h">
       <Filter>Std Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assert.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -139,5 +145,6 @@
     <None Include="lox\native.lox">
       <Filter>Lox Files</Filter>
     </None>
+    <None Include="README.md" />
   </ItemGroup>
 </Project>
