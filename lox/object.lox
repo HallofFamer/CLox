@@ -16,3 +16,7 @@ print object.getClass();
 print object.instanceOf(Object);
 print object.memberOf(Object);
 print object.toString();
+
+var pair2 = pair.clone();
+print pair2.first + pair2.second;
+print pair.equals(pair2);

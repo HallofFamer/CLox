@@ -87,12 +87,13 @@ typedef struct {
     int upvalueCount;
 } ObjClosure;
 
-typedef struct {
+struct ObjClass {
     Obj obj;
     ObjString* name;
+    struct ObjClass* superclass;
     Table methods;
     bool isNative;
-} ObjClass;
+};
 
 typedef struct {
     Obj obj;

@@ -7,6 +7,14 @@
 #include "../object.h"
 #include "../vm.h"
 
+LOX_METHOD(Object, clone) {
+	assertArgCount(vm, "Object::clone()", 0, argCount);
+	ObjInstance* thisObject = AS_INSTANCE(receiver);
+	ObjInstance* thatObject = newInstance(vm, thisObject->klass);
+	tableAddAll(vm, &thisObject->fields, &thatObject->fields);
+	RETURN_OBJ(thatObject);
+}
+
 LOX_METHOD(Object, equals) {
 	assertArgCount(vm, "Object::equals(value)", 1, argCount);
 	RETURN_BOOL(valuesEqual(receiver, args[0]));
@@ -36,7 +44,14 @@ LOX_METHOD(Object, instanceOf) {
 	if (!IS_CLASS(args[0])) RETURN_FALSE;
 	ObjClass* thisClass = AS_INSTANCE(receiver)->klass;
 	ObjClass* thatClass = AS_CLASS(args[0]);
-	RETURN_BOOL(thisClass == thatClass);
+	if (thisClass == thatClass) RETURN_TRUE;
+
+	ObjClass* superclass = thisClass->superclass;
+	while (superclass != NULL) {
+		if (superclass == thatClass) RETURN_TRUE;
+		superclass = superclass->superclass;
+	}
+	RETURN_FALSE;
 }
 
 LOX_METHOD(Object, memberOf) {
@@ -69,6 +84,7 @@ LOX_METHOD(Object, toString) {
 
 void registerLangPackage(VM* vm){
 	ObjClass* objectClass = defineNativeClass(vm, "Object");
+	DEF_METHOD(objectClass, Object, clone);
 	DEF_METHOD(objectClass, Object, equals);
 	DEF_METHOD(objectClass, Object, getClass);
 	DEF_METHOD(objectClass, Object, getClassName);

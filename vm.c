@@ -233,6 +233,15 @@ static void defineMethod(VM* vm, ObjString* name) {
     pop(vm);
 }
 
+static void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
+    if (superclass == NULL) {
+        runtimeError(vm, "Superclass cannot be null for class %s", subclass->name);
+        return;
+    }
+    subclass->superclass = superclass;
+    tableAddAll(vm, &superclass->methods, &subclass->methods);
+}
+
 static bool isFalsey(Value value) {
   return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
@@ -511,7 +520,7 @@ static InterpretResult run(VM* vm) {
                 }
 
                 ObjClass* subclass = AS_CLASS(peek(vm, 0));
-                tableAddAll(vm, &AS_CLASS(superclass)->methods, &subclass->methods);
+                bindSuperclass(vm, subclass, AS_CLASS(superclass));
                 pop(vm);
                 break;
             }

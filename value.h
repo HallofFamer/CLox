@@ -6,6 +6,7 @@
 #include "common.h"
 
 typedef struct Obj Obj;
+typedef struct ObjClass ObjClass;
 typedef struct ObjString ObjString;
 
 #ifdef NAN_BOXING

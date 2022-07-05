@@ -48,6 +48,7 @@ typedef enum {
 void initVM(VM* vm);
 void freeVM(VM* vm);
 
+void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void runtimeError(VM* vm, const char* format, ...);
 InterpretResult interpret(VM* vm, const char* source);
 void push(VM* vm, Value value);

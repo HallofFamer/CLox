@@ -20,6 +20,15 @@ class B < A {
 
 class C < B { }
 
+var a = A();
+var b = B();
 var c = C();
 c.test();
+
 print(c.toString());
+print(c.instanceOf(C));
+print(c.instanceOf(B));
+print(c.instanceOf(A));
+print(c.instanceOf(Object));
+print(b.instanceOf(C));
+print(b.instanceOf(A));
