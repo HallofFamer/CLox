@@ -15,6 +15,7 @@ typedef struct {
     Scanner* scanner;
     Token current;
     Token previous;
+    Token rootClass;
     bool hadError;
     bool panicMode;
 } Parser;
@@ -73,7 +74,6 @@ typedef struct Compiler {
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
     Token name;
-    bool hasSuperclass;
 } ClassCompiler;
 
 Parser parser;
@@ -513,9 +513,6 @@ static void super_(VM* vm, bool canAssign) {
     if (currentClass == NULL) {
         error("Cannot use 'super' outside of a class.");
     }
-    else if (!currentClass->hasSuperclass) {
-        error("Cannot use 'super' in a class with no superclass.");
-    }
 
     consume(TOKEN_DOT, "Expect '.' after 'super'.");
     consume(TOKEN_IDENTIFIER, "Expect superclass method name.");
@@ -682,11 +679,11 @@ static void classDeclaration(VM* vm) {
     Token className = parser.previous;
     uint8_t nameConstant = identifierConstant(vm, &parser.previous);
 
-    declareVariable();    
+    declareVariable();
     emitBytes(vm, OP_CLASS, nameConstant);
     defineVariable(vm, nameConstant);
 
-    ClassCompiler classCompiler = { .name = parser.previous, .hasSuperclass = false, .enclosing = currentClass };
+    ClassCompiler classCompiler = { .name = parser.previous, .enclosing = currentClass };
     currentClass = &classCompiler;
 
     if (match(TOKEN_LESS)) {
@@ -695,16 +692,21 @@ static void classDeclaration(VM* vm) {
         if (identifiersEqual(&className, &parser.previous)) {
             error("A class cannot inherit from itself.");
         }
-
-        beginScope();
-        addLocal(syntheticToken("super"));
-        defineVariable(vm, 0);
-        namedVariable(vm, className, false);
-        emitByte(vm, OP_INHERIT);
-        classCompiler.hasSuperclass = true;
     }
-    namedVariable(vm, className, false);
+    else {
+        namedVariable(vm, parser.rootClass, false);
+        if (identifiersEqual(&className, &parser.rootClass)) {
+            error("Cannot redeclare root class Object.");
+        }
+    }
 
+    beginScope();
+    addLocal(syntheticToken("super"));
+    defineVariable(vm, 0);
+    namedVariable(vm, className, false);
+    emitByte(vm, OP_INHERIT);
+
+    namedVariable(vm, className, false);
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
     while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
         method(vm);
@@ -712,9 +714,7 @@ static void classDeclaration(VM* vm) {
 
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
     emitByte(vm, OP_POP);
-    if (classCompiler.hasSuperclass) {
-        endScope(vm);
-    }
+    endScope(vm);
     currentClass = currentClass->enclosing;
 }
 
@@ -981,6 +981,7 @@ ObjFunction* compile(VM* vm, const char* source) {
     initCompiler(vm, &compiler, TYPE_SCRIPT);
 
     parser.scanner = &scanner;
+    parser.rootClass = syntheticToken("Object");
     parser.hadError = false;
     parser.panicMode = false;
     advance();

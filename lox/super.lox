@@ -2,6 +2,10 @@ class A {
     method(){ 
         print "A method";
     }
+
+    toString(){ 
+        return super.toString() + " of class " + this.getClassName();
+    }
 }
 
 class B < A { 
@@ -16,4 +20,6 @@ class B < A {
 
 class C < B { }
 
-C().test();
+var c = C();
+c.test();
+print(c.toString());
