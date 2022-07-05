@@ -9,7 +9,7 @@ https://github.com/munificent/craftinginterpreters
 
 ## Features
 - Scanner, Parser and Single-Pass Compiler
-- Stacked based VM with the basic Op Code support
+- Stacked based bytecote VM with the basic Op Code support
 - Unary and Binary Expression/Operators
 - If and Else Statement
 - While and For Loop
@@ -18,6 +18,7 @@ https://github.com/munificent/craftinginterpreters
 - Functions and Closures
 - Classes, Objects and Methods
 - Inheritance and this/super keywords
+- Root Object class
 
 ## Roadmap
 

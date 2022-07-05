@@ -16,7 +16,7 @@ LOX_FUNCTION(clock){
 LOX_FUNCTION(error){
 	assertArgCount(vm, "error(message)", 1, argCount);
 	assertArgIsString(vm, "error(message)", args, 0);
-    runtimeError(vm, AS_CSTRING(args[0]));
+	runtimeError(vm, AS_CSTRING(args[0]));
 	exit(70);
 	RETURN_NIL;
 }
