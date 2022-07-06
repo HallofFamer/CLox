@@ -14,13 +14,12 @@ https://github.com/munificent/craftinginterpreters
 - If and Else Statement
 - Switch Statement
 - While and For Loop
-- Scope and Environment
 - Functions and Closures
 - Classes, Objects and Methods
 - Inheritance and this/super keywords
-- Embeddable VM for CLox in other host applications(since version 1.0)
-- `Object` root class for every class in Lox(since version 1.0)
-- Framework for creating native functions, methods and classes.
+- Embeddable VM for CLox in other host applications(since version 1.1)
+- `Object` root class for every class in Lox(since version 1.1)
+- Framework for creating native functions, methods and classes(since version 1.1).
 
 ## Roadmap
 

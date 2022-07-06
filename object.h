@@ -117,10 +117,11 @@ ObjNativeMethod* newNativeMethod(VM* vm, NativeMethod method);
 ObjString* takeString(VM* vm, char* chars, int length);
 ObjString* copyString(VM* vm, const char* chars, int length);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
+ObjClass* getObjClass(VM* vm, Value value);
 void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type) {
-  return IS_OBJ(value) && AS_OBJ(value)->type == type;
+    return IS_OBJ(value) && AS_OBJ(value)->type == type;
 }
 
 #endif

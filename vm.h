@@ -17,6 +17,9 @@ typedef struct {
 
 struct VM {
     ObjClass* objectClass;
+    ObjClass* nilClass;
+    ObjClass* boolClass;
+    ObjClass* numberClass;
 
     CallFrame frames[FRAMES_MAX];
     int frameCount;

@@ -7,6 +7,54 @@
 #include "../object.h"
 #include "../vm.h"
 
+LOX_METHOD(Bool, clone) {
+	assertArgCount(vm, "Bool::clone()", 0, argCount);
+	RETURN_BOOL(receiver);
+}
+
+LOX_METHOD(Bool, init) {
+	assertError(vm, "Cannot instantiate from class Bool.");
+	RETURN_NIL;
+}
+
+LOX_METHOD(Bool, toString) {
+	assertArgCount(vm, "Bool::toString()", 0, argCount);
+	if (AS_BOOL(receiver)) RETURN_STRING("true");
+	else RETURN_STRING("false");
+}
+
+LOX_METHOD(Nil, clone) {
+	assertArgCount(vm, "Nil::clone()", 0, argCount);
+	RETURN_NIL;
+}
+
+LOX_METHOD(Nil, init) {
+	assertError(vm, "Cannot instantiate from class Nil.");
+	RETURN_NIL;
+}
+
+LOX_METHOD(Nil, toString) {
+	assertArgCount(vm, "Nil::toString()", 0, argCount);
+	RETURN_STRING("nil");
+}
+
+LOX_METHOD(Number, clone) {
+	assertArgCount(vm, "Number::clone()", 0, argCount);
+	RETURN_NUMBER((double)receiver);
+}
+
+LOX_METHOD(Number, init) {
+	assertError(vm, "Cannot instantiate from class Number.");
+	RETURN_NIL;
+}
+
+LOX_METHOD(Number, toString) {
+	assertArgCount(vm, "Number::toString()", 0, argCount);
+	char chars[24];
+	int length = sprintf_s(chars, 24, "%.14g", AS_NUMBER(receiver));
+	RETURN_STRING(chars);
+}
+
 LOX_METHOD(Object, clone) {
 	assertArgCount(vm, "Object::clone()", 0, argCount);
 	ObjInstance* thisObject = AS_INSTANCE(receiver);
@@ -22,12 +70,12 @@ LOX_METHOD(Object, equals) {
 
 LOX_METHOD(Object, getClass) {
 	assertArgCount(vm, "Object::getClass()", 0, argCount);
-	RETURN_OBJ(AS_INSTANCE(receiver)->klass);
+	RETURN_OBJ(getObjClass(vm, receiver));
 }
 
 LOX_METHOD(Object, getClassName) {
 	assertArgCount(vm, "Object::getClassName()", 0, argCount);
-	RETURN_OBJ(AS_INSTANCE(receiver)->klass->name);
+	RETURN_OBJ(getObjClass(vm, receiver)->name);
 }
 
 LOX_METHOD(Object, hasField) {
@@ -42,7 +90,7 @@ LOX_METHOD(Object, hasField) {
 LOX_METHOD(Object, instanceOf) {
 	assertArgCount(vm, "Object::instanceOf(class)", 1, argCount);
 	if (!IS_CLASS(args[0])) RETURN_FALSE;
-	ObjClass* thisClass = AS_INSTANCE(receiver)->klass;
+	ObjClass* thisClass = getObjClass(vm, receiver);
 	ObjClass* thatClass = AS_CLASS(args[0]);
 	if (thisClass == thatClass) RETURN_TRUE;
 
@@ -57,40 +105,42 @@ LOX_METHOD(Object, instanceOf) {
 LOX_METHOD(Object, memberOf) {
 	assertArgCount(vm, "Object::memberOf(class)", 1, argCount);
 	if (!IS_CLASS(args[0])) RETURN_FALSE;
-	ObjClass* thisClass = AS_INSTANCE(receiver)->klass;
+	ObjClass* thisClass = getObjClass(vm, receiver);
 	ObjClass* thatClass = AS_CLASS(args[0]);
 	RETURN_BOOL(thisClass == thatClass);
 }
 
 LOX_METHOD(Object, toString) {
 	assertArgCount(vm, "Object::toString()", 0, argCount);
-
-	if (IS_BOOL(receiver)) {
-		if (AS_BOOL(receiver)) RETURN_STRING("true", 4);
-		else RETURN_STRING("false", 5);
-	}
-	else if (IS_NIL(receiver)) {
-		RETURN_STRING("nil", 3);
-	}
-	else if (IS_NUMBER(receiver)) {
-		char chars[24];
-		int length = sprintf_s(chars, 24, "%.14g", AS_NUMBER(args[0]));
-		RETURN_STRING(chars, length);
-	}
-	else {
-		RETURN_STRING("object", 6);
-	}
+	RETURN_STRING("object");
 }
 
 void registerLangPackage(VM* vm){
-	ObjClass* objectClass = defineNativeClass(vm, "Object");
-	DEF_METHOD(objectClass, Object, clone);
-	DEF_METHOD(objectClass, Object, equals);
-	DEF_METHOD(objectClass, Object, getClass);
-	DEF_METHOD(objectClass, Object, getClassName);
-	DEF_METHOD(objectClass, Object, hasField);
-	DEF_METHOD(objectClass, Object, instanceOf);
-	DEF_METHOD(objectClass, Object, memberOf);
-	DEF_METHOD(objectClass, Object, toString);
-	vm->objectClass = objectClass;
+	vm->objectClass = defineNativeClass(vm, "Object");
+	DEF_METHOD(vm->objectClass, Object, clone);
+	DEF_METHOD(vm->objectClass, Object, equals);
+	DEF_METHOD(vm->objectClass, Object, getClass);
+	DEF_METHOD(vm->objectClass, Object, getClassName);
+	DEF_METHOD(vm->objectClass, Object, hasField);
+	DEF_METHOD(vm->objectClass, Object, instanceOf);
+	DEF_METHOD(vm->objectClass, Object, memberOf);
+	DEF_METHOD(vm->objectClass, Object, toString);
+
+	vm->nilClass = defineNativeClass(vm, "Nil");
+	bindSuperclass(vm, vm->nilClass, vm->objectClass);
+	DEF_METHOD(vm->nilClass, Nil, clone);
+	DEF_METHOD(vm->nilClass, Nil, init);
+	DEF_METHOD(vm->nilClass, Nil, toString);
+
+	vm->boolClass = defineNativeClass(vm, "Bool");
+	bindSuperclass(vm, vm->boolClass, vm->objectClass);
+	DEF_METHOD(vm->boolClass, Bool, clone);
+	DEF_METHOD(vm->boolClass, Bool, init);
+	DEF_METHOD(vm->boolClass, Bool, toString);
+
+	vm->numberClass = defineNativeClass(vm, "Number");
+	bindSuperclass(vm, vm->numberClass, vm->objectClass);
+	DEF_METHOD(vm->numberClass, Number, clone);
+	DEF_METHOD(vm->numberClass, Number, init);
+	DEF_METHOD(vm->numberClass, Number, toString);
 }

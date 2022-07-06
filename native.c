@@ -38,19 +38,19 @@ LOX_FUNCTION(toString){
 	assertArgCount(vm, "toString(value)", 1, argCount);
 
 	if (IS_BOOL(args[0])) {
-		if (AS_BOOL(args[0])) RETURN_STRING("true", 4);
-		else RETURN_STRING("false", 5);
+		if (AS_BOOL(args[0])) RETURN_STRING("true");
+		else RETURN_STRING("false");
 	}
 	else if (IS_NIL(args[0])) {
-		RETURN_STRING("nil", 3);
+		RETURN_STRING("nil");
 	}
 	else if (IS_NUMBER(args[0])) {
 		char chars[24];
 		int length = sprintf_s(chars, 24, "%.14g", AS_NUMBER(args[0]));
-		RETURN_STRING(chars, length);
+		RETURN_STRING(chars);
 	}
 	else {
-		RETURN_STRING("object", 6);
+		RETURN_STRING("object");
 	}
 }
 

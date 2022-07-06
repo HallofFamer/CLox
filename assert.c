@@ -38,3 +38,8 @@ void assertArgIsString(VM* vm, const char* method, Value* args, int index){
 		exit(70);
 	}
 }
+
+void assertError(VM* vm, const char* message) {
+	runtimeError(vm, message);
+	exit(70);
+}

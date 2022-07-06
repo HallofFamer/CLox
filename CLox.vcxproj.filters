@@ -146,5 +146,8 @@
       <Filter>Lox Files</Filter>
     </None>
     <None Include="README.md" />
+    <None Include="lox\lang.lox">
+      <Filter>Lox Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

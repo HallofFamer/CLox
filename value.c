@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "object.h"
 #include "memory.h"
+#include "object.h"
 #include "value.h"
 
 void initValueArray(ValueArray* array) {

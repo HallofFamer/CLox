@@ -175,6 +175,7 @@
     <None Include="lox\fibonacci.lox" />
     <None Include="lox\initializer.lox" />
     <None Include="lox\invoke.lox" />
+    <None Include="lox\lang.lox" />
     <None Include="lox\loop.lox" />
     <None Include="lox\method.lox" />
     <None Include="lox\native.lox" />

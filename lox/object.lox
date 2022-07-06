@@ -1,22 +1,22 @@
 class Brioche { }
-print Brioche;
-print Brioche();
+println(Brioche);
+println(Brioche());
 
 class Pair { }
 var pair = Pair();
 pair.first = 1;
 pair.second = 2;
-print pair.first + pair.second;
+println(pair.first + pair.second);
 
 var object = Object();
-print object;
-print object.equals("Hello World");
-print object.hasField("length");
-print object.getClass();
-print object.instanceOf(Object);
-print object.memberOf(Object);
-print object.toString();
+println(object);
+println(object.equals("Hello World"));
+println(object.hasField("length"));
+println(object.getClass());
+println(object.instanceOf(Object));
+println(object.memberOf(Object));
+println(object.toString());
 
 var pair2 = pair.clone();
-print pair2.first + pair2.second;
-print pair.equals(pair2);
+println(pair2.first + pair2.second);
+println(pair.equals(pair2));

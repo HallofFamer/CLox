@@ -105,13 +105,18 @@ static bool callNative(VM* vm, NativeMethod method, int argCount) {
     return true;
 }
 
+static bool callMethod(VM* vm, Value method, int argCount) {
+    if (IS_NATIVE_METHOD(method)) return callNative(vm, AS_NATIVE_METHOD(method), argCount);
+    else return call(vm, AS_CLOSURE(method), argCount);
+}
+
 static bool callValue(VM* vm, Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
             case OBJ_BOUND_METHOD: {
                 ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
                 vm->stackTop[-argCount - 1] = bound->receiver;
-                return call(vm, bound->method, argCount);
+                return callMethod(vm, OBJ_VAL(bound->method), argCount);
             }
             case OBJ_CLASS: {
                 ObjClass* klass = AS_CLASS(callee);
@@ -119,7 +124,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
 
                 Value initializer;
                 if (tableGet(&klass->methods, vm->initString, &initializer)) {
-                    return call(vm, AS_CLOSURE(initializer), argCount);
+                    return callMethod(vm, initializer, argCount);
                 }
                 else if (argCount != 0) {
                     runtimeError(vm, "Expected 0 argument but got %d.", argCount);
@@ -157,12 +162,16 @@ static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCou
         runtimeError(vm, "Undefined property '%s'.", name->chars);
         return false;
     }
-    if (IS_NATIVE_METHOD(method)) return callNative(vm, AS_NATIVE_METHOD(method), argCount);
-    return call(vm, AS_CLOSURE(method), argCount);
+    return callMethod(vm, method, argCount);
 }
 
 static bool invoke(VM* vm, ObjString* name, int argCount) {
     Value receiver = peek(vm, argCount);
+
+    if (!IS_OBJ(receiver)) {
+        return invokeFromClass(vm, getObjClass(vm, receiver), name, argCount);
+    }
+
     if (!IS_INSTANCE(receiver)) {
         runtimeError(vm, "Only instances have methods.");
         return false;
@@ -233,7 +242,7 @@ static void defineMethod(VM* vm, ObjString* name) {
     pop(vm);
 }
 
-static void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
+void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     if (superclass == NULL) {
         runtimeError(vm, "Superclass cannot be null for class %s", subclass->name);
         return;
