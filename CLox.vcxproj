@@ -120,6 +120,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <StackCommitSize>
+      </StackCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -143,6 +145,7 @@
     <ClCompile Include="chunk.c" />
     <ClCompile Include="compiler.c" />
     <ClCompile Include="debug.c" />
+    <ClCompile Include="hash.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="memory.c" />
     <ClCompile Include="native.c" />
@@ -159,6 +162,7 @@
     <ClInclude Include="common.h" />
     <ClInclude Include="compiler.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="hash.h" />
     <ClInclude Include="memory.h" />
     <ClInclude Include="native.h" />
     <ClInclude Include="object.h" />

@@ -10,6 +10,7 @@ void assertArgIsBool(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClass(VM* vm, const char* method, Value* args, int index);
 void assertArgIsNumber(VM* vm, const char* method, Value* args, int index);
 void assertArgIsString(VM* vm, const char* method, Value* args, int index);
-void assertError(VM* vm, const char* message);
+void assertPositiveNumber(VM* vm, const char* method, double number, int index);
+void raiseError(VM* vm, const char* message);
 
 #endif // !clox_assert_h

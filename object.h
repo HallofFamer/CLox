@@ -116,6 +116,8 @@ ObjNativeFunction* newNativeFunction(VM* vm, NativeFn function);
 ObjNativeMethod* newNativeMethod(VM* vm, NativeMethod method);
 ObjString* takeString(VM* vm, char* chars, int length);
 ObjString* copyString(VM* vm, const char* chars, int length);
+ObjString* formattedString(VM* vm, const char* format, ...);
+ObjString* formattedLongString(VM* vm, const char* format, ...);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 ObjClass* getObjClass(VM* vm, Value value);
 void printObject(Value value);

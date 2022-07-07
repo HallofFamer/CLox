@@ -17,7 +17,9 @@
 #define RETURN_BOOL(value) return BOOL_VAL(value)
 #define RETURN_NUMBER(value) return NUMBER_VAL(value)
 #define RETURN_OBJ(value) return OBJ_VAL(value)
-#define RETURN_STRING(chars) return OBJ_VAL(copyString(vm, chars, (int)strlen(chars)))
+#define RETURN_STRING(chars, length) return OBJ_VAL(copyString(vm, chars, length))
+#define RETURN_STRING_FMT(...) return OBJ_VAL(formattedString(vm, __VA_ARGS__))
+#define RETURN_STRING_FMTL(...) return OBJ_VAL(formattedLongString(vm, __VA_ARGS__))
 
 ObjClass* defineNativeClass(VM* vm, const char* name);
 void defineNativeFunction(VM* vm, const char* name, NativeFn function);

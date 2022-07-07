@@ -39,7 +39,15 @@ void assertArgIsString(VM* vm, const char* method, Value* args, int index){
 	}
 }
 
-void assertError(VM* vm, const char* message) {
+void assertPositiveNumber(VM* vm, const char* method, double number, int index) {
+	if (number <= 0) {
+		if (index < 0) runtimeError(vm, "method %s expects receiver to be a positive number.", method);
+		else runtimeError(vm, "method %s expects argument %d to be a positive number.", method, index);
+		exit(70);
+	}
+}
+
+void raiseError(VM* vm, const char* message) {
 	runtimeError(vm, message);
 	exit(70);
 }

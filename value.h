@@ -9,6 +9,7 @@ typedef struct Obj Obj;
 typedef struct ObjClass ObjClass;
 typedef struct ObjString ObjString;
 
+
 #ifdef NAN_BOXING
 
 #define SIGN_BIT  ((uint64_t)0x8000000000000000)
@@ -34,7 +35,6 @@ typedef uint64_t Value;
 #define AS_BOOL(value)   ((value) == TRUE_VAL)
 #define AS_NUMBER(value) valueToNum(value)
 #define AS_OBJ(value)    ((Obj*)(uintptr_t)((value) & ~(SIGN_BIT | QNAN)))
-
 
 static inline double valueToNum(Value value) {
     double num;
@@ -79,6 +79,14 @@ typedef struct {
 #define NIL_VAL           ((Value){VAL_NIL, {.number = 0}})
 #define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
 #define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})
+
+static inline double valueToNum(Value value) {
+    return AS_NUMBER(value);
+}
+
+static inline Value numToValue(double num) {
+    return NUMBER_VAL(num);
+}
 
 #endif
 

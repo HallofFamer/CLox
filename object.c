@@ -1,6 +1,8 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "hash.h"
 #include "memory.h"
 #include "object.h"
 #include "table.h"
@@ -96,15 +98,6 @@ static ObjString* allocateString(VM* vm, char* chars, int length, uint32_t hash)
     return string;
 }
 
-static uint32_t hashString(const char* key, int length) {
-    uint32_t hash = 2166136261u;
-    for (int i = 0; i < length; i++) {
-        hash ^= (uint8_t)key[i];
-        hash *= 16777619;
-    }
-    return hash;
-}
-
 ObjString* takeString(VM* vm, char* chars, int length) {
     uint32_t hash = hashString(chars, length);
     ObjString* interned = tableFindString(&vm->strings, chars, length, hash);
@@ -126,6 +119,24 @@ ObjString* copyString(VM* vm, const char* chars, int length) {
     memcpy(heapChars, chars, length);
     heapChars[length] = '\0';
     return allocateString(vm, heapChars, length, hash);
+}
+
+ObjString* formattedString(VM* vm, const char* format, ...) {
+    char chars[UINT8_MAX];
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(chars, UINT8_MAX, format, args);
+    va_end(args);
+    return copyString(vm, chars, length);
+}
+
+ObjString* formattedLongString(VM* vm, const char* format, ...) {
+    char chars[UINT16_MAX];
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(chars, UINT16_MAX, format, args);
+    va_end(args);
+    return copyString(vm, chars, length);
 }
 
 ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
