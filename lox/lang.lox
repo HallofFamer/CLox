@@ -1,3 +1,9 @@
+/*
+var obj = Object();
+/* more comments */
+println(obj.toString());
+*/
+
 println("Testing nil...");
 //var undefined = Nil();
 print("Class name for nil: ");
@@ -43,3 +49,7 @@ print("Values of sqrt(8) and cbrt(8) are: ");
 println(8.sqrt().toString() + ", " + 8.cbrt().toString());
 print("Values of log(10), log10(10) and log2(10) are: ");
 println(10.log().toString() + ", " + 10.log2().toString() + ", " + 10.log10().toString());
+print("Values of sin(1), cos(1) and tan(1) are: ");
+println(1.sin().toString() + ", " + 1.cos().toString() + ", " + 1.tan().toString());
+print("Computing hypot(3, 4): ");
+println(3.hypot(4));

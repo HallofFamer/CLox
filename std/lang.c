@@ -45,6 +45,21 @@ LOX_METHOD(Number, abs) {
     RETURN_NUMBER(fabs(AS_NUMBER(receiver)));
 }
 
+LOX_METHOD(Number, acos) {
+    assertArgCount(vm, "Number::acos()", 0, argCount);
+    RETURN_NUMBER(acos(AS_NUMBER(receiver)));
+}
+
+LOX_METHOD(Number, asin) {
+    assertArgCount(vm, "Number::asin()", 0, argCount);
+    RETURN_NUMBER(asin(AS_NUMBER(receiver)));
+}
+
+LOX_METHOD(Number, atan) {
+    assertArgCount(vm, "Number::atan()", 0, argCount);
+    RETURN_NUMBER(atan(AS_NUMBER(receiver)));
+}
+
 LOX_METHOD(Number, cbrt) {
     assertArgCount(vm, "Number::cbrt()", 0, argCount);
     RETURN_NUMBER(cbrt(AS_NUMBER(receiver)));
@@ -60,6 +75,11 @@ LOX_METHOD(Number, clone) {
     RETURN_NUMBER((double)receiver);
 }
 
+LOX_METHOD(Number, cos) {
+    assertArgCount(vm, "Number::cos()", 0, argCount);
+    RETURN_NUMBER(cos(AS_NUMBER(receiver)));
+}
+
 LOX_METHOD(Number, exp) {
     assertArgCount(vm, "Number::exp()", 0, argCount);
     RETURN_NUMBER(exp(AS_NUMBER(receiver)));
@@ -68,6 +88,12 @@ LOX_METHOD(Number, exp) {
 LOX_METHOD(Number, floor) {
     assertArgCount(vm, "Number::floor()", 0, argCount);
     RETURN_NUMBER(floor(AS_NUMBER(receiver)));
+}
+
+LOX_METHOD(Number, hypot) {
+    assertArgCount(vm, "Number::hypot(other)", 1, argCount);
+    assertArgIsNumber(vm, "Number::hypot(other)", args, 0);
+    RETURN_NUMBER(hypot(AS_NUMBER(receiver), AS_NUMBER(args[0])));
 }
 
 LOX_METHOD(Number, init) {
@@ -119,11 +145,21 @@ LOX_METHOD(Number, round) {
     RETURN_NUMBER(round(AS_NUMBER(receiver)));
 }
 
+LOX_METHOD(Number, sin) {
+    assertArgCount(vm, "Number::sin()", 0, argCount);
+    RETURN_NUMBER(sin(AS_NUMBER(receiver)));
+}
+
 LOX_METHOD(Number, sqrt) {
     assertArgCount(vm, "Number::sqrt()", 0, argCount);
     double self = AS_NUMBER(receiver);
     assertPositiveNumber(vm, "Number::sqrt()", self, -1);
     RETURN_NUMBER(sqrt(self));
+}
+
+LOX_METHOD(Number, tan) {
+    assertArgCount(vm, "Number::tan()", 0, argCount);
+    RETURN_NUMBER(tan(AS_NUMBER(receiver)));
 }
 
 LOX_METHOD(Number, toString) {
@@ -225,11 +261,16 @@ void registerLangPackage(VM* vm){
     vm->numberClass = defineNativeClass(vm, "Number");
     bindSuperclass(vm, vm->numberClass, vm->objectClass);
     DEF_METHOD(vm->numberClass, Number, abs);
+    DEF_METHOD(vm->numberClass, Number, acos);
+    DEF_METHOD(vm->numberClass, Number, asin);
+    DEF_METHOD(vm->numberClass, Number, atan);
     DEF_METHOD(vm->numberClass, Number, cbrt);
     DEF_METHOD(vm->numberClass, Number, ceil);
     DEF_METHOD(vm->numberClass, Number, clone);
+    DEF_METHOD(vm->numberClass, Number, cos);
     DEF_METHOD(vm->numberClass, Number, exp);
     DEF_METHOD(vm->numberClass, Number, floor);
+    DEF_METHOD(vm->numberClass, Number, hypot);
     DEF_METHOD(vm->numberClass, Number, init);
     DEF_METHOD(vm->numberClass, Number, log);
     DEF_METHOD(vm->numberClass, Number, log2);
@@ -238,6 +279,8 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->numberClass, Number, min);
     DEF_METHOD(vm->numberClass, Number, pow);
     DEF_METHOD(vm->numberClass, Number, round);
+    DEF_METHOD(vm->numberClass, Number, sin);
     DEF_METHOD(vm->numberClass, Number, sqrt);
+    DEF_METHOD(vm->numberClass, Number, tan);
     DEF_METHOD(vm->numberClass, Number, toString);
 }

@@ -25,12 +25,12 @@ https://github.com/munificent/craftinginterpreters
 ## Roadmap
 
 ### CLox v1.1.0
-- VM is no longer a global variable, allowing CLox VM to be embeded in other host applications.
+- VM is no longer a global variable, allowing CLox VM to be embedded in other host applications.
 - Full fledged Framework for writing Native functions, methods and classes.
 - Root class Object which serves as superclass of every class.
 - Remove print statement and replace it by print/println native functions.
 
-### CLox v1.2.0
+### CLox v1.2.0(current version)
 - Improved object model - Everything is an object, and every object has a class, including nil, true, false, number, string, function, class etc.
 - CLox Standard Library for package `lang` and `util`, which contains classes such as Boolean, Number, String, Array, Dictionary, DateTime, etc.
 - Allow customized runtime configurations for KtLox at startup with clox.ini

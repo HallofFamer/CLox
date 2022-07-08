@@ -61,6 +61,36 @@ static Token errorToken(Scanner* scanner, const char* message) {
     return token;
 }
 
+static void skipLineComment(Scanner* scanner) {
+    while (peek(scanner) != '\n' && !isAtEnd(scanner)) {
+        advance(scanner);
+    }
+}
+
+static void skipBlockComment(Scanner* scanner) {
+    int nesting = 1;
+    while (nesting > 0) {
+        if (isAtEnd(scanner)) return;
+
+        if (peek(scanner) == '/' && peekNext(scanner) == '*') {
+            advance(scanner);
+            advance(scanner);
+            nesting++;
+            continue;
+        }
+
+        if (peek(scanner) == '*' && peekNext(scanner) == '/') {
+            advance(scanner);
+            advance(scanner);
+            nesting--;
+            continue;
+        }
+
+        if (peek(scanner) == '\n') scanner->line++;
+        advance(scanner);
+    }
+}
+
 static void skipWhitespace(Scanner* scanner) {
     for (;;) {
         char c = peek(scanner);
@@ -76,8 +106,12 @@ static void skipWhitespace(Scanner* scanner) {
                 break;
             case '/':
                 if (peekNext(scanner) == '/') {
-                    while (peek(scanner) != '\n' && !isAtEnd(scanner)) advance(scanner);
+                    skipLineComment(scanner);
                 } 
+                else if (peekNext(scanner) == '*') {
+                    advance(scanner);
+                    skipBlockComment(scanner);
+                }
                 else {
                     return;
                 }
