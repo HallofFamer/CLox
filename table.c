@@ -4,7 +4,6 @@
 #include "memory.h"
 #include "object.h"
 #include "table.h"
-#include "value.h"
 
 #define TABLE_MAX_LOAD 0.75
 
@@ -15,7 +14,7 @@ void initTable(Table* table) {
 }
 
 void freeTable(VM* vm, Table* table) {
-    FREE_ARRAY(vm, Entry, table->entries, table->capacity);
+    FREE_ARRAY(Entry, table->entries, table->capacity);
     initTable(table);
 }
 
@@ -52,7 +51,7 @@ bool tableGet(Table* table, ObjString* key, Value* value) {
 }
 
 static void adjustCapacity(VM* vm, Table* table, int capacity) {
-    Entry* entries = ALLOCATE(vm, Entry, capacity);
+    Entry* entries = ALLOCATE(Entry, capacity);
     for (int i = 0; i < capacity; i++) {
         entries[i].key = NULL;
         entries[i].value = NIL_VAL;
@@ -69,7 +68,7 @@ static void adjustCapacity(VM* vm, Table* table, int capacity) {
         table->count++;
     }
 
-    FREE_ARRAY(vm, Entry, table->entries, table->capacity);
+    FREE_ARRAY(Entry, table->entries, table->capacity);
     table->entries = entries;
     table->capacity = capacity;
 }

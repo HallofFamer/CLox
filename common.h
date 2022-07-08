@@ -18,4 +18,4 @@
 
 typedef struct VM VM;
 
-#endif
+#endif // !clox_common_h

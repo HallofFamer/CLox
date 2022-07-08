@@ -3,6 +3,6 @@ var world = "World ";
 
 var start = clock();
 for(var i = 0; i < 1000; i = i + 1){ 
-    print hello + world + toString(i);
+    println(hello + world + i.toString());
 }
-print clock() - start;
+println(clock() - start);

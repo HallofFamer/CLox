@@ -17,7 +17,7 @@ typedef enum {
     
     TOKEN_AND, TOKEN_CASE, TOKEN_CLASS, TOKEN_DEFAULT, TOKEN_ELSE, 
     TOKEN_FALSE, TOKEN_FOR, TOKEN_FUN, TOKEN_IF, TOKEN_NIL, TOKEN_OR,
-    TOKEN_PRINT, TOKEN_RETURN, TOKEN_SUPER, TOKEN_SWITCH, TOKEN_THIS,
+    TOKEN_RETURN, TOKEN_SUPER, TOKEN_SWITCH, TOKEN_THIS,
     TOKEN_TRUE, TOKEN_VAR, TOKEN_WHILE,
 
     TOKEN_ERROR, TOKEN_EOF
@@ -39,4 +39,4 @@ typedef struct {
 void initScanner(Scanner* scanner, const char* source);
 Token scanToken(Scanner* scanner);
 
-#endif
+#endif // !clox_scanner_h

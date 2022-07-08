@@ -126,4 +126,4 @@ static inline bool isObjType(Value value, ObjType type) {
     return IS_OBJ(value) && AS_OBJ(value)->type == type;
 }
 
-#endif
+#endif // !clox_object_h

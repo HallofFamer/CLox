@@ -4,7 +4,7 @@ class CoffeeMaker {
     }
 
     brew(){
-        print "Enjoy your cup of " + this.coffee;
+        print("Enjoy your cup of " + this.coffee);
 
         //no reusing the grounds!
         this.coffee = nil;
@@ -13,7 +13,3 @@ class CoffeeMaker {
 
 var maker = CoffeeMaker("coffee and chicory");
 maker.brew();
-//print("Coffee maker has field 'coffee': ");
-//println(maker.hasField("coffee"));
-//print("Coffee maker has field 'tea': ");
-//println(maker.hasField("tea"));

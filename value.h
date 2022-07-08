@@ -102,4 +102,4 @@ void writeValueArray(VM* vm, ValueArray* array, Value value);
 void freeValueArray(VM* vm, ValueArray* array);
 void printValue(Value value);
 
-#endif
+#endif // !clox_value_h

@@ -5,14 +5,14 @@
 #include "value.h"
 
 typedef struct {
-  ObjString* key;
-  Value value;
+    ObjString* key;
+    Value value;
 } Entry;
 
 typedef struct {
-  int count;
-  int capacity;
-  Entry* entries;
+    int count;
+    int capacity;
+    Entry* entries;
 } Table;
 
 void initTable(Table* table);
@@ -25,4 +25,4 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
 void tableRemoveWhite(Table* table);
 void markTable(VM* vm, Table* table);
 
-#endif
+#endif // !clox_table_h

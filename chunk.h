@@ -30,7 +30,6 @@ typedef enum {
     OP_DIVIDE,
     OP_NOT,
     OP_NEGATE,
-    OP_PRINT,
     OP_JUMP,
     OP_JUMP_IF_FALSE,
     OP_LOOP,
@@ -58,4 +57,4 @@ void freeChunk(VM* vm, Chunk* chunk);
 void writeChunk(VM* vm, Chunk* chunk, uint8_t byte, int line);
 int addConstant(VM* vm, Chunk* chunk, Value value);
 
-#endif
+#endif // !clox_chunk_h

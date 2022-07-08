@@ -3,12 +3,10 @@
 #include <string.h>
 #include <time.h>
 
-#include "common.h"
 #include "compiler.h"
 #include "debug.h"
 #include "memory.h"
 #include "native.h"
-#include "object.h"
 #include "vm.h"
 #include "std/lang.h"
 
@@ -260,7 +258,7 @@ static void concatenate(VM* vm) {
     ObjString* a = AS_STRING(peek(vm, 1));
 
     int length = a->length + b->length;
-    char* chars = ALLOCATE(vm, char, length + 1);
+    char* chars = ALLOCATE(char, length + 1);
     memcpy(chars, a->chars, a->length);
     memcpy(chars + a->length, b->chars, b->length);
     chars[length] = '\0';
@@ -437,12 +435,7 @@ static InterpretResult run(VM* vm) {
                 }
                 push(vm, NUMBER_VAL(-AS_NUMBER(pop(vm))));
                 break;
-            case OP_PRINT: {
-                printValue(pop(vm));
-                printf("\n");
-                break;
-            }
-             case OP_JUMP: {
+            case OP_JUMP: {
                 uint16_t offset = READ_SHORT();
                 frame->ip += offset;
                 break;

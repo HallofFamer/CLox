@@ -1,13 +1,13 @@
 var x = 2;
 switch(x) {
   case 1:
-    print("one");
+    println("one");
   case 2:
-    print("two");
+    println("two");
   case 3:
-    print("three");
+    println("three");
   default:
-    print("default");
+    println("default");
 }
 
 print("after");

@@ -7,4 +7,4 @@
 ObjFunction* compile(VM* vm, const char* source);
 void markCompilerRoots(VM* vm);
 
-#endif
+#endif // !clox_compiler_h

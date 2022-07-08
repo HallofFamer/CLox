@@ -26,4 +26,4 @@ void defineNativeFunction(VM* vm, const char* name, NativeFn function);
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, NativeMethod method);
 void registerNativeFunctions(VM* vm);
 
-#endif
+#endif // !clox_native_h

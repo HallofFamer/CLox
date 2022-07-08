@@ -1,7 +1,7 @@
 class Nested { 
     method(){ 
         fun function(){ 
-            print this;
+            print(this);
         }
 
         function();

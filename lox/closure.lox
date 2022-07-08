@@ -2,14 +2,14 @@ fun outer() {
   var x = "value";
   fun middle() {
     fun inner() {
-      print x;
+      println(x);
     }
 
-    print "create inner closure";
+    println("create inner closure");
     return inner;
   }
 
-  print "return from outer";
+  println("return from outer");
   return middle;
 }
 

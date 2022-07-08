@@ -1,6 +1,6 @@
 class A { 
     method(){ 
-        print "A method";
+        println("A method");
     }
 
     toString(){ 
@@ -10,7 +10,7 @@ class A {
 
 class B < A { 
     method(){ 
-        print "B method";
+        println("B method");
     }
 
     test(){
@@ -25,10 +25,10 @@ var b = B();
 var c = C();
 c.test();
 
-print(c.toString());
-print(c.instanceOf(C));
-print(c.instanceOf(B));
-print(c.instanceOf(A));
-print(c.instanceOf(Object));
-print(b.instanceOf(C));
-print(b.instanceOf(A));
+println(c.toString());
+println(c.instanceOf(C));
+println(c.instanceOf(B));
+println(c.instanceOf(A));
+println(c.instanceOf(Object));
+println(b.instanceOf(C));
+println(b.instanceOf(A));

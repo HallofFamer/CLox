@@ -46,8 +46,9 @@ void markObject(VM* vm, Obj* object) {
     object->isMarked = true;
     if (vm->grayCapacity < vm->grayCount + 1) {
         vm->grayCapacity = GROW_CAPACITY(vm->grayCapacity);
-        vm->grayStack = (Obj**)realloc(vm->grayStack, sizeof(Obj*) * vm->grayCapacity);
-        if (vm->grayStack == NULL) exit(1);
+        Obj** grayStack = (Obj**)realloc(vm->grayStack, sizeof(Obj*) * vm->grayCapacity);
+        if (grayStack == NULL) exit(1);
+        vm->grayStack = grayStack;
     }
     vm->grayStack[vm->grayCount++] = object;
 }
@@ -120,44 +121,44 @@ static void freeObject(VM* vm, Obj* object) {
 
     switch (object->type) {
         case OBJ_BOUND_METHOD:
-            FREE(vm, ObjBoundMethod, object);
+            FREE(ObjBoundMethod, object);
             break;        
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
             freeTable(vm, &klass->methods);
-            FREE(vm, ObjClass, object);
+            FREE(ObjClass, object);
             break;
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
-            FREE_ARRAY(vm, ObjUpvalue*, closure->upvalues, closure->upvalueCount);
-            FREE(vm, ObjClosure, object);
+            FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount);
+            FREE(ObjClosure, object);
             break;
         }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*)object;
             freeChunk(vm, &function->chunk);
-            FREE(vm, ObjFunction, object);
+            FREE(ObjFunction, object);
             break;
         }
         case OBJ_INSTANCE: {
             ObjInstance* instance = (ObjInstance*)object;
             freeTable(vm, &instance->fields);
-            FREE(vm, ObjInstance, object);
+            FREE(ObjInstance, object);
             break;
         }
         case OBJ_NATIVE_FUNCTION:
-            FREE(vm, ObjNativeFunction, object);
+            FREE(ObjNativeFunction, object);
             break;
         case OBJ_NATIVE_METHOD:
-            FREE(vm, ObjNativeMethod, object);
+            FREE(ObjNativeMethod, object);
             break;
         case OBJ_STRING: {
-            FREE(vm, ObjString, object);
+            FREE(ObjString, object);
             break;
         }
         case OBJ_UPVALUE:
-            FREE(vm, ObjUpvalue, object);
+            FREE(ObjUpvalue, object);
             break;
     }
 }

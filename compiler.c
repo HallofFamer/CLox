@@ -113,7 +113,7 @@ static void errorAtCurrent(const char* message) {
 
 static void advance() {
     parser.previous = parser.current;
-
+    
     for (;;) {
         parser.current = scanToken(parser.scanner);
         if (parser.current.type != TOKEN_ERROR) break;
@@ -213,7 +213,7 @@ static void initCompiler(VM* vm, Compiler* compiler, FunctionType type) {
     if (type != TYPE_SCRIPT) {
         current->function->name = copyString(vm, parser.previous.start, parser.previous.length);
     }
-
+    
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
     local->isCaptured = false;
@@ -582,7 +582,6 @@ ParseRule rules[] = {
     [TOKEN_IF] = {NULL,     NULL,   PREC_NONE},
     [TOKEN_NIL] = {literal,  NULL,   PREC_NONE},
     [TOKEN_OR] = {NULL,     or_,    PREC_OR},
-    [TOKEN_PRINT] = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN] = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SUPER] = {super_,   NULL,   PREC_NONE},
     [TOKEN_THIS] = {this_,    NULL,   PREC_NONE},
@@ -806,12 +805,6 @@ static void ifStatement(VM* vm) {
     patchJump(elseJump);
 }
 
-static void printStatement(VM* vm) {
-    expression(vm);
-    consume(TOKEN_SEMICOLON, "Expect ';' after value.");
-    emitByte(vm, OP_PRINT);
-}
-
 static void returnStatement(VM* vm) {
     if (current->type == TYPE_SCRIPT) {
         error("Can't return from top-level code.");
@@ -918,7 +911,6 @@ static void synchronize() {
             case TOKEN_FOR:
             case TOKEN_IF:
             case TOKEN_WHILE:
-            case TOKEN_PRINT:
             case TOKEN_RETURN:
                 return;
 
@@ -946,10 +938,7 @@ static void declaration(VM* vm) {
 }
 
 static void statement(VM* vm) {
-    if (match(TOKEN_PRINT)) {
-        printStatement(vm);
-    }
-    else if (match(TOKEN_FOR)) {
+    if (match(TOKEN_FOR)) {
         forStatement(vm);
     }
     else if (match(TOKEN_IF)) {

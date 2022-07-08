@@ -57,4 +57,4 @@ InterpretResult interpret(VM* vm, const char* source);
 void push(VM* vm, Value value);
 Value pop(VM* vm);
 
-#endif
+#endif // !clox_vm_h

@@ -20,6 +20,7 @@ https://github.com/munificent/craftinginterpreters
 - Embeddable VM for CLox in other host applications(since version 1.1)
 - `Object` root class for every class in Lox(since version 1.1)
 - Framework for creating native functions, methods and classes(since version 1.1).
+- Print statement removed, use native function `print` and `println` instead(since version 1.1).
 
 ## Roadmap
 
@@ -40,3 +41,11 @@ https://github.com/munificent/craftinginterpreters
 - Anonymous Functions and Closure(Lambda expression) with nonlocal returns.
 - Replace C style for loop by Kotlin style for-in loop for collection.
 - Clox Standard Library improvement: New package `collection` and `io`.
+
+## FAQ
+
+#### What is the purpose of this project? 
+CLox is an implementation of Lox language with bytecode VM instead of treewalk interpreter. It is the last experiment on feature implementations, before I will begin writing my own programming language `Mysidia` in C.
+
+#### What will happen to KtLox? 
+Nothing, KtLox development is on hold until I can figure out a way to generate JVM bytecode instead of running the interpreter by walking down the AST. Treewalk interpreters are way too slow to be practical without JIT. 
