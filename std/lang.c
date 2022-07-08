@@ -195,7 +195,7 @@ LOX_METHOD(Object, memberOf) {
 
 LOX_METHOD(Object, toString) {
     assertArgCount(vm, "Object::toString()", 0, argCount);
-    RETURN_STRING_FMT("[object %s]", AS_INSTANCE(receiver)->klass->name->chars);
+    RETURN_STRING_FMT("<object %s>", AS_INSTANCE(receiver)->klass->name->chars);
 }
 
 void registerLangPackage(VM* vm){
