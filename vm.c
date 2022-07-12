@@ -220,7 +220,6 @@ static ObjUpvalue* captureUpvalue(VM* vm, Value* local) {
     else {
         prevUpvalue->next = createdUpvalue;
     }
-
     return createdUpvalue;
 }
 
@@ -411,6 +410,11 @@ static InterpretResult run(VM* vm) {
                 if (IS_STRING(peek(vm, 0)) && IS_STRING(peek(vm, 1))) {
                      concatenate(vm);
                 }
+                else if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
+                    int b = AS_INT(pop(vm));
+                    int a = AS_INT(pop(vm));
+                    push(vm, INT_VAL(a + b));
+                }
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) {
                     double b = AS_NUMBER(pop(vm));
                     double a = AS_NUMBER(pop(vm));
@@ -422,8 +426,24 @@ static InterpretResult run(VM* vm) {
                 }
                 break;
             }
-            case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
-            case OP_MULTIPLY: BINARY_OP(NUMBER_VAL, *); break;
+            case OP_SUBTRACT: {
+                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
+                    int b = AS_INT(pop(vm));
+                    int a = AS_INT(pop(vm));
+                    push(vm, INT_VAL(a - b));
+                }
+                else BINARY_OP(NUMBER_VAL, -);
+                break;
+            }
+            case OP_MULTIPLY: {
+                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
+                    int b = AS_INT(pop(vm));
+                    int a = AS_INT(pop(vm));
+                    push(vm, INT_VAL(a * b));
+                }
+                else BINARY_OP(NUMBER_VAL, *); 
+                break;
+            }
             case OP_DIVIDE:   BINARY_OP(NUMBER_VAL, /); break;
             case OP_NOT:
                 push(vm, BOOL_VAL(isFalsey(pop(vm))));

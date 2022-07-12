@@ -25,20 +25,20 @@ typedef uint64_t Value;
 #define NIL_VAL          ((Value)(uint64_t)(QNAN | TAG_NIL))
 #define BOOL_VAL(b)      ((b) ? TRUE_VAL : FALSE_VAL)
 #define INT_VAL(i)       ((Value)(QNAN | ((uint64_t)(uint32_t)(i) << 3) | TAG_INT))
-#define DOUBLE_VAL(d)    numToValue(num)
+#define FLOAT_VAL(d)     numToValue(num)
 #define NUMBER_VAL(num)  numToValue(num)
 #define OBJ_VAL(obj)     ((Value)(SIGN_BIT | QNAN | (uint64_t)(uintptr_t)(obj)))
 
 #define IS_NIL(value)    ((value) == NIL_VAL)
 #define IS_BOOL(value)   (((value) | 1) == TRUE_VAL)
 #define IS_INT(value)    valueIsInt(value)
-#define IS_DOUBLE(value) (((value) & QNAN) != QNAN)
+#define IS_FLOAT(value) (((value) & QNAN) != QNAN)
 #define IS_NUMBER(value) valueIsNum(value)
 #define IS_OBJ(value)    (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
 
 #define AS_BOOL(value)   ((value) == TRUE_VAL)
-#define AS_INT(value)    ((int)(value >> 3))
-#define AS_DOUBLE(value) valueToDouble(value)
+#define AS_INT(value)    ((int)((value) >> 3))
+#define AS_FLOAT(value)  valueToFloat(value)
 #define AS_NUMBER(value) valueToNum(value)
 #define AS_OBJ(value)    ((Obj*)(uintptr_t)((value) & ~(SIGN_BIT | QNAN)))
 
@@ -47,17 +47,17 @@ static inline bool valueIsInt(Value value) {
 }
 
 static inline bool valueIsNum(Value value) {
-    return IS_DOUBLE(value) || valueIsInt(value);
+    return IS_FLOAT(value) || valueIsInt(value);
 }
 
-static inline double valueToDouble(Value value) {
+static inline double valueToFloat(Value value) {
     double num;
     memcpy(&num, &value, sizeof(Value));
     return num;
 }
 
 static inline double valueToNum(Value value) {
-    return IS_DOUBLE(value) ? AS_DOUBLE(value) : AS_INT(value);
+    return IS_FLOAT(value) ? AS_FLOAT(value) : AS_INT(value);
 }
 
 static inline Value numToValue(double num) {

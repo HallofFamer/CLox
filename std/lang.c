@@ -9,6 +9,14 @@
 #include "../object.h"
 #include "../vm.h"
 
+static int factorial(int self) {
+    int result = 1;
+    for (int i = 1; i <= self; i++) {
+        result *= i;
+    }
+    return result;
+}
+
 static int gcd(int self, int other) {
     while (self != other) {
         if (self > other) self -= other;
@@ -42,6 +50,18 @@ LOX_METHOD(Int, abs) {
     RETURN_INT(abs(AS_INT(receiver)));
 }
 
+LOX_METHOD(Int, clone) {
+    assertArgCount(vm, "Int::clone()", 0, argCount);
+    RETURN_INT((int)receiver);
+}
+
+LOX_METHOD(Int, factorial) {
+    assertArgCount(vm, "Int::factorial()", 0, argCount);
+    int self = AS_INT(receiver);
+    assertPositiveNumber(vm, "Int::factorial()", self, -1);
+    RETURN_INT(factorial(self));
+}
+
 LOX_METHOD(Int, gcd) {
     assertArgCount(vm, "Int::gcd(other)", 1, argCount);
     assertArgIsInt(vm, "Int::gcd(other)", args, 0);
@@ -51,6 +71,16 @@ LOX_METHOD(Int, gcd) {
 LOX_METHOD(Int, init) {
     raiseError(vm, "Cannot instantiate from class Int.");
     RETURN_NIL;
+}
+
+LOX_METHOD(Int, isEven) {
+    assertArgCount(vm, "Int::isEven()", 0, argCount);
+    RETURN_BOOL(AS_INT(receiver) % 2 == 0);
+}
+
+LOX_METHOD(Int, isOdd) {
+    assertArgCount(vm, "Int::isOdd()", 0, argCount);
+    RETURN_BOOL(AS_INT(receiver) % 2 != 0);
 }
 
 LOX_METHOD(Int, lcm) {
@@ -332,7 +362,12 @@ void registerLangPackage(VM* vm){
     vm->intClass = defineNativeClass(vm, "Int");
     bindSuperclass(vm, vm->intClass, vm->numberClass);
     DEF_METHOD(vm->intClass, Int, abs);
+    DEF_METHOD(vm->intClass, Int, clone);
+    DEF_METHOD(vm->intClass, Int, factorial);
     DEF_METHOD(vm->intClass, Int, gcd);
+    DEF_METHOD(vm->intClass, Int, init);
+    DEF_METHOD(vm->intClass, Int, isEven);
+    DEF_METHOD(vm->intClass, Int, isOdd);
     DEF_METHOD(vm->intClass, Int, lcm);
     DEF_METHOD(vm->intClass, Int, toFloat);
 }

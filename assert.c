@@ -25,9 +25,16 @@ void assertArgIsClass(VM* vm, const char* method, Value* args, int index){
 	}
 }
 
+void assertArgIsFloat(VM* vm, const char* method, Value* args, int index) {
+	if (!IS_FLOAT(args[index])) {
+		runtimeError(vm, "method %s expects argument %d to be a floating point number.", method, index + 1);
+		exit(70);
+	}
+}
+
 void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
 	if (!IS_INT(args[index])) {
-		runtimeError(vm, "method %s expects argument %d to be an integer.", method, index + 1);
+		runtimeError(vm, "method %s expects argument %d to be an integer number.", method, index + 1);
 		exit(70);
 	}
 }
@@ -46,10 +53,18 @@ void assertArgIsString(VM* vm, const char* method, Value* args, int index){
 	}
 }
 
-void assertNonZero(VM* vm, const char* method, double number, int index) {
+void assertNonZeroNumber(VM* vm, const char* method, double number, int index) {
 	if (number == 0) {
 		if (index < 0) runtimeError(vm, "method %s expects receiver to be a non-zero number but got %g.", method, number);
 		else runtimeError(vm, "method %s expects argument %d to be a non-zero number but got %g.", method, index, number);
+		exit(70);
+	}
+}
+
+void assertNonNegativeNumber(VM* vm, const char* method, double number, int index) {
+	if (number < 0) {
+		if (index < 0) runtimeError(vm, "method %s expects receiver to be a non negative number but got %g.", method, number);
+		else runtimeError(vm, "method %s expects argument %d to be a non negative number but got %g.", method, index, number);
 		exit(70);
 	}
 }
