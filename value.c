@@ -35,6 +35,9 @@ void printValue(Value value) {
     else if (IS_NIL(value)) {
         printf("nil");
     }
+    else if (IS_INT(value)) {
+        printf("%d", AS_INT(value));
+    }
     else if (IS_NUMBER(value)) {
         printf("%g", AS_NUMBER(value));
     }

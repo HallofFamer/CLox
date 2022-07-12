@@ -20,6 +20,7 @@ struct VM {
     ObjClass* nilClass;
     ObjClass* boolClass;
     ObjClass* numberClass;
+    ObjClass* intClass;
 
     CallFrame frames[FRAMES_MAX];
     int frameCount;

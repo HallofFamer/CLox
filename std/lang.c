@@ -9,6 +9,18 @@
 #include "../object.h"
 #include "../vm.h"
 
+static int gcd(int self, int other) {
+    while (self != other) {
+        if (self > other) self -= other;
+        else other -= self;
+    }
+    return self;
+}
+
+static int lcm(int self, int other) {
+    return (self * other) / gcd(self, other);
+}
+
 LOX_METHOD(Bool, clone) {
     assertArgCount(vm, "Bool::clone()", 0, argCount);
     RETURN_BOOL(receiver);
@@ -23,6 +35,33 @@ LOX_METHOD(Bool, toString) {
     assertArgCount(vm, "Bool::toString()", 0, argCount);
     if (AS_BOOL(receiver)) RETURN_STRING("true", 4);
     else RETURN_STRING("false", 5);
+}
+
+LOX_METHOD(Int, abs) {
+    assertArgCount(vm, "Int::abs()", 0, argCount);
+    RETURN_INT(abs(AS_INT(receiver)));
+}
+
+LOX_METHOD(Int, gcd) {
+    assertArgCount(vm, "Int::gcd(other)", 1, argCount);
+    assertArgIsInt(vm, "Int::gcd(other)", args, 0);
+    RETURN_INT(gcd(abs(AS_INT(receiver)), abs(AS_INT(args[0]))));
+}
+
+LOX_METHOD(Int, init) {
+    raiseError(vm, "Cannot instantiate from class Int.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(Int, lcm) {
+    assertArgCount(vm, "Int::lcm(other)", 1, argCount);
+    assertArgIsInt(vm, "Int::lcm(other)", args, 0);
+    RETURN_INT(lcm(abs(AS_INT(receiver)), abs(AS_INT(args[0]))));
+}
+
+LOX_METHOD(Int, toFloat) {
+    assertArgCount(vm, "Int::toFloat()", 0, argCount);
+    RETURN_NUMBER((double)AS_INT(receiver));
 }
 
 LOX_METHOD(Nil, clone) {
@@ -162,6 +201,11 @@ LOX_METHOD(Number, tan) {
     RETURN_NUMBER(tan(AS_NUMBER(receiver)));
 }
 
+LOX_METHOD(Number, toInt) {
+    assertArgCount(vm, "Number::toInt()", 0, argCount);
+    RETURN_INT((int)AS_NUMBER(receiver));
+}
+
 LOX_METHOD(Number, toString) {
     assertArgCount(vm, "Number::toString()", 0, argCount);
     char chars[24];
@@ -203,7 +247,7 @@ LOX_METHOD(Object, hasField) {
 
 LOX_METHOD(Object, hashCode) {
     assertArgCount(vm, "Object::hashCode()", 0, argCount);
-    RETURN_NUMBER(hashValue(receiver));
+    RETURN_INT(hashValue(receiver));
 }
 
 LOX_METHOD(Object, instanceOf) {
@@ -282,5 +326,13 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->numberClass, Number, sin);
     DEF_METHOD(vm->numberClass, Number, sqrt);
     DEF_METHOD(vm->numberClass, Number, tan);
+    DEF_METHOD(vm->numberClass, Number, toInt);
     DEF_METHOD(vm->numberClass, Number, toString);
+
+    vm->intClass = defineNativeClass(vm, "Int");
+    bindSuperclass(vm, vm->intClass, vm->numberClass);
+    DEF_METHOD(vm->intClass, Int, abs);
+    DEF_METHOD(vm->intClass, Int, gcd);
+    DEF_METHOD(vm->intClass, Int, lcm);
+    DEF_METHOD(vm->intClass, Int, toFloat);
 }

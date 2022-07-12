@@ -15,6 +15,7 @@
 #define RETURN_FALSE return BOOL_VAL(false)
 #define RETURN_TRUE return BOOL_VAL(true)
 #define RETURN_BOOL(value) return BOOL_VAL(value)
+#define RETURN_INT(value) return INT_VAL(value)
 #define RETURN_NUMBER(value) return NUMBER_VAL(value)
 #define RETURN_OBJ(value) return OBJ_VAL(value)
 #define RETURN_STRING(chars, length) return OBJ_VAL(copyString(vm, chars, length))

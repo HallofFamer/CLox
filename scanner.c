@@ -192,8 +192,9 @@ static Token number(Scanner* scanner) {
         advance(scanner);
 
         while (isDigit(peek(scanner))) advance(scanner);
+        return makeToken(scanner, TOKEN_NUMBER);
     }
-    return makeToken(scanner, TOKEN_NUMBER);
+    return makeToken(scanner, TOKEN_INT);
 }
 
 static Token string(Scanner* scanner) {

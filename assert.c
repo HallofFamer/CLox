@@ -25,6 +25,13 @@ void assertArgIsClass(VM* vm, const char* method, Value* args, int index){
 	}
 }
 
+void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
+	if (!IS_INT(args[index])) {
+		runtimeError(vm, "method %s expects argument %d to be an integer.", method, index + 1);
+		exit(70);
+	}
+}
+
 void assertArgIsNumber(VM* vm, const char* method, Value* args, int index){
 	if (!IS_NUMBER(args[index])) {
 		runtimeError(vm, "method %s expects argument %d to be a number.", method, index + 1);

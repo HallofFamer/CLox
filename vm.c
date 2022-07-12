@@ -433,7 +433,9 @@ static InterpretResult run(VM* vm) {
                     runtimeError(vm, "Operand must be a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                push(vm, NUMBER_VAL(-AS_NUMBER(pop(vm))));
+
+                if(IS_INT(peek(vm, 0))) push(vm, INT_VAL(-AS_INT(pop(vm))));
+                else push(vm, NUMBER_VAL(-AS_NUMBER(pop(vm))));
                 break;
             case OP_JUMP: {
                 uint16_t offset = READ_SHORT();
