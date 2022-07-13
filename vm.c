@@ -170,6 +170,10 @@ static bool invoke(VM* vm, ObjString* name, int argCount) {
         return invokeFromClass(vm, getObjClass(vm, receiver), name, argCount);
     }
 
+    if (IS_CLASS(receiver)) {
+        return invokeFromClass(vm, vm->classClass, name, argCount);
+    }
+
     if (!IS_INSTANCE(receiver)) {
         runtimeError(vm, "Only instances have methods.");
         return false;

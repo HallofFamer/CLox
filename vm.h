@@ -17,10 +17,12 @@ typedef struct {
 
 struct VM {
     ObjClass* objectClass;
+    ObjClass* classClass;
     ObjClass* nilClass;
     ObjClass* boolClass;
     ObjClass* numberClass;
     ObjClass* intClass;
+    ObjClass* floatClass;
 
     CallFrame frames[FRAMES_MAX];
     int frameCount;

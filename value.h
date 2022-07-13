@@ -25,7 +25,7 @@ typedef uint64_t Value;
 #define NIL_VAL          ((Value)(uint64_t)(QNAN | TAG_NIL))
 #define BOOL_VAL(b)      ((b) ? TRUE_VAL : FALSE_VAL)
 #define INT_VAL(i)       ((Value)(QNAN | ((uint64_t)(uint32_t)(i) << 3) | TAG_INT))
-#define FLOAT_VAL(d)     numToValue(num)
+#define FLOAT_VAL(f)     numToValue(f)
 #define NUMBER_VAL(num)  numToValue(num)
 #define OBJ_VAL(obj)     ((Value)(SIGN_BIT | QNAN | (uint64_t)(uintptr_t)(obj)))
 
@@ -71,32 +71,52 @@ static inline Value numToValue(double num) {
 typedef enum {
     VAL_BOOL,
     VAL_NIL,
-    VAL_NUMBER,
+    VAL_INT,
+    VAL_FLOAT,
     VAL_OBJ
 } ValueType;
 
 typedef struct {
     ValueType type;
     union {
-        bool boolean;
-        double number;
+        bool bval;
+        int ival;
+        double fval;
         Obj* obj;
     } as;
 } Value;
 
 #define IS_BOOL(value)    ((value).type == VAL_BOOL)
 #define IS_NIL(value)     ((value).type == VAL_NIL)
-#define IS_NUMBER(value)  ((value).type == VAL_NUMBER)
+#define IS_INT(value)     ((value).type == VAL_INT)
+#define IS_FLOAT(value)   ((value).type == VAL_FLOAT)
+#define IS_NUMBER(value)  valueIsNum(value)
 #define IS_OBJ(value)     ((value).type == VAL_OBJ)
 
 #define AS_OBJ(value)     ((value).as.obj)
-#define AS_BOOL(value)    ((value).as.boolean)
-#define AS_NUMBER(value)  ((value).as.number)
+#define AS_BOOL(value)    ((value).as.bval)
+#define AS_INT(value)     ((value).as.ival)
+#define AS_FLOAT(value)   ((value).as.fval)
+#define AS_NUMBER(value)  ((value).as.fval)
 
-#define BOOL_VAL(value)   ((Value){VAL_BOOL, {.boolean = value}})
-#define NIL_VAL           ((Value){VAL_NIL, {.number = 0}})
-#define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
+#define BOOL_VAL(b)       ((Value){VAL_BOOL, {.bval = b}})
+#define NIL_VAL           ((Value){VAL_NIL, {.ival = 0}})
+#define INT_VAL(i)        ((Value){VAL_INT, {.ival = i}})
+#define FLOAT_VAL(f)      ((Value){VAL_FLOAT, {.fval = f}})
+#define NUMBER_VAL(num)   ((Value){VAL_FLOAT, {.fval = num}})
 #define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})
+
+static inline bool valueIsInt(Value value) {
+    return value.type == VAL_INT;
+}
+
+static inline bool valueIsNum(Value value) {
+    return IS_FLOAT(value) || valueIsInt(value);
+}
+
+static inline double valueToFloat(Value value) {
+    return AS_FLOAT(value);
+}
 
 static inline double valueToNum(Value value) {
     return AS_NUMBER(value);

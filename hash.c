@@ -15,6 +15,8 @@ uint32_t hashObject(Obj* object) {
     switch (object->type) {
         case OBJ_STRING:
             return ((ObjString*)object)->hash;
+        case OBJ_CLASS:
+            return ((ObjClass*)object)->name->hash;
         default: {
             uint64_t hash = (uint64_t)(&object);
             return hash64To32Bits(hash);

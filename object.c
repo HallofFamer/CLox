@@ -149,7 +149,7 @@ ObjClass* getObjClass(VM* vm, Value value) {
     if (IS_BOOL(value)) return vm->boolClass;
     else if (IS_NIL(value)) return vm->nilClass;
     else if (IS_INT(value)) return vm->intClass;
-    else if (IS_NUMBER(value)) return vm->numberClass;
+    else if (IS_FLOAT(value)) return vm->floatClass;
     else if (IS_OBJ(value)) return AS_INSTANCE(value)->klass;
     else return NULL;
 }

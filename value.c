@@ -38,7 +38,7 @@ void printValue(Value value) {
     else if (IS_INT(value)) {
         printf("%d", AS_INT(value));
     }
-    else if (IS_NUMBER(value)) {
+    else if (IS_FLOAT(value)) {
         printf("%g", AS_NUMBER(value));
     }
     else if(IS_OBJ(value)) {
@@ -46,11 +46,10 @@ void printValue(Value value) {
     }
 #else
     switch (value.type) {
-        case VAL_BOOL:
-            printf(AS_BOOL(value) ? "true" : "false");
-            break;
+        case VAL_BOOL: printf(AS_BOOL(value) ? "true" : "false"); break;
         case VAL_NIL: printf("nil"); break;
-        case VAL_NUMBER: printf("%g", AS_NUMBER(value)); break;
+        case VAL_INT: printf("%d", AS_INT(value)); break;
+        case VAL_FLOAT: printf("%g", AS_FLOAT(value)); break;
         case VAL_OBJ: printObject(value); break;
     }
 #endif
@@ -65,11 +64,17 @@ bool valuesEqual(Value a, Value b) {
 #else
     if (a.type != b.type) return false;
     switch (a.type) {
-        case VAL_BOOL:   return AS_BOOL(a) == AS_BOOL(b);
-        case VAL_NIL:    return true;
-        case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
-        case VAL_OBJ:    return AS_OBJ(a) == AS_OBJ(b);
-        default:         return false;
+        case VAL_BOOL:   
+            return AS_BOOL(a) == AS_BOOL(b);
+        case VAL_NIL:    
+            return true;
+        case VAL_INT:
+        case VAL_FLOAT:  
+            return AS_NUMBER(a) == AS_NUMBER(b);
+        case VAL_OBJ:    
+            return AS_OBJ(a) == AS_OBJ(b);
+        default:         
+            return false;
     }
 #endif
 }

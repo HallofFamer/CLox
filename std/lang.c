@@ -45,6 +45,52 @@ LOX_METHOD(Bool, toString) {
     else RETURN_STRING("false", 5);
 }
 
+LOX_METHOD(Class, clone) {
+    assertArgCount(vm, "Class::clone()", 0, argCount);
+    RETURN_OBJ(AS_CLASS(receiver));
+}
+
+LOX_METHOD(Class, init) {
+    assertArgCount(vm, "Class::init(name, superclass)", 2, argCount);
+    assertArgIsString(vm, "Class::init(name, superclass)", args, 0);
+    assertArgIsClass(vm, "Class::init(name, superclass)", args, 1);
+    ObjClass* klass = newClass(vm, AS_STRING(args[0]));
+    bindSuperclass(vm, klass, AS_CLASS(args[1]));
+    RETURN_OBJ(klass);
+}
+
+LOX_METHOD(Class, name) {
+    assertArgCount(vm, "Class::name()", 0, argCount);
+    RETURN_OBJ(AS_CLASS(receiver)->name);
+}
+
+LOX_METHOD(Class, superclass) {
+    assertArgCount(vm, "Class::superclass()", 0, argCount);
+    ObjClass* klass = AS_CLASS(receiver);
+    if (klass->superclass == NULL) RETURN_NIL;
+    RETURN_OBJ(klass->superclass);
+}
+
+LOX_METHOD(Class, toString) {
+    assertArgCount(vm, "Class::toString()", 0, argCount);
+    RETURN_STRING_FMT("<class %s>", AS_CLASS(receiver)->name->chars);
+}
+
+LOX_METHOD(Float, clone) {
+    assertArgCount(vm, "Float::clone()", 0, argCount);
+    RETURN_NUMBER((double)receiver);
+}
+
+LOX_METHOD(Float, init) {
+    raiseError(vm, "Cannot instantiate from class Float.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(Float, toString) {
+    assertArgCount(vm, "Float::toString()", 0, argCount);
+    RETURN_STRING_FMT("%g", AS_FLOAT(receiver));
+}
+
 LOX_METHOD(Int, abs) {
     assertArgCount(vm, "Int::abs()", 0, argCount);
     RETURN_INT(abs(AS_INT(receiver)));
@@ -92,6 +138,11 @@ LOX_METHOD(Int, lcm) {
 LOX_METHOD(Int, toFloat) {
     assertArgCount(vm, "Int::toFloat()", 0, argCount);
     RETURN_NUMBER((double)AS_INT(receiver));
+}
+
+LOX_METHOD(Int, toString) {
+    assertArgCount(vm, "Int::toString()", 0, argCount);
+    RETURN_STRING_FMT("%d", AS_INT(receiver));
 }
 
 LOX_METHOD(Nil, clone) {
@@ -319,6 +370,14 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->objectClass, Object, instanceOf);
     DEF_METHOD(vm->objectClass, Object, memberOf);
     DEF_METHOD(vm->objectClass, Object, toString);
+
+    vm->classClass = defineNativeClass(vm, "Class");
+    bindSuperclass(vm, vm->classClass, vm->objectClass);
+    DEF_METHOD(vm->classClass, Class, clone);
+    DEF_METHOD(vm->classClass, Class, init);
+    DEF_METHOD(vm->classClass, Class, name);
+    DEF_METHOD(vm->classClass, Class, superclass);
+    DEF_METHOD(vm->classClass, Class, toString);
     
     vm->nilClass = defineNativeClass(vm, "Nil");
     bindSuperclass(vm, vm->nilClass, vm->objectClass);
@@ -370,4 +429,11 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->intClass, Int, isOdd);
     DEF_METHOD(vm->intClass, Int, lcm);
     DEF_METHOD(vm->intClass, Int, toFloat);
+    DEF_METHOD(vm->intClass, Int, toString);
+
+    vm->floatClass = defineNativeClass(vm, "Float");
+    bindSuperclass(vm, vm->floatClass, vm->numberClass);
+    DEF_METHOD(vm->floatClass, Float, clone);
+    DEF_METHOD(vm->floatClass, Float, init);
+    DEF_METHOD(vm->floatClass, Float, toString);
 }
