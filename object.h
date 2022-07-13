@@ -7,6 +7,7 @@
 #include "value.h"
 
 #define OBJ_TYPE(value)            (AS_OBJ(value)->type)
+#define OBJ_KLASS(value)           (AS_OBJ(value)->klass)
 
 #define IS_BOUND_METHOD(value)     isObjType(value, OBJ_BOUND_METHOD)
 #define IS_CLASS(value)            isObjType(value, OBJ_CLASS)
@@ -41,6 +42,7 @@ typedef enum {
 
 struct Obj {
     ObjType type;
+    ObjClass* klass;
     bool isMarked;
     struct Obj* next;
 };
@@ -97,7 +99,6 @@ struct ObjClass {
 
 typedef struct {
     Obj obj;
-    ObjClass* klass;
     Table fields;
 } ObjInstance;
 

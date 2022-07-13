@@ -23,6 +23,7 @@ struct VM {
     ObjClass* numberClass;
     ObjClass* intClass;
     ObjClass* floatClass;
+    ObjClass* stringClass;
 
     CallFrame frames[FRAMES_MAX];
     int frameCount;

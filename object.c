@@ -7,13 +7,14 @@
 #include "object.h"
 #include "vm.h"
 
-#define ALLOCATE_OBJ(type, objectType) (type*)allocateObject(vm, sizeof(type), objectType)
+#define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass)
 
-#define ALLOCATE_STRING(length) (ObjString*)allocateObject(vm, sizeof(ObjString) + length + 1, OBJ_STRING)
+#define ALLOCATE_STRING(length) (ObjString*)allocateObject(vm, sizeof(ObjString) + length + 1, OBJ_STRING, vm->stringClass)
 
-static Obj* allocateObject(VM* vm, size_t size, ObjType type) {
+static Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     Obj* object = (Obj*)reallocate(vm, NULL, 0, size);
     object->type = type;
+    object->klass = klass;
     object->isMarked = false;
   
     object->next = vm->objects;
@@ -27,14 +28,14 @@ static Obj* allocateObject(VM* vm, size_t size, ObjType type) {
 }
 
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
-    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD);
+    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD, NULL);
     bound->receiver = receiver;
     bound->method = method;
     return bound;
 }
 
 ObjClass* newClass(VM* vm, ObjString* name) {
-    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
+    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->classClass);
     klass->name = name;
     klass->superclass = NULL;
     klass->isNative = false;
@@ -48,7 +49,7 @@ ObjClosure* newClosure(VM* vm, ObjFunction* function) {
         upvalues[i] = NULL;
     }
 
-    ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+    ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE, NULL);
     closure->function = function;
     closure->upvalues = upvalues;
     closure->upvalueCount = function->upvalueCount;
@@ -56,7 +57,7 @@ ObjClosure* newClosure(VM* vm, ObjFunction* function) {
 }
 
 ObjFunction* newFunction(VM* vm) {
-    ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
+    ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION, NULL);
     function->arity = 0;
     function->upvalueCount = 0;
     function->name = NULL;
@@ -65,20 +66,19 @@ ObjFunction* newFunction(VM* vm) {
 }
 
 ObjInstance* newInstance(VM* vm, ObjClass* klass) {
-    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE);
-    instance->klass = klass;
+    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
     initTable(&instance->fields);
     return instance;
 }
 
 ObjNativeFunction* newNativeFunction(VM* vm, NativeFn function) {
-    ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION);
+    ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, NULL);
     nativeFunction->function = function;
     return nativeFunction;
 }
 
 ObjNativeMethod* newNativeMethod(VM* vm, NativeMethod method) {
-    ObjNativeMethod* nativeMethod = ALLOCATE_OBJ(ObjNativeMethod, OBJ_NATIVE_METHOD);
+    ObjNativeMethod* nativeMethod = ALLOCATE_OBJ(ObjNativeMethod, OBJ_NATIVE_METHOD, NULL);
     nativeMethod->method = method;
     return nativeMethod;
 }
@@ -138,7 +138,7 @@ ObjString* formattedLongString(VM* vm, const char* format, ...) {
 }
 
 ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
-    ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
+    ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE, NULL);
     upvalue->closed = NIL_VAL;
     upvalue->location = slot;
     upvalue->next = NULL;
@@ -150,7 +150,7 @@ ObjClass* getObjClass(VM* vm, Value value) {
     else if (IS_NIL(value)) return vm->nilClass;
     else if (IS_INT(value)) return vm->intClass;
     else if (IS_FLOAT(value)) return vm->floatClass;
-    else if (IS_OBJ(value)) return AS_INSTANCE(value)->klass;
+    else if (IS_OBJ(value)) return AS_OBJ(value)->klass;
     else return NULL;
 }
 
@@ -177,7 +177,7 @@ void printObject(Value value) {
             printFunction(AS_FUNCTION(value));
             break;
         case OBJ_INSTANCE:
-            printf("<object %s>", AS_INSTANCE(value)->klass->name->chars);
+            printf("<object %s>", AS_OBJ(value)->klass->name->chars);
             break;
         case OBJ_NATIVE_FUNCTION:
             printf("<native function>");

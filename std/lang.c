@@ -29,6 +29,35 @@ static int lcm(int self, int other) {
     return (self * other) / gcd(self, other);
 }
 
+static int searchString(ObjString* haystack, ObjString* needle, uint32_t start) {
+    if (needle->length == 0) return start;
+    if (start + needle->length > haystack->length || start >= haystack->length) return -1;
+    uint32_t shift[UINT8_MAX];
+    uint32_t needleEnd = needle->length - 1;
+
+    for (uint32_t index = 0; index < UINT8_MAX; index++){
+        shift[index] = needle->length;
+    }
+
+    for (uint32_t index = 0; index < needleEnd; index++){
+        char c = needle->chars[index];
+        shift[(uint8_t)c] = needleEnd - index;
+    }
+
+    char lastChar = needle->chars[needleEnd];
+    uint32_t range = haystack->length - needle->length;
+
+    for (uint32_t index = start; index <= range; ){
+        char c = haystack->chars[index + needleEnd];
+        if (lastChar == c && memcmp(haystack->chars + index, needle->chars, needleEnd) == 0){
+            return index;
+        }
+
+        index += shift[(uint8_t)c];
+    }
+    return -1;
+}
+
 LOX_METHOD(Bool, clone) {
     assertArgCount(vm, "Bool::clone()", 0, argCount);
     RETURN_BOOL(receiver);
@@ -47,7 +76,17 @@ LOX_METHOD(Bool, toString) {
 
 LOX_METHOD(Class, clone) {
     assertArgCount(vm, "Class::clone()", 0, argCount);
-    RETURN_OBJ(AS_CLASS(receiver));
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Class, getClass) {
+    assertArgCount(vm, "Class::getClass()", 0, argCount);
+    RETURN_OBJ(vm->classClass);
+}
+
+LOX_METHOD(Class, getClassName) {
+    assertArgCount(vm, "Class::getClassName()", 0, argCount);
+    RETURN_OBJ(vm->classClass->name);
 }
 
 LOX_METHOD(Class, init) {
@@ -57,6 +96,22 @@ LOX_METHOD(Class, init) {
     ObjClass* klass = newClass(vm, AS_STRING(args[0]));
     bindSuperclass(vm, klass, AS_CLASS(args[1]));
     RETURN_OBJ(klass);
+}
+
+LOX_METHOD(Class, instanceOf) {
+    assertArgCount(vm, "Class::instanceOf(class)", 1, argCount);
+    if (!IS_CLASS(args[0])) RETURN_FALSE;
+    ObjClass* klass = AS_CLASS(args[0]);
+    if (klass == vm->classClass) RETURN_TRUE;
+    else RETURN_FALSE;
+}
+
+LOX_METHOD(Class, memberOf) {
+    assertArgCount(vm, "Class::memberOf(class)", 1, argCount);
+    if (!IS_CLASS(args[0])) RETURN_FALSE;
+    ObjClass* klass = AS_CLASS(args[0]);
+    if (klass == vm->classClass) RETURN_TRUE;
+    else RETURN_FALSE;
 }
 
 LOX_METHOD(Class, name) {
@@ -297,7 +352,7 @@ LOX_METHOD(Number, toString) {
 LOX_METHOD(Object, clone) {
     assertArgCount(vm, "Object::clone()", 0, argCount);
     ObjInstance* thisObject = AS_INSTANCE(receiver);
-    ObjInstance* thatObject = newInstance(vm, thisObject->klass);
+    ObjInstance* thatObject = newInstance(vm, OBJ_KLASS(receiver));
     tableAddAll(vm, &thisObject->fields, &thatObject->fields);
     RETURN_OBJ(thatObject);
 }
@@ -356,7 +411,44 @@ LOX_METHOD(Object, memberOf) {
 
 LOX_METHOD(Object, toString) {
     assertArgCount(vm, "Object::toString()", 0, argCount);
-    RETURN_STRING_FMT("<object %s>", AS_INSTANCE(receiver)->klass->name->chars);
+    RETURN_STRING_FMT("<object %s>", AS_OBJ(receiver)->klass->name->chars);
+}
+
+LOX_METHOD(String, clone) {
+    assertArgCount(vm, "String::clone()", 0, argCount);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(String, contains) {
+    assertArgCount(vm, "String::contains(chars)", 1, argCount);
+    assertArgIsString(vm, "String::contains(chars)", args, 0);
+    ObjString* haystack = AS_STRING(receiver);
+    ObjString* needle = AS_STRING(args[0]);
+    RETURN_BOOL(searchString(haystack, needle, 0) != -1);
+}
+
+LOX_METHOD(String, indexOf) {
+    assertArgCount(vm, "String::indexOf(chars)", 1, argCount);
+    assertArgIsString(vm, "String::indexOf(chars)", args, 0);
+    ObjString* haystack = AS_STRING(receiver);
+    ObjString* needle = AS_STRING(args[0]);
+    RETURN_INT(searchString(haystack, needle, 0));
+}
+
+LOX_METHOD(String, init) {
+    assertArgCount(vm, "String::init(chars)", 1, argCount);
+    assertArgIsString(vm, "String::init(chars)", args, 0);
+    RETURN_OBJ(args[0]);
+}
+
+LOX_METHOD(String, length) {
+    assertArgCount(vm, "String::length()", 0, argCount);
+    RETURN_INT(AS_STRING(receiver)->length);
+}
+
+LOX_METHOD(String, toString) {
+    assertArgCount(vm, "String::toString()", 0, argCount);
+    RETURN_OBJ(receiver);
 }
 
 void registerLangPackage(VM* vm){
@@ -374,7 +466,11 @@ void registerLangPackage(VM* vm){
     vm->classClass = defineNativeClass(vm, "Class");
     bindSuperclass(vm, vm->classClass, vm->objectClass);
     DEF_METHOD(vm->classClass, Class, clone);
+    DEF_METHOD(vm->classClass, Class, getClass);
+    DEF_METHOD(vm->classClass, Class, getClassName);
     DEF_METHOD(vm->classClass, Class, init);
+    DEF_METHOD(vm->classClass, Class, instanceOf);
+    DEF_METHOD(vm->classClass, Class, memberOf);
     DEF_METHOD(vm->classClass, Class, name);
     DEF_METHOD(vm->classClass, Class, superclass);
     DEF_METHOD(vm->classClass, Class, toString);
@@ -436,4 +532,13 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->floatClass, Float, clone);
     DEF_METHOD(vm->floatClass, Float, init);
     DEF_METHOD(vm->floatClass, Float, toString);
+
+    vm->stringClass = defineNativeClass(vm, "String");
+    bindSuperclass(vm, vm->stringClass, vm->objectClass);
+    DEF_METHOD(vm->stringClass, String, clone);
+    DEF_METHOD(vm->stringClass, String, contains);
+    DEF_METHOD(vm->stringClass, String, indexOf);
+    DEF_METHOD(vm->stringClass, String, init);
+    DEF_METHOD(vm->stringClass, String, length);
+    DEF_METHOD(vm->stringClass, String, toString);
 }

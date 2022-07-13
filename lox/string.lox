@@ -1,8 +1,11 @@
-var hello = "Hello ";
-var world = "World ";
-
-var start = clock();
-for(var i = 0; i < 1000; i = i + 1){ 
-    println(hello + world + i.toString());
-}
-println(clock() - start);
+var str = "Hello World";
+print("printing string 'Hello World': ");
+println(str);
+print("Class of string is: ");
+println(str.getClassName());
+print("length of string is: ");
+println(str.length());
+print("String contains 'hello': ");
+println(str.contains("Hello"));
+print("String index for 'Wo': ");
+println(str.indexOf("Wo"));

@@ -32,7 +32,7 @@ typedef uint64_t Value;
 #define IS_NIL(value)    ((value) == NIL_VAL)
 #define IS_BOOL(value)   (((value) | 1) == TRUE_VAL)
 #define IS_INT(value)    valueIsInt(value)
-#define IS_FLOAT(value) (((value) & QNAN) != QNAN)
+#define IS_FLOAT(value)  (((value) & QNAN) != QNAN)
 #define IS_NUMBER(value) valueIsNum(value)
 #define IS_OBJ(value)    (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
 
