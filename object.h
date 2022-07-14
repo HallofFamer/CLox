@@ -1,3 +1,4 @@
+#pragma once
 #ifndef clox_object_h
 #define clox_object_h
 
@@ -108,6 +109,7 @@ typedef struct {
     ObjClosure* method;
 } ObjBoundMethod;
 
+Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method);
 ObjClass* newClass(VM* vm, ObjString* name);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
@@ -115,10 +117,6 @@ ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjNativeFunction* newNativeFunction(VM* vm, NativeFn function);
 ObjNativeMethod* newNativeMethod(VM* vm, NativeMethod method);
-ObjString* takeString(VM* vm, char* chars, int length);
-ObjString* copyString(VM* vm, const char* chars, int length);
-ObjString* formattedString(VM* vm, const char* format, ...);
-ObjString* formattedLongString(VM* vm, const char* format, ...);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 ObjClass* getObjClass(VM* vm, Value value);
 void printObject(Value value);

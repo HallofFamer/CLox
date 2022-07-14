@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "memory.h"
 #include "native.h"
+#include "string.h"
 #include "vm.h"
 #include "std/lang.h"
 
@@ -42,7 +43,7 @@ void initVM(VM* vm) {
     resetStack(vm);
     vm->objects = NULL;
     vm->bytesAllocated = 0;
-    vm->nextGC = 1024 * 1024;
+    vm->nextGC = (size_t)1024 * 1024;
 
     vm->grayCount = 0;
     vm->grayCapacity = 0;
@@ -135,7 +136,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
             case OBJ_NATIVE_FUNCTION: {
                 NativeFn native = AS_NATIVE_FUNCTION(callee);
                 Value result = native(vm, argCount, vm->stackTop - argCount);
-                vm->stackTop -= argCount + 1;
+                vm->stackTop -= (size_t)argCount + 1;
                 push(vm, result);
                 return true;
             }

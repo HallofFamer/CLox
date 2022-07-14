@@ -7,6 +7,7 @@
 #include "../hash.h"
 #include "../native.h"
 #include "../object.h"
+#include "../string.h"
 #include "../vm.h"
 
 static int factorial(int self) {
@@ -27,35 +28,6 @@ static int gcd(int self, int other) {
 
 static int lcm(int self, int other) {
     return (self * other) / gcd(self, other);
-}
-
-static int searchString(ObjString* haystack, ObjString* needle, uint32_t start) {
-    if (needle->length == 0) return start;
-    if (start + needle->length > haystack->length || start >= haystack->length) return -1;
-    uint32_t shift[UINT8_MAX];
-    uint32_t needleEnd = needle->length - 1;
-
-    for (uint32_t index = 0; index < UINT8_MAX; index++){
-        shift[index] = needle->length;
-    }
-
-    for (uint32_t index = 0; index < needleEnd; index++){
-        char c = needle->chars[index];
-        shift[(uint8_t)c] = needleEnd - index;
-    }
-
-    char lastChar = needle->chars[needleEnd];
-    uint32_t range = haystack->length - needle->length;
-
-    for (uint32_t index = start; index <= range; ){
-        char c = haystack->chars[index + needleEnd];
-        if (lastChar == c && memcmp(haystack->chars + index, needle->chars, needleEnd) == 0){
-            return index;
-        }
-
-        index += shift[(uint8_t)c];
-    }
-    return -1;
 }
 
 LOX_METHOD(Bool, clone) {
@@ -414,6 +386,11 @@ LOX_METHOD(Object, toString) {
     RETURN_STRING_FMT("<object %s>", AS_OBJ(receiver)->klass->name->chars);
 }
 
+LOX_METHOD(String, capitalize) {
+    assertArgCount(vm, "String::capitalize()", 0, argCount);
+    RETURN_OBJ(capitalizeString(vm, AS_STRING(receiver)));
+}
+
 LOX_METHOD(String, clone) {
     assertArgCount(vm, "String::clone()", 0, argCount);
     RETURN_OBJ(receiver);
@@ -424,7 +401,35 @@ LOX_METHOD(String, contains) {
     assertArgIsString(vm, "String::contains(chars)", args, 0);
     ObjString* haystack = AS_STRING(receiver);
     ObjString* needle = AS_STRING(args[0]);
-    RETURN_BOOL(searchString(haystack, needle, 0) != -1);
+    RETURN_BOOL(searchString(vm, haystack, needle, 0) != -1);
+}
+
+LOX_METHOD(String, decapitalize) {
+    assertArgCount(vm, "String::decapitalize()", 0, argCount);
+    RETURN_OBJ(decapitalizeString(vm, AS_STRING(receiver)));
+}
+
+LOX_METHOD(String, endsWith) {
+    assertArgCount(vm, "String::endsWith(chars)", 1, argCount);
+    assertArgIsString(vm, "String::endsWith(chars)", args, 0);
+    ObjString* haystack = AS_STRING(receiver);
+    ObjString* needle = AS_STRING(args[0]);
+    if (needle->length > haystack->length) RETURN_FALSE;
+    RETURN_BOOL(memcmp(haystack->chars + haystack->length - needle->length, needle->chars, needle->length) == 0);
+}
+
+LOX_METHOD(String, getChar) {
+    assertArgCount(vm, "String::getChar(index)", 1, argCount);
+    assertArgIsInt(vm, "String::getChar(index)", args, 0);
+    
+    ObjString* self = AS_STRING(receiver);
+    int index = AS_INT(args[0]);
+    assertArgWithinRange(vm, "String::getChar(index)", index, 0, self->length, 0);
+
+    char chars[2];
+    chars[0] = self->chars[index];
+    chars[1] = '\n';
+    RETURN_STRING(chars, 1);
 }
 
 LOX_METHOD(String, indexOf) {
@@ -432,7 +437,7 @@ LOX_METHOD(String, indexOf) {
     assertArgIsString(vm, "String::indexOf(chars)", args, 0);
     ObjString* haystack = AS_STRING(receiver);
     ObjString* needle = AS_STRING(args[0]);
-    RETURN_INT(searchString(haystack, needle, 0));
+    RETURN_INT(searchString(vm, haystack, needle, 0));
 }
 
 LOX_METHOD(String, init) {
@@ -444,6 +449,36 @@ LOX_METHOD(String, init) {
 LOX_METHOD(String, length) {
     assertArgCount(vm, "String::length()", 0, argCount);
     RETURN_INT(AS_STRING(receiver)->length);
+}
+
+LOX_METHOD(String, replace) {
+    assertArgCount(vm, "String::replace(target, replacement)", 2, argCount);
+    assertArgIsString(vm, "String::replace(target, replacement)", args, 0);
+    assertArgIsString(vm, "String::replace(target, replacement)", args, 1);
+    RETURN_OBJ(replaceString(vm, AS_STRING(receiver), AS_STRING(args[0]), AS_STRING(args[1])));
+}
+
+LOX_METHOD(String, reverse) {
+    assertArgCount(vm, "String::reverse()", 0, argCount);
+    ObjString* self = AS_STRING(receiver);
+    if (self->length <= 1) RETURN_OBJ(receiver);
+    RETURN_STRING(_strrev(self->chars), self->length);
+}
+
+LOX_METHOD(String, startsWith) {
+    assertArgCount(vm, "String::startsWith(chars)", 1, argCount);
+    assertArgIsString(vm, "String::startsWith(chars)", args, 0);
+    ObjString* haystack = AS_STRING(receiver);
+    ObjString* needle = AS_STRING(args[0]);
+    if (needle->length > haystack->length) RETURN_FALSE;
+    RETURN_BOOL(memcmp(haystack->chars, needle->chars, needle->length) == 0);
+}
+
+LOX_METHOD(String, subString) {
+    assertArgCount(vm, "String::subString(from, to)", 2, argCount);
+    assertArgIsInt(vm, "String::subString(from, to)", args, 0);
+    assertArgIsInt(vm, "String::subString(from, to)", args, 1);
+    RETURN_OBJ(subString(vm, AS_STRING(receiver), AS_INT(args[0]), AS_INT(args[1])));
 }
 
 LOX_METHOD(String, toString) {
@@ -535,10 +570,18 @@ void registerLangPackage(VM* vm){
 
     vm->stringClass = defineNativeClass(vm, "String");
     bindSuperclass(vm, vm->stringClass, vm->objectClass);
+    DEF_METHOD(vm->stringClass, String, capitalize);
     DEF_METHOD(vm->stringClass, String, clone);
     DEF_METHOD(vm->stringClass, String, contains);
+    DEF_METHOD(vm->stringClass, String, decapitalize);
+    DEF_METHOD(vm->stringClass, String, endsWith);
+    DEF_METHOD(vm->stringClass, String, getChar);
     DEF_METHOD(vm->stringClass, String, indexOf);
     DEF_METHOD(vm->stringClass, String, init);
     DEF_METHOD(vm->stringClass, String, length);
+    DEF_METHOD(vm->stringClass, String, replace);
+    DEF_METHOD(vm->stringClass, String, reverse);
+    DEF_METHOD(vm->stringClass, String, startsWith);
+    DEF_METHOD(vm->stringClass, String, subString);
     DEF_METHOD(vm->stringClass, String, toString);
 }

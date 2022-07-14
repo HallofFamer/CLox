@@ -152,6 +152,7 @@
     <ClCompile Include="object.c" />
     <ClCompile Include="scanner.c" />
     <ClCompile Include="std\lang.c" />
+    <ClCompile Include="string.c" />
     <ClCompile Include="table.c" />
     <ClCompile Include="value.c" />
     <ClCompile Include="vm.c" />
@@ -169,6 +170,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="scanner.h" />
     <ClInclude Include="std\lang.h" />
+    <ClInclude Include="string.h" />
     <ClInclude Include="table.h" />
     <ClInclude Include="value.h" />
     <ClInclude Include="vm.h" />

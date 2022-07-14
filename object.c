@@ -9,9 +9,7 @@
 
 #define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass)
 
-#define ALLOCATE_STRING(length) (ObjString*)allocateObject(vm, sizeof(ObjString) + length + 1, OBJ_STRING, vm->stringClass)
-
-static Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
+Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     Obj* object = (Obj*)reallocate(vm, NULL, 0, size);
     object->type = type;
     object->klass = klass;
@@ -81,60 +79,6 @@ ObjNativeMethod* newNativeMethod(VM* vm, NativeMethod method) {
     ObjNativeMethod* nativeMethod = ALLOCATE_OBJ(ObjNativeMethod, OBJ_NATIVE_METHOD, NULL);
     nativeMethod->method = method;
     return nativeMethod;
-}
-
-static ObjString* allocateString(VM* vm, char* chars, int length, uint32_t hash) {
-    ObjString* string = ALLOCATE_STRING(length);
-    string->length = length;
-    string->hash = hash;
-
-    push(vm, OBJ_VAL(string));
-    memcpy(string->chars, chars, length);
-    string->chars[length] = '\0';
-    tableSet(vm, &vm->strings, string, NIL_VAL);
-    pop(vm);
-    return string;
-}
-
-ObjString* takeString(VM* vm, char* chars, int length) {
-    uint32_t hash = hashString(chars, length);
-    ObjString* interned = tableFindString(&vm->strings, chars, length, hash);
-    if (interned != NULL) {
-        FREE_ARRAY(char, chars, length + 1);
-        return interned;
-    }
-    ObjString* string = allocateString(vm, chars, length, hash);
-    FREE_ARRAY(char, chars, length + 1);
-    return string;
-}
-
-ObjString* copyString(VM* vm, const char* chars, int length) {
-    uint32_t hash = hashString(chars, length);
-    ObjString* interned = tableFindString(&vm->strings, chars, length, hash);
-    if (interned != NULL) return interned;
-
-    char* heapChars = ALLOCATE(char, length + 1);
-    memcpy(heapChars, chars, length);
-    heapChars[length] = '\0';
-    return allocateString(vm, heapChars, length, hash);
-}
-
-ObjString* formattedString(VM* vm, const char* format, ...) {
-    char chars[UINT8_MAX];
-    va_list args;
-    va_start(args, format);
-    int length = vsnprintf(chars, UINT8_MAX, format, args);
-    va_end(args);
-    return copyString(vm, chars, length);
-}
-
-ObjString* formattedLongString(VM* vm, const char* format, ...) {
-    char chars[UINT16_MAX];
-    va_list args;
-    va_start(args, format);
-    int length = vsnprintf(chars, UINT16_MAX, format, args);
-    va_end(args);
-    return copyString(vm, chars, length);
 }
 
 ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
