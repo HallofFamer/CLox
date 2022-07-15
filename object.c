@@ -47,7 +47,7 @@ ObjClosure* newClosure(VM* vm, ObjFunction* function) {
         upvalues[i] = NULL;
     }
 
-    ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE, NULL);
+    ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE, vm->functionClass);
     closure->function = function;
     closure->upvalues = upvalues;
     closure->upvalueCount = function->upvalueCount;

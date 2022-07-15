@@ -118,6 +118,37 @@ LOX_METHOD(Float, toString) {
     RETURN_STRING_FMT("%g", AS_FLOAT(receiver));
 }
 
+LOX_METHOD(Function, arity) {
+    assertArgCount(vm, "Function::arity()", 0, argCount);
+    RETURN_INT(AS_CLOSURE(receiver)->function->arity);
+}
+
+LOX_METHOD(Function, clone) {
+    assertArgCount(vm, "Function::clone()", 0, argCount);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Function, init) {
+    raiseError(vm, "Cannot instantiate from class Function.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(Function, name) {
+    assertArgCount(vm, "Function::name()", 0, argCount);
+    ObjClosure* closure = AS_CLOSURE(receiver);
+    RETURN_OBJ(closure->function->name);
+}
+
+LOX_METHOD(Function, toString) {
+    assertArgCount(vm, "Function::toString()", 0, argCount);
+    RETURN_STRING_FMT("<fn %s>", AS_CLOSURE(receiver)->function->name->chars);
+}
+
+LOX_METHOD(Function, upvalueCount) {
+    assertArgCount(vm, "Function::upvalueCount()", 0, argCount);
+    RETURN_INT(AS_CLOSURE(receiver)->upvalueCount);
+}
+
 LOX_METHOD(Int, abs) {
     assertArgCount(vm, "Int::abs()", 0, argCount);
     RETURN_INT(abs(AS_INT(receiver)));
@@ -481,9 +512,24 @@ LOX_METHOD(String, subString) {
     RETURN_OBJ(subString(vm, AS_STRING(receiver), AS_INT(args[0]), AS_INT(args[1])));
 }
 
+LOX_METHOD(String, toLowercase) {
+    assertArgCount(vm, "String::toLowercase()", 0, argCount);
+    RETURN_OBJ(toLowerString(vm, AS_STRING(receiver)));
+}
+
 LOX_METHOD(String, toString) {
     assertArgCount(vm, "String::toString()", 0, argCount);
     RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(String, toUppercase) {
+    assertArgCount(vm, "String::toLowercase()", 0, argCount);
+    RETURN_OBJ(toUpperString(vm, AS_STRING(receiver)));
+}
+
+LOX_METHOD(String, trim) {
+    assertArgCount(vm, "String::trim()", 0, argCount);
+    RETURN_OBJ(trimString(vm, AS_STRING(receiver)));
 }
 
 void registerLangPackage(VM* vm){
@@ -509,7 +555,7 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->classClass, Class, name);
     DEF_METHOD(vm->classClass, Class, superclass);
     DEF_METHOD(vm->classClass, Class, toString);
-    
+
     vm->nilClass = defineNativeClass(vm, "Nil");
     bindSuperclass(vm, vm->nilClass, vm->objectClass);
     DEF_METHOD(vm->nilClass, Nil, clone);
@@ -583,5 +629,17 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->stringClass, String, reverse);
     DEF_METHOD(vm->stringClass, String, startsWith);
     DEF_METHOD(vm->stringClass, String, subString);
+    DEF_METHOD(vm->stringClass, String, toLowercase);
     DEF_METHOD(vm->stringClass, String, toString);
+    DEF_METHOD(vm->stringClass, String, toUppercase);
+    DEF_METHOD(vm->stringClass, String, trim);
+
+    vm->functionClass = defineNativeClass(vm, "Function");
+    bindSuperclass(vm, vm->functionClass, vm->objectClass);
+    DEF_METHOD(vm->functionClass, Function, arity);
+    DEF_METHOD(vm->functionClass, Function, clone);
+    DEF_METHOD(vm->functionClass, Function, init);
+    DEF_METHOD(vm->functionClass, Function, name);
+    DEF_METHOD(vm->functionClass, Function, toString);
+    DEF_METHOD(vm->functionClass, Function, upvalueCount);
 }

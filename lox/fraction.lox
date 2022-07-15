@@ -1,0 +1,29 @@
+class Fraction {
+
+    init(numerator, denominator){
+        if(!numerator.instanceOf(Int) or !numerator.instanceOf(Int)){
+            error("Numerator and Denominator must be integers.");
+        }
+        this.numerator = numerator;
+        this.denominator = denominator;
+    }
+
+    reduce(){
+        var gcd = this.numerator.gcd(this.denominator);
+        println(gcd);
+        var numerator = this.numerator / gcd;
+        var denominator = this.denominator / gcd;
+        return Fraction(numerator.toInt(), denominator.toInt());
+    }
+
+    toString(){
+        return this.numerator.toString() + "/" + this.denominator.toString();
+    }
+}
+
+println("Created class Fraction...");
+var frac = Fraction(3, 6);
+var frac2 = frac.reduce();
+println(frac.toString());
+println(frac2.toString());
+println(frac == frac2);

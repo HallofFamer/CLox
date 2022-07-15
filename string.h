@@ -16,5 +16,8 @@ ObjString* capitalizeString(VM* vm, ObjString* string);
 ObjString* decapitalizeString(VM* vm, ObjString* string);
 ObjString* replaceString(VM* vm, ObjString* original, ObjString* target, ObjString* replace);
 ObjString* subString(VM* vm, ObjString* original, int fromIndex, int toIndex);
+ObjString* toLowerString(VM* vm, ObjString* string);
+ObjString* toUpperString(VM* vm, ObjString* string);
+ObjString* trimString(VM* vm, ObjString* string);
 
 #endif // !clox_string_h

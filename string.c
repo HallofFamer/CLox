@@ -159,3 +159,49 @@ ObjString* subString(VM* vm, ObjString* original, int fromIndex, int toIndex) {
     heapChars[newLength] = '\n';
     return takeString(vm, heapChars, (int)newLength);
 }
+
+ObjString* toLowerString(VM* vm, ObjString* string) {
+    if (string->length == 0) return string;
+    char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
+
+    for (int offset = 0; offset < string->length; offset++) {
+        heapChars[offset] = (char)tolower(string->chars[offset]);
+    }
+    heapChars[string->length] = '\0';
+    return takeString(vm, heapChars, (int)string->length);
+}
+
+ObjString* toUpperString(VM* vm, ObjString* string) {
+    if (string->length == 0) return string;
+    char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
+
+    for (int offset = 0; offset < string->length; offset++) {
+        heapChars[offset] = (char)toupper(string->chars[offset]);
+    }
+    heapChars[string->length] = '\0';
+    return takeString(vm, heapChars, (int)string->length);
+}
+
+ObjString* trimString(VM* vm, ObjString* string) {
+    int ltLen = 0, rtLen = 0;
+
+    for (int i = 0; i < string->length; i++) {
+        char c = string->chars[i];
+        if (c != ' ' && c != '\t' && c != '\n') break;
+        ltLen++;
+    }
+
+    for (int i = string->length - 1; i >= 0; i--) {
+        char c = string->chars[i];
+        if (c != ' ' && c != '\t' && c != '\n') break;
+        rtLen++;
+    }
+
+    int newLength = string->length - ltLen - rtLen + 1;
+    char* heapChars = ALLOCATE(char, (size_t)newLength + 1);
+    for (int i = 0; i < newLength; i++) {
+        heapChars[i] = string->chars[i + ltLen];
+    }
+    heapChars[newLength] = '\n';
+    return takeString(vm, heapChars, (int)newLength);
+}

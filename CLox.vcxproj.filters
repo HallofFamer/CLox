@@ -161,5 +161,8 @@
     <None Include="lox\lang.lox">
       <Filter>Lox Files</Filter>
     </None>
+    <None Include="lox\fraction.lox">
+      <Filter>Lox Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

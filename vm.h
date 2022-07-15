@@ -24,6 +24,7 @@ struct VM {
     ObjClass* intClass;
     ObjClass* floatClass;
     ObjClass* stringClass;
+    ObjClass* functionClass;
 
     CallFrame frames[FRAMES_MAX];
     int frameCount;

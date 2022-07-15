@@ -179,6 +179,7 @@
     <None Include="lox\benchmark.lox" />
     <None Include="lox\closure.lox" />
     <None Include="lox\fibonacci.lox" />
+    <None Include="lox\fraction.lox" />
     <None Include="lox\initializer.lox" />
     <None Include="lox\invoke.lox" />
     <None Include="lox\lang.lox" />

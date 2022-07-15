@@ -16,3 +16,6 @@ fun outer() {
 var mid = outer();
 var in = mid();
 in();
+
+print("Class of function 'in()' is: ");
+println(in.getClassName());
