@@ -54,8 +54,8 @@ void initVM(VM* vm) {
     vm->initString = NULL;
     vm->initString = copyString(vm, "init", 4);
 
-    registerNativeFunctions(vm);
     registerLangPackage(vm);
+    registerNativeFunctions(vm);
 }
 
 void freeVM(VM* vm) {
@@ -105,7 +105,9 @@ static bool callNative(VM* vm, NativeMethod method, int argCount) {
 }
 
 static bool callMethod(VM* vm, Value method, int argCount) {
-    if (IS_NATIVE_METHOD(method)) return callNative(vm, AS_NATIVE_METHOD(method), argCount);
+    if (IS_NATIVE_METHOD(method)) {
+        return callNative(vm, AS_NATIVE_METHOD(method)->method, argCount);
+    }
     else return call(vm, AS_CLOSURE(method), argCount);
 }
 
@@ -134,14 +136,14 @@ static bool callValue(VM* vm, Value callee, int argCount) {
             case OBJ_CLOSURE:
                 return call(vm, AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE_FUNCTION: {
-                NativeFn native = AS_NATIVE_FUNCTION(callee);
+                NativeFn native = AS_NATIVE_FUNCTION(callee)->function;
                 Value result = native(vm, argCount, vm->stackTop - argCount);
                 vm->stackTop -= (size_t)argCount + 1;
                 push(vm, result);
                 return true;
             }
             case OBJ_NATIVE_METHOD: {
-                NativeMethod method = AS_NATIVE_METHOD(callee);
+                NativeMethod method = AS_NATIVE_METHOD(callee)->method;
                 Value result = method(vm, vm->stackTop[-argCount - 1], argCount, vm->stackTop - argCount);
                 vm->stackTop -= argCount + 1;
                 push(vm, result);

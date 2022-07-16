@@ -53,28 +53,29 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     return nativeClass;
 }
 
-void defineNativeFunction(VM* vm, const char* name, NativeFn function) {
-    push(vm, OBJ_VAL(copyString(vm, name, (int)strlen(name))));
-    push(vm, OBJ_VAL(newNativeFunction(vm, function)));
+void defineNativeFunction(VM* vm, const char* name, int arity, NativeFn function) {
+    ObjString* functionName = copyString(vm, name, (int)strlen(name));
+    push(vm, OBJ_VAL(functionName));
+    push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, function)));
     tableSet(vm, &vm->globals, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
 }
 
-void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, NativeMethod method) {
-    ObjNativeMethod* nativeMethod = newNativeMethod(vm, method);
-    push(vm, OBJ_VAL(nativeMethod));
+void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, NativeMethod method) {
     ObjString* methodName = copyString(vm, name, (int)strlen(name));
     push(vm, OBJ_VAL(methodName));
+    ObjNativeMethod* nativeMethod = newNativeMethod(vm, klass, methodName, arity, method);
+    push(vm, OBJ_VAL(nativeMethod));
     tableSet(vm, &klass->methods, methodName, OBJ_VAL(nativeMethod));
     pop(vm);
     pop(vm);
 }
 
 void registerNativeFunctions(VM* vm){
-    DEF_FUNCTION(clock);
-    DEF_FUNCTION(error);
-    DEF_FUNCTION(gc);
-    DEF_FUNCTION(print);
-    DEF_FUNCTION(println);
+    DEF_FUNCTION(clock, 0);
+    DEF_FUNCTION(error, 1);
+    DEF_FUNCTION(gc, 0);
+    DEF_FUNCTION(print, 1);
+    DEF_FUNCTION(println, 1);
 }

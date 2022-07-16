@@ -1,9 +1,11 @@
+#pragma once
 #ifndef clox_memory_h
 #define clox_memory_h
 
 #include "common.h"
 #include "object.h"
 #include "value.h"
+#include "vm.h"
 
 #define ALLOCATE(type, count) \
     (type*)reallocate(vm, NULL, 0, sizeof(type) * (count))

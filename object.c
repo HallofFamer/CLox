@@ -26,7 +26,7 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
 }
 
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
-    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD, NULL);
+    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD, vm->methodClass);
     bound->receiver = receiver;
     bound->method = method;
     return bound;
@@ -69,14 +69,19 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     return instance;
 }
 
-ObjNativeFunction* newNativeFunction(VM* vm, NativeFn function) {
-    ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, NULL);
+ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFn function) {
+    ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, vm->functionClass);
+    nativeFunction->name = name;
+    nativeFunction->arity = arity;
     nativeFunction->function = function;
     return nativeFunction;
 }
 
-ObjNativeMethod* newNativeMethod(VM* vm, NativeMethod method) {
+ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method) {
     ObjNativeMethod* nativeMethod = ALLOCATE_OBJ(ObjNativeMethod, OBJ_NATIVE_METHOD, NULL);
+    nativeMethod->klass = klass;
+    nativeMethod->name = name;
+    nativeMethod->arity = arity;
     nativeMethod->method = method;
     return nativeMethod;
 }

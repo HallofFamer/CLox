@@ -1,3 +1,4 @@
+#pragma once
 #ifndef clox_vm_h
 #define clox_vm_h
 
@@ -25,6 +26,7 @@ struct VM {
     ObjClass* floatClass;
     ObjClass* stringClass;
     ObjClass* functionClass;
+    ObjClass* methodClass;
 
     CallFrame frames[FRAMES_MAX];
     int frameCount;

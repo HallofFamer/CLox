@@ -2,7 +2,6 @@
 
 #include "compiler.h"
 #include "memory.h"
-#include "vm.h"
 
 #ifdef DEBUG_LOG_GC
 #include <stdio.h>
@@ -107,8 +106,17 @@ static void blackenObject(VM* vm, Obj* object) {
         case OBJ_UPVALUE:
             markValue(vm, ((ObjUpvalue*)object)->closed);
             break;
-        case OBJ_NATIVE_FUNCTION:
-        case OBJ_NATIVE_METHOD:
+        case OBJ_NATIVE_FUNCTION: {
+            ObjNativeFunction* nativeFunction = (ObjNativeFunction*)object;
+            markObject(vm, (Obj*)nativeFunction->name);
+            break;
+        }
+        case OBJ_NATIVE_METHOD: {
+            ObjNativeMethod* nativeMethod = (ObjNativeMethod*)object;
+            markObject(vm, (Obj*)nativeMethod->klass);
+            markObject(vm, (Obj*)nativeMethod->name);
+            break;
+        }
         case OBJ_STRING:
             break;
     }

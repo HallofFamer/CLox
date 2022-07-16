@@ -24,8 +24,8 @@
 #define AS_CLOSURE(value)          ((ObjClosure*)AS_OBJ(value))
 #define AS_FUNCTION(value)         ((ObjFunction*)AS_OBJ(value))
 #define AS_INSTANCE(value)         ((ObjInstance*)AS_OBJ(value))
-#define AS_NATIVE_FUNCTION(value)  (((ObjNativeFunction*)AS_OBJ(value))->function)
-#define AS_NATIVE_METHOD(value)    (((ObjNativeMethod*)AS_OBJ(value))->method)
+#define AS_NATIVE_FUNCTION(value)  ((ObjNativeFunction*)AS_OBJ(value))
+#define AS_NATIVE_METHOD(value)    ((ObjNativeMethod*)AS_OBJ(value))
 #define AS_STRING(value)           ((ObjString*)AS_OBJ(value))
 #define AS_CSTRING(value)          (((ObjString*)AS_OBJ(value))->chars)
 
@@ -61,11 +61,16 @@ typedef Value (*NativeMethod)(VM* vm, Value receiver, int argCount, Value* args)
 
 typedef struct {
     Obj obj;
+    ObjString* name;
+    int arity;
     NativeFn function;
 } ObjNativeFunction;
 
 typedef struct {
     Obj obj;
+    ObjClass* klass;
+    ObjString* name;
+    int arity;
     NativeMethod method;
 } ObjNativeMethod;
 
@@ -115,8 +120,8 @@ ObjClass* newClass(VM* vm, ObjString* name);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
-ObjNativeFunction* newNativeFunction(VM* vm, NativeFn function);
-ObjNativeMethod* newNativeMethod(VM* vm, NativeMethod method);
+ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFn function);
+ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 ObjClass* getObjClass(VM* vm, Value value);
 void printObject(Value value);

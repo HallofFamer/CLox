@@ -19,3 +19,12 @@ in();
 
 print("Class of function 'in()' is: ");
 println(in.getClassName());
+print("function 'in()' is native: ");
+println(in.isNative());
+
+var time = clock;
+println("Assinging variable 'time' as native function 'clock'...");
+print("Class of function 'time()' is: ");
+println(time.getClassName());
+print("function 'time()' is native: ");
+println(time.isNative());
