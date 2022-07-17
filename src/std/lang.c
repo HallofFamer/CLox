@@ -3,12 +3,12 @@
 #include <stdlib.h>
 
 #include "lang.h"
-#include "../assert.h"
-#include "../hash.h"
-#include "../native.h"
-#include "../object.h"
-#include "../string.h"
-#include "../vm.h"
+#include "../vm/assert.h"
+#include "../vm/hash.h"
+#include "../vm/native.h"
+#include "../vm/object.h"
+#include "../vm/string.h"
+#include "../vm/vm.h"
 
 static int factorial(int self) {
     int result = 1;

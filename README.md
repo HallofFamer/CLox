@@ -21,6 +21,7 @@ https://github.com/munificent/craftinginterpreters
 - `Object` root class for every class in Lox(since version 1.1)
 - Framework for creating native functions, methods and classes(since version 1.1).
 - Print statement removed, use native function `print` and `println` instead(since version 1.1).
+- Customized Runtime configuration for CLox using clox.ini(since version 1.2)
 - Separated integer values and floating point values(since version 1.2).
 
 ## Roadmap

@@ -16,6 +16,17 @@ typedef struct {
     Value* slots;
 } CallFrame;
 
+typedef struct {
+    const char* version;
+    const char* argv;
+    const char* path;
+    const char* timezone;
+
+    const char* gcType;
+    size_t gcHeapSize;
+    size_t gcGrowthFactor;
+} Configuration;
+
 struct VM {
     ObjClass* objectClass;
     ObjClass* classClass;
@@ -42,6 +53,7 @@ struct VM {
     size_t bytesAllocated;
     size_t nextGC;
 
+    Configuration config;
     Obj* objects;
 
     int grayCount;
@@ -57,7 +69,6 @@ typedef enum {
 
 void initVM(VM* vm);
 void freeVM(VM* vm);
-
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void runtimeError(VM* vm, const char* format, ...);
 InterpretResult interpret(VM* vm, const char* source);

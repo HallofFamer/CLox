@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -9,7 +10,8 @@
 #include "native.h"
 #include "string.h"
 #include "vm.h"
-#include "std/lang.h"
+#include "../inc/ini.h"
+#include "../std/lang.h"
 
 static void resetStack(VM* vm) {
     vm->stackTop = vm->stack;
@@ -39,11 +41,52 @@ void runtimeError(VM* vm, const char* format, ...) {
     resetStack(vm);
 }
 
+static int parseConfiguration(void* data, const char* section, const char* name, const char* value) {
+    Configuration* config = (Configuration*)data;
+#define HAS_CONFIG(s, n) strcmp(section, (s)) == 0 && strcmp(name, (n)) == 0
+    if (HAS_CONFIG("basic", "version")) {
+        config->version = _strdup(value);
+    }
+    else if (HAS_CONFIG("basic", "argv")) {
+        config->argv = _strdup(value);
+    }
+    else if (HAS_CONFIG("basic", "path")) {
+        config->path = _strdup(value);
+    }
+    else if (HAS_CONFIG("basic", "timezone")) {
+        config->timezone = _strdup(value);
+    }
+    else if (HAS_CONFIG("gc", "gcType")) {
+        config->gcType = _strdup(value);
+    }
+    else if (HAS_CONFIG("gc", "gcHeapSize")) {
+        config->gcHeapSize = (int)atoi(value);
+    }
+    else if (HAS_CONFIG("gc", "gcGrowthFactor")) {       
+        config->gcGrowthFactor = (int)atoi(value);
+    }
+    else {
+        return 0;
+    }
+    return 1;
+#undef HAS_CONFIG
+}
+
+void initConfiguration(VM* vm) {
+    Configuration config;
+    if (ini_parse("clox.ini", parseConfiguration, &config) < 0) {
+        printf("Can't load 'clox.ini'...\n");
+        exit(70);
+    }
+    vm->config = config;
+}
+
 void initVM(VM* vm) {
     resetStack(vm);
+    initConfiguration(vm);
     vm->objects = NULL;
     vm->bytesAllocated = 0;
-    vm->nextGC = (size_t)1024 * 1024;
+    vm->nextGC = vm->config.gcHeapSize;
 
     vm->grayCount = 0;
     vm->grayCapacity = 0;

@@ -141,58 +141,60 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="assert.c" />
-    <ClCompile Include="chunk.c" />
-    <ClCompile Include="compiler.c" />
-    <ClCompile Include="debug.c" />
-    <ClCompile Include="hash.c" />
     <ClCompile Include="main.c" />
-    <ClCompile Include="memory.c" />
-    <ClCompile Include="native.c" />
-    <ClCompile Include="object.c" />
-    <ClCompile Include="scanner.c" />
-    <ClCompile Include="std\lang.c" />
-    <ClCompile Include="string.c" />
-    <ClCompile Include="table.c" />
-    <ClCompile Include="value.c" />
-    <ClCompile Include="vm.c" />
+    <ClCompile Include="src\inc\ini.c" />
+    <ClCompile Include="src\std\lang.c" />
+    <ClCompile Include="src\vm\assert.c" />
+    <ClCompile Include="src\vm\chunk.c" />
+    <ClCompile Include="src\vm\compiler.c" />
+    <ClCompile Include="src\vm\debug.c" />
+    <ClCompile Include="src\vm\hash.c" />
+    <ClCompile Include="src\vm\memory.c" />
+    <ClCompile Include="src\vm\native.c" />
+    <ClCompile Include="src\vm\object.c" />
+    <ClCompile Include="src\vm\scanner.c" />
+    <ClCompile Include="src\vm\string.c" />
+    <ClCompile Include="src\vm\table.c" />
+    <ClCompile Include="src\vm\value.c" />
+    <ClCompile Include="src\vm\vm.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="assert.h" />
-    <ClInclude Include="chunk.h" />
-    <ClInclude Include="common.h" />
-    <ClInclude Include="compiler.h" />
-    <ClInclude Include="debug.h" />
-    <ClInclude Include="hash.h" />
-    <ClInclude Include="memory.h" />
-    <ClInclude Include="native.h" />
-    <ClInclude Include="object.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="scanner.h" />
-    <ClInclude Include="std\lang.h" />
-    <ClInclude Include="string.h" />
-    <ClInclude Include="table.h" />
-    <ClInclude Include="value.h" />
-    <ClInclude Include="vm.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="lox\benchmark.lox" />
-    <None Include="lox\closure.lox" />
-    <None Include="lox\fibonacci.lox" />
-    <None Include="lox\fraction.lox" />
-    <None Include="lox\initializer.lox" />
-    <None Include="lox\invoke.lox" />
-    <None Include="lox\lang.lox" />
-    <None Include="lox\loop.lox" />
-    <None Include="lox\method.lox" />
-    <None Include="lox\native.lox" />
-    <None Include="lox\object.lox" />
-    <None Include="lox\receiver.lox" />
-    <None Include="lox\string.lox" />
-    <None Include="lox\sum.lox" />
-    <None Include="lox\super.lox" />
-    <None Include="lox\switch.lox" />
+    <None Include="clox.ini" />
     <None Include="README.md" />
+    <None Include="test\lox\benchmark.lox" />
+    <None Include="test\lox\closure.lox" />
+    <None Include="test\lox\fibonacci.lox" />
+    <None Include="test\lox\fraction.lox" />
+    <None Include="test\lox\initializer.lox" />
+    <None Include="test\lox\invoke.lox" />
+    <None Include="test\lox\lang.lox" />
+    <None Include="test\lox\loop.lox" />
+    <None Include="test\lox\method.lox" />
+    <None Include="test\lox\native.lox" />
+    <None Include="test\lox\object.lox" />
+    <None Include="test\lox\receiver.lox" />
+    <None Include="test\lox\string.lox" />
+    <None Include="test\lox\sum.lox" />
+    <None Include="test\lox\super.lox" />
+    <None Include="test\lox\switch.lox" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\inc\ini.h" />
+    <ClInclude Include="src\std\lang.h" />
+    <ClInclude Include="src\vm\assert.h" />
+    <ClInclude Include="src\vm\chunk.h" />
+    <ClInclude Include="src\vm\common.h" />
+    <ClInclude Include="src\vm\compiler.h" />
+    <ClInclude Include="src\vm\debug.h" />
+    <ClInclude Include="src\vm\hash.h" />
+    <ClInclude Include="src\vm\memory.h" />
+    <ClInclude Include="src\vm\native.h" />
+    <ClInclude Include="src\vm\object.h" />
+    <ClInclude Include="src\vm\scanner.h" />
+    <ClInclude Include="src\vm\string.h" />
+    <ClInclude Include="src\vm\table.h" />
+    <ClInclude Include="src\vm\value.h" />
+    <ClInclude Include="src\vm\vm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

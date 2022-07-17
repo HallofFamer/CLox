@@ -8,8 +8,6 @@
 #include "debug.h"
 #endif
 
-#define GC_HEAP_GROW_FACTOR 2
-
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize) {
     vm->bytesAllocated += newSize - oldSize;
     if (newSize > oldSize) {
@@ -229,7 +227,7 @@ void collectGarbage(VM* vm) {
     traceReferences(vm);
     tableRemoveWhite(&vm->strings);
     sweep(vm);
-    vm->nextGC = vm->bytesAllocated * GC_HEAP_GROW_FACTOR;
+    vm->nextGC = vm->bytesAllocated * vm->config.gcGrowthFactor;
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc end\n");

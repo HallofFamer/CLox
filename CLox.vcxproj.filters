@@ -1,168 +1,174 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;hpp;h;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Lox Files">
-      <UniqueIdentifier>{3e1ab4cd-65fe-4129-be74-ce321192ff22}</UniqueIdentifier>
-      <Extensions>lox</Extensions>
+    <Filter Include="Source Files\inc">
+      <UniqueIdentifier>{34dbcfb1-2e14-4ab2-90e3-d9056922a9f5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Std Files">
+    <Filter Include="Source Files\std">
+      <UniqueIdentifier>{73cdae4c-37b1-40cb-9ebf-a5f087cdfa67}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vm">
+      <UniqueIdentifier>{c030f7cf-c001-4142-8f19-6c35c5c98cfb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Test Files">
       <UniqueIdentifier>{2632c855-5f69-4d41-baca-aa134a220bb4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Test Files\lox">
+      <UniqueIdentifier>{4b0ff55b-3c99-4e35-9ec3-f6b1541000ec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="main.c" />
+    <ClCompile Include="src\vm\assert.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="memory.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\chunk.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="debug.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\compiler.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="value.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\debug.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="vm.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\hash.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="compiler.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\memory.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="scanner.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\native.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="object.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\object.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="table.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\scanner.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="chunk.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\string.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="native.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\table.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="std\lang.c">
-      <Filter>Std Files</Filter>
+    <ClCompile Include="src\vm\value.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="assert.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\vm\vm.c">
+      <Filter>Source Files\vm</Filter>
     </ClCompile>
-    <ClCompile Include="hash.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\std\lang.c">
+      <Filter>Source Files\std</Filter>
     </ClCompile>
-    <ClCompile Include="string.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\inc\ini.c">
+      <Filter>Source Files\inc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="chunk.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="memory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="debug.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="value.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="scanner.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="object.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="table.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="native.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="std\lang.h">
-      <Filter>Std Files</Filter>
-    </ClInclude>
-    <ClInclude Include="assert.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hash.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="string.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="lox\benchmark.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\benchmark.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\closure.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\closure.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\loop.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\fibonacci.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\method.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\fraction.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\object.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\initializer.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\receiver.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\invoke.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\sum.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\lang.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\switch.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\loop.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\initializer.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\method.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\invoke.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\native.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\super.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\object.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\string.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\receiver.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\fibonacci.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\string.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="lox\native.lox">
-      <Filter>Lox Files</Filter>
+    <None Include="test\lox\sum.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
+    <None Include="test\lox\super.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
+    <None Include="test\lox\switch.lox">
+      <Filter>Test Files\lox</Filter>
     </None>
     <None Include="README.md" />
-    <None Include="lox\lang.lox">
-      <Filter>Lox Files</Filter>
-    </None>
-    <None Include="lox\fraction.lox">
-      <Filter>Lox Files</Filter>
-    </None>
+    <None Include="clox.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\vm\assert.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\chunk.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\common.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\compiler.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\debug.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\hash.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\memory.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\native.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\object.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\scanner.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\string.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\table.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\value.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\vm.h">
+      <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\std\lang.h">
+      <Filter>Source Files\std</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\ini.h">
+      <Filter>Source Files\inc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

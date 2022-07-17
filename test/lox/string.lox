@@ -1,4 +1,4 @@
-var str = "Hello World Friend";
+var str = "Hello World";
 print("printing string 'Hello World': ");
 println(str);
 print("Class of string is: ");
@@ -9,8 +9,8 @@ print("String contains 'Hello': ");
 println(str.contains("Hello"));
 print("String index for 'Wo': ");
 println(str.indexOf("Wo"));
-print("Replace 'World' in String by 'My Love': ");
-println(str.replace("World", "My Dear"));
+print("Replace 'World' in String by 'My Friend': ");
+println(str.replace("World", "My Friend"));
 print("String starts with 'Hello': ");
 println(str.startsWith("Hello"));
 print("String ends with World: ");

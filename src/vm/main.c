@@ -2,14 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "src/inc/ini.h"
-#include "src/vm/common.h"
-#include "src/vm/chunk.h"
-#include "src/vm/debug.h"
-#include "src/vm/vm.h"
+#include "common.h"
+#include "chunk.h"
+#include "debug.h"
+#include "vm.h"
 
 static void repl(VM* vm) {
-    printf("REPL for CLox version %s\n", vm->config.version);
     char line[1024];
     for (;;) {
         printf("> ");
@@ -53,8 +51,8 @@ static char* readFile(const char* path) {
     return buffer;
 }
 
-static void runFile(VM* vm, char* filePath) {
-    char* source = readFile(filePath);
+static void runFile(VM* vm, char* path) {
+    char* source = readFile(path);
     InterpretResult result = interpret(vm, source);
     free(source);
 
@@ -62,24 +60,10 @@ static void runFile(VM* vm, char* filePath) {
     if (result == INTERPRET_RUNTIME_ERROR) exit(70);
 }
 
-static void runScript(VM* vm, const char* script) {
-    char path[UINT8_MAX];
-    if (strlen(vm->config.path) + strlen(vm->config.argv) > UINT8_MAX) {
-        printf("file path/name too long...");
-        exit(74);
-    }
-    int length = sprintf_s(path, UINT8_MAX, "%s%s", vm->config.path, vm->config.argv);
-    runFile(vm, path);
-}
-
 int main(int argc, char* argv[]) {
     VM vm;
     initVM(&vm);
-
-    if (strlen(vm.config.argv)) {
-        runScript(&vm, vm.config.argv);
-    }
-    else if (argc == 1) {
+    if (argc == 1) {
         repl(&vm);
     } 
     else if (argc == 2) {

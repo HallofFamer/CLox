@@ -2,7 +2,7 @@
 #ifndef clox_std_lang_h
 #define clox_std_lang_h
 
-#include "../common.h"
+#include "../vm/common.h"
 
 void registerLangPackage(VM* vm);
 
