@@ -35,7 +35,7 @@ https://github.com/munificent/craftinginterpreters
 ### CLox v1.2.0(current version)
 - Improved object model - Everything is an object, and every object has a class, including nil, true, false, number, string, function, class etc.
 - CLox Standard Library for package `lang` and `util`, which contains classes such as Boolean, Number, String, Array, Dictionary, DateTime, etc.
-- Allow customized runtime configurations for KtLox at startup with clox.ini
+- Allow customized runtime configurations for CLox at startup with clox.ini
 - Split the Number class, which will distinguish between integers and floating numbers.
 
 ### CLox v1.3.0
