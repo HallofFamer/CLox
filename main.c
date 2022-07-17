@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     VM vm;
     initVM(&vm);
 
-    if (strlen(vm.config.argv)) {
+    if (strlen(vm.config.argv) > 0) {
         runScript(&vm, vm.config.argv);
     }
     else if (argc == 1) {

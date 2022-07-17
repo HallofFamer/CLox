@@ -25,6 +25,7 @@ typedef struct {
     const char* gcType;
     size_t gcHeapSize;
     size_t gcGrowthFactor;
+    bool gcStressMode;
 } Configuration;
 
 struct VM {

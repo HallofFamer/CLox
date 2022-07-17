@@ -60,10 +60,13 @@ static int parseConfiguration(void* data, const char* section, const char* name,
         config->gcType = _strdup(value);
     }
     else if (HAS_CONFIG("gc", "gcHeapSize")) {
-        config->gcHeapSize = (int)atoi(value);
+        config->gcHeapSize = (size_t)atol(value);
     }
     else if (HAS_CONFIG("gc", "gcGrowthFactor")) {       
-        config->gcGrowthFactor = (int)atoi(value);
+        config->gcGrowthFactor = (size_t)atol(value);
+    }
+    else if (HAS_CONFIG("gc", "gcStressMode")) {
+        config->gcStressMode = (bool)atoi(value);
     }
     else {
         return 0;
@@ -75,7 +78,7 @@ static int parseConfiguration(void* data, const char* section, const char* name,
 void initConfiguration(VM* vm) {
     Configuration config;
     if (ini_parse("clox.ini", parseConfiguration, &config) < 0) {
-        printf("Can't load 'clox.ini'...\n");
+        printf("Can't load 'clox.ini' configuration file...\n");
         exit(70);
     }
     vm->config = config;
