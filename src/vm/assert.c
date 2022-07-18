@@ -53,8 +53,8 @@ void assertArgIsString(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
-void assertArgWithinRange(VM* vm, const char* method, int arg, int min, int max, int index){
-    if (arg < min || arg >= max) {
+void assertIndexWithinRange(VM* vm, const char* method, int arg, int min, int max, int index){
+    if (arg < min || arg > max) {
         runtimeError(vm, "method %s expects argument %d to be an index within range %d to %d but got %d.", method, index, min, max, arg);
         exit(70);
     }

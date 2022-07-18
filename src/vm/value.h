@@ -136,6 +136,7 @@ typedef struct {
 } ValueArray;
 
 bool valuesEqual(Value a, Value b);
+char* valueToString(VM* vm, Value value);
 void initValueArray(ValueArray* array);
 void writeValueArray(VM* vm, ValueArray* array, Value value);
 void freeValueArray(VM* vm, ValueArray* array);

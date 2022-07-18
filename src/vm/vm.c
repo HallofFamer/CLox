@@ -12,6 +12,7 @@
 #include "vm.h"
 #include "../inc/ini.h"
 #include "../std/lang.h"
+#include "../std/util.h"
 
 static void resetStack(VM* vm) {
     vm->stackTop = vm->stack;
@@ -47,8 +48,8 @@ static int parseConfiguration(void* data, const char* section, const char* name,
     if (HAS_CONFIG("basic", "version")) {
         config->version = _strdup(value);
     }
-    else if (HAS_CONFIG("basic", "argv")) {
-        config->argv = _strdup(value);
+    else if (HAS_CONFIG("basic", "script")) {
+        config->script = _strdup(value);
     }
     else if (HAS_CONFIG("basic", "path")) {
         config->path = _strdup(value);
@@ -101,6 +102,7 @@ void initVM(VM* vm) {
     vm->initString = copyString(vm, "init", 4);
 
     registerLangPackage(vm);
+    registerUtilPackage(vm);
     registerNativeFunctions(vm);
 }
 

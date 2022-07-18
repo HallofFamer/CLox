@@ -101,6 +101,11 @@ static void blackenObject(VM* vm, Obj* object) {
             markTable(vm, &instance->fields);
             break;
         }
+        case OBJ_LIST: {
+            ObjList* list = (ObjList*)object;
+            markArray(vm, &list->elements);
+            break;
+        }
         case OBJ_UPVALUE:
             markValue(vm, ((ObjUpvalue*)object)->closed);
             break;
@@ -153,6 +158,9 @@ static void freeObject(VM* vm, Obj* object) {
             FREE(ObjInstance, object);
             break;
         }
+        case OBJ_LIST: 
+            FREE(ObjList, object);
+            break;
         case OBJ_NATIVE_FUNCTION:
             FREE(ObjNativeFunction, object);
             break;

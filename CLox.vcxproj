@@ -144,6 +144,7 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="src\inc\ini.c" />
     <ClCompile Include="src\std\lang.c" />
+    <ClCompile Include="src\std\util.c" />
     <ClCompile Include="src\vm\assert.c" />
     <ClCompile Include="src\vm\chunk.c" />
     <ClCompile Include="src\vm\compiler.c" />
@@ -168,6 +169,7 @@
     <None Include="test\lox\initializer.lox" />
     <None Include="test\lox\invoke.lox" />
     <None Include="test\lox\lang.lox" />
+    <None Include="test\lox\list.lox" />
     <None Include="test\lox\loop.lox" />
     <None Include="test\lox\method.lox" />
     <None Include="test\lox\native.lox" />
@@ -181,6 +183,7 @@
   <ItemGroup>
     <ClInclude Include="src\inc\ini.h" />
     <ClInclude Include="src\std\lang.h" />
+    <ClInclude Include="src\std\util.h" />
     <ClInclude Include="src\vm\assert.h" />
     <ClInclude Include="src\vm\chunk.h" />
     <ClInclude Include="src\vm\common.h" />

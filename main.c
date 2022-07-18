@@ -53,7 +53,7 @@ static char* readFile(const char* path) {
     return buffer;
 }
 
-static void runFile(VM* vm, char* filePath) {
+static void runFile(VM* vm, const char* filePath) {
     char* source = readFile(filePath);
     InterpretResult result = interpret(vm, source);
     free(source);
@@ -62,22 +62,22 @@ static void runFile(VM* vm, char* filePath) {
     if (result == INTERPRET_RUNTIME_ERROR) exit(70);
 }
 
-static void runScript(VM* vm, const char* script) {
-    char path[UINT8_MAX];
-    if (strlen(vm->config.path) + strlen(vm->config.argv) > UINT8_MAX) {
+static void runScript(VM* vm, const char* path, const char* script) {
+    char scriptPath[UINT8_MAX];
+    if (strlen(path) + strlen(script) > UINT8_MAX) {
         printf("file path/name too long...");
         exit(74);
     }
-    int length = sprintf_s(path, UINT8_MAX, "%s%s", vm->config.path, vm->config.argv);
-    runFile(vm, path);
+    int length = sprintf_s(scriptPath, UINT8_MAX, "%s%s", path, script);
+    runFile(vm, scriptPath);
 }
 
 int main(int argc, char* argv[]) {
     VM vm;
     initVM(&vm);
 
-    if (strlen(vm.config.argv) > 0) {
-        runScript(&vm, vm.config.argv);
+    if (strlen(vm.config.script) > 0) {
+        runScript(&vm, vm.config.path, vm.config.script);
     }
     else if (argc == 1) {
         repl(&vm);

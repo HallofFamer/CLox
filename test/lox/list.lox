@@ -1,0 +1,21 @@
+var list = List();
+print("Creating empty list: ");
+println(list);
+
+print("Adding elements 2, 3.5, true and 'Hello World': ");
+list.add(2);
+list.add(3.5);
+list.add(true);
+list.add("Hello World");
+println(list);
+
+print("Getting element at index 3: ");
+println(list.getAt(3));
+print("Index of element 'true': ");
+println(list.indexOf(true));
+
+print("Remove element at index 1: ");
+var element = list.removeAt(1);
+println(element.toString());
+print("Current List is: ");
+println(list.toString());

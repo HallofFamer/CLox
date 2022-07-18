@@ -18,7 +18,7 @@ typedef struct {
 
 typedef struct {
     const char* version;
-    const char* argv;
+    const char* script;
     const char* path;
     const char* timezone;
 
@@ -39,6 +39,7 @@ struct VM {
     ObjClass* stringClass;
     ObjClass* functionClass;
     ObjClass* methodClass;
+    ObjClass* listClass;
 
     CallFrame frames[FRAMES_MAX];
     int frameCount;

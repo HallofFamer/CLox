@@ -15,6 +15,7 @@
 #define IS_CLOSURE(value)          isObjType(value, OBJ_CLOSURE)
 #define IS_FUNCTION(value)         isObjType(value, OBJ_FUNCTION)
 #define IS_INSTANCE(value)         isObjType(value, OBJ_INSTANCE)
+#define IS_LIST(value)             isObjType(value, OBJ_LIST)
 #define IS_NATIVE_FUNCTION(value)  isObjType(value, OBJ_NATIVE_FUNCTION)
 #define IS_NATIVE_METHOD(value)    isObjType(value, OBJ_NATIVE_METHOD)
 #define IS_STRING(value)           isObjType(value, OBJ_STRING)
@@ -24,6 +25,7 @@
 #define AS_CLOSURE(value)          ((ObjClosure*)AS_OBJ(value))
 #define AS_FUNCTION(value)         ((ObjFunction*)AS_OBJ(value))
 #define AS_INSTANCE(value)         ((ObjInstance*)AS_OBJ(value))
+#define AS_LIST(value)             ((ObjList*)AS_OBJ(value))
 #define AS_NATIVE_FUNCTION(value)  ((ObjNativeFunction*)AS_OBJ(value))
 #define AS_NATIVE_METHOD(value)    ((ObjNativeMethod*)AS_OBJ(value))
 #define AS_STRING(value)           ((ObjString*)AS_OBJ(value))
@@ -35,6 +37,7 @@ typedef enum {
     OBJ_CLOSURE,
     OBJ_FUNCTION,
     OBJ_INSTANCE,
+    OBJ_LIST,
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
     OBJ_STRING,
@@ -81,6 +84,11 @@ struct ObjString {
     char chars[];
 };
 
+typedef struct ObjList {
+    Obj obj;
+    ValueArray elements;
+} ObjList;
+
 typedef struct ObjUpvalue {
     Obj obj;
     Value* location;
@@ -120,6 +128,8 @@ ObjClass* newClass(VM* vm, ObjString* name);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
+ObjList* newList(VM* vm);
+ObjList* copyList(VM* vm, ValueArray elements);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFn function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);

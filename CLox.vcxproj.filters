@@ -68,6 +68,9 @@
     <ClCompile Include="src\inc\ini.c">
       <Filter>Source Files\inc</Filter>
     </ClCompile>
+    <ClCompile Include="src\std\util.c">
+      <Filter>Source Files\std</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="test\lox\benchmark.lox">
@@ -120,6 +123,9 @@
     </None>
     <None Include="README.md" />
     <None Include="clox.ini" />
+    <None Include="test\lox\list.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">
@@ -169,6 +175,9 @@
     </ClInclude>
     <ClInclude Include="src\inc\ini.h">
       <Filter>Source Files\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\std\util.h">
+      <Filter>Source Files\std</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
