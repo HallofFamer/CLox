@@ -70,7 +70,6 @@ static ObjString* listToString(VM* vm, ObjList* list) {
 				offset += length + 2;
 			}
 		}
-		if (offset < 1) return copyString(vm, "[]", 2);
 		string[offset] = ']';
 		string[offset + 1] = '\0';
 		return copyString(vm, string, (int)offset + 1);
