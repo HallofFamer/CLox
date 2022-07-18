@@ -1,6 +1,9 @@
 var list = List();
 print("Creating empty list: ");
 println(list);
+var list2 = List();
+print("Two empty lists are equal: ");
+println(list.equals(list2));
 
 print("Adding elements 2, 3.5, true and 'Hello World': ");
 list.add(2);
@@ -8,6 +11,8 @@ list.add(3.5);
 list.add(true);
 list.add("Hello World");
 println(list);
+print("Testing two list equality again: ");
+println(list.equals(list2));
 
 print("Getting element at index 3: ");
 println(list.getAt(3));

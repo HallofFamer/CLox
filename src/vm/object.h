@@ -129,7 +129,7 @@ ObjClosure* newClosure(VM* vm, ObjFunction* function);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjList* newList(VM* vm);
-ObjList* copyList(VM* vm, ValueArray elements);
+ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFn function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);

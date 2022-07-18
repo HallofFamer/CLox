@@ -75,21 +75,21 @@ ObjList* newList(VM* vm) {
     return list;
 }
 
+ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
+    ObjList* list = ALLOCATE_OBJ(ObjList, OBJ_LIST, NULL);
+    initValueArray(&list->elements);
+    for (int i = fromIndex; i < toIndex; i++) {
+        writeValueArray(vm, &list->elements, elements.values[i]);
+    }
+    return list;
+}
+
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFn function) {
     ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, vm->functionClass);
     nativeFunction->name = name;
     nativeFunction->arity = arity;
     nativeFunction->function = function;
     return nativeFunction;
-}
-
-ObjList* copyList(VM* vm, ValueArray elements) {
-    ObjList* list = ALLOCATE_OBJ(ObjList, OBJ_LIST, NULL);
-    initValueArray(&list->elements);
-    for (int i = 0; i < elements.count; i++) {
-        writeValueArray(vm, &list->elements, elements.values[i]);
-    }
-    return list;
 }
 
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method) {

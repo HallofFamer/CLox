@@ -10,6 +10,14 @@
 #include "../vm/value.h"
 #include "../vm/vm.h"
 
+static bool listEqual(ObjList* list, ObjList* list2) {
+	if (list->elements.count != list2->elements.count) return false;
+	for (int i = 0; i < list->elements.count; i++) {
+		if (list->elements.values[i] != list2->elements.values[i]) return false;
+	}
+	return true;
+}
+
 static int listIndexOf(VM* vm, ObjList* list, Value element) {
 	for (int i = 0; i < list->elements.count; i++) {
 		if (valuesEqual(list->elements.values[i], element)) {
@@ -90,7 +98,19 @@ LOX_METHOD(List, clear) {
 
 LOX_METHOD(List, clone) {
 	assertArgCount(vm, "List::clone()", 0, argCount);
-	RETURN_OBJ(copyList(vm, AS_LIST(receiver)->elements));
+	ObjList* self = AS_LIST(receiver);
+	RETURN_OBJ(copyList(vm, self->elements, 0, self->elements.count));
+}
+
+LOX_METHOD(List, contains) {
+	assertArgCount(vm, "List::contains(element)", 1, argCount);
+	RETURN_BOOL(listIndexOf(vm, AS_LIST(receiver), args[0]) != -1);
+}
+
+LOX_METHOD(List, equals) {
+	assertArgCount(vm, "List::equals(other)", 1, argCount);
+	if (!IS_LIST(args[0])) RETURN_FALSE;
+	RETURN_BOOL(listEqual(AS_LIST(receiver), AS_LIST(args[0])));
 }
 
 LOX_METHOD(List, getAt) {
@@ -124,6 +144,11 @@ LOX_METHOD(List, insertAt) {
 	RETURN_VAL(args[1]);
 }
 
+LOX_METHOD(List, isEmpty) {
+	assertArgCount(vm, "List::isEmpty()", 0, argCount);
+	RETURN_BOOL(AS_LIST(receiver)->elements.count == 0);
+}
+
 LOX_METHOD(List, lastIndexOf) {
 	assertArgCount(vm, "List::indexOf(element)", 1, argCount);
 	ObjList* self = AS_LIST(receiver);
@@ -155,6 +180,19 @@ LOX_METHOD(List, removeAt) {
 	RETURN_VAL(element);
 }
 
+LOX_METHOD(List, subList) {
+	assertArgCount(vm, "List::subList(from, to)", 2, argCount);
+	assertArgIsInt(vm, "List::subList(from, to)", args, 0);
+	assertArgIsInt(vm, "List::subList(from, to)", args, 1);
+	ObjList* self = AS_LIST(receiver);
+	int fromIndex = AS_INT(args[0]);
+	int toIndex = AS_INT(args[1]);
+
+	assertIndexWithinRange(vm, "List::subList(from, to)", fromIndex, 0, self->elements.count, 0);
+	assertIndexWithinRange(vm, "List::subList(from, to", toIndex, fromIndex, self->elements.count, 1);
+	RETURN_OBJ(copyList(vm, self->elements, fromIndex, toIndex));
+}
+
 LOX_METHOD(List, toString) {
 	assertArgCount(vm, "List::toString()", 0, argCount);
 	RETURN_OBJ(listToString(vm, AS_LIST(receiver)));
@@ -164,14 +202,19 @@ void registerUtilPackage(VM* vm) {
 	vm->listClass = defineNativeClass(vm, "List");
 	bindSuperclass(vm, vm->listClass, vm->objectClass);
 	DEF_METHOD(vm->listClass, List, add, 1);
+	DEF_METHOD(vm->listClass, List, clear, 0);
 	DEF_METHOD(vm->listClass, List, clone, 0);
+	DEF_METHOD(vm->listClass, List, contains, 1);
+	DEF_METHOD(vm->listClass, List, equals, 1);
 	DEF_METHOD(vm->listClass, List, getAt, 1);
 	DEF_METHOD(vm->listClass, List, indexOf, 1);
 	DEF_METHOD(vm->listClass, List, init, 0);
 	DEF_METHOD(vm->listClass, List, insertAt, 2);
+	DEF_METHOD(vm->listClass, List, isEmpty, 0);
 	DEF_METHOD(vm->listClass, List, lastIndexOf, 1);
 	DEF_METHOD(vm->listClass, List, length, 0);
 	DEF_METHOD(vm->listClass, List, remove, 1);
 	DEF_METHOD(vm->listClass, List, removeAt, 1);
+	DEF_METHOD(vm->listClass, List, subList, 2);
 	DEF_METHOD(vm->listClass, List, toString, 0);
 }
