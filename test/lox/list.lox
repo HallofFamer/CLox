@@ -19,8 +19,18 @@ println(list.getAt(3));
 print("Index of element 'true': ");
 println(list.indexOf(true));
 
+print("Setting element false at index 2: ");
+list.setAt(2, false);
+println(list.toString());
+print("Inserting element nil at index 3: ");
+list.insertAt(3, nil);
+println(list.toString());
+
 print("Remove element at index 1: ");
 var element = list.removeAt(1);
 println(element.toString());
 print("Current List is: ");
+println(list.toString());
+print("Clearing List: ");
+list.clear();
 println(list.toString());

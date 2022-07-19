@@ -180,6 +180,17 @@ LOX_METHOD(List, removeAt) {
 	RETURN_VAL(element);
 }
 
+LOX_METHOD(List, setAt) {
+	assertArgCount(vm, "List::setAt(index, element)", 2, argCount);
+	assertArgIsInt(vm, "List::setAt(index, element)", args, 0);
+	ObjList* self = AS_LIST(receiver);
+	int index = AS_INT(args[0]);
+	assertIndexWithinRange(vm, "List::insertAt(index)", index, 0, self->elements.count, 0);
+	self->elements.values[index] = args[1];
+	if (index == self->elements.count) self->elements.count++;
+	RETURN_OBJ(receiver);
+}
+
 LOX_METHOD(List, subList) {
 	assertArgCount(vm, "List::subList(from, to)", 2, argCount);
 	assertArgIsInt(vm, "List::subList(from, to)", args, 0);
@@ -215,6 +226,7 @@ void registerUtilPackage(VM* vm) {
 	DEF_METHOD(vm->listClass, List, length, 0);
 	DEF_METHOD(vm->listClass, List, remove, 1);
 	DEF_METHOD(vm->listClass, List, removeAt, 1);
+	DEF_METHOD(vm->listClass, List, setAt, 2);
 	DEF_METHOD(vm->listClass, List, subList, 2);
 	DEF_METHOD(vm->listClass, List, toString, 0);
 }
