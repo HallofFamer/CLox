@@ -40,6 +40,7 @@ struct VM {
     ObjClass* functionClass;
     ObjClass* methodClass;
     ObjClass* listClass;
+    ObjClass* dictionaryClass;
 
     CallFrame frames[FRAMES_MAX];
     int frameCount;

@@ -89,6 +89,11 @@ static void blackenObject(VM* vm, Obj* object) {
             }
             break;
         }
+        case OBJ_DICTIONARY: {
+            ObjDictionary* dictionary = (ObjDictionary*)object;
+            markTable(vm, &dictionary->table);
+            break;
+        }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*)object;
             markObject(vm, (Obj*)function->name);
@@ -102,7 +107,8 @@ static void blackenObject(VM* vm, Obj* object) {
             break;
         }
         case OBJ_LIST: {
-            markArray(vm, &((ObjList*)object)->elements);
+            ObjList* list = (ObjList*)object;
+            markArray(vm, &list->elements);
             break;
         }
         case OBJ_UPVALUE:
@@ -145,6 +151,12 @@ static void freeObject(VM* vm, Obj* object) {
             FREE(ObjClosure, object);
             break;
         }
+        case OBJ_DICTIONARY: {
+            ObjDictionary* dictionary = (ObjDictionary*)object;
+            freeTable(vm, &dictionary->table);
+            FREE(ObjDictionary, object);
+            break;
+        }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*)object;
             freeChunk(vm, &function->chunk);
@@ -157,10 +169,12 @@ static void freeObject(VM* vm, Obj* object) {
             FREE(ObjInstance, object);
             break;
         }
-        case OBJ_LIST:
-            freeValueArray(vm, &((ObjList*)object)->elements);
+        case OBJ_LIST: {
+            ObjList* list = (ObjList*)object;
+            freeValueArray(vm, &list->elements);
             FREE(ObjList, object);
             break;
+        }
         case OBJ_NATIVE_FUNCTION:
             FREE(ObjNativeFunction, object);
             break;

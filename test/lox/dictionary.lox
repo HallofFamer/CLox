@@ -1,0 +1,5 @@
+var dict = Dictionary();
+print("Creating empty dictionary: ");
+println(dict);
+print("Dictionary is empty: ");
+println(dict.isEmpty());

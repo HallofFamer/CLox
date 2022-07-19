@@ -10,6 +10,43 @@
 #include "../vm/value.h"
 #include "../vm/vm.h"
 
+static ObjString* dictionaryToString(VM* vm, ObjDictionary* dictionary) {
+	if(dictionary->table.count == 0) return copyString(vm, "[]", 2);
+	else {
+		char string[UINT8_MAX] = "";
+		string[0] = '[';
+		size_t offset = 1;
+		for (int i = 0; i < dictionary->table.capacity; i++) {
+			Entry* entry = &dictionary->table.entries[i];
+			if (entry->key == NULL) continue;
+
+			ObjString* key = entry->key;
+			size_t keyLength = (size_t)key->length;
+			Value value = entry->value;
+			char* valueChars = valueToString(vm, value);
+			size_t valueLength = strlen(valueChars);
+
+			memcpy(string + offset, key->chars, keyLength);
+			offset += keyLength;
+			memcpy(string + offset, ": ", 2);
+			offset += 2;
+			memcpy(string + offset, valueChars, valueLength);
+
+			if (i == dictionary->table.capacity - 1) {
+				offset += valueLength;
+			}
+			else {
+				memcpy(string + offset + valueLength, ", ", 2);
+				offset += valueLength + 2;
+			}
+		}
+
+		string[offset] = ']';
+		string[offset + 1] = '\0';
+		return copyString(vm, string, (int)offset + 1);
+	}
+}
+
 static bool listEqual(ObjList* list, ObjList* list2) {
 	if (list->elements.count != list2->elements.count) return false;
 	for (int i = 0; i < list->elements.count; i++) {
@@ -82,6 +119,39 @@ static ObjString* listToString(VM* vm, ObjList* list) {
 		string[offset + 1] = '\0';
 		return copyString(vm, string, (int)offset + 1);
 	}
+}
+
+LOX_METHOD(Dictionary, clear) {
+	assertArgCount(vm, "Dictionary::clear()", 0, argCount);
+	freeTable(vm, &AS_DICTIONARY(receiver)->table);
+	RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Dictionary, clone) {
+	assertArgCount(vm, "Dictionary::clone()", 0, argCount);
+	ObjDictionary* self = AS_DICTIONARY(receiver);
+	RETURN_OBJ(copyDictionary(vm, self->table));
+}
+
+LOX_METHOD(Dictionary, init) {
+	assertArgCount(vm, "Dictionary::init()", 0, argCount);
+	RETURN_OBJ(newDictionary(vm));
+}
+
+LOX_METHOD(Dictionary, isEmpty) {
+	assertArgCount(vm, "Dictionary::isEmpty()", 0, argCount);
+	RETURN_BOOL(AS_DICTIONARY(receiver)->table.count == 0);
+}
+
+LOX_METHOD(Dictionary, length) {
+	assertArgCount(vm, "Dictionary::length()", 0, argCount);
+	ObjDictionary* self = AS_DICTIONARY(receiver);
+	RETURN_INT(AS_DICTIONARY(receiver)->table.count);
+}
+
+LOX_METHOD(Dictionary, toString) {
+	assertArgCount(vm, "Dictionary::toString()", 0, argCount);
+	RETURN_OBJ(dictionaryToString(vm, AS_DICTIONARY(receiver)));
 }
 
 LOX_METHOD(List, add) {
@@ -229,4 +299,13 @@ void registerUtilPackage(VM* vm) {
 	DEF_METHOD(vm->listClass, List, setAt, 2);
 	DEF_METHOD(vm->listClass, List, subList, 2);
 	DEF_METHOD(vm->listClass, List, toString, 0);
+
+	vm->dictionaryClass = defineNativeClass(vm, "Dictionary");
+	bindSuperclass(vm, vm->dictionaryClass, vm->objectClass);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, init, 0);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, isEmpty, 0);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, length, 0);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
 }

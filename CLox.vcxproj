@@ -164,6 +164,7 @@
     <None Include="README.md" />
     <None Include="test\lox\benchmark.lox" />
     <None Include="test\lox\closure.lox" />
+    <None Include="test\lox\dictionary.lox" />
     <None Include="test\lox\fibonacci.lox" />
     <None Include="test\lox\fraction.lox" />
     <None Include="test\lox\initializer.lox" />

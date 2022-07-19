@@ -13,6 +13,7 @@
 #define IS_BOUND_METHOD(value)     isObjType(value, OBJ_BOUND_METHOD)
 #define IS_CLASS(value)            isObjType(value, OBJ_CLASS)
 #define IS_CLOSURE(value)          isObjType(value, OBJ_CLOSURE)
+#define IS_DICTIONARY(value)       isObjType(value, OBJ_DICTIONARY)
 #define IS_FUNCTION(value)         isObjType(value, OBJ_FUNCTION)
 #define IS_INSTANCE(value)         isObjType(value, OBJ_INSTANCE)
 #define IS_LIST(value)             isObjType(value, OBJ_LIST)
@@ -23,6 +24,7 @@
 #define AS_BOUND_METHOD(value)     ((ObjBoundMethod*)AS_OBJ(value))
 #define AS_CLASS(value)            ((ObjClass*)AS_OBJ(value))
 #define AS_CLOSURE(value)          ((ObjClosure*)AS_OBJ(value))
+#define AS_DICTIONARY(value)       ((ObjDictionary*)AS_OBJ(value))
 #define AS_FUNCTION(value)         ((ObjFunction*)AS_OBJ(value))
 #define AS_INSTANCE(value)         ((ObjInstance*)AS_OBJ(value))
 #define AS_LIST(value)             ((ObjList*)AS_OBJ(value))
@@ -35,6 +37,7 @@ typedef enum {
     OBJ_BOUND_METHOD,
     OBJ_CLASS,
     OBJ_CLOSURE,
+    OBJ_DICTIONARY,
     OBJ_FUNCTION,
     OBJ_INSTANCE,
     OBJ_LIST,
@@ -89,6 +92,11 @@ typedef struct ObjList {
     ValueArray elements;
 } ObjList;
 
+typedef struct ObjDictionary {
+    Obj obj;
+    Table table;
+} ObjDictionary;
+
 typedef struct ObjUpvalue {
     Obj obj;
     Value* location;
@@ -126,6 +134,8 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method);
 ObjClass* newClass(VM* vm, ObjString* name);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
+ObjDictionary* newDictionary(VM* vm);
+ObjDictionary* copyDictionary(VM* vm, Table table);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjList* newList(VM* vm);

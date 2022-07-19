@@ -54,6 +54,19 @@ ObjClosure* newClosure(VM* vm, ObjFunction* function) {
     return closure;
 }
 
+ObjDictionary* newDictionary(VM* vm) {
+    ObjDictionary* dictionary = ALLOCATE_OBJ(ObjDictionary, OBJ_DICTIONARY, vm->dictionaryClass);
+    initTable(&dictionary->table);
+    return dictionary;
+}
+
+ObjDictionary* copyDictionary(VM* vm, Table table) {
+    ObjDictionary* dictionary = ALLOCATE_OBJ(ObjDictionary, OBJ_DICTIONARY, vm->dictionaryClass);
+    initTable(&dictionary->table);
+    tableAddAll(vm, &table, &dictionary->table);
+    return dictionary;
+}
+
 ObjFunction* newFunction(VM* vm) {
     ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION, NULL);
     function->arity = 0;
@@ -76,7 +89,7 @@ ObjList* newList(VM* vm) {
 }
 
 ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
-    ObjList* list = ALLOCATE_OBJ(ObjList, OBJ_LIST, NULL);
+    ObjList* list = ALLOCATE_OBJ(ObjList, OBJ_LIST, vm->listClass);
     initValueArray(&list->elements);
     for (int i = fromIndex; i < toIndex; i++) {
         writeValueArray(vm, &list->elements, elements.values[i]);
@@ -118,6 +131,18 @@ ObjClass* getObjClass(VM* vm, Value value) {
     else return NULL;
 }
 
+static void printDictionary(ObjDictionary* dictionary) {
+    printf("[");
+    for (int i = 0; i < dictionary->table.capacity; i++) {
+        Entry* entry = &dictionary->table.entries[i];
+        if (entry->key == NULL) continue;
+        printf("%s: ", entry->key->chars);
+        printValue(entry->value);
+        if (i < dictionary->table.capacity - 1) printf(", ");
+    }
+    printf("]");
+}
+
 static void printFunction(ObjFunction* function) {
     if (function->name == NULL) {
         printf("<script>");
@@ -145,6 +170,9 @@ void printObject(Value value) {
             break;
         case OBJ_CLOSURE:
             printFunction(AS_CLOSURE(value)->function);
+            break;
+        case OBJ_DICTIONARY: 
+            printDictionary(AS_DICTIONARY(value));
             break;
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value));
