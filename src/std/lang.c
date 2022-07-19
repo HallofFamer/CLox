@@ -546,6 +546,24 @@ LOX_METHOD(String, reverse) {
     RETURN_STRING(_strrev(self->chars), self->length);
 }
 
+LOX_METHOD(String, split) {
+    assertArgCount(vm, "String::split(delimiter)", 1, argCount);
+    assertArgIsString(vm, "String::split(delimiter)", args, 0);
+    ObjString* self = AS_STRING(receiver);
+    ObjString* delimiter = AS_STRING(args[0]);
+
+    ObjList* list = newList(vm);
+    char* string = _strdup(self->chars);
+    char* next = NULL;
+    char* token = strtok_s(string, delimiter->chars, &next);
+    while (token != NULL) {
+        writeValueArray(vm, &list->elements, OBJ_VAL(copyString(vm, token, (int)strlen(token))));
+        token = strtok_s(NULL, delimiter->chars, &next);
+    }
+    free(string);
+    RETURN_OBJ(list);
+}
+
 LOX_METHOD(String, startsWith) {
     assertArgCount(vm, "String::startsWith(chars)", 1, argCount);
     assertArgIsString(vm, "String::startsWith(chars)", args, 0);
@@ -677,6 +695,7 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->stringClass, String, length, 0);
     DEF_METHOD(vm->stringClass, String, replace, 2);
     DEF_METHOD(vm->stringClass, String, reverse, 0);
+    DEF_METHOD(vm->stringClass, String, split, 1);
     DEF_METHOD(vm->stringClass, String, startsWith, 1);
     DEF_METHOD(vm->stringClass, String, subString, 2);
     DEF_METHOD(vm->stringClass, String, toLowercase, 0);

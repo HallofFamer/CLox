@@ -5,25 +5,33 @@ print("Class of string is: ");
 println(str.getClassName());
 print("length of string is: ");
 println(str.length());
+
 print("String contains 'Hello': ");
 println(str.contains("Hello"));
 print("String index for 'Wo': ");
 println(str.indexOf("Wo"));
 print("Replace 'World' in String by 'My Friend': ");
 println(str.replace("World", "My Friend"));
+
 print("String starts with 'Hello': ");
 println(str.startsWith("Hello"));
 print("String ends with World: ");
 println(str.endsWith("World"));
 print("String char at position 4: ");
 println(str.getChar(4));
+
 print("Getting substring at index 3 and 8: ");
 println(str.subString(3, 8));
 print("Reversing String: ");
 println(str.reverse());
 print("Trim String ' Hello World  ': ");
 println(" Hello World  ".trim());
+
 print("'Hello World' to upper case: ");
 println("Hello World".toUppercase());
 print("'Hello World' to lower case: ");
 println("Hello World".toLowercase());
+
+print("Splitting string 'Hello My Friend'");
+var str2 = "Hello My Friend";
+println(str2.split(" "));
