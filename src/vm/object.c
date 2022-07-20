@@ -138,7 +138,7 @@ static void printDictionary(ObjDictionary* dictionary) {
         if (entry->key == NULL) continue;
         printf("%s: ", entry->key->chars);
         printValue(entry->value);
-        if (i < dictionary->table.capacity - 1) printf(", ");
+        printf("; ");
     }
     printf("]");
 }

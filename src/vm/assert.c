@@ -18,9 +18,16 @@ void assertArgIsBool(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
-void assertArgIsClass(VM* vm, const char* method, Value* args, int index){
+void assertArgIsClass(VM* vm, const char* method, Value* args, int index) {
     if (!IS_CLASS(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be a class.", method, index + 1);
+        exit(70);
+    }
+}
+
+void assertArgIsDictionary(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_DICTIONARY(args[index])) {
+        runtimeError(vm, "method %s expects argument %d to be a dictionary.", method, index + 1);
         exit(70);
     }
 }
@@ -39,6 +46,13 @@ void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
+void assertArgIsList(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_LIST(args[index])) {
+        runtimeError(vm, "method %s expects argument %d to be a list.", method, index + 1);
+        exit(70);
+    }
+}
+
 void assertArgIsNumber(VM* vm, const char* method, Value* args, int index) {
     if (!IS_NUMBER(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be a number.", method, index + 1);
@@ -53,9 +67,9 @@ void assertArgIsString(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
-void assertIndexWithinRange(VM* vm, const char* method, int arg, int min, int max, int index){
-    if (arg < min || arg > max) {
-        runtimeError(vm, "method %s expects argument %d to be an index within range %d to %d but got %d.", method, index, min, max, arg);
+void assertIndexWithinRange(VM* vm, const char* method, int value, int min, int max, int index){
+    if (value < min || value > max) {
+        runtimeError(vm, "method %s expects argument %d to be an index within range %d to %d but got %d.", method, index, min, max, value);
         exit(70);
     }
 }

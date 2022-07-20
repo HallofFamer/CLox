@@ -18,6 +18,8 @@ typedef struct {
 
 void initTable(Table* table);
 void freeTable(VM* vm, Table* table);
+bool tableContainsKey(Table* table, ObjString* key);
+bool tableContainsValue(Table* table, Value value);
 bool tableGet(Table* table, ObjString* key, Value* value);
 bool tableSet(VM* vm, Table* table, ObjString* key, Value value);
 bool tableDelete(Table* table, ObjString* key);

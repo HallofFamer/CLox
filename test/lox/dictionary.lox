@@ -3,3 +3,25 @@ print("Creating empty dictionary: ");
 println(dict);
 print("Dictionary is empty: ");
 println(dict.isEmpty());
+
+print("Adding entries to the dictionary: ");
+dict.putAt("name", "Joe Doe");
+dict.putAt("age", 40);
+dict.putAt("isAdmin", false);
+println(dict.toString());
+
+print("Dictionary contains key 'age': ");
+println(dict.containsKey("age"));
+print("Dictionary contains value true: ");
+println(dict.containsValue(true));
+print("Getting value at key 'name': ");
+println(dict.getAt("name"));
+print("Length of the dictionary is: ");
+println(dict.length());
+
+print("Removing key 'isAdmin': ");
+dict.removeAt("isAdmin");
+println(dict);
+print("Clearing dictionary: ");
+dict.clear();
+println(dict.toString());

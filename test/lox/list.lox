@@ -20,7 +20,7 @@ print("Index of element 'true': ");
 println(list.indexOf(true));
 
 print("Setting element false at index 2: ");
-list.setAt(2, false);
+list.putAt(2, false);
 println(list.toString());
 print("Inserting element nil at index 3: ");
 list.insertAt(3, nil);

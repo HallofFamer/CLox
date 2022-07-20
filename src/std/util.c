@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "util.h"
 #include "../vm/assert.h"
@@ -32,18 +33,20 @@ static ObjString* dictionaryToString(VM* vm, ObjDictionary* dictionary) {
 			offset += 2;
 			memcpy(string + offset, valueChars, valueLength);
 
-			if (i == dictionary->table.capacity - 1) {
-				offset += valueLength;
-			}
-			else {
-				memcpy(string + offset + valueLength, ", ", 2);
-				offset += valueLength + 2;
-			}
+			memcpy(string + offset + valueLength, "; ", 2);
+		    offset += valueLength + 2;
 		}
 
 		string[offset] = ']';
 		string[offset + 1] = '\0';
 		return copyString(vm, string, (int)offset + 1);
+	}
+}
+
+static void listAddAll(VM* vm, ObjList* from, ObjList* to) {
+	if (from->elements.count == 0) return;
+	for (int i = 0; i < from->elements.count; i++) {
+		writeValueArray(vm, &to->elements, from->elements.values[i]);
 	}
 }
 
@@ -133,6 +136,26 @@ LOX_METHOD(Dictionary, clone) {
 	RETURN_OBJ(copyDictionary(vm, self->table));
 }
 
+LOX_METHOD(Dictionary, containsKey) {
+	assertArgCount(vm, "Dictionary::containsKey(key)", 1, argCount);
+	assertArgIsString(vm, "Dictionary::containsKey(key)", args, 0);
+	RETURN_BOOL(tableContainsKey(&AS_DICTIONARY(receiver)->table, AS_STRING(args[0])));
+}
+
+LOX_METHOD(Dictionary, containsValue) {
+	assertArgCount(vm, "Dictionary::containsValue(value)", 1, argCount);
+	RETURN_BOOL(tableContainsValue(&AS_DICTIONARY(receiver)->table, args[0]));
+}
+
+LOX_METHOD(Dictionary, getAt) {
+	assertArgCount(vm, "Dictionary::getAt(key)", 1, argCount);
+	assertArgIsString(vm, "Dictionary::getAt(key)", args, 0);
+	Value value;
+	bool valueExists = tableGet(&AS_DICTIONARY(receiver)->table, AS_STRING(args[0]), &value);
+	if (!valueExists) RETURN_NIL;
+	RETURN_VAL(value);
+}
+
 LOX_METHOD(Dictionary, init) {
 	assertArgCount(vm, "Dictionary::init()", 0, argCount);
 	RETURN_OBJ(newDictionary(vm));
@@ -149,6 +172,33 @@ LOX_METHOD(Dictionary, length) {
 	RETURN_INT(AS_DICTIONARY(receiver)->table.count);
 }
 
+LOX_METHOD(Dictionary, putAll) {
+	assertArgCount(vm, "Dictionary::putAll(dictionary)", 1, argCount);
+	assertArgIsDictionary(vm, "Dictionary::putAll(dictionary)", args, 0);
+	tableAddAll(vm, &AS_DICTIONARY(args[0])->table, &AS_DICTIONARY(receiver)->table);
+	RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Dictionary, putAt) {
+	assertArgCount(vm, "Dictionary::putAt(key, value)", 2, argCount);
+	assertArgIsString(vm, "Dictionary::putAt(key, value)", args, 0);
+	tableSet(vm, &AS_DICTIONARY(receiver)->table, AS_STRING(args[0]), args[1]);
+	RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Dictionary, removeAt) {
+	assertArgCount(vm, "Dictionary::removeAt(key)", 1, argCount);
+	assertArgIsString(vm, "Dictionary::removeAt(key)", args, 0);
+	ObjDictionary* self = AS_DICTIONARY(receiver);
+	ObjString* key = AS_STRING(args[0]);
+	Value value;
+
+	bool keyExists = tableGet(&self->table, key, &value);
+	if (!keyExists) RETURN_NIL;
+	tableDelete(&self->table, key);
+	RETURN_VAL(value);
+}
+
 LOX_METHOD(Dictionary, toString) {
 	assertArgCount(vm, "Dictionary::toString()", 0, argCount);
 	RETURN_OBJ(dictionaryToString(vm, AS_DICTIONARY(receiver)));
@@ -157,6 +207,13 @@ LOX_METHOD(Dictionary, toString) {
 LOX_METHOD(List, add) {
 	assertArgCount(vm, "List::add(element)", 1, argCount);
 	writeValueArray(vm, &AS_LIST(receiver)->elements, args[0]);
+	RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(List, addAll) {
+	assertArgCount(vm, "List::add(list)", 1, argCount);
+	assertArgIsList(vm, "List::add(list)", args, 0);
+	listAddAll(vm, AS_LIST(args[0]), AS_LIST(receiver));
 	RETURN_OBJ(receiver);
 }
 
@@ -231,6 +288,17 @@ LOX_METHOD(List, length) {
 	RETURN_INT(AS_LIST(receiver)->elements.count);
 }
 
+LOX_METHOD(List, putAt) {
+	assertArgCount(vm, "List::putAt(index, element)", 2, argCount);
+	assertArgIsInt(vm, "List::putAt(index, element)", args, 0);
+	ObjList* self = AS_LIST(receiver);
+	int index = AS_INT(args[0]);
+	assertIndexWithinRange(vm, "List::putAt(index)", index, 0, self->elements.count, 0);
+	self->elements.values[index] = args[1];
+	if (index == self->elements.count) self->elements.count++;
+	RETURN_OBJ(receiver);
+}
+
 LOX_METHOD(List, remove) {
 	assertArgCount(vm, "List::remove(element)", 1, argCount);
 	ObjList* self = AS_LIST(receiver);
@@ -248,17 +316,6 @@ LOX_METHOD(List, removeAt) {
 	assertIndexWithinRange(vm, "List::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
 	Value element = listRemoveAt(vm, self, index);
 	RETURN_VAL(element);
-}
-
-LOX_METHOD(List, setAt) {
-	assertArgCount(vm, "List::setAt(index, element)", 2, argCount);
-	assertArgIsInt(vm, "List::setAt(index, element)", args, 0);
-	ObjList* self = AS_LIST(receiver);
-	int index = AS_INT(args[0]);
-	assertIndexWithinRange(vm, "List::insertAt(index)", index, 0, self->elements.count, 0);
-	self->elements.values[index] = args[1];
-	if (index == self->elements.count) self->elements.count++;
-	RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(List, subList) {
@@ -283,6 +340,7 @@ void registerUtilPackage(VM* vm) {
 	vm->listClass = defineNativeClass(vm, "List");
 	bindSuperclass(vm, vm->listClass, vm->objectClass);
 	DEF_METHOD(vm->listClass, List, add, 1);
+	DEF_METHOD(vm->listClass, List, addAll, 1);
 	DEF_METHOD(vm->listClass, List, clear, 0);
 	DEF_METHOD(vm->listClass, List, clone, 0);
 	DEF_METHOD(vm->listClass, List, contains, 1);
@@ -294,9 +352,9 @@ void registerUtilPackage(VM* vm) {
 	DEF_METHOD(vm->listClass, List, isEmpty, 0);
 	DEF_METHOD(vm->listClass, List, lastIndexOf, 1);
 	DEF_METHOD(vm->listClass, List, length, 0);
+	DEF_METHOD(vm->listClass, List, putAt, 2);
 	DEF_METHOD(vm->listClass, List, remove, 1);
 	DEF_METHOD(vm->listClass, List, removeAt, 1);
-	DEF_METHOD(vm->listClass, List, setAt, 2);
 	DEF_METHOD(vm->listClass, List, subList, 2);
 	DEF_METHOD(vm->listClass, List, toString, 0);
 
@@ -304,8 +362,14 @@ void registerUtilPackage(VM* vm) {
 	bindSuperclass(vm, vm->dictionaryClass, vm->objectClass);
 	DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
 	DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, containsKey, 1);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, containsValue, 1);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, getAt, 1);
 	DEF_METHOD(vm->dictionaryClass, Dictionary, init, 0);
 	DEF_METHOD(vm->dictionaryClass, Dictionary, isEmpty, 0);
 	DEF_METHOD(vm->dictionaryClass, Dictionary, length, 0);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, putAll, 1);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, putAt, 2);
+	DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);
 	DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
 }
