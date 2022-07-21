@@ -8,6 +8,7 @@
 
 ObjString* takeString(VM* vm, char* chars, int length);
 ObjString* copyString(VM* vm, const char* chars, int length);
+ObjString* newString(VM* vm, const char* chars);
 ObjString* formattedString(VM* vm, const char* format, ...);
 ObjString* formattedLongString(VM* vm, const char* format, ...);
 

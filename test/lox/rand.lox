@@ -1,0 +1,10 @@
+var rand = Random();
+println("Generating random numbers between 0 to 10000: ");
+println("Current seed is: " + rand.getSeed().toString());
+var i = 0;
+
+while(i < 100){ 
+    i = i + 1;
+    print("Random number " + i.toString() + ": ");
+    println(rand.nextIntBounded(10000));
+}

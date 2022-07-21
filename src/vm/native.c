@@ -1,3 +1,4 @@
+#pragma warning(disable:4996)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +13,18 @@
 LOX_FUNCTION(clock){
     assertArgCount(vm, "clock()", 0, argCount);
     RETURN_NUMBER((double)clock() / CLOCKS_PER_SEC);
+}
+
+LOX_FUNCTION(dateNow) {
+    assertArgCount(vm, "dateNow()", 0, argCount);
+    time_t nowTime;
+    time(&nowTime);
+    struct tm *now = localtime(&nowTime);
+    ObjInstance* date = newInstance(vm, getNativeClass(vm, "Date"));
+    setObjProperty(vm, date, "year", INT_VAL(1900 + now->tm_year));
+    setObjProperty(vm, date, "month", INT_VAL(1 + now->tm_mon));
+    setObjProperty(vm, date, "day", INT_VAL(now->tm_mday));
+    RETURN_OBJ(date);
 }
 
 LOX_FUNCTION(error){
@@ -72,8 +85,39 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, Na
     pop(vm);
 }
 
+ObjClass* getNativeClass(VM* vm, const char* name) {
+    Value klass;
+    tableGet(&vm->globals, newString(vm, name), &klass);
+    if (!IS_CLASS(klass)) {
+        runtimeError(vm, "Native class %s is undefined.", name);
+        exit(70);
+    }
+    return AS_CLASS(klass);
+}
+
+ObjNativeFunction* getNativeFunction(VM* vm, const char* name) {
+    Value function;
+    tableGet(&vm->globals, newString(vm, name), &function);
+    if (!IS_NATIVE_FUNCTION(function)) {
+        runtimeError(vm, "Native function %s is undefined.", name);
+        exit(70);
+    }
+    return AS_NATIVE_FUNCTION(function);
+}
+
+ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
+    Value method;
+    tableGet(&klass->methods, newString(vm, name), &method);
+    if (!IS_NATIVE_METHOD(method)) {
+        runtimeError(vm, "Native method %s::%s is undefined.", klass->name->chars, name);
+        exit(70);
+    }
+    return AS_NATIVE_METHOD(method);
+}
+
 void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(clock, 0);
+    DEF_FUNCTION(dateNow, 0);
     DEF_FUNCTION(error, 1);
     DEF_FUNCTION(gc, 0);
     DEF_FUNCTION(print, 1);

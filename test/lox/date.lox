@@ -1,0 +1,5 @@
+var now = dateNow();
+println("Current Date is: " + now.toString());
+
+var birthDay = Date(2022, 5, 21);
+println("Birthday is: " + birthDay.toString());

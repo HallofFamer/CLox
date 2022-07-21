@@ -1,15 +1,26 @@
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 
 #include "util.h"
+#include "../inc/pcg.h"
 #include "../vm/assert.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
 #include "../vm/string.h"
 #include "../vm/value.h"
 #include "../vm/vm.h"
+
+static struct tm dateToTm(int year, int month, int day) {
+	struct tm cDate = { 
+		.tm_year = year - 1900,
+		.tm_mon = month - 1,
+		.tm_mday = day
+	};
+	return cDate;
+}
 
 static ObjString* dictionaryToString(VM* vm, ObjDictionary* dictionary) {
 	if(dictionary->table.count == 0) return copyString(vm, "[]", 2);
@@ -122,6 +133,28 @@ static ObjString* listToString(VM* vm, ObjList* list) {
 		string[offset + 1] = '\0';
 		return copyString(vm, string, (int)offset + 1);
 	}
+}
+
+LOX_METHOD(Date, init) {
+	assertArgCount(vm, "Date::init(year, month, day)", 3, argCount);
+	assertArgIsInt(vm, "Date::init(year, month, day)", args, 0);
+	assertArgIsInt(vm, "Date::init(year, month, day)", args, 1);
+	assertArgIsInt(vm, "Date::init(year, month, day)", args, 2);
+
+	ObjInstance* self = AS_INSTANCE(receiver);
+	setObjProperty(vm, self, "year", args[0]);
+	setObjProperty(vm, self, "month", args[1]);
+	setObjProperty(vm, self, "day", args[2]);
+	RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Date, toString) {
+	assertArgCount(vm, "Date::toString()", 0, argCount);
+	ObjInstance* self = AS_INSTANCE(receiver);
+	Value year = getObjProperty(vm, self, "year");
+	Value month = getObjProperty(vm, self, "month");
+	Value day = getObjProperty(vm, self, "day");
+	RETURN_STRING_FMT("%d-%02d-%02d", AS_INT(year), AS_INT(month), AS_INT(day));
 }
 
 LOX_METHOD(Dictionary, clear) {
@@ -336,6 +369,56 @@ LOX_METHOD(List, toString) {
 	RETURN_OBJ(listToString(vm, AS_LIST(receiver)));
 }
 
+LOX_METHOD(Random, getSeed) {
+	assertArgCount(vm, "Random::getSeed()", 0, argCount);
+	Value seed = getObjProperty(vm, AS_INSTANCE(receiver), "seed");
+	RETURN_VAL(seed);
+}
+
+LOX_METHOD(Random, init) {
+	assertArgCount(vm, "Random::init()", 0, argCount);
+	ObjInstance* self = AS_INSTANCE(receiver);
+	uint64_t seed = (uint64_t)time(NULL);
+	pcg32_seed(seed);
+	setObjProperty(vm, self, "seed", INT_VAL(abs((int)seed)));
+	RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Random, nextBool) {
+	assertArgCount(vm, "Random::nextBool()", 0, argCount);
+	bool value = pcg32_random_bool();
+	RETURN_BOOL(value);
+}
+
+LOX_METHOD(Random, nextFloat) {
+	assertArgCount(vm, "Random::nextFloat()", 0, argCount);
+	double value = pcg32_random_double();
+	RETURN_NUMBER(value);
+}
+
+LOX_METHOD(Random, nextInt) {
+	assertArgCount(vm, "Random::nextInt()", 0, argCount);
+	uint32_t value = pcg32_random_int();
+	RETURN_INT((int)value);
+}
+
+LOX_METHOD(Random, nextIntBounded) {
+	assertArgCount(vm, "Random::nextIntBounded(bound)", 1, argCount);
+	assertArgIsInt(vm, "Random::nextIntBounded(bound)", args, 0);
+	assertNonNegativeNumber(vm, "Random::nextIntBounded(bound)", AS_NUMBER(args[0]), 0);
+	uint32_t value = pcg32_random_int_bounded((uint32_t)AS_INT(args[0]));
+	RETURN_INT((int)value);
+}
+
+LOX_METHOD(Random, setSeed) {
+	assertArgCount(vm, "Random::setSeed(seed)", 1, argCount);
+	assertArgIsInt(vm, "Random::setSeed(seed)", args, 0);
+	assertNonNegativeNumber(vm, "Random::setSeed(seed)", AS_NUMBER(args[0]), 0);
+	pcg32_seed((uint64_t)AS_INT(args[0]));
+	setObjProperty(vm, AS_INSTANCE(receiver), "seed", args[0]);
+	RETURN_NIL;
+}
+
 void registerUtilPackage(VM* vm) {
 	vm->listClass = defineNativeClass(vm, "List");
 	bindSuperclass(vm, vm->listClass, vm->objectClass);
@@ -372,4 +455,19 @@ void registerUtilPackage(VM* vm) {
 	DEF_METHOD(vm->dictionaryClass, Dictionary, putAt, 2);
 	DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);
 	DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
+
+	ObjClass* randomClass = defineNativeClass(vm, "Random");
+	bindSuperclass(vm, randomClass, vm->objectClass);
+	DEF_METHOD(randomClass, Random, getSeed, 0);
+	DEF_METHOD(randomClass, Random, init, 0);
+	DEF_METHOD(randomClass, Random, nextBool, 0);
+	DEF_METHOD(randomClass, Random, nextFloat, 0);
+	DEF_METHOD(randomClass, Random, nextInt, 0);
+	DEF_METHOD(randomClass, Random, nextIntBounded, 1);
+	DEF_METHOD(randomClass, Random, setSeed, 1);
+
+	ObjClass* dateClass = defineNativeClass(vm, "Date");
+	bindSuperclass(vm, dateClass, vm->objectClass);
+	DEF_METHOD(dateClass, Date, init, 3);
+	DEF_METHOD(dateClass, Date, toString, 0);
 }

@@ -71,6 +71,9 @@
     <ClCompile Include="src\std\util.c">
       <Filter>Source Files\std</Filter>
     </ClCompile>
+    <ClCompile Include="src\inc\pcg.c">
+      <Filter>Source Files\inc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="test\lox\benchmark.lox">
@@ -129,6 +132,12 @@
     <None Include="test\lox\dictionary.lox">
       <Filter>Test Files\lox</Filter>
     </None>
+    <None Include="test\lox\rand.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
+    <None Include="test\lox\date.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">
@@ -181,6 +190,9 @@
     </ClInclude>
     <ClInclude Include="src\std\util.h">
       <Filter>Source Files\std</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\pcg.h">
+      <Filter>Source Files\inc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

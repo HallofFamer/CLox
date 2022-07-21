@@ -8,7 +8,7 @@
 #include "value.h"
 
 #define OBJ_TYPE(value)            (AS_OBJ(value)->type)
-#define OBJ_KLASS(value)           (AS_OBJ(value)->klass)
+#define OBJ_KLASS(value)           (AS_OBJ(value)->klass)  
 
 #define IS_BOUND_METHOD(value)     isObjType(value, OBJ_BOUND_METHOD)
 #define IS_CLASS(value)            isObjType(value, OBJ_CLASS)
@@ -143,7 +143,10 @@ ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFn function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
+
 ObjClass* getObjClass(VM* vm, Value value);
+Value getObjProperty(VM* vm, ObjInstance* object, char* name);
+void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
 void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type) {

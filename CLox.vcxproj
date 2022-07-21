@@ -143,6 +143,7 @@
   <ItemGroup>
     <ClCompile Include="main.c" />
     <ClCompile Include="src\inc\ini.c" />
+    <ClCompile Include="src\inc\pcg.c" />
     <ClCompile Include="src\std\lang.c" />
     <ClCompile Include="src\std\util.c" />
     <ClCompile Include="src\vm\assert.c" />
@@ -164,6 +165,7 @@
     <None Include="README.md" />
     <None Include="test\lox\benchmark.lox" />
     <None Include="test\lox\closure.lox" />
+    <None Include="test\lox\date.lox" />
     <None Include="test\lox\dictionary.lox" />
     <None Include="test\lox\fibonacci.lox" />
     <None Include="test\lox\fraction.lox" />
@@ -175,6 +177,7 @@
     <None Include="test\lox\method.lox" />
     <None Include="test\lox\native.lox" />
     <None Include="test\lox\object.lox" />
+    <None Include="test\lox\rand.lox" />
     <None Include="test\lox\receiver.lox" />
     <None Include="test\lox\string.lox" />
     <None Include="test\lox\sum.lox" />
@@ -183,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\inc\ini.h" />
+    <ClInclude Include="src\inc\pcg.h" />
     <ClInclude Include="src\std\lang.h" />
     <ClInclude Include="src\std\util.h" />
     <ClInclude Include="src\vm\assert.h" />

@@ -46,6 +46,10 @@ ObjString* copyString(VM* vm, const char* chars, int length) {
     return allocateString(vm, heapChars, length, hash);
 }
 
+ObjString* newString(VM* vm, const char* chars) {
+    return copyString(vm, chars, (int)strlen(chars));
+}
+
 ObjString* formattedString(VM* vm, const char* format, ...) {
     char chars[UINT8_MAX];
     va_list args;

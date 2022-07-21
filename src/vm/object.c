@@ -1,10 +1,12 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "hash.h"
 #include "memory.h"
 #include "object.h"
+#include "string.h"
 #include "vm.h"
 
 #define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass)
@@ -129,6 +131,16 @@ ObjClass* getObjClass(VM* vm, Value value) {
     else if (IS_FLOAT(value)) return vm->floatClass;
     else if (IS_OBJ(value)) return AS_OBJ(value)->klass;
     else return NULL;
+}
+
+Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
+    Value value;
+    tableGet(&object->fields, copyString(vm, name, (int)strlen(name)), &value);
+    return value;
+}
+
+void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
+    tableSet(vm, &object->fields, copyString(vm, name, (int)strlen(name)), value);
 }
 
 static void printDictionary(ObjDictionary* dictionary) {
