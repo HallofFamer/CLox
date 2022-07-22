@@ -145,6 +145,7 @@ ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int a
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 
 ObjClass* getObjClass(VM* vm, Value value);
+bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
 void printObject(Value value);

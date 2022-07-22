@@ -133,6 +133,18 @@ ObjClass* getObjClass(VM* vm, Value value) {
     else return NULL;
 }
 
+bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass) {
+    ObjClass* currentClass = getObjClass(vm, value);
+    if (currentClass == klass) return true;
+
+    ObjClass* superClass = currentClass->superclass;
+    while (superClass != NULL) {
+        if (superClass == klass) return true;
+        superClass = superClass->superclass;
+    }
+    return false;
+}
+
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
     Value value;
     tableGet(&object->fields, copyString(vm, name, (int)strlen(name)), &value);

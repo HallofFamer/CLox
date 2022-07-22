@@ -442,16 +442,7 @@ LOX_METHOD(Object, hashCode) {
 LOX_METHOD(Object, instanceOf) {
     assertArgCount(vm, "Object::instanceOf(class)", 1, argCount);
     if (!IS_CLASS(args[0])) RETURN_FALSE;
-    ObjClass* thisClass = getObjClass(vm, receiver);
-    ObjClass* thatClass = AS_CLASS(args[0]);
-    if (thisClass == thatClass) RETURN_TRUE;
-
-    ObjClass* superclass = thisClass->superclass;
-    while (superclass != NULL) {
-        if (superclass == thatClass) RETURN_TRUE;
-        superclass = superclass->superclass;
-    }
-    RETURN_FALSE;
+    RETURN_BOOL(isObjInstanceOf(vm, receiver, AS_CLASS(args[0])));
 }
 
 LOX_METHOD(Object, memberOf) {

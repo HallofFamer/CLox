@@ -19,8 +19,10 @@ https://github.com/munificent/craftinginterpreters
 - Inheritance and this/super keywords
 - Embeddable VM for CLox in other host applications(since version 1.1)
 - `Object` root class for every class in Lox(since version 1.1)
-- Framework for creating native functions, methods and classes(since version 1.1).
-- Print statement removed, use native function `print` and `println` instead(since version 1.1).
+- Framework for creating native functions, methods and classes(since version 1.1)
+- Print statement removed, use native function `print` and `println` instead(since version 1.1)
+- Improved Object Model - Everything is an object, and every object has a class(since version 1.2)
+- CLox Standard Library for package 'lang' and 'util'(since version 1.2)
 - Customized Runtime configuration for CLox using clox.ini(since version 1.2)
 - Separated integer values and floating point values(since version 1.2).
 

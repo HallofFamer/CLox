@@ -21,13 +21,6 @@
  *     http://www.pcg-random.org
  */
 
-/*
- * This code is derived from the full C implementation, which is in turn
- * derived from the canonical C++ PCG implementation. The C++ version
- * has many additional features and is preferable if you can use C++ in
- * your project.
- */
-
 #ifndef PCG_H_INCLUDED
 #define PCG_H_INCLUDED 1
 

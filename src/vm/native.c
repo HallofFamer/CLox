@@ -27,6 +27,21 @@ LOX_FUNCTION(dateNow) {
     RETURN_OBJ(date);
 }
 
+LOX_FUNCTION(dateTimeNow) {
+    assertArgCount(vm, "dateTimeNow()", 0, argCount);
+    time_t nowTime;
+    time(&nowTime);
+    struct tm* now = localtime(&nowTime);
+    ObjInstance* date = newInstance(vm, getNativeClass(vm, "DateTime"));
+    setObjProperty(vm, date, "year", INT_VAL(1900 + now->tm_year));
+    setObjProperty(vm, date, "month", INT_VAL(1 + now->tm_mon));
+    setObjProperty(vm, date, "day", INT_VAL(now->tm_mday));
+    setObjProperty(vm, date, "hour", INT_VAL(now->tm_hour));
+    setObjProperty(vm, date, "minute", INT_VAL(now->tm_min));
+    setObjProperty(vm, date, "second", INT_VAL(now->tm_sec));
+    RETURN_OBJ(date);
+}
+
 LOX_FUNCTION(error){
     assertArgCount(vm, "error(message)", 1, argCount);
     assertArgIsString(vm, "error(message)", args, 0);
@@ -118,6 +133,7 @@ ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
 void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(clock, 0);
     DEF_FUNCTION(dateNow, 0);
+    DEF_FUNCTION(dateTimeNow, 0);
     DEF_FUNCTION(error, 1);
     DEF_FUNCTION(gc, 0);
     DEF_FUNCTION(print, 1);

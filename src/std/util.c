@@ -22,6 +22,45 @@ static struct tm dateToTm(int year, int month, int day) {
 	return cDate;
 }
 
+static struct tm dateTimeToTm(int year, int month, int day, int hour, int minute, int second) {
+	struct tm cDate = {
+	    .tm_year = year - 1900,
+	    .tm_mon = month - 1,
+	    .tm_mday = day, 
+		.tm_hour = hour,
+		.tm_min = minute,
+		.tm_sec = second
+	};
+	return cDate;
+}
+
+static double dateGetTimestamp(int year, int month, int day) {
+	struct tm cTime = dateToTm(year, month, day);
+	return (double)mktime(&cTime);
+}
+
+static double dateTimeGetTimestamp(int year, int month, int day, int hour, int minute, int second) {
+	struct tm cTime = dateTimeToTm(year, month, day, hour, minute, second);
+	return (double)mktime(&cTime);
+}
+
+static double dateObjGetTimestamp(VM* vm, ObjInstance* date) {
+	Value year = getObjProperty(vm, date, "year");
+	Value month = getObjProperty(vm, date, "month");
+	Value day = getObjProperty(vm, date, "day");
+	return dateGetTimestamp(AS_INT(year), AS_INT(month), AS_INT(day));
+}
+
+static double dateTimeObjGetTimestamp(VM* vm, ObjInstance* dateTime) {
+	Value year = getObjProperty(vm, dateTime, "year");
+	Value month = getObjProperty(vm, dateTime, "month");
+	Value day = getObjProperty(vm, dateTime, "day");
+	Value hour = getObjProperty(vm, dateTime, "hour");
+	Value minute = getObjProperty(vm, dateTime, "minute");
+	Value second = getObjProperty(vm, dateTime, "second");
+	return dateTimeGetTimestamp(AS_INT(year), AS_INT(month), AS_INT(day), AS_INT(hour), AS_INT(minute), AS_INT(second));
+}
+
 static ObjString* dictionaryToString(VM* vm, ObjDictionary* dictionary) {
 	if(dictionary->table.count == 0) return copyString(vm, "[]", 2);
 	else {
@@ -52,6 +91,41 @@ static ObjString* dictionaryToString(VM* vm, ObjDictionary* dictionary) {
 		string[offset + 1] = '\0';
 		return copyString(vm, string, (int)offset + 1);
 	}
+}
+
+static void durationInit(int* duration, Value* args) {
+	int days = AS_INT(args[0]);
+	int hours = AS_INT(args[1]);
+	int minutes = AS_INT(args[2]);
+	int seconds = AS_INT(args[3]);
+
+	if (seconds > 60) {
+		minutes += seconds / 60;
+		seconds %= 60;
+	}
+
+	if (minutes > 60) {
+		hours += minutes / 60;
+		minutes %= 60;
+	}
+
+	if (hours > 60) {
+		days += hours / 24;
+		hours %= 24;
+	}
+
+	duration[0] = days;
+	duration[1] = hours;
+	duration[2] = minutes;
+	duration[3] = seconds;
+}
+
+static double durationTotalSeconds(VM* vm, ObjInstance* duration) {
+	Value days = getObjProperty(vm, duration, "days");
+	Value hours = getObjProperty(vm, duration, "hours");
+	Value minutes = getObjProperty(vm, duration, "minutes");
+	Value seconds = getObjProperty(vm, duration, "seconds");
+	return 86400.0 * AS_INT(days) + 3600.0 * AS_INT(hours) + 60.0 * AS_INT(minutes) + AS_INT(seconds);
 }
 
 static void listAddAll(VM* vm, ObjList* from, ObjList* to) {
@@ -135,6 +209,35 @@ static ObjString* listToString(VM* vm, ObjList* list) {
 	}
 }
 
+LOX_METHOD(Date, after) {
+	assertArgCount(vm, "Date::after(date)", 1, argCount);
+	assertInstanceOf(vm, "Date::after(date)", args[0], "Date", 0);
+	double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
+	double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+	RETURN_BOOL(timestamp > timestamp2);
+}
+
+LOX_METHOD(Date, before) {
+	assertArgCount(vm, "Date::before(date)", 1, argCount);
+	assertInstanceOf(vm, "Date::before(date)", args[0], "Date", 0);
+	double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
+	double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+	RETURN_BOOL(timestamp < timestamp2);
+}
+
+LOX_METHOD(Date, diff) {
+	assertArgCount(vm, "Date::diff(date)", 1, argCount);
+	assertInstanceOf(vm, "Date::diff(date)", args[0], "Date", 0);
+	double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
+	double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+	RETURN_NUMBER(timestamp - timestamp2);
+}
+
+LOX_METHOD(Date, getTimestamp) {
+	assertArgCount(vm, "Date::getTimestamp()", 0, argCount);
+	RETURN_NUMBER(dateObjGetTimestamp(vm, AS_INSTANCE(receiver)));
+}
+
 LOX_METHOD(Date, init) {
 	assertArgCount(vm, "Date::init(year, month, day)", 3, argCount);
 	assertArgIsInt(vm, "Date::init(year, month, day)", args, 0);
@@ -148,6 +251,19 @@ LOX_METHOD(Date, init) {
 	RETURN_OBJ(receiver);
 }
 
+LOX_METHOD(Date, toDateTime) {
+	assertArgCount(vm, "Date::toDateTime()", 0, argCount);
+	ObjInstance* self = AS_INSTANCE(receiver);
+	ObjInstance* dateTime = newInstance(vm, getNativeClass(vm, "DateTime"));
+	setObjProperty(vm, dateTime, "year", getObjProperty(vm, self, "year"));
+	setObjProperty(vm, dateTime, "month", getObjProperty(vm, self, "month"));
+	setObjProperty(vm, dateTime, "day", getObjProperty(vm, self, "day"));
+	setObjProperty(vm, dateTime, "hour", INT_VAL(0));
+	setObjProperty(vm, dateTime, "minute", INT_VAL(0));
+	setObjProperty(vm, dateTime, "second", INT_VAL(0));
+	RETURN_OBJ(dateTime);
+}
+
 LOX_METHOD(Date, toString) {
 	assertArgCount(vm, "Date::toString()", 0, argCount);
 	ObjInstance* self = AS_INSTANCE(receiver);
@@ -155,6 +271,76 @@ LOX_METHOD(Date, toString) {
 	Value month = getObjProperty(vm, self, "month");
 	Value day = getObjProperty(vm, self, "day");
 	RETURN_STRING_FMT("%d-%02d-%02d", AS_INT(year), AS_INT(month), AS_INT(day));
+}
+
+LOX_METHOD(DateTime, after) {
+	assertArgCount(vm, "DateTime::after(date)", 1, argCount);
+	assertInstanceOf(vm, "DateTime::after(date)", args[0], "DateTime", 0);
+	double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
+	double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+	RETURN_BOOL(timestamp > timestamp2);
+}
+
+LOX_METHOD(DateTime, before) {
+	assertArgCount(vm, "DateTime::before(date)", 1, argCount);
+	assertInstanceOf(vm, "DateTime::before(date)", args[0], "DateTime", 0);
+	double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
+	double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+	RETURN_BOOL(timestamp < timestamp2);
+}
+
+LOX_METHOD(DateTime, diff) {
+	assertArgCount(vm, "DateTime::diff(date)", 1, argCount);
+	assertInstanceOf(vm, "DateTime::diff(date)", args[0], "DateTime", 0);
+	double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
+	double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+	RETURN_NUMBER(timestamp - timestamp2);
+}
+
+LOX_METHOD(DateTime, getTimestamp) {
+	assertArgCount(vm, "DateTime::getTimestamp()", 0, argCount);
+	RETURN_NUMBER(dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver)));
+}
+
+LOX_METHOD(DateTime, init) {
+	assertArgCount(vm, "DateTime::init(year, month, day, hour, minute, second)", 6, argCount);
+	assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 0);
+	assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 1);
+	assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 2);
+	assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 3);
+	assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 4);
+	assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 5);
+
+	ObjInstance* self = AS_INSTANCE(receiver);
+	setObjProperty(vm, self, "year", args[0]);
+	setObjProperty(vm, self, "month", args[1]);
+	setObjProperty(vm, self, "day", args[2]);
+	setObjProperty(vm, self, "hour", args[3]);
+	setObjProperty(vm, self, "minute", args[4]);
+	setObjProperty(vm, self, "second", args[5]);
+	RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(DateTime, toDate) {
+	assertArgCount(vm, "DateTime::toDate()", 0, argCount);
+	ObjInstance* self = AS_INSTANCE(receiver);
+	ObjInstance* date = newInstance(vm, getNativeClass(vm, "Date"));
+	setObjProperty(vm, date, "year", getObjProperty(vm, self, "year"));
+	setObjProperty(vm, date, "month", getObjProperty(vm, self, "month"));
+	setObjProperty(vm, date, "day", getObjProperty(vm, self, "day"));
+	RETURN_OBJ(date);
+}
+
+LOX_METHOD(DateTime, toString) {
+	assertArgCount(vm, "DateTime::toString()", 0, argCount);
+	ObjInstance* self = AS_INSTANCE(receiver);
+	Value year = getObjProperty(vm, self, "year");
+	Value month = getObjProperty(vm, self, "month");
+	Value day = getObjProperty(vm, self, "day");
+	Value hour = getObjProperty(vm, self, "hour");
+	Value minute = getObjProperty(vm, self, "minute");
+	Value second = getObjProperty(vm, self, "second");
+	RETURN_STRING_FMT("%d-%02d-%02d %02d:%02d:%02d", AS_INT(year), AS_INT(month), AS_INT(day), AS_INT(hour), AS_INT(minute), AS_INT(second));
 }
 
 LOX_METHOD(Dictionary, clear) {
@@ -235,6 +421,43 @@ LOX_METHOD(Dictionary, removeAt) {
 LOX_METHOD(Dictionary, toString) {
 	assertArgCount(vm, "Dictionary::toString()", 0, argCount);
 	RETURN_OBJ(dictionaryToString(vm, AS_DICTIONARY(receiver)));
+}
+
+LOX_METHOD(Duration, getTotalSeconds) {
+	assertArgCount(vm, "Duration::getTotalSeconds()", 0, argCount);
+	RETURN_NUMBER(durationTotalSeconds(vm, AS_INSTANCE(receiver)));
+}
+
+LOX_METHOD(Duration, init) {
+	assertArgCount(vm, "Duration::init(days, hours, minutes, seconds)", 4, argCount);
+	assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 0);
+	assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 1);
+	assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 2);
+	assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 3);
+
+	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[0]), 1);
+	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[1]), 2);
+	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[2]), 3);
+	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[3]), 4);
+
+	ObjInstance* self = AS_INSTANCE(receiver);
+	int duration[4];
+	durationInit(duration, args);
+	setObjProperty(vm, self, "days", INT_VAL(duration[0]));
+	setObjProperty(vm, self, "hours", INT_VAL(duration[1]));
+	setObjProperty(vm, self, "minutes", INT_VAL(duration[2]));
+	setObjProperty(vm, self, "seconds", INT_VAL(duration[3]));
+	RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Duration, toString) {
+	assertArgCount(vm, "Duration::toString()", 0, argCount);
+	ObjInstance* self = AS_INSTANCE(receiver);
+	Value days = getObjProperty(vm, self, "days");
+	Value hours = getObjProperty(vm, self, "hours");
+	Value minutes = getObjProperty(vm, self, "minutes");
+	Value seconds = getObjProperty(vm, self, "seconds");
+	RETURN_STRING_FMT("%d days, %02d hours, %02d minutes, %02d seconds", AS_INT(days), AS_INT(hours), AS_INT(minutes), AS_INT(seconds));
 }
 
 LOX_METHOD(List, add) {
@@ -468,6 +691,27 @@ void registerUtilPackage(VM* vm) {
 
 	ObjClass* dateClass = defineNativeClass(vm, "Date");
 	bindSuperclass(vm, dateClass, vm->objectClass);
+	DEF_METHOD(dateClass, Date, after, 1);
+	DEF_METHOD(dateClass, Date, before, 1);
+	DEF_METHOD(dateClass, Date, diff, 1);
+	DEF_METHOD(dateClass, Date, getTimestamp, 0);
 	DEF_METHOD(dateClass, Date, init, 3);
+	DEF_METHOD(dateClass, Date, toDateTime, 0);
 	DEF_METHOD(dateClass, Date, toString, 0);
+
+	ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
+	bindSuperclass(vm, dateTimeClass, dateClass);
+	DEF_METHOD(dateTimeClass, DateTime, after, 1);
+	DEF_METHOD(dateTimeClass, DateTime, before, 1);
+	DEF_METHOD(dateTimeClass, DateTime, diff, 1);
+	DEF_METHOD(dateTimeClass, DateTime, getTimestamp, 0);
+	DEF_METHOD(dateTimeClass, DateTime, init, 6);
+	DEF_METHOD(dateTimeClass, DateTime, toDate, 0);
+	DEF_METHOD(dateTimeClass, DateTime, toString, 0);
+
+	ObjClass* durationClass = defineNativeClass(vm, "Duration");
+	bindSuperclass(vm, durationClass, vm->objectClass);
+	DEF_METHOD(durationClass, Duration, getTotalSeconds, 0);
+	DEF_METHOD(durationClass, Duration, init, 4);
+	DEF_METHOD(durationClass, Duration, toString, 0);
 }
