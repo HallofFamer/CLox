@@ -14,7 +14,7 @@
 #include "../vm/vm.h"
 
 static struct tm dateToTm(int year, int month, int day) {
-	struct tm cDate = { 
+	struct tm cDate = {
 		.tm_year = year - 1900,
 		.tm_mon = month - 1,
 		.tm_mday = day
@@ -59,6 +59,31 @@ static double dateTimeObjGetTimestamp(VM* vm, ObjInstance* dateTime) {
 	Value minute = getObjProperty(vm, dateTime, "minute");
 	Value second = getObjProperty(vm, dateTime, "second");
 	return dateTimeGetTimestamp(AS_INT(year), AS_INT(month), AS_INT(day), AS_INT(hour), AS_INT(minute), AS_INT(second));
+}
+
+static ObjInstance* dateObjFromTimestamp(VM* vm, ObjClass* dateClass, double timeValue) {
+	time_t timestamp = (time_t)timeValue;
+	struct tm time;
+	localtime_s(&time, &timestamp);
+	ObjInstance* date = newInstance(vm, dateClass);
+	setObjProperty(vm, date, "year", INT_VAL(1900 + time.tm_year));
+	setObjProperty(vm, date, "month", INT_VAL(1 + time.tm_mon));
+	setObjProperty(vm, date, "day", INT_VAL(time.tm_mday));
+	return date;
+}
+
+static ObjInstance* dateTimeObjFromTimestamp(VM* vm, ObjClass* dateTimeClass, double timeValue) {
+	time_t timestamp = (time_t)timeValue;
+	struct tm time;
+	localtime_s(&time, &timestamp);
+	ObjInstance* dateTime = newInstance(vm, dateTimeClass);
+	setObjProperty(vm, dateTime, "year", INT_VAL(1900 + time.tm_year));
+	setObjProperty(vm, dateTime, "month", INT_VAL(1 + time.tm_mon));
+	setObjProperty(vm, dateTime, "day", INT_VAL(time.tm_mday));
+	setObjProperty(vm, dateTime, "hour", INT_VAL(time.tm_hour));
+	setObjProperty(vm, dateTime, "minute", INT_VAL(time.tm_min));
+	setObjProperty(vm, dateTime, "second", INT_VAL(time.tm_sec));
+	return dateTime;
 }
 
 static ObjString* dictionaryToString(VM* vm, ObjDictionary* dictionary) {
@@ -239,16 +264,34 @@ LOX_METHOD(Date, getTimestamp) {
 }
 
 LOX_METHOD(Date, init) {
-	assertArgCount(vm, "Date::init(year, month, day)", 3, argCount);
-	assertArgIsInt(vm, "Date::init(year, month, day)", args, 0);
-	assertArgIsInt(vm, "Date::init(year, month, day)", args, 1);
-	assertArgIsInt(vm, "Date::init(year, month, day)", args, 2);
+    assertArgCount(vm, "Date::init(year, month, day)", 3, argCount);
+    assertArgIsInt(vm, "Date::init(year, month, day)", args, 0);
+    assertArgIsInt(vm, "Date::init(year, month, day)", args, 1);
+    assertArgIsInt(vm, "Date::init(year, month, day)", args, 2);
 
-	ObjInstance* self = AS_INSTANCE(receiver);
-	setObjProperty(vm, self, "year", args[0]);
-	setObjProperty(vm, self, "month", args[1]);
-	setObjProperty(vm, self, "day", args[2]);
-	RETURN_OBJ(receiver);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "year", args[0]);
+    setObjProperty(vm, self, "month", args[1]);
+    setObjProperty(vm, self, "day", args[2]);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Date, minus) {
+    assertArgCount(vm, "Date::minus(duration)", 1, argCount);
+    assertInstanceOf(vm, "Date::minus(duration)", args[0], "Duration", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    double timestamp = dateObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
+    RETURN_OBJ(date);
+}
+
+LOX_METHOD(Date, plus) {
+    assertArgCount(vm, "Date::plus(duration)", 1, argCount);
+    assertInstanceOf(vm, "Date::plus(duration)", args[0], "Duration", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    double timestamp = dateObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
+    RETURN_OBJ(date);
 }
 
 LOX_METHOD(Date, toDateTime) {
@@ -319,6 +362,24 @@ LOX_METHOD(DateTime, init) {
 	setObjProperty(vm, self, "minute", args[4]);
 	setObjProperty(vm, self, "second", args[5]);
 	RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(DateTime, minus) {
+    assertArgCount(vm, "DateTime::minus(duration)", 1, argCount);
+    assertInstanceOf(vm, "DateTime::minus(duration)", args[0], "Duration", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    double timestamp = dateTimeObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
+    RETURN_OBJ(dateTime);
+}
+
+LOX_METHOD(DateTime, plus) {
+    assertArgCount(vm, "DateTime::plus(duration)", 1, argCount);
+    assertInstanceOf(vm, "DateTime::plus(duration)", args[0], "Duration", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    double timestamp = dateTimeObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
+    RETURN_OBJ(dateTime);
 }
 
 LOX_METHOD(DateTime, toDate) {
@@ -435,10 +496,10 @@ LOX_METHOD(Duration, init) {
 	assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 2);
 	assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 3);
 
-	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[0]), 1);
-	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[1]), 2);
-	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[2]), 3);
-	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[3]), 4);
+	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[0]), 0);
+	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[1]), 1);
+	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[2]), 2);
+	assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[3]), 3);
 
 	ObjInstance* self = AS_INSTANCE(receiver);
 	int duration[4];
@@ -696,6 +757,8 @@ void registerUtilPackage(VM* vm) {
 	DEF_METHOD(dateClass, Date, diff, 1);
 	DEF_METHOD(dateClass, Date, getTimestamp, 0);
 	DEF_METHOD(dateClass, Date, init, 3);
+	DEF_METHOD(dateClass, Date, minus, 1);
+	DEF_METHOD(dateClass, Date, plus, 1);
 	DEF_METHOD(dateClass, Date, toDateTime, 0);
 	DEF_METHOD(dateClass, Date, toString, 0);
 
@@ -706,6 +769,8 @@ void registerUtilPackage(VM* vm) {
 	DEF_METHOD(dateTimeClass, DateTime, diff, 1);
 	DEF_METHOD(dateTimeClass, DateTime, getTimestamp, 0);
 	DEF_METHOD(dateTimeClass, DateTime, init, 6);
+	DEF_METHOD(dateTimeClass, DateTime, minus, 1);
+	DEF_METHOD(dateTimeClass, DateTime, plus, 1);
 	DEF_METHOD(dateTimeClass, DateTime, toDate, 0);
 	DEF_METHOD(dateTimeClass, DateTime, toString, 0);
 

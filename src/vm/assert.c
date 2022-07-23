@@ -70,7 +70,7 @@ void assertArgIsString(VM* vm, const char* method, Value* args, int index) {
 
 void assertIndexWithinRange(VM* vm, const char* method, int value, int min, int max, int index){
     if (value < min || value > max) {
-        runtimeError(vm, "method %s expects argument %d to be an index within range %d to %d but got %d.", method, index, min, max, value);
+        runtimeError(vm, "method %s expects argument %d to be an index within range %d to %d but got %d.", method, index + 1, min, max, value);
         exit(70);
     }
 }
@@ -83,7 +83,7 @@ void assertInstanceOf(VM* vm, const char* method, Value arg, char* className, in
         }
         else {
             runtimeError(vm, "method %s expects argument %d to be an instance of class %s but got %s.", 
-                method, index, className, getObjClass(vm, arg)->name->chars);
+                method, index + 1, className, getObjClass(vm, arg)->name->chars);
         }
         exit(70);
     }
@@ -92,7 +92,7 @@ void assertInstanceOf(VM* vm, const char* method, Value arg, char* className, in
 void assertNonNegativeNumber(VM* vm, const char* method, double number, int index) {
     if (number < 0) {
         if (index < 0) runtimeError(vm, "method %s expects receiver to be a non negative number but got %g.", method, number);
-        else runtimeError(vm, "method %s expects argument %d to be a non negative number but got %g.", method, index, number);
+        else runtimeError(vm, "method %s expects argument %d to be a non negative number but got %g.", method, index + 1, number);
         exit(70);
     }
 }
@@ -100,7 +100,7 @@ void assertNonNegativeNumber(VM* vm, const char* method, double number, int inde
 void assertNonZeroNumber(VM* vm, const char* method, double number, int index) {
     if (number == 0) {
         if (index < 0) runtimeError(vm, "method %s expects receiver to be a non-zero number but got %g.", method, number);
-        else runtimeError(vm, "method %s expects argument %d to be a non-zero number but got %g.", method, index, number);
+        else runtimeError(vm, "method %s expects argument %d to be a non-zero number but got %g.", method, index + 1, number);
         exit(70);
     }
 }
@@ -108,7 +108,7 @@ void assertNonZeroNumber(VM* vm, const char* method, double number, int index) {
 void assertPositiveNumber(VM* vm, const char* method, double number, int index) {
     if (number <= 0) {
         if (index < 0) runtimeError(vm, "method %s expects receiver to be a positive number but got %g.", method, number);
-        else runtimeError(vm, "method %s expects argument %d to be a positive number but got %g.", method, index, number);
+        else runtimeError(vm, "method %s expects argument %d to be a positive number but got %g.", method, index + 1, number);
         exit(70);
     }
 }

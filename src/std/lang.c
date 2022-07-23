@@ -693,6 +693,11 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->stringClass, String, toString, 0);
     DEF_METHOD(vm->stringClass, String, toUppercase, 0);
     DEF_METHOD(vm->stringClass, String, trim, 0);
+    for (int i = 0; i < vm->strings.capacity; i++) {
+        Entry* entry = &vm->strings.entries[i];
+        if (entry->key == NULL) continue;
+        entry->key->obj.klass = vm->stringClass;
+    }
 
     vm->functionClass = defineNativeClass(vm, "Function");
     bindSuperclass(vm, vm->functionClass, vm->objectClass);
@@ -713,5 +718,4 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->methodClass, Method, receiver, 0);
     DEF_METHOD(vm->methodClass, Method, toString, 0);
     DEF_METHOD(vm->methodClass, Method, upvalueCount, 0);
-
 }

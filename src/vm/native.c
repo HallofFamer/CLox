@@ -1,4 +1,3 @@
-#pragma warning(disable:4996)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,11 +18,12 @@ LOX_FUNCTION(dateNow) {
     assertArgCount(vm, "dateNow()", 0, argCount);
     time_t nowTime;
     time(&nowTime);
-    struct tm *now = localtime(&nowTime);
+    struct tm now;
+    localtime_s(&now, &nowTime);
     ObjInstance* date = newInstance(vm, getNativeClass(vm, "Date"));
-    setObjProperty(vm, date, "year", INT_VAL(1900 + now->tm_year));
-    setObjProperty(vm, date, "month", INT_VAL(1 + now->tm_mon));
-    setObjProperty(vm, date, "day", INT_VAL(now->tm_mday));
+    setObjProperty(vm, date, "year", INT_VAL(1900 + now.tm_year));
+    setObjProperty(vm, date, "month", INT_VAL(1 + now.tm_mon));
+    setObjProperty(vm, date, "day", INT_VAL(now.tm_mday));
     RETURN_OBJ(date);
 }
 
@@ -31,14 +31,15 @@ LOX_FUNCTION(dateTimeNow) {
     assertArgCount(vm, "dateTimeNow()", 0, argCount);
     time_t nowTime;
     time(&nowTime);
-    struct tm* now = localtime(&nowTime);
+    struct tm now;
+    localtime_s(&now,&nowTime);
     ObjInstance* date = newInstance(vm, getNativeClass(vm, "DateTime"));
-    setObjProperty(vm, date, "year", INT_VAL(1900 + now->tm_year));
-    setObjProperty(vm, date, "month", INT_VAL(1 + now->tm_mon));
-    setObjProperty(vm, date, "day", INT_VAL(now->tm_mday));
-    setObjProperty(vm, date, "hour", INT_VAL(now->tm_hour));
-    setObjProperty(vm, date, "minute", INT_VAL(now->tm_min));
-    setObjProperty(vm, date, "second", INT_VAL(now->tm_sec));
+    setObjProperty(vm, date, "year", INT_VAL(1900 + now.tm_year));
+    setObjProperty(vm, date, "month", INT_VAL(1 + now.tm_mon));
+    setObjProperty(vm, date, "day", INT_VAL(now.tm_mday));
+    setObjProperty(vm, date, "hour", INT_VAL(now.tm_hour));
+    setObjProperty(vm, date, "minute", INT_VAL(now.tm_min));
+    setObjProperty(vm, date, "second", INT_VAL(now.tm_sec));
     RETURN_OBJ(date);
 }
 

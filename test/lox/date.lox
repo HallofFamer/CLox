@@ -25,3 +25,10 @@ println("current DateTime is instance of DateTime: " + nowDateTime.instanceOf(Da
 var duration = Duration(1, 15, 80, 280);
 println("Creating Duration: " + duration.toString());
 println("Total number of seconds in Duration: " + duration.getTotalSeconds().toString());
+println("");
+
+var duration2 = Duration(1, 0, 0, 0);
+println("Tomorrow Date: " + nowDate.plus(duration2).toString());
+println("Yesterday Date: " + nowDate.minus(duration2).toString());
+println("Adding duration to current DateTime: " + nowDateTime.plus(duration).toString());
+println("Subtracting duration from current DateTime: " + nowDateTime.minus(duration).toString());
