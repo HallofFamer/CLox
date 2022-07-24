@@ -1,0 +1,9 @@
+var regex = Regex("[Hh]ello [Ww]orld[!]?");
+print("Creating regular expression pattern: ");
+println(regex.toString());
+
+var text = "ahem.. 'hello world!' ..";
+print("Creating text: ");
+println(text);
+print("Text matches pattern: ");
+println(regex.match(text));

@@ -144,6 +144,7 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="src\inc\ini.c" />
     <ClCompile Include="src\inc\pcg.c" />
+    <ClCompile Include="src\inc\regex.c" />
     <ClCompile Include="src\std\lang.c" />
     <ClCompile Include="src\std\util.c" />
     <ClCompile Include="src\vm\assert.c" />
@@ -179,6 +180,7 @@
     <None Include="test\lox\object.lox" />
     <None Include="test\lox\rand.lox" />
     <None Include="test\lox\receiver.lox" />
+    <None Include="test\lox\regex.lox" />
     <None Include="test\lox\string.lox" />
     <None Include="test\lox\sum.lox" />
     <None Include="test\lox\super.lox" />
@@ -187,6 +189,7 @@
   <ItemGroup>
     <ClInclude Include="src\inc\ini.h" />
     <ClInclude Include="src\inc\pcg.h" />
+    <ClInclude Include="src\inc\regex.h" />
     <ClInclude Include="src\std\lang.h" />
     <ClInclude Include="src\std\util.h" />
     <ClInclude Include="src\vm\assert.h" />

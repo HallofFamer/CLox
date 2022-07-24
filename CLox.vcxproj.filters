@@ -74,6 +74,9 @@
     <ClCompile Include="src\inc\pcg.c">
       <Filter>Source Files\inc</Filter>
     </ClCompile>
+    <ClCompile Include="src\inc\regex.c">
+      <Filter>Source Files\inc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="test\lox\benchmark.lox">
@@ -138,6 +141,9 @@
     <None Include="test\lox\date.lox">
       <Filter>Test Files\lox</Filter>
     </None>
+    <None Include="test\lox\regex.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">
@@ -192,6 +198,9 @@
       <Filter>Source Files\std</Filter>
     </ClInclude>
     <ClInclude Include="src\inc\pcg.h">
+      <Filter>Source Files\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\regex.h">
       <Filter>Source Files\inc</Filter>
     </ClInclude>
   </ItemGroup>

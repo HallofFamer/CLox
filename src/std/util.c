@@ -6,6 +6,7 @@
 
 #include "util.h"
 #include "../inc/pcg.h"
+#include "../inc/regex.h"
 #include "../vm/assert.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
@@ -703,6 +704,43 @@ LOX_METHOD(Random, setSeed) {
 	RETURN_NIL;
 }
 
+LOX_METHOD(Regex, init) {
+	assertArgCount(vm, "Regex::init(pattern)", 1, argCount);
+	assertArgIsString(vm, "Regex::init(pattern)", args, 0);
+	ObjInstance* self = AS_INSTANCE(receiver);
+	setObjProperty(vm, self, "pattern", args[0]);
+	RETURN_OBJ(self);
+}
+
+LOX_METHOD(Regex, match) {
+	assertArgCount(vm, "Regex::match(string)", 1, argCount);
+	assertArgIsString(vm, "Regex::match(string)", args, 0);
+	Value pattern = getObjProperty(vm, AS_INSTANCE(receiver), "pattern");
+	int length;
+	int index = re_match(AS_CSTRING(pattern), AS_CSTRING(args[0]), &length);
+	RETURN_BOOL(index != -1);
+}
+
+LOX_METHOD(Regex, replace) {
+	assertArgCount(vm, "Regex::replace(original, replacement)", 2, argCount);
+	assertArgIsString(vm, "Regex::replace(original, replacement)", args, 0);
+	assertArgIsString(vm, "Regex::replace(original, replacement)", args, 1);
+	Value pattern = getObjProperty(vm, AS_INSTANCE(receiver), "pattern");
+	ObjString* original = AS_STRING(args[0]);
+	ObjString* replacement = AS_STRING(args[1]);
+	int length;
+	int index = re_match(AS_CSTRING(pattern), original->chars, &length);
+	if (length == -1) RETURN_OBJ(original);
+	ObjString* needle = subString(vm, original, index, index + length);
+	RETURN_OBJ(replaceString(vm, original, needle, replacement));
+}
+
+LOX_METHOD(Regex, toString) {
+	assertArgCount(vm, "Regex::toString()", 0, argCount);
+	Value pattern = getObjProperty(vm, AS_INSTANCE(receiver), "pattern");
+	RETURN_OBJ(pattern);
+}
+
 void registerUtilPackage(VM* vm) {
 	vm->listClass = defineNativeClass(vm, "List");
 	bindSuperclass(vm, vm->listClass, vm->objectClass);
@@ -779,4 +817,11 @@ void registerUtilPackage(VM* vm) {
 	DEF_METHOD(durationClass, Duration, getTotalSeconds, 0);
 	DEF_METHOD(durationClass, Duration, init, 4);
 	DEF_METHOD(durationClass, Duration, toString, 0);
+
+	ObjClass* regexClass = defineNativeClass(vm, "Regex");
+	bindSuperclass(vm, regexClass, vm->objectClass);
+	DEF_METHOD(regexClass, Regex, init, 1);
+	DEF_METHOD(regexClass, Regex, match, 1);
+	DEF_METHOD(regexClass, Regex, replace, 2);
+	DEF_METHOD(regexClass, Regex, toString, 0);
 }
