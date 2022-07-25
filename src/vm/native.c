@@ -70,8 +70,32 @@ LOX_FUNCTION(println){
     RETURN_NIL;
 }
 
+LOX_FUNCTION(read) {
+    assertArgCount(vm, "read()", 0, argCount);
+    uint64_t inputSize = 128;
+    char* line = malloc(inputSize);
+    if (line == NULL) exit(1);
+
+    int c = EOF;
+    uint64_t i = 0;
+    while ((c = getchar()) != '\n' && c != EOF) {
+        line[i++] = (char)c;
+        if (inputSize == i + 1) {
+            inputSize = GROW_CAPACITY(inputSize);
+            char* newLine = realloc(line, inputSize);
+            if (newLine == NULL) exit(1);
+            line = newLine;
+        }
+    }
+
+    line[i] = '\0';
+    ObjString* input = newString(vm, line);
+    free(line);
+    RETURN_OBJ(input);
+}
+
 ObjClass* defineNativeClass(VM* vm, const char* name) {
-    ObjString* className = copyString(vm, name, (int)strlen(name));
+    ObjString* className = newString(vm, name);
     push(vm, OBJ_VAL(className));
     ObjClass* nativeClass = newClass(vm, className);
     nativeClass->isNative = true;
@@ -83,7 +107,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
 }
 
 void defineNativeFunction(VM* vm, const char* name, int arity, NativeFn function) {
-    ObjString* functionName = copyString(vm, name, (int)strlen(name));
+    ObjString* functionName = newString(vm, name);
     push(vm, OBJ_VAL(functionName));
     push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, function)));
     tableSet(vm, &vm->globals, AS_STRING(vm->stack[0]), vm->stack[1]);
@@ -92,7 +116,7 @@ void defineNativeFunction(VM* vm, const char* name, int arity, NativeFn function
 }
 
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, NativeMethod method) {
-    ObjString* methodName = copyString(vm, name, (int)strlen(name));
+    ObjString* methodName = newString(vm, name);
     push(vm, OBJ_VAL(methodName));
     ObjNativeMethod* nativeMethod = newNativeMethod(vm, klass, methodName, arity, method);
     push(vm, OBJ_VAL(nativeMethod));
@@ -139,4 +163,5 @@ void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(gc, 0);
     DEF_FUNCTION(print, 1);
     DEF_FUNCTION(println, 1);
+    DEF_FUNCTION(read, 0);
 }

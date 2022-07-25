@@ -1,4 +1,7 @@
 var start = clock();
 print("Current time is: ");
 println(start);
+print("Enter any text: ");
+var text = read();
+println("Your entered text: " + text);
 error("Trigger runtime error.");
