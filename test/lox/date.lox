@@ -28,6 +28,10 @@ println("Total number of seconds in Duration: " + duration.getTotalSeconds().toS
 println("");
 
 var duration2 = Duration(1, 0, 0, 0);
+println("Creating Durtion 2: " + duration2.toString());
+println("Adding two durations: " + duration.plus(duration2).toString());
+println("Subtracting two durations: " + duration.minus(duration2).toString());
+
 println("Tomorrow Date: " + nowDate.plus(duration2).toString());
 println("Yesterday Date: " + nowDate.minus(duration2).toString());
 println("Adding duration to current DateTime: " + nowDateTime.plus(duration).toString());

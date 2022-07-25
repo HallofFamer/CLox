@@ -258,12 +258,11 @@ void collectGarbage(VM* vm) {
 }
 
 void freeObjects(VM* vm) {
-  Obj* object = vm->objects;
-  while (object != NULL) {
-    Obj* next = object->next;
-    freeObject(vm, object);
-    object = next;
-  }
-
-  free(vm->grayStack);
+    Obj* object = vm->objects;
+    while (object != NULL) {
+        Obj* next = object->next;
+        freeObject(vm, object);
+        object = next;
+    }
+    free(vm->grayStack);
 }

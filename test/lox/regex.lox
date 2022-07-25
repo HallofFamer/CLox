@@ -7,3 +7,5 @@ print("Creating text: ");
 println(text);
 print("Text matches pattern: ");
 println(regex.match(text));
+print("Replace regular expression pattern: ");
+println(regex.replace(text, "my friend"));
