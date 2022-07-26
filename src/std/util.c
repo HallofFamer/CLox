@@ -247,7 +247,7 @@ static ObjString* listToString(VM* vm, ObjList* list) {
 
 LOX_METHOD(Date, after) {
     assertArgCount(vm, "Date::after(date)", 1, argCount);
-    assertInstanceOf(vm, "Date::after(date)", args[0], "Date", 0);
+    assertObjInstanceOfClass(vm, "Date::after(date)", args[0], "Date", 0);
     double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_BOOL(timestamp > timestamp2);
@@ -255,7 +255,7 @@ LOX_METHOD(Date, after) {
 
 LOX_METHOD(Date, before) {
     assertArgCount(vm, "Date::before(date)", 1, argCount);
-    assertInstanceOf(vm, "Date::before(date)", args[0], "Date", 0);
+    assertObjInstanceOfClass(vm, "Date::before(date)", args[0], "Date", 0);
     double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_BOOL(timestamp < timestamp2);
@@ -263,7 +263,7 @@ LOX_METHOD(Date, before) {
 
 LOX_METHOD(Date, diff) {
     assertArgCount(vm, "Date::diff(date)", 1, argCount);
-    assertInstanceOf(vm, "Date::diff(date)", args[0], "Date", 0);
+    assertObjInstanceOfClass(vm, "Date::diff(date)", args[0], "Date", 0);
     double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_NUMBER(timestamp - timestamp2);
@@ -289,7 +289,7 @@ LOX_METHOD(Date, init) {
 
 LOX_METHOD(Date, minus) {
     assertArgCount(vm, "Date::minus(duration)", 1, argCount);
-    assertInstanceOf(vm, "Date::minus(duration)", args[0], "Duration", 0);
+    assertObjInstanceOfClass(vm, "Date::minus(duration)", args[0], "Duration", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     double timestamp = dateObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
     ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
@@ -298,7 +298,7 @@ LOX_METHOD(Date, minus) {
 
 LOX_METHOD(Date, plus) {
     assertArgCount(vm, "Date::plus(duration)", 1, argCount);
-    assertInstanceOf(vm, "Date::plus(duration)", args[0], "Duration", 0);
+    assertObjInstanceOfClass(vm, "Date::plus(duration)", args[0], "Duration", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     double timestamp = dateObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
     ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
@@ -329,7 +329,7 @@ LOX_METHOD(Date, toString) {
 
 LOX_METHOD(DateTime, after) {
     assertArgCount(vm, "DateTime::after(date)", 1, argCount);
-    assertInstanceOf(vm, "DateTime::after(date)", args[0], "DateTime", 0);
+    assertObjInstanceOfClass(vm, "DateTime::after(date)", args[0], "DateTime", 0);
     double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_BOOL(timestamp > timestamp2);
@@ -337,7 +337,7 @@ LOX_METHOD(DateTime, after) {
 
 LOX_METHOD(DateTime, before) {
     assertArgCount(vm, "DateTime::before(date)", 1, argCount);
-    assertInstanceOf(vm, "DateTime::before(date)", args[0], "DateTime", 0);
+    assertObjInstanceOfClass(vm, "DateTime::before(date)", args[0], "DateTime", 0);
     double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_BOOL(timestamp < timestamp2);
@@ -345,7 +345,7 @@ LOX_METHOD(DateTime, before) {
 
 LOX_METHOD(DateTime, diff) {
     assertArgCount(vm, "DateTime::diff(date)", 1, argCount);
-    assertInstanceOf(vm, "DateTime::diff(date)", args[0], "DateTime", 0);
+    assertObjInstanceOfClass(vm, "DateTime::diff(date)", args[0], "DateTime", 0);
     double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_NUMBER(timestamp - timestamp2);
@@ -377,7 +377,7 @@ LOX_METHOD(DateTime, init) {
 
 LOX_METHOD(DateTime, minus) {
     assertArgCount(vm, "DateTime::minus(duration)", 1, argCount);
-    assertInstanceOf(vm, "DateTime::minus(duration)", args[0], "Duration", 0);
+    assertObjInstanceOfClass(vm, "DateTime::minus(duration)", args[0], "Duration", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     double timestamp = dateTimeObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
     ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
@@ -386,7 +386,7 @@ LOX_METHOD(DateTime, minus) {
 
 LOX_METHOD(DateTime, plus) {
     assertArgCount(vm, "DateTime::plus(duration)", 1, argCount);
-    assertInstanceOf(vm, "DateTime::plus(duration)", args[0], "Duration", 0);
+    assertObjInstanceOfClass(vm, "DateTime::plus(duration)", args[0], "Duration", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     double timestamp = dateTimeObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
     ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
@@ -507,10 +507,10 @@ LOX_METHOD(Duration, init) {
     assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 2);
     assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 3);
 
-    assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[0]), 0);
-    assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[1]), 1);
-    assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[2]), 2);
-    assertNonNegativeNumber(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[3]), 3);
+    assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[0]), 0);
+    assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[1]), 1);
+    assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[2]), 2);
+    assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[3]), 3);
 
     ObjInstance* self = AS_INSTANCE(receiver);
     int duration[4];
@@ -521,7 +521,7 @@ LOX_METHOD(Duration, init) {
 
 LOX_METHOD(Duration, minus) {
     assertArgCount(vm, "Duration::minus(duration)", 1, argCount);
-    assertInstanceOf(vm, "DateTime::minus(duration)", args[0], "Duration", 0);
+    assertObjInstanceOfClass(vm, "DateTime::minus(duration)", args[0], "Duration", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int duration[4];
     durationFromSeconds(duration, durationTotalSeconds(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0])));
@@ -532,7 +532,7 @@ LOX_METHOD(Duration, minus) {
 
 LOX_METHOD(Duration, plus) {
     assertArgCount(vm, "Duration::plus(duration)", 1, argCount);
-    assertInstanceOf(vm, "DateTime::plus(duration)", args[0], "Duration", 0);
+    assertObjInstanceOfClass(vm, "DateTime::plus(duration)", args[0], "Duration", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int duration[4];
     durationFromSeconds(duration, durationTotalSeconds(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0])));
@@ -592,7 +592,7 @@ LOX_METHOD(List, getAt) {
     assertArgIsInt(vm, "List::getAt(index)", args, 0);
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
-    assertIndexWithinRange(vm, "List::getAt(index)", index, 0, self->elements.count - 1, 0);
+    assertIntWithinRange(vm, "List::getAt(index)", index, 0, self->elements.count - 1, 0);
     RETURN_VAL(self->elements.values[index]);
 }
 
@@ -613,7 +613,7 @@ LOX_METHOD(List, insertAt) {
     assertArgIsInt(vm, "List::insertAt(index, element)", args, 0);
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
-    assertIndexWithinRange(vm, "List::insertAt(index)", index, 0, self->elements.count, 0);
+    assertIntWithinRange(vm, "List::insertAt(index)", index, 0, self->elements.count, 0);
     listInsertAt(vm, self, index, args[1]);
     RETURN_VAL(args[1]);
 }
@@ -640,7 +640,7 @@ LOX_METHOD(List, putAt) {
     assertArgIsInt(vm, "List::putAt(index, element)", args, 0);
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
-    assertIndexWithinRange(vm, "List::putAt(index)", index, 0, self->elements.count, 0);
+    assertIntWithinRange(vm, "List::putAt(index)", index, 0, self->elements.count, 0);
     self->elements.values[index] = args[1];
     if (index == self->elements.count) self->elements.count++;
     RETURN_OBJ(receiver);
@@ -660,7 +660,7 @@ LOX_METHOD(List, removeAt) {
     assertArgIsInt(vm, "List::removeAt(index)", args, 0);
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
-    assertIndexWithinRange(vm, "List::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
+    assertIntWithinRange(vm, "List::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
     Value element = listRemoveAt(vm, self, index);
     RETURN_VAL(element);
 }
@@ -673,8 +673,8 @@ LOX_METHOD(List, subList) {
     int fromIndex = AS_INT(args[0]);
     int toIndex = AS_INT(args[1]);
 
-    assertIndexWithinRange(vm, "List::subList(from, to)", fromIndex, 0, self->elements.count, 0);
-    assertIndexWithinRange(vm, "List::subList(from, to", toIndex, fromIndex, self->elements.count, 1);
+    assertIntWithinRange(vm, "List::subList(from, to)", fromIndex, 0, self->elements.count, 0);
+    assertIntWithinRange(vm, "List::subList(from, to", toIndex, fromIndex, self->elements.count, 1);
     RETURN_OBJ(copyList(vm, self->elements, fromIndex, toIndex));
 }
 
@@ -719,7 +719,7 @@ LOX_METHOD(Random, nextInt) {
 LOX_METHOD(Random, nextIntBounded) {
     assertArgCount(vm, "Random::nextIntBounded(bound)", 1, argCount);
     assertArgIsInt(vm, "Random::nextIntBounded(bound)", args, 0);
-    assertNonNegativeNumber(vm, "Random::nextIntBounded(bound)", AS_NUMBER(args[0]), 0);
+    assertNumberNonNegative(vm, "Random::nextIntBounded(bound)", AS_NUMBER(args[0]), 0);
     uint32_t value = pcg32_random_int_bounded((uint32_t)AS_INT(args[0]));
     RETURN_INT((int)value);
 }
@@ -727,7 +727,7 @@ LOX_METHOD(Random, nextIntBounded) {
 LOX_METHOD(Random, setSeed) {
     assertArgCount(vm, "Random::setSeed(seed)", 1, argCount);
     assertArgIsInt(vm, "Random::setSeed(seed)", args, 0);
-    assertNonNegativeNumber(vm, "Random::setSeed(seed)", AS_NUMBER(args[0]), 0);
+    assertNumberNonNegative(vm, "Random::setSeed(seed)", AS_NUMBER(args[0]), 0);
     pcg32_seed((uint64_t)AS_INT(args[0]));
     setObjProperty(vm, AS_INSTANCE(receiver), "seed", args[0]);
     RETURN_NIL;

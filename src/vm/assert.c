@@ -68,28 +68,14 @@ void assertArgIsString(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
-void assertIndexWithinRange(VM* vm, const char* method, int value, int min, int max, int index){
+void assertIntWithinRange(VM* vm, const char* method, int value, int min, int max, int index){
     if (value < min || value > max) {
-        runtimeError(vm, "method %s expects argument %d to be an index within range %d to %d but got %d.", method, index + 1, min, max, value);
+        runtimeError(vm, "method %s expects argument %d to be an integer within range %d to %d but got %d.", method, index + 1, min, max, value);
         exit(70);
     }
 }
 
-void assertInstanceOf(VM* vm, const char* method, Value arg, char* className, int index) {
-    if (!isObjInstanceOf(vm, arg, getNativeClass(vm, className))) {
-        if (index < 0) {
-            runtimeError(vm, "method %s expects receiver to be an instance of class %s but got %s.", 
-                className, getObjClass(vm, arg)->name->chars);
-        }
-        else {
-            runtimeError(vm, "method %s expects argument %d to be an instance of class %s but got %s.", 
-                method, index + 1, className, getObjClass(vm, arg)->name->chars);
-        }
-        exit(70);
-    }
-}
-
-void assertNonNegativeNumber(VM* vm, const char* method, double number, int index) {
+void assertNumberNonNegative(VM* vm, const char* method, double number, int index) {
     if (number < 0) {
         if (index < 0) runtimeError(vm, "method %s expects receiver to be a non negative number but got %g.", method, number);
         else runtimeError(vm, "method %s expects argument %d to be a non negative number but got %g.", method, index + 1, number);
@@ -97,7 +83,7 @@ void assertNonNegativeNumber(VM* vm, const char* method, double number, int inde
     }
 }
 
-void assertNonZeroNumber(VM* vm, const char* method, double number, int index) {
+void assertNumberNonZero(VM* vm, const char* method, double number, int index) {
     if (number == 0) {
         if (index < 0) runtimeError(vm, "method %s expects receiver to be a non-zero number but got %g.", method, number);
         else runtimeError(vm, "method %s expects argument %d to be a non-zero number but got %g.", method, index + 1, number);
@@ -105,10 +91,31 @@ void assertNonZeroNumber(VM* vm, const char* method, double number, int index) {
     }
 }
 
-void assertPositiveNumber(VM* vm, const char* method, double number, int index) {
+void assertNumberPositive(VM* vm, const char* method, double number, int index) {
     if (number <= 0) {
         if (index < 0) runtimeError(vm, "method %s expects receiver to be a positive number but got %g.", method, number);
         else runtimeError(vm, "method %s expects argument %d to be a positive number but got %g.", method, index + 1, number);
+        exit(70);
+    }
+}
+
+void assertNumberWithinRange(VM* vm, const char* method, double value, double min, double max, int index) {
+    if (value < min || value > max) {
+        runtimeError(vm, "method %s expects argument %d to be a number within range %g to %g but got %g.", method, index + 1, min, max, value);
+        exit(70);
+    }
+}
+
+void assertObjInstanceOfClass(VM* vm, const char* method, Value arg, char* className, int index) {
+    if (!isObjInstanceOf(vm, arg, getNativeClass(vm, className))) {
+        if (index < 0) {
+            runtimeError(vm, "method %s expects receiver to be an instance of class %s but got %s.",
+                className, getObjClass(vm, arg)->name->chars);
+        }
+        else {
+            runtimeError(vm, "method %s expects argument %d to be an instance of class %s but got %s.",
+                method, index + 1, className, getObjClass(vm, arg)->name->chars);
+        }
         exit(70);
     }
 }

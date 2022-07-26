@@ -21,7 +21,7 @@
 #define RETURN_STRING(chars, length) return OBJ_VAL(copyString(vm, chars, length))
 #define RETURN_STRING_FMT(...) return OBJ_VAL(formattedString(vm, __VA_ARGS__))
 #define RETURN_STRING_FMTL(...) return OBJ_VAL(formattedLongString(vm, __VA_ARGS__))
-#define RETURN_VAL(value) return value
+#define RETURN_VAL(value) return (value)
 
 ObjClass* defineNativeClass(VM* vm, const char* name);
 void defineNativeFunction(VM* vm, const char* name, int arity, NativeFn function);

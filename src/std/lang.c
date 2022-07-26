@@ -175,7 +175,7 @@ LOX_METHOD(Int, clone) {
 LOX_METHOD(Int, factorial) {
     assertArgCount(vm, "Int::factorial()", 0, argCount);
     int self = AS_INT(receiver);
-    assertPositiveNumber(vm, "Int::factorial()", self, -1);
+    assertNumberPositive(vm, "Int::factorial()", self, -1);
     RETURN_INT(factorial(self));
 }
 
@@ -332,21 +332,21 @@ LOX_METHOD(Number, init) {
 LOX_METHOD(Number, log) {
     assertArgCount(vm, "Number::log()", 0, argCount);
     double self = AS_NUMBER(receiver);
-    assertPositiveNumber(vm, "Number::log2()", self, -1);
+    assertNumberPositive(vm, "Number::log2()", self, -1);
     RETURN_NUMBER(log(self));
 }
 
 LOX_METHOD(Number, log10) {
     assertArgCount(vm, "Number::log10()", 0, argCount);
     double self = AS_NUMBER(receiver);
-    assertPositiveNumber(vm, "Number::log10()", self, -1);
+    assertNumberPositive(vm, "Number::log10()", self, -1);
     RETURN_NUMBER(log10(self));
 }
 
 LOX_METHOD(Number, log2) {
     assertArgCount(vm, "Number::log2()", 0, argCount);
     double self = AS_NUMBER(receiver);
-    assertPositiveNumber(vm, "Number::log2()", self, -1);
+    assertNumberPositive(vm, "Number::log2()", self, -1);
     RETURN_NUMBER(log2(self));
 }
 
@@ -381,7 +381,7 @@ LOX_METHOD(Number, sin) {
 LOX_METHOD(Number, sqrt) {
     assertArgCount(vm, "Number::sqrt()", 0, argCount);
     double self = AS_NUMBER(receiver);
-    assertPositiveNumber(vm, "Number::sqrt()", self, -1);
+    assertNumberPositive(vm, "Number::sqrt()", self, -1);
     RETURN_NUMBER(sqrt(self));
 }
 
@@ -496,7 +496,7 @@ LOX_METHOD(String, getChar) {
     
     ObjString* self = AS_STRING(receiver);
     int index = AS_INT(args[0]);
-    assertIndexWithinRange(vm, "String::getChar(index)", index, 0, self->length, 0);
+    assertIntWithinRange(vm, "String::getChar(index)", index, 0, self->length, 0);
 
     char chars[2];
     chars[0] = self->chars[index];
