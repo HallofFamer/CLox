@@ -24,7 +24,7 @@
 #define RETURN_VAL(value) return (value)
 
 ObjClass* defineNativeClass(VM* vm, const char* name);
-void defineNativeFunction(VM* vm, const char* name, int arity, NativeFn function);
+void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction function);
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, NativeMethod method);
 ObjClass* getNativeClass(VM* vm, const char* name);
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name);

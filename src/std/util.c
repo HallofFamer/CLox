@@ -87,38 +87,6 @@ static ObjInstance* dateTimeObjFromTimestamp(VM* vm, ObjClass* dateTimeClass, do
     return dateTime;
 }
 
-static ObjString* dictionaryToString(VM* vm, ObjDictionary* dictionary) {
-    if(dictionary->table.count == 0) return copyString(vm, "[]", 2);
-    else {
-        char string[UINT8_MAX] = "";
-        string[0] = '[';
-        size_t offset = 1;
-        for (int i = 0; i < dictionary->table.capacity; i++) {
-            Entry* entry = &dictionary->table.entries[i];
-            if (entry->key == NULL) continue;
-
-            ObjString* key = entry->key;
-            size_t keyLength = (size_t)key->length;
-            Value value = entry->value;
-            char* valueChars = valueToString(vm, value);
-            size_t valueLength = strlen(valueChars);
-
-            memcpy(string + offset, key->chars, keyLength);
-            offset += keyLength;
-            memcpy(string + offset, ": ", 2);
-            offset += 2;
-            memcpy(string + offset, valueChars, valueLength);
-            
-            memcpy(string + offset + valueLength, "; ", 2);
-		    offset += valueLength + 2;
-        }
-
-        string[offset] = ']';
-        string[offset + 1] = '\0';  
-        return copyString(vm, string, (int)offset + 1);
-    }
-}
-
 static void durationInit(int* duration, int days, int hours, int minutes, int seconds) {
     if (seconds > 60) {
         minutes += seconds / 60;
@@ -492,7 +460,7 @@ LOX_METHOD(Dictionary, removeAt) {
 
 LOX_METHOD(Dictionary, toString) {
     assertArgCount(vm, "Dictionary::toString()", 0, argCount);
-    RETURN_OBJ(dictionaryToString(vm, AS_DICTIONARY(receiver)));
+    RETURN_OBJ(tableToString(vm, &AS_DICTIONARY(receiver)->table));
 }
 
 LOX_METHOD(Duration, getTotalSeconds) {

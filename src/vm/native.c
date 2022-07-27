@@ -106,7 +106,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     return nativeClass;
 }
 
-void defineNativeFunction(VM* vm, const char* name, int arity, NativeFn function) {
+void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction function) {
     ObjString* functionName = newString(vm, name);
     push(vm, OBJ_VAL(functionName));
     push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, function)));

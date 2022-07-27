@@ -145,7 +145,14 @@ static bool call(VM* vm, ObjClosure* closure, int argCount) {
     return true;
 }
 
-static bool callNative(VM* vm, NativeMethod method, int argCount) {
+static bool callNativeFunction(VM* vm, NativeFunction function, int argCount) {
+    Value result = function(vm, argCount, vm->stackTop - argCount);
+    vm->stackTop -= (size_t)argCount + 1;
+    push(vm, result);
+    return true;
+}
+
+static bool callNativeMethod(VM* vm, NativeMethod method, int argCount) {
     Value result = method(vm, vm->stackTop[-argCount - 1], argCount, vm->stackTop - argCount);
     vm->stackTop -= argCount + 1;
     push(vm, result);
@@ -154,7 +161,7 @@ static bool callNative(VM* vm, NativeMethod method, int argCount) {
 
 static bool callMethod(VM* vm, Value method, int argCount) {
     if (IS_NATIVE_METHOD(method)) {
-        return callNative(vm, AS_NATIVE_METHOD(method)->method, argCount);
+        return callNativeMethod(vm, AS_NATIVE_METHOD(method)->method, argCount);
     }
     else return call(vm, AS_CLOSURE(method), argCount);
 }
@@ -183,20 +190,10 @@ static bool callValue(VM* vm, Value callee, int argCount) {
             }
             case OBJ_CLOSURE:
                 return call(vm, AS_CLOSURE(callee), argCount);
-            case OBJ_NATIVE_FUNCTION: {
-                NativeFn native = AS_NATIVE_FUNCTION(callee)->function;
-                Value result = native(vm, argCount, vm->stackTop - argCount);
-                vm->stackTop -= (size_t)argCount + 1;
-                push(vm, result);
-                return true;
-            }
-            case OBJ_NATIVE_METHOD: {
-                NativeMethod method = AS_NATIVE_METHOD(callee)->method;
-                Value result = method(vm, vm->stackTop[-argCount - 1], argCount, vm->stackTop - argCount);
-                vm->stackTop -= argCount + 1;
-                push(vm, result);
-                return true;
-            }
+            case OBJ_NATIVE_FUNCTION: 
+                return callNativeFunction(vm, AS_NATIVE_FUNCTION(callee)->function, argCount);
+            case OBJ_NATIVE_METHOD: 
+                return callNativeMethod(vm, AS_NATIVE_METHOD(callee)->method, argCount);
             default:
                 break;
         }

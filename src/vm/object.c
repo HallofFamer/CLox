@@ -99,7 +99,7 @@ ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
     return list;
 }
 
-ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFn function) {
+ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function) {
     ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, vm->functionClass);
     nativeFunction->name = name;
     nativeFunction->arity = arity;
@@ -157,12 +157,14 @@ void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
 
 static void printDictionary(ObjDictionary* dictionary) {
     printf("[");
+    int startIndex = 0;
     for (int i = 0; i < dictionary->table.capacity; i++) {
         Entry* entry = &dictionary->table.entries[i];
         if (entry->key == NULL) continue;
+        if (startIndex == 0) startIndex = i;
+        if(i > startIndex) printf(", ");
         printf("%s: ", entry->key->chars);
-        printValue(entry->value);
-        printf("; ");
+        printValue(entry->value);  
     }
     printf("]");
 }
@@ -195,7 +197,7 @@ void printObject(Value value) {
         case OBJ_CLOSURE:
             printFunction(AS_CLOSURE(value)->function);
             break;
-        case OBJ_DICTIONARY: 
+        case OBJ_DICTIONARY:
             printDictionary(AS_DICTIONARY(value));
             break;
         case OBJ_FUNCTION:
