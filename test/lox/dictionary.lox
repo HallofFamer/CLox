@@ -16,12 +16,14 @@ print("Dictionary contains value true: ");
 println(dict.containsValue(true));
 print("Getting value at key 'name': ");
 println(dict.getAt("name"));
-print("Length of the dictionary is: ");
+print("Current Length of the dictionary is: ");
 println(dict.length());
 
 print("Removing key 'isAdmin': ");
 dict.removeAt("isAdmin");
 println(dict);
+print("New Length of the dictionary is: ");
+println(dict.length());
 print("Clearing dictionary: ");
 dict.clear();
 println(dict.toString());

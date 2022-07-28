@@ -325,6 +325,12 @@ LOX_METHOD(Dictionary, containsValue) {
     RETURN_BOOL(tableContainsValue(&AS_DICTIONARY(receiver)->table, args[0]));
 }
 
+LOX_METHOD(Dictionary, equals) {
+    assertArgCount(vm, "Dictionary::equals(other)", 1, argCount);
+    if (!IS_DICTIONARY(args[0])) RETURN_FALSE;
+    RETURN_BOOL(tablesEqual(&AS_DICTIONARY(receiver)->table, &AS_DICTIONARY(args[0])->table));
+}
+
 LOX_METHOD(Dictionary, getAt) {
     assertArgCount(vm, "Dictionary::getAt(key)", 1, argCount);
     assertArgIsString(vm, "Dictionary::getAt(key)", args, 0);
@@ -347,7 +353,7 @@ LOX_METHOD(Dictionary, isEmpty) {
 LOX_METHOD(Dictionary, length) {
     assertArgCount(vm, "Dictionary::length()", 0, argCount);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    RETURN_INT(AS_DICTIONARY(receiver)->table.count);
+    RETURN_INT(tableLength(&AS_DICTIONARY(receiver)->table));
 }
 
 LOX_METHOD(Dictionary, putAll) {
@@ -685,6 +691,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, containsKey, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, containsValue, 1);
+    DEF_METHOD(vm->dictionaryClass, Dictionary, equals, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, getAt, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, init, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, isEmpty, 0);

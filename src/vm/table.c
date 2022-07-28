@@ -125,6 +125,16 @@ void tableAddAll(VM* vm, Table* from, Table* to) {
     }
 }
 
+int tableLength(Table* table) {
+    if (table->count == 0) return 0;
+    int length = 0;
+    for (int i = 0; i < table->capacity; i++) {
+        Entry* entry = &table->entries[i];
+        if (entry->key != NULL) length++;
+    }
+    return length;
+}
+
 ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t hash) {
     if (table->count == 0) return NULL;
 
@@ -148,6 +158,26 @@ void tableRemoveWhite(Table* table) {
             tableDelete(table, entry->key);
         }
     }
+}
+
+bool tablesEqual(Table* aTable, Table* bTable) {
+    for (int i = 0; i < aTable->capacity; i++) {
+        Entry* entry = &aTable->entries[i];
+        if (entry->key == NULL) continue;
+        Value bValue;
+        bool keyExists = tableGet(bTable, entry->key, &bValue);
+        if (!keyExists || entry->value != bValue) return false;
+    }
+
+    for (int i = 0; i < bTable->capacity; i++) {
+        Entry* entry = &bTable->entries[i];
+        if (entry->key == NULL) continue;
+        Value aValue;
+        bool keyExists = tableGet(aTable, entry->key, &aValue);
+        if (!keyExists || entry->value != aValue) return false;
+    }
+
+    return true;
 }
 
 ObjString* tableToString(VM* vm, Table* table) {
