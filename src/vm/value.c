@@ -3,6 +3,7 @@
 
 #include "memory.h"
 #include "object.h"
+#include "string.h"
 #include "value.h"
 
 void initValueArray(ValueArray* array) {
@@ -11,7 +12,12 @@ void initValueArray(ValueArray* array) {
     array->count = 0;
 }
 
-void writeValueArray(VM* vm, ValueArray* array, Value value) {
+void freeValueArray(VM* vm, ValueArray* array) {
+    FREE_ARRAY(Value, array->values, array->capacity);
+    initValueArray(array);
+}
+
+void valueArrayWrite(VM* vm, ValueArray* array, Value value) {
     if (array->capacity < array->count + 1) {
         int oldCapacity = array->capacity;
         array->capacity = GROW_CAPACITY(oldCapacity);
@@ -22,9 +28,85 @@ void writeValueArray(VM* vm, ValueArray* array, Value value) {
     array->count++;
 }
 
-void freeValueArray(VM* vm, ValueArray* array) {
-    FREE_ARRAY(Value, array->values, array->capacity);
-    initValueArray(array);
+void valueArrayAddAll(VM* vm, ValueArray* from, ValueArray* to) {
+    if (from->count == 0) return;
+    for (int i = 0; i < from->count; i++) {
+        valueArrayWrite(vm, to, from->values[i]);
+    }
+}
+
+int valueArrayFirstIndex(VM* vm, ValueArray* array, Value value) {
+    for (int i = 0; i < array->count; i++) {
+        if (valuesEqual(array->values[i], value)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int valueArrayLastIndex(VM* vm, ValueArray* array, Value value) {
+    for (int i = array->count - 1; i >= 0; i--) {
+        if (valuesEqual(array->values[i], value)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void valueArrayInsert(VM* vm, ValueArray* array, int index, Value value) {
+    if (IS_OBJ(value)) push(vm, value);
+    valueArrayWrite(vm, array, NIL_VAL);
+    if (IS_OBJ(value)) pop(vm);
+
+    for (int i = array->count - 1; i > index; i--) {
+        array->values[i] = array->values[i - 1];
+    }
+    array->values[index] = value;
+}
+
+Value valueArrayDelete(VM* vm, ValueArray* array, int index) {
+    Value value = array->values[index];
+    if (IS_OBJ(value)) push(vm, value);
+
+    for (int i = index; i < array->count - 1; i++) {
+        array->values[i] = array->values[i + 1];
+    }
+    array->count--;
+
+    if (IS_OBJ(value)) pop(vm);
+    return value;
+}
+
+bool valueArraysEqual(ValueArray* aArray, ValueArray* bArray) {
+    if (aArray->count != bArray->count) return false;
+    for (int i = 0; i < aArray->count; i++) {
+        if (aArray->values[i] != bArray->values[i]) return false;
+    }
+    return true;
+}
+
+ObjString* valueArrayToString(VM* vm, ValueArray* array) {
+    if (array->count == 0) return copyString(vm, "[]", 2);
+    else {
+        char string[UINT8_MAX] = "";
+        string[0] = '[';
+        size_t offset = 1;
+        for (int i = 0; i < array->count; i++) {
+            char* chars = valueToString(vm, array->values[i]);
+            size_t length = strlen(chars);
+            memcpy(string + offset, chars, length);
+            if (i == array->count - 1) {
+                offset += length;
+            }
+            else {
+                memcpy(string + offset + length, ", ", 2);
+                offset += length + 2;
+            }
+        }
+        string[offset] = ']';
+        string[offset + 1] = '\0';
+        return copyString(vm, string, (int)offset + 1);
+    }
 }
 
 void printValue(Value value) {

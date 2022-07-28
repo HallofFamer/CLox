@@ -138,8 +138,15 @@ typedef struct {
 bool valuesEqual(Value a, Value b);
 char* valueToString(VM* vm, Value value);
 void initValueArray(ValueArray* array);
-void writeValueArray(VM* vm, ValueArray* array, Value value);
 void freeValueArray(VM* vm, ValueArray* array);
+void valueArrayWrite(VM* vm, ValueArray* array, Value value);
+void valueArrayAddAll(VM* vm, ValueArray* from, ValueArray* to);
+void valueArrayInsert(VM* vm, ValueArray* array, int index, Value value);
+int valueArrayFirstIndex(VM* vm, ValueArray* array, Value value);
+int valueArrayLastIndex(VM* vm, ValueArray* array, Value value);
+Value valueArrayDelete(VM* vm, ValueArray* array, int index);
+bool valueArraysEqual(ValueArray* aArray, ValueArray* bArray);
+ObjString* valueArrayToString(VM* vm, ValueArray* array);
 void printValue(Value value);
 
 #endif // !clox_value_h

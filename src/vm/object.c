@@ -94,7 +94,7 @@ ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
     ObjList* list = ALLOCATE_OBJ(ObjList, OBJ_LIST, vm->listClass);
     initValueArray(&list->elements);
     for (int i = fromIndex; i < toIndex; i++) {
-        writeValueArray(vm, &list->elements, elements.values[i]);
+        valueArrayWrite(vm, &list->elements, elements.values[i]);
     }
     return list;
 }

@@ -548,7 +548,7 @@ LOX_METHOD(String, split) {
     char* next = NULL;
     char* token = strtok_s(string, delimiter->chars, &next);
     while (token != NULL) {
-        writeValueArray(vm, &list->elements, OBJ_VAL(newString(vm, token)));
+        valueArrayWrite(vm, &list->elements, OBJ_VAL(newString(vm, token)));
         token = strtok_s(NULL, delimiter->chars, &next);
     }
     free(string);

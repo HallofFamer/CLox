@@ -132,87 +132,6 @@ static double durationTotalSeconds(VM* vm, ObjInstance* duration) {
     return 86400.0 * AS_INT(days) + 3600.0 * AS_INT(hours) + 60.0 * AS_INT(minutes) + AS_INT(seconds);
 }
 
-static void listAddAll(VM* vm, ObjList* from, ObjList* to) {
-    if (from->elements.count == 0) return;
-    for (int i = 0; i < from->elements.count; i++) {
-        writeValueArray(vm, &to->elements, from->elements.values[i]);
-    }
-}
-
-static bool listEqual(ObjList* list, ObjList* list2) {
-    if (list->elements.count != list2->elements.count) return false;
-    for (int i = 0; i < list->elements.count; i++) {
-        if (list->elements.values[i] != list2->elements.values[i]) return false;
-    }
-    return true;
-}
-
-static int listIndexOf(VM* vm, ObjList* list, Value element) {
-    for (int i = 0; i < list->elements.count; i++) {
-        if (valuesEqual(list->elements.values[i], element)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-static void listInsertAt(VM* vm, ObjList* list, int index, Value element) {
-    if (IS_OBJ(element)) push(vm, element);
-    writeValueArray(vm, &list->elements, NIL_VAL);
-    if (IS_OBJ(element)) pop(vm);
-    
-    for (int i = list->elements.count - 1; i > index; i--) {
-        list->elements.values[i] = list->elements.values[i - 1];
-    }
-    list->elements.values[index] = element;
-}
-
-static int listLastIndexOf(VM* vm, ObjList* list, Value element) {
-    for (int i = list->elements.count - 1; i >= 0; i--) {
-        if (valuesEqual(list->elements.values[i], element)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-static Value listRemoveAt(VM* vm, ObjList* list, int index) {
-    Value element = list->elements.values[index];
-    if (IS_OBJ(element)) push(vm, element);
-    
-    for (int i = index; i < list->elements.count - 1; i++) {
-        list->elements.values[i] = list->elements.values[i + 1];
-    }
-    list->elements.count--;
-    
-    if (IS_OBJ(element)) pop(vm);
-    return element;
-}
-
-static ObjString* listToString(VM* vm, ObjList* list) {
-    if (list->elements.count == 0) return copyString(vm, "[]", 2);
-    else {
-        char string[UINT8_MAX] = "";
-        string[0] = '[';
-        size_t offset = 1;
-        for (int i = 0; i < list->elements.count; i++) {
-            char* chars = valueToString(vm, list->elements.values[i]);
-            size_t length = strlen(chars);
-            memcpy(string + offset, chars, length);
-            if (i == list->elements.count - 1) {
-                offset += length;
-            }
-            else{
-                memcpy(string + offset + length, ", ", 2);
-                offset += length + 2;
-            }
-        }
-        string[offset] = ']';
-        string[offset + 1] = '\0';
-        return copyString(vm, string, (int)offset + 1);
-    }
-}
-
 LOX_METHOD(Date, after) {
     assertArgCount(vm, "Date::after(date)", 1, argCount);
     assertObjInstanceOfClass(vm, "Date::after(date)", args[0], "Date", 0);
@@ -521,14 +440,14 @@ LOX_METHOD(Duration, toString) {
 
 LOX_METHOD(List, add) {
     assertArgCount(vm, "List::add(element)", 1, argCount);
-    writeValueArray(vm, &AS_LIST(receiver)->elements, args[0]);
+    valueArrayWrite(vm, &AS_LIST(receiver)->elements, args[0]);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(List, addAll) {
     assertArgCount(vm, "List::add(list)", 1, argCount);
     assertArgIsList(vm, "List::add(list)", args, 0);
-    listAddAll(vm, AS_LIST(args[0]), AS_LIST(receiver));
+    valueArrayAddAll(vm, &AS_LIST(args[0])->elements, &AS_LIST(receiver)->elements);
     RETURN_OBJ(receiver);
 }
 
@@ -546,13 +465,13 @@ LOX_METHOD(List, clone) {
 
 LOX_METHOD(List, contains) {
     assertArgCount(vm, "List::contains(element)", 1, argCount);
-    RETURN_BOOL(listIndexOf(vm, AS_LIST(receiver), args[0]) != -1);
+    RETURN_BOOL(valueArrayFirstIndex(vm, &AS_LIST(receiver)->elements, args[0]) != -1);
 }
 
 LOX_METHOD(List, equals) {
     assertArgCount(vm, "List::equals(other)", 1, argCount);
     if (!IS_LIST(args[0])) RETURN_FALSE;
-    RETURN_BOOL(listEqual(AS_LIST(receiver), AS_LIST(args[0])));
+    RETURN_BOOL(valueArraysEqual(&AS_LIST(receiver)->elements, &AS_LIST(args[0])->elements));
 }
 
 LOX_METHOD(List, getAt) {
@@ -568,7 +487,7 @@ LOX_METHOD(List, indexOf) {
     assertArgCount(vm, "List::indexOf(element)", 1, argCount);
     ObjList* self = AS_LIST(receiver);
     if (self->elements.count == 0) return -1;
-    RETURN_INT(listIndexOf(vm, self, args[0]));
+    RETURN_INT(valueArrayFirstIndex(vm, &self->elements, args[0]));
 }
 
 LOX_METHOD(List, init) {
@@ -582,7 +501,7 @@ LOX_METHOD(List, insertAt) {
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::insertAt(index)", index, 0, self->elements.count, 0);
-    listInsertAt(vm, self, index, args[1]);
+    valueArrayInsert(vm, &self->elements, index, args[1]);
     RETURN_VAL(args[1]);
 }
 
@@ -595,7 +514,7 @@ LOX_METHOD(List, lastIndexOf) {
     assertArgCount(vm, "List::indexOf(element)", 1, argCount);
     ObjList* self = AS_LIST(receiver);
     if (self->elements.count == 0) return -1;
-    RETURN_INT(listLastIndexOf(vm, self, args[0]));
+    RETURN_INT(valueArrayLastIndex(vm, &self->elements, args[0]));
 }
 
 LOX_METHOD(List, length) {
@@ -617,9 +536,9 @@ LOX_METHOD(List, putAt) {
 LOX_METHOD(List, remove) {
     assertArgCount(vm, "List::remove(element)", 1, argCount);
     ObjList* self = AS_LIST(receiver);
-    int index = listIndexOf(vm, self, args[0]);
+    int index = valueArrayFirstIndex(vm, &self->elements, args[0]);
     if (index == -1) RETURN_FALSE;
-    listRemoveAt(vm, self, index);
+    valueArrayDelete(vm, &self->elements, index);
     RETURN_TRUE;
 }
 
@@ -629,7 +548,7 @@ LOX_METHOD(List, removeAt) {
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
-    Value element = listRemoveAt(vm, self, index);
+    Value element = valueArrayDelete(vm, &self->elements, index);
     RETURN_VAL(element);
 }
 
@@ -648,7 +567,7 @@ LOX_METHOD(List, subList) {
 
 LOX_METHOD(List, toString) {
     assertArgCount(vm, "List::toString()", 0, argCount);
-    RETURN_OBJ(listToString(vm, AS_LIST(receiver)));
+    RETURN_OBJ(valueArrayToString(vm, &AS_LIST(receiver)->elements));
 }
 
 LOX_METHOD(Random, getSeed) {
