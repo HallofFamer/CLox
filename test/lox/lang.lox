@@ -59,3 +59,8 @@ print("Values of sin(1), cos(1) and tan(1) are: ");
 println(1.sin().toString() + ", " + 1.cos().toString() + ", " + 1.tan().toString());
 print("Computing hypot(3, 4): ");
 println(3.hypot(4));
+
+var i = 1024 * 1024 + 125 * 25;
+println("Integer value in base 10: " + i.toString());
+println("Integer value in base 2: " + i.toBinary());
+println("Integer value in base 16: " + i.toHexadecimal());

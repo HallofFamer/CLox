@@ -206,9 +206,25 @@ LOX_METHOD(Int, lcm) {
     RETURN_INT(lcm(abs(AS_INT(receiver)), abs(AS_INT(args[0]))));
 }
 
+LOX_METHOD(Int, toBinary) {
+    assertArgCount(vm, "Int::toBinary()", 0, argCount);
+    char buffer[32];
+    int length = 32;
+    _itoa_s(AS_INT(receiver), buffer, length, 2);
+    RETURN_STRING(buffer, length);
+}
+
 LOX_METHOD(Int, toFloat) {
     assertArgCount(vm, "Int::toFloat()", 0, argCount);
     RETURN_NUMBER((double)AS_INT(receiver));
+}
+
+LOX_METHOD(Int, toHexadecimal) {
+    assertArgCount(vm, "Int::toHexadecimal()", 0, argCount);
+    char buffer[8];
+    int length = 8;
+    _itoa_s(AS_INT(receiver), buffer, length, 16);
+    RETURN_STRING(buffer, length);
 }
 
 LOX_METHOD(Int, toString) {
@@ -665,7 +681,9 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->intClass, Int, isEven, 0);
     DEF_METHOD(vm->intClass, Int, isOdd, 0);
     DEF_METHOD(vm->intClass, Int, lcm, 1);
+    DEF_METHOD(vm->intClass, Int, toBinary, 0);
     DEF_METHOD(vm->intClass, Int, toFloat, 0);
+    DEF_METHOD(vm->intClass, Int, toHexadecimal, 0);
     DEF_METHOD(vm->intClass, Int, toString, 0);
 
     vm->floatClass = defineNativeClass(vm, "Float");
