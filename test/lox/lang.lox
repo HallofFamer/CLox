@@ -21,7 +21,7 @@ println(true.getClassName());
 print("Class name for false: ");
 println(false.getClassName());
 var bool = 3 > 2;
-println("Evaluating '3 > 2' as string: ");
+print("Evaluating '3 > 2' as string: ");
 println(bool.toString());
 print("hashcode for true is: ");
 println(true.hashCode());

@@ -5,6 +5,9 @@
 #include "common.h"
 #include "value.h"
 
+#define ASSERT_ARG_COUNT(method, expectedCount) assertArgCount(vm, method, expectedCount, argCount)
+#define ASSERT_ARG_TYPE(method, index, type) assertArgIs##type(vm, method, args, index) 
+
 void assertArgCount(VM* vm, const char* method, int expectedCount, int actualCount);
 void assertArgIsBool(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClass(VM* vm, const char* method, Value* args, int index);
