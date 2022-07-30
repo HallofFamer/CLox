@@ -12,6 +12,14 @@ void assertArgCount(VM* vm, const char* method, int expectedCount, int actualCou
     }
 }
 
+void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, char* className) {
+    if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, className))) {
+        runtimeError(vm, "method %s expects argument %d to be an instance of class %s but got %s.", 
+            method, index + 1, className, getObjClass(vm, args[index])->name->chars);
+        exit(70);
+    }
+}
+
 void assertArgIsBool(VM* vm, const char* method, Value* args, int index) {
     if (!IS_BOOL(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be a boolean value.", method, index + 1);
@@ -109,20 +117,6 @@ void assertNumberPositive(VM* vm, const char* method, double number, int index) 
 void assertNumberWithinRange(VM* vm, const char* method, double value, double min, double max, int index) {
     if (value < min || value > max) {
         runtimeError(vm, "method %s expects argument %d to be a number within range %g to %g but got %g.", method, index + 1, min, max, value);
-        exit(70);
-    }
-}
-
-void assertObjInstanceOfClass(VM* vm, const char* method, Value arg, char* className, int index) {
-    if (!isObjInstanceOf(vm, arg, getNativeClass(vm, className))) {
-        if (index < 0) {
-            runtimeError(vm, "method %s expects receiver to be an instance of class %s but got %s.",
-                className, getObjClass(vm, arg)->name->chars);
-        }
-        else {
-            runtimeError(vm, "method %s expects argument %d to be an instance of class %s but got %s.",
-                method, index + 1, className, getObjClass(vm, arg)->name->chars);
-        }
         exit(70);
     }
 }

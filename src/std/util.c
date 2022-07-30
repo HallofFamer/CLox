@@ -133,39 +133,39 @@ static double durationTotalSeconds(VM* vm, ObjInstance* duration) {
 }
 
 LOX_METHOD(Date, after) {
-    assertArgCount(vm, "Date::after(date)", 1, argCount);
-    assertObjInstanceOfClass(vm, "Date::after(date)", args[0], "Date", 0);
+    ASSERT_ARG_COUNT("Date::after(date)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::after(date)", 0, Date);
     double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_BOOL(timestamp > timestamp2);
 }
 
 LOX_METHOD(Date, before) {
-    assertArgCount(vm, "Date::before(date)", 1, argCount);
-    assertObjInstanceOfClass(vm, "Date::before(date)", args[0], "Date", 0);
+    ASSERT_ARG_COUNT("Date::before(date)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::before(date)", 0, Date);
     double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_BOOL(timestamp < timestamp2);
 }
 
 LOX_METHOD(Date, diff) {
-    assertArgCount(vm, "Date::diff(date)", 1, argCount);
-    assertObjInstanceOfClass(vm, "Date::diff(date)", args[0], "Date", 0);
+    ASSERT_ARG_COUNT("Date::diff(date)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::diff(date)", 0, Date);
     double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_NUMBER(timestamp - timestamp2);
 }
 
 LOX_METHOD(Date, getTimestamp) {
-    assertArgCount(vm, "Date::getTimestamp()", 0, argCount);
+    ASSERT_ARG_COUNT("Date::getTimestamp()", 0);
     RETURN_NUMBER(dateObjGetTimestamp(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Date, init) {
-    assertArgCount(vm, "Date::init(year, month, day)", 3, argCount);
-    assertArgIsInt(vm, "Date::init(year, month, day)", args, 0);
-    assertArgIsInt(vm, "Date::init(year, month, day)", args, 1);
-    assertArgIsInt(vm, "Date::init(year, month, day)", args, 2);
+    ASSERT_ARG_COUNT("Date::init(year, month, day)", 3);
+    ASSERT_ARG_TYPE("Date::init(year, month, day)", 0, Int);
+    ASSERT_ARG_TYPE("Date::init(year, month, day)", 1, Int);
+    ASSERT_ARG_TYPE("Date::init(year, month, day)", 2, Int);
 
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "year", args[0]);
@@ -175,8 +175,8 @@ LOX_METHOD(Date, init) {
 }
 
 LOX_METHOD(Date, minus) {
-    assertArgCount(vm, "Date::minus(duration)", 1, argCount);
-    assertObjInstanceOfClass(vm, "Date::minus(duration)", args[0], "Duration", 0);
+    ASSERT_ARG_COUNT("Date::minus(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::minus(duration)", 0, Duration);
     ObjInstance* self = AS_INSTANCE(receiver);
     double timestamp = dateObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
     ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
@@ -184,8 +184,8 @@ LOX_METHOD(Date, minus) {
 }
 
 LOX_METHOD(Date, plus) {
-    assertArgCount(vm, "Date::plus(duration)", 1, argCount);
-    assertObjInstanceOfClass(vm, "Date::plus(duration)", args[0], "Duration", 0);
+    ASSERT_ARG_COUNT("Date::plus(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::plus(duration)", 0, Duration);
     ObjInstance* self = AS_INSTANCE(receiver);
     double timestamp = dateObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
     ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
@@ -193,7 +193,7 @@ LOX_METHOD(Date, plus) {
 }
 
 LOX_METHOD(Date, toDateTime) {
-    assertArgCount(vm, "Date::toDateTime()", 0, argCount);
+    ASSERT_ARG_COUNT("Date::toDateTime()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* dateTime = newInstance(vm, getNativeClass(vm, "DateTime"));
     setObjProperty(vm, dateTime, "year", getObjProperty(vm, self, "year"));
@@ -206,7 +206,7 @@ LOX_METHOD(Date, toDateTime) {
 }
 
 LOX_METHOD(Date, toString) {
-    assertArgCount(vm, "Date::toString()", 0, argCount);
+    ASSERT_ARG_COUNT("Date::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     Value year = getObjProperty(vm, self, "year");
     Value month = getObjProperty(vm, self, "month");
@@ -215,42 +215,42 @@ LOX_METHOD(Date, toString) {
 }
 
 LOX_METHOD(DateTime, after) {
-    assertArgCount(vm, "DateTime::after(date)", 1, argCount);
-    assertObjInstanceOfClass(vm, "DateTime::after(date)", args[0], "DateTime", 0);
+    ASSERT_ARG_COUNT("DateTime::after(dateTime)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::after(dateTime)", 0, DateTime);
     double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_BOOL(timestamp > timestamp2);
 }
 
 LOX_METHOD(DateTime, before) {
-    assertArgCount(vm, "DateTime::before(date)", 1, argCount);
-    assertObjInstanceOfClass(vm, "DateTime::before(date)", args[0], "DateTime", 0);
+    ASSERT_ARG_COUNT("DateTime::before(dateTime)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::before(dateTime)", 0, DateTime);
     double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_BOOL(timestamp < timestamp2);
 }
 
 LOX_METHOD(DateTime, diff) {
-    assertArgCount(vm, "DateTime::diff(date)", 1, argCount);
-    assertObjInstanceOfClass(vm, "DateTime::diff(date)", args[0], "DateTime", 0);
+    ASSERT_ARG_COUNT("DateTime::diff(dateTime)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::diff(dateTime)", 0, DateTime);
     double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
     double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
     RETURN_NUMBER(timestamp - timestamp2);
 }
 
 LOX_METHOD(DateTime, getTimestamp) {
-    assertArgCount(vm, "DateTime::getTimestamp()", 0, argCount);
+    ASSERT_ARG_COUNT("DateTime::getTimestamp()", 0);
     RETURN_NUMBER(dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(DateTime, init) {
-    assertArgCount(vm, "DateTime::init(year, month, day, hour, minute, second)", 6, argCount);
-    assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 0);
-    assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 1);
-    assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 2);
-    assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 3);
-    assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 4);
-    assertArgIsInt(vm, "DateTime::init(year, month, day, hour, minute, second)", args, 5);
+    ASSERT_ARG_COUNT("DateTime::init(year, month, day, hour, minute, second)", 6);
+    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 0, Int);
+    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 1, Int);
+    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 2, Int);
+    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 3, Int);
+    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 4, Int);
+    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 5, Int);
     
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "year", args[0]);
@@ -263,8 +263,8 @@ LOX_METHOD(DateTime, init) {
 }
 
 LOX_METHOD(DateTime, minus) {
-    assertArgCount(vm, "DateTime::minus(duration)", 1, argCount);
-    assertObjInstanceOfClass(vm, "DateTime::minus(duration)", args[0], "Duration", 0);
+    ASSERT_ARG_COUNT("DateTime::minus(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::minus(duration)", 0, Duration);
     ObjInstance* self = AS_INSTANCE(receiver);
     double timestamp = dateTimeObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
     ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
@@ -272,8 +272,8 @@ LOX_METHOD(DateTime, minus) {
 }
 
 LOX_METHOD(DateTime, plus) {
-    assertArgCount(vm, "DateTime::plus(duration)", 1, argCount);
-    assertObjInstanceOfClass(vm, "DateTime::plus(duration)", args[0], "Duration", 0);
+    ASSERT_ARG_COUNT("DateTime::plus(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::plus(duration)", 0, Duration);
     ObjInstance* self = AS_INSTANCE(receiver);
     double timestamp = dateTimeObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
     ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
@@ -281,7 +281,7 @@ LOX_METHOD(DateTime, plus) {
 }
 
 LOX_METHOD(DateTime, toDate) {
-    assertArgCount(vm, "DateTime::toDate()", 0, argCount);
+    ASSERT_ARG_COUNT("DateTime::toDate()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* date = newInstance(vm, getNativeClass(vm, "Date"));
     setObjProperty(vm, date, "year", getObjProperty(vm, self, "year"));
@@ -291,7 +291,7 @@ LOX_METHOD(DateTime, toDate) {
 }
 
 LOX_METHOD(DateTime, toString) {
-    assertArgCount(vm, "DateTime::toString()", 0, argCount);
+    ASSERT_ARG_COUNT("DateTime::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     Value year = getObjProperty(vm, self, "year");
     Value month = getObjProperty(vm, self, "month");
@@ -303,37 +303,37 @@ LOX_METHOD(DateTime, toString) {
 }
 
 LOX_METHOD(Dictionary, clear) {
-    assertArgCount(vm, "Dictionary::clear()", 0, argCount);
+    ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     freeTable(vm, &AS_DICTIONARY(receiver)->table);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Dictionary, clone) {
-    assertArgCount(vm, "Dictionary::clone()", 0, argCount);
+    ASSERT_ARG_COUNT("Dictionary::clone()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     RETURN_OBJ(copyDictionary(vm, self->table));
 }
 
 LOX_METHOD(Dictionary, containsKey) {
-    assertArgCount(vm, "Dictionary::containsKey(key)", 1, argCount);
-    assertArgIsString(vm, "Dictionary::containsKey(key)", args, 0);
+    ASSERT_ARG_COUNT("Dictionary::containsKey(key)", 1);
+    ASSERT_ARG_TYPE("Dictionary::containsKey(key)", 0, String);
     RETURN_BOOL(tableContainsKey(&AS_DICTIONARY(receiver)->table, AS_STRING(args[0])));
 }
 
 LOX_METHOD(Dictionary, containsValue) {
-    assertArgCount(vm, "Dictionary::containsValue(value)", 1, argCount);
+    ASSERT_ARG_COUNT("Dictionary::containsValue(value)", 1);
     RETURN_BOOL(tableContainsValue(&AS_DICTIONARY(receiver)->table, args[0]));
 }
 
 LOX_METHOD(Dictionary, equals) {
-    assertArgCount(vm, "Dictionary::equals(other)", 1, argCount);
+    ASSERT_ARG_COUNT("Dictionary::equals(other)", 1);
     if (!IS_DICTIONARY(args[0])) RETURN_FALSE;
     RETURN_BOOL(tablesEqual(&AS_DICTIONARY(receiver)->table, &AS_DICTIONARY(args[0])->table));
 }
 
 LOX_METHOD(Dictionary, getAt) {
-    assertArgCount(vm, "Dictionary::getAt(key)", 1, argCount);
-    assertArgIsString(vm, "Dictionary::getAt(key)", args, 0);
+    ASSERT_ARG_COUNT("Dictionary::getAt(key)", 1);
+    ASSERT_ARG_TYPE("Dictionary::getAt(key)", 0, String);
     Value value;
     bool valueExists = tableGet(&AS_DICTIONARY(receiver)->table, AS_STRING(args[0]), &value);
     if (!valueExists) RETURN_NIL;
@@ -341,38 +341,38 @@ LOX_METHOD(Dictionary, getAt) {
 }
 
 LOX_METHOD(Dictionary, init) {
-    assertArgCount(vm, "Dictionary::init()", 0, argCount);
+    ASSERT_ARG_COUNT("Dictionary::init()", 0);
     RETURN_OBJ(newDictionary(vm));
 }
 
 LOX_METHOD(Dictionary, isEmpty) {
-    assertArgCount(vm, "Dictionary::isEmpty()", 0, argCount);
+    ASSERT_ARG_COUNT("Dictionary::isEmpty()", 0);
     RETURN_BOOL(AS_DICTIONARY(receiver)->table.count == 0);
 }
 
 LOX_METHOD(Dictionary, length) {
-    assertArgCount(vm, "Dictionary::length()", 0, argCount);
+    ASSERT_ARG_COUNT("Dictionary::length()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     RETURN_INT(tableLength(&AS_DICTIONARY(receiver)->table));
 }
 
 LOX_METHOD(Dictionary, putAll) {
-    assertArgCount(vm, "Dictionary::putAll(dictionary)", 1, argCount);
-    assertArgIsDictionary(vm, "Dictionary::putAll(dictionary)", args, 0);
+    ASSERT_ARG_COUNT("Dictionary::putAll(dictionary)", 1);
+    ASSERT_ARG_TYPE("Dictionary::putAll(dictionary)", 0, Dictionary);
     tableAddAll(vm, &AS_DICTIONARY(args[0])->table, &AS_DICTIONARY(receiver)->table);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Dictionary, putAt) {
-    assertArgCount(vm, "Dictionary::putAt(key, value)", 2, argCount);
-    assertArgIsString(vm, "Dictionary::putAt(key, value)", args, 0);
+    ASSERT_ARG_COUNT("Dictionary::putAt(key, value)", 2);
+    ASSERT_ARG_TYPE("Dictionary::putAt(key, valuue)", 0, String);
     tableSet(vm, &AS_DICTIONARY(receiver)->table, AS_STRING(args[0]), args[1]);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Dictionary, removeAt) {
-    assertArgCount(vm, "Dictionary::removeAt(key)", 1, argCount);
-    assertArgIsString(vm, "Dictionary::removeAt(key)", args, 0);
+    ASSERT_ARG_COUNT("Dictionary::removeAt(key)", 1);
+    ASSERT_ARG_TYPE("Dictionary::removeAt(key)", 0, String);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjString* key = AS_STRING(args[0]);
     Value value;
@@ -384,21 +384,21 @@ LOX_METHOD(Dictionary, removeAt) {
 }
 
 LOX_METHOD(Dictionary, toString) {
-    assertArgCount(vm, "Dictionary::toString()", 0, argCount);
+    ASSERT_ARG_COUNT("Dictionary::toString()", 0);
     RETURN_OBJ(tableToString(vm, &AS_DICTIONARY(receiver)->table));
 }
 
 LOX_METHOD(Duration, getTotalSeconds) {
-    assertArgCount(vm, "Duration::getTotalSeconds()", 0, argCount);
+    ASSERT_ARG_COUNT("Duration::getTotalSeconds()", 0);
     RETURN_NUMBER(durationTotalSeconds(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Duration, init) {
-    assertArgCount(vm, "Duration::init(days, hours, minutes, seconds)", 4, argCount);
-    assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 0);
-    assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 1);
-    assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 2);
-    assertArgIsInt(vm, "Duration::init(days, hours, minutes, seconds)", args, 3);
+    ASSERT_ARG_COUNT("Duration::init(days, hours, minutes, seconds)", 4);
+    ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 0, Int);
+    ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 1, Int);
+    ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 2, Int);
+    ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 3, Int);
 
     assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[0]), 0);
     assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[1]), 1);
@@ -413,8 +413,8 @@ LOX_METHOD(Duration, init) {
 }
 
 LOX_METHOD(Duration, minus) {
-    assertArgCount(vm, "Duration::minus(duration)", 1, argCount);
-    assertObjInstanceOfClass(vm, "DateTime::minus(duration)", args[0], "Duration", 0);
+    ASSERT_ARG_COUNT("Duration::minus(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Duration::minus(duration)", 0, Duration);
     ObjInstance* self = AS_INSTANCE(receiver);
     int duration[4];
     durationFromSeconds(duration, durationTotalSeconds(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0])));
@@ -424,8 +424,8 @@ LOX_METHOD(Duration, minus) {
 }
 
 LOX_METHOD(Duration, plus) {
-    assertArgCount(vm, "Duration::plus(duration)", 1, argCount);
-    assertObjInstanceOfClass(vm, "DateTime::plus(duration)", args[0], "Duration", 0);
+    ASSERT_ARG_COUNT("Duration::plus(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Duration::plus(duration)", 0, Duration);
     ObjInstance* self = AS_INSTANCE(receiver);
     int duration[4];
     durationFromSeconds(duration, durationTotalSeconds(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0])));
@@ -435,7 +435,7 @@ LOX_METHOD(Duration, plus) {
 }
 
 LOX_METHOD(Duration, toString) {
-    assertArgCount(vm, "Duration::toString()", 0, argCount);
+    ASSERT_ARG_COUNT("Duration::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     Value days = getObjProperty(vm, self, "days");
     Value hours = getObjProperty(vm, self, "hours");
@@ -445,44 +445,44 @@ LOX_METHOD(Duration, toString) {
 }
 
 LOX_METHOD(List, add) {
-    assertArgCount(vm, "List::add(element)", 1, argCount);
+    ASSERT_ARG_COUNT("List::add(element)", 1);
     valueArrayWrite(vm, &AS_LIST(receiver)->elements, args[0]);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(List, addAll) {
-    assertArgCount(vm, "List::add(list)", 1, argCount);
-    assertArgIsList(vm, "List::add(list)", args, 0);
+    ASSERT_ARG_COUNT("List::add(list)", 1);
+    ASSERT_ARG_TYPE("List::add(list)", 0, List);
     valueArrayAddAll(vm, &AS_LIST(args[0])->elements, &AS_LIST(receiver)->elements);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(List, clear) {
-    assertArgCount(vm, "List::clear()", 0, argCount);
+    ASSERT_ARG_COUNT("List::clear()", 0);
     freeValueArray(vm, &AS_LIST(receiver)->elements);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(List, clone) {
-    assertArgCount(vm, "List::clone()", 0, argCount);
+    ASSERT_ARG_COUNT("List::clone()", 0);
     ObjList* self = AS_LIST(receiver);
     RETURN_OBJ(copyList(vm, self->elements, 0, self->elements.count));
 }
 
 LOX_METHOD(List, contains) {
-    assertArgCount(vm, "List::contains(element)", 1, argCount);
+    ASSERT_ARG_COUNT("List::contains(element)", 1);
     RETURN_BOOL(valueArrayFirstIndex(vm, &AS_LIST(receiver)->elements, args[0]) != -1);
 }
 
 LOX_METHOD(List, equals) {
-    assertArgCount(vm, "List::equals(other)", 1, argCount);
+    ASSERT_ARG_COUNT("List::equals(other)", 1);
     if (!IS_LIST(args[0])) RETURN_FALSE;
     RETURN_BOOL(valueArraysEqual(&AS_LIST(receiver)->elements, &AS_LIST(args[0])->elements));
 }
 
 LOX_METHOD(List, getAt) {
-    assertArgCount(vm, "List::getAt(index)", 1, argCount);
-    assertArgIsInt(vm, "List::getAt(index)", args, 0);
+    ASSERT_ARG_COUNT("List::getAt(index)", 1);
+    ASSERT_ARG_TYPE("List::getAt(index)", 0, Int);
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::getAt(index)", index, 0, self->elements.count - 1, 0);
@@ -490,20 +490,20 @@ LOX_METHOD(List, getAt) {
 }
 
 LOX_METHOD(List, indexOf) {
-    assertArgCount(vm, "List::indexOf(element)", 1, argCount);
+    ASSERT_ARG_COUNT("List::indexOf(element)", 1);
     ObjList* self = AS_LIST(receiver);
     if (self->elements.count == 0) return -1;
     RETURN_INT(valueArrayFirstIndex(vm, &self->elements, args[0]));
 }
 
 LOX_METHOD(List, init) {
-    assertArgCount(vm, "List::init()", 0, argCount);
+    ASSERT_ARG_COUNT("List::init()", 0);
     RETURN_OBJ(newList(vm));
 }
 
 LOX_METHOD(List, insertAt) {
-    assertArgCount(vm, "List::insertAt(index, element)", 2, argCount);
-    assertArgIsInt(vm, "List::insertAt(index, element)", args, 0);
+    ASSERT_ARG_COUNT("List::insertAt(index, element)", 2);
+    ASSERT_ARG_TYPE("List::insertAt(index, element)", 0, Int);
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::insertAt(index)", index, 0, self->elements.count, 0);
@@ -512,25 +512,25 @@ LOX_METHOD(List, insertAt) {
 }
 
 LOX_METHOD(List, isEmpty) {
-    assertArgCount(vm, "List::isEmpty()", 0, argCount);
+    ASSERT_ARG_COUNT("List::isEmpty()", 0);
     RETURN_BOOL(AS_LIST(receiver)->elements.count == 0);
 }
 
 LOX_METHOD(List, lastIndexOf) {
-    assertArgCount(vm, "List::indexOf(element)", 1, argCount);
+    ASSERT_ARG_COUNT("List::indexOf(element)", 1);
     ObjList* self = AS_LIST(receiver);
     if (self->elements.count == 0) return -1;
     RETURN_INT(valueArrayLastIndex(vm, &self->elements, args[0]));
 }
 
 LOX_METHOD(List, length) {
-    assertArgCount(vm, "List::length()", 0, argCount);
+    ASSERT_ARG_COUNT("List::length()", 0);
     RETURN_INT(AS_LIST(receiver)->elements.count);
 }
 
 LOX_METHOD(List, putAt) {
-    assertArgCount(vm, "List::putAt(index, element)", 2, argCount);
-    assertArgIsInt(vm, "List::putAt(index, element)", args, 0);
+    ASSERT_ARG_COUNT("List::putAt(index, element)", 2);
+    ASSERT_ARG_TYPE("List::putAt(index, element)", 0, Int);
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::putAt(index)", index, 0, self->elements.count, 0);
@@ -540,7 +540,7 @@ LOX_METHOD(List, putAt) {
 }
 
 LOX_METHOD(List, remove) {
-    assertArgCount(vm, "List::remove(element)", 1, argCount);
+    ASSERT_ARG_COUNT("List::remove(element)", 1);
     ObjList* self = AS_LIST(receiver);
     int index = valueArrayFirstIndex(vm, &self->elements, args[0]);
     if (index == -1) RETURN_FALSE;
@@ -549,8 +549,8 @@ LOX_METHOD(List, remove) {
 }
 
 LOX_METHOD(List, removeAt) {
-    assertArgCount(vm, "List::removeAt(index)", 1, argCount);
-    assertArgIsInt(vm, "List::removeAt(index)", args, 0);
+    ASSERT_ARG_COUNT("List::removeAt(index)", 1);
+    ASSERT_ARG_TYPE("List::removeAt(index)", 0, Int);
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
@@ -559,9 +559,9 @@ LOX_METHOD(List, removeAt) {
 }
 
 LOX_METHOD(List, subList) {
-    assertArgCount(vm, "List::subList(from, to)", 2, argCount);
-    assertArgIsInt(vm, "List::subList(from, to)", args, 0);
-    assertArgIsInt(vm, "List::subList(from, to)", args, 1);
+    ASSERT_ARG_COUNT("List::subList(from, to)", 2);
+    ASSERT_ARG_TYPE("List::subList(from, to)", 0, Int);
+    ASSERT_ARG_TYPE("List::subList(from, to)", 1, Int);
     ObjList* self = AS_LIST(receiver);
     int fromIndex = AS_INT(args[0]);
     int toIndex = AS_INT(args[1]);
@@ -572,18 +572,18 @@ LOX_METHOD(List, subList) {
 }
 
 LOX_METHOD(List, toString) {
-    assertArgCount(vm, "List::toString()", 0, argCount);
+    ASSERT_ARG_COUNT("List::toString()", 0);
     RETURN_OBJ(valueArrayToString(vm, &AS_LIST(receiver)->elements));
 }
 
 LOX_METHOD(Random, getSeed) {
-    assertArgCount(vm, "Random::getSeed()", 0, argCount);
+    ASSERT_ARG_COUNT("Random::getSeed()", 0);
     Value seed = getObjProperty(vm, AS_INSTANCE(receiver), "seed");
     RETURN_VAL(seed);
 }
 
 LOX_METHOD(Random, init) {
-    assertArgCount(vm, "Random::init()", 0, argCount);
+    ASSERT_ARG_COUNT("Random::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     uint64_t seed = (uint64_t)time(NULL);
     pcg32_seed(seed);
@@ -592,34 +592,34 @@ LOX_METHOD(Random, init) {
 }
 
 LOX_METHOD(Random, nextBool) {
-    assertArgCount(vm, "Random::nextBool()", 0, argCount);
+    ASSERT_ARG_COUNT("Random::nextBool()", 0);
     bool value = pcg32_random_bool();
     RETURN_BOOL(value);
 }
 
 LOX_METHOD(Random, nextFloat) {
-    assertArgCount(vm, "Random::nextFloat()", 0, argCount);
+    ASSERT_ARG_COUNT("Random::nextFloat()", 0);
     double value = pcg32_random_double();
     RETURN_NUMBER(value);
 }
 
 LOX_METHOD(Random, nextInt) {
-    assertArgCount(vm, "Random::nextInt()", 0, argCount);
+    ASSERT_ARG_COUNT("Random::nextInt()", 0);
     uint32_t value = pcg32_random_int();
     RETURN_INT((int)value);
 }
 
 LOX_METHOD(Random, nextIntBounded) {
-    assertArgCount(vm, "Random::nextIntBounded(bound)", 1, argCount);
-    assertArgIsInt(vm, "Random::nextIntBounded(bound)", args, 0);
+    ASSERT_ARG_COUNT("Random::nextIntBounded(bound)", 1);
+    ASSERT_ARG_TYPE("Random::nextIntBounded(bound)", 0, Int);
     assertNumberNonNegative(vm, "Random::nextIntBounded(bound)", AS_NUMBER(args[0]), 0);
     uint32_t value = pcg32_random_int_bounded((uint32_t)AS_INT(args[0]));
     RETURN_INT((int)value);
 }
 
 LOX_METHOD(Random, setSeed) {
-    assertArgCount(vm, "Random::setSeed(seed)", 1, argCount);
-    assertArgIsInt(vm, "Random::setSeed(seed)", args, 0);
+    ASSERT_ARG_COUNT("Random::setSeed(seed)", 1);
+    ASSERT_ARG_TYPE("Random::setSeed(seed)", 0, Int);
     assertNumberNonNegative(vm, "Random::setSeed(seed)", AS_NUMBER(args[0]), 0);
     pcg32_seed((uint64_t)AS_INT(args[0]));
     setObjProperty(vm, AS_INSTANCE(receiver), "seed", args[0]);
@@ -627,16 +627,16 @@ LOX_METHOD(Random, setSeed) {
 }
 
 LOX_METHOD(Regex, init) {
-    assertArgCount(vm, "Regex::init(pattern)", 1, argCount);
-    assertArgIsString(vm, "Regex::init(pattern)", args, 0);
+    ASSERT_ARG_COUNT("Regex::init(pattern)", 1);
+    ASSERT_ARG_TYPE("Regex::init(pattern)", 0, String);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "pattern", args[0]);
     RETURN_OBJ(self);
 }
 
 LOX_METHOD(Regex, match) {
-    assertArgCount(vm, "Regex::match(string)", 1, argCount);
-    assertArgIsString(vm, "Regex::match(string)", args, 0);
+    ASSERT_ARG_COUNT("Regex::match(string)", 1);
+    ASSERT_ARG_TYPE("Regex::match(string)", 0, String);
     Value pattern = getObjProperty(vm, AS_INSTANCE(receiver), "pattern");
     int length;
     int index = re_match(AS_CSTRING(pattern), AS_CSTRING(args[0]), &length);
@@ -644,9 +644,9 @@ LOX_METHOD(Regex, match) {
 }
 
 LOX_METHOD(Regex, replace) {
-    assertArgCount(vm, "Regex::replace(original, replacement)", 2, argCount);
-    assertArgIsString(vm, "Regex::replace(original, replacement)", args, 0);
-    assertArgIsString(vm, "Regex::replace(original, replacement)", args, 1);
+    ASSERT_ARG_COUNT("Regex::replace(original, replacement)", 2);
+    ASSERT_ARG_TYPE("Regex::replace(original, replacement)", 0, String);
+    ASSERT_ARG_TYPE("Regex::replace(original, replacement)", 1, String);
     Value pattern = getObjProperty(vm, AS_INSTANCE(receiver), "pattern");
     ObjString* original = AS_STRING(args[0]);
     ObjString* replacement = AS_STRING(args[1]);
@@ -658,7 +658,7 @@ LOX_METHOD(Regex, replace) {
 }
 
 LOX_METHOD(Regex, toString) {
-    assertArgCount(vm, "Regex::toString()", 0, argCount);
+    ASSERT_ARG_COUNT("Regex::toString()", 0);
     Value pattern = getObjProperty(vm, AS_INSTANCE(receiver), "pattern");
     RETURN_OBJ(pattern);
 }

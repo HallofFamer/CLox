@@ -10,12 +10,12 @@
 #include "vm.h"
 
 LOX_FUNCTION(clock){
-    assertArgCount(vm, "clock()", 0, argCount);
+    ASSERT_ARG_COUNT("clock()", 0);
     RETURN_NUMBER((double)clock() / CLOCKS_PER_SEC);
 }
 
 LOX_FUNCTION(dateNow) {
-    assertArgCount(vm, "dateNow()", 0, argCount);
+    ASSERT_ARG_COUNT("dateNow()", 0);
     time_t nowTime;
     time(&nowTime);
     struct tm now;
@@ -28,7 +28,7 @@ LOX_FUNCTION(dateNow) {
 }
 
 LOX_FUNCTION(dateTimeNow) {
-    assertArgCount(vm, "dateTimeNow()", 0, argCount);
+    ASSERT_ARG_COUNT("dateTimeNow()", 0);
     time_t nowTime;
     time(&nowTime);
     struct tm now;
@@ -44,34 +44,34 @@ LOX_FUNCTION(dateTimeNow) {
 }
 
 LOX_FUNCTION(error){
-    assertArgCount(vm, "error(message)", 1, argCount);
-    assertArgIsString(vm, "error(message)", args, 0);
+    ASSERT_ARG_COUNT("error(message)", 1);
+    ASSERT_ARG_TYPE("error(message)", 0, String);
     runtimeError(vm, AS_CSTRING(args[0]));
     exit(70);
     RETURN_NIL;
 }
 
 LOX_FUNCTION(gc) {
-    assertArgCount(vm, "gc()", 0, argCount);
+    ASSERT_ARG_COUNT("gc()", 0);
     collectGarbage(vm);
     RETURN_NIL;
 }
 
 LOX_FUNCTION(print){
-    assertArgCount(vm, "print(message)", 1, argCount);
+    ASSERT_ARG_COUNT("print(message)", 1);
     printValue(args[0]);
     RETURN_NIL;
 }
 
 LOX_FUNCTION(println){
-    assertArgCount(vm, "println(message)", 1, argCount);
+    ASSERT_ARG_COUNT("println(message)", 1);
     printValue(args[0]);
     printf("\n");
     RETURN_NIL;
 }
 
 LOX_FUNCTION(read) {
-    assertArgCount(vm, "read()", 0, argCount);
+    ASSERT_ARG_COUNT("read()", 0);
     uint64_t inputSize = 128;
     char* line = malloc(inputSize);
     if (line == NULL) exit(1);

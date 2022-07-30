@@ -522,7 +522,7 @@ LOX_METHOD(String, getChar) {
 
 LOX_METHOD(String, indexOf) {
     ASSERT_ARG_COUNT("String::indexOf(chars)", 1);
-    assertArgIsString(vm, "String::indexOf(chars)", args, 0);
+    ASSERT_ARG_TYPE("String::indexOf(chars)", 0, String);
     ObjString* haystack = AS_STRING(receiver);
     ObjString* needle = AS_STRING(args[0]);
     RETURN_INT(searchString(vm, haystack, needle, 0));
@@ -530,7 +530,7 @@ LOX_METHOD(String, indexOf) {
 
 LOX_METHOD(String, init) {
     ASSERT_ARG_COUNT("String::init(chars)", 1);
-    assertArgIsString(vm, "String::init(chars)", args, 0);
+    ASSERT_ARG_TYPE("String::init(chars)", 0, String);
     RETURN_OBJ(args[0]);
 }
 
@@ -541,8 +541,8 @@ LOX_METHOD(String, length) {
 
 LOX_METHOD(String, replace) {
     ASSERT_ARG_COUNT("String::replace(target, replacement)", 2);
-    assertArgIsString(vm, "String::replace(target, replacement)", args, 0);
-    assertArgIsString(vm, "String::replace(target, replacement)", args, 1);
+    ASSERT_ARG_TYPE("String::replace(target, replacement)", 0, String);
+    ASSERT_ARG_TYPE("String::replace(target, replacement)", 1, String);
     RETURN_OBJ(replaceString(vm, AS_STRING(receiver), AS_STRING(args[0]), AS_STRING(args[1])));
 }
 
@@ -555,7 +555,7 @@ LOX_METHOD(String, reverse) {
 
 LOX_METHOD(String, split) {
     ASSERT_ARG_COUNT("String::split(delimiter)", 1);
-    assertArgIsString(vm, "String::split(delimiter)", args, 0);
+    ASSERT_ARG_TYPE("String::split(delimiter)", 0, String);
     ObjString* self = AS_STRING(receiver);
     ObjString* delimiter = AS_STRING(args[0]);
 
@@ -573,7 +573,7 @@ LOX_METHOD(String, split) {
 
 LOX_METHOD(String, startsWith) {
     ASSERT_ARG_COUNT("String::startsWith(chars)", 1);
-    assertArgIsString(vm, "String::startsWith(chars)", args, 0);
+    ASSERT_ARG_TYPE("String::startsWith(chars)", 0, String);
     ObjString* haystack = AS_STRING(receiver);
     ObjString* needle = AS_STRING(args[0]);
     if (needle->length > haystack->length) RETURN_FALSE;

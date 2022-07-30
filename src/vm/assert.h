@@ -6,9 +6,11 @@
 #include "value.h"
 
 #define ASSERT_ARG_COUNT(method, expectedCount) assertArgCount(vm, method, expectedCount, argCount)
-#define ASSERT_ARG_TYPE(method, index, type) assertArgIs##type(vm, method, args, index) 
+#define ASSERT_ARG_INSTANCE_OF(method, index, className) assertArgInstanceOf(vm, method, args, index, #className)
+#define ASSERT_ARG_TYPE(method, index, type) assertArgIs##type(vm, method, args, index)
 
 void assertArgCount(VM* vm, const char* method, int expectedCount, int actualCount);
+void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, char* className);
 void assertArgIsBool(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClass(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClosure(VM* vm, const char* method, Value* args, int index);
@@ -23,7 +25,6 @@ void assertNumberNonNegative(VM* vm, const char* method, double number, int inde
 void assertNumberNonZero(VM* vm, const char* method, double number, int index);
 void assertNumberPositive(VM* vm, const char* method, double number, int index);
 void assertNumberWithinRange(VM* vm, const char* method, double value, double min, double max, int index);
-void assertObjInstanceOfClass(VM* vm, const char* method, Value arg, char* className, int index);
 void raiseError(VM* vm, const char* message);
 
 #endif // !clox_assert_h
