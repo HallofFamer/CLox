@@ -32,6 +32,6 @@ println("Hello World".toUppercase());
 print("'Hello World' to lower case: ");
 println("Hello World".toLowercase());
 
-print("Splitting string 'Hello My Friend'");
+print("Splitting string 'Hello My Friend': ");
 var str2 = "Hello My Friend";
 println(str2.split(" "));

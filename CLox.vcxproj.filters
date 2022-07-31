@@ -77,6 +77,9 @@
     <ClCompile Include="src\inc\regex.c">
       <Filter>Source Files\inc</Filter>
     </ClCompile>
+    <ClCompile Include="src\vm\parser.c">
+      <Filter>Source Files\vm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="test\lox\benchmark.lox">
@@ -202,6 +205,9 @@
     </ClInclude>
     <ClInclude Include="src\inc\regex.h">
       <Filter>Source Files\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\parser.h">
+      <Filter>Source Files\vm</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

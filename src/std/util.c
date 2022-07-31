@@ -67,9 +67,11 @@ static ObjInstance* dateObjFromTimestamp(VM* vm, ObjClass* dateClass, double tim
     struct tm time;
     localtime_s(&time, &timestamp);
     ObjInstance* date = newInstance(vm, dateClass);
+    push(vm, OBJ_VAL(date));
     setObjProperty(vm, date, "year", INT_VAL(1900 + time.tm_year));
     setObjProperty(vm, date, "month", INT_VAL(1 + time.tm_mon));
     setObjProperty(vm, date, "day", INT_VAL(time.tm_mday));
+    pop(vm);
     return date;
 }
 
@@ -78,12 +80,14 @@ static ObjInstance* dateTimeObjFromTimestamp(VM* vm, ObjClass* dateTimeClass, do
     struct tm time;
     localtime_s(&time, &timestamp);
     ObjInstance* dateTime = newInstance(vm, dateTimeClass);
+    push(vm, OBJ_VAL(dateTime));
     setObjProperty(vm, dateTime, "year", INT_VAL(1900 + time.tm_year));
     setObjProperty(vm, dateTime, "month", INT_VAL(1 + time.tm_mon));
     setObjProperty(vm, dateTime, "day", INT_VAL(time.tm_mday));
     setObjProperty(vm, dateTime, "hour", INT_VAL(time.tm_hour));
     setObjProperty(vm, dateTime, "minute", INT_VAL(time.tm_min));
     setObjProperty(vm, dateTime, "second", INT_VAL(time.tm_sec));
+    pop(vm);
     return dateTime;
 }
 
@@ -118,10 +122,12 @@ static void durationFromArgs(int* duration, Value* args) {
 }
 
 static void durationObjInit(VM* vm, int* duration, ObjInstance* object) {
+    push(vm, OBJ_VAL(object));
     setObjProperty(vm, object, "days", INT_VAL(duration[0]));
     setObjProperty(vm, object, "hours", INT_VAL(duration[1]));
     setObjProperty(vm, object, "minutes", INT_VAL(duration[2]));
     setObjProperty(vm, object, "seconds", INT_VAL(duration[3]));
+    pop(vm);
 }
 
 static double durationTotalSeconds(VM* vm, ObjInstance* duration) {
@@ -196,12 +202,14 @@ LOX_METHOD(Date, toDateTime) {
     ASSERT_ARG_COUNT("Date::toDateTime()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* dateTime = newInstance(vm, getNativeClass(vm, "DateTime"));
+    push(vm, OBJ_VAL(dateTime));
     setObjProperty(vm, dateTime, "year", getObjProperty(vm, self, "year"));
     setObjProperty(vm, dateTime, "month", getObjProperty(vm, self, "month"));
     setObjProperty(vm, dateTime, "day", getObjProperty(vm, self, "day"));
     setObjProperty(vm, dateTime, "hour", INT_VAL(0));
     setObjProperty(vm, dateTime, "minute", INT_VAL(0));
     setObjProperty(vm, dateTime, "second", INT_VAL(0));
+    pop(vm);
     RETURN_OBJ(dateTime);
 }
 
@@ -284,9 +292,11 @@ LOX_METHOD(DateTime, toDate) {
     ASSERT_ARG_COUNT("DateTime::toDate()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* date = newInstance(vm, getNativeClass(vm, "Date"));
+    push(vm, OBJ_VAL(date));
     setObjProperty(vm, date, "year", getObjProperty(vm, self, "year"));
     setObjProperty(vm, date, "month", getObjProperty(vm, self, "month"));
     setObjProperty(vm, date, "day", getObjProperty(vm, self, "day"));
+    pop(vm);
     RETURN_OBJ(date);
 }
 

@@ -127,7 +127,9 @@ ObjString* replaceString(VM* vm, ObjString* original, ObjString* target, ObjStri
     if (startIndex == -1) return original;
 
     int newLength = original->length - target->length + replace->length;
+    push(vm, OBJ_VAL(target));
     char* heapChars = ALLOCATE(char, (size_t)newLength + 1);
+    pop(vm);
 
     int offset = 0;
     while (offset < startIndex) {

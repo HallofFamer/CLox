@@ -38,6 +38,7 @@ typedef struct {
 } Scanner;
 
 void initScanner(Scanner* scanner, const char* source);
+Token syntheticToken(const char* text);
 Token scanToken(Scanner* scanner);
 
 #endif // !clox_scanner_h

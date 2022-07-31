@@ -4,7 +4,6 @@
 #include <string.h>
 #include <time.h>
 
-#include "compiler.h"
 #include "debug.h"
 #include "memory.h"
 #include "native.h"
@@ -88,6 +87,7 @@ void initConfiguration(VM* vm) {
 void initVM(VM* vm) {
     resetStack(vm);
     initConfiguration(vm);
+    vm->currentCompiler = NULL;
     vm->objects = NULL;
     vm->bytesAllocated = 0;
     vm->nextGC = vm->config.gcHeapSize;

@@ -18,5 +18,6 @@
 #define MAX_CASES 256
 
 typedef struct VM VM;
+typedef struct Compiler Compiler;
 
 #endif // !clox_common_h

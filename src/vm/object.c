@@ -147,12 +147,15 @@ bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass) {
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
     Value value;
-    tableGet(&object->fields, copyString(vm, name, (int)strlen(name)), &value);
+    tableGet(&object->fields, newString(vm, name), &value);
     return value;
 }
 
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
-    tableSet(vm, &object->fields, copyString(vm, name, (int)strlen(name)), value);
+    ObjString* key = newString(vm, name);
+    push(vm, OBJ_VAL(key));
+    tableSet(vm, &object->fields, key, value);
+    pop(vm);
 }
 
 static void printDictionary(ObjDictionary* dictionary) {

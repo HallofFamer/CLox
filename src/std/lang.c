@@ -422,7 +422,9 @@ LOX_METHOD(Object, clone) {
     ASSERT_ARG_COUNT("Object::clone()", 0);
     ObjInstance* thisObject = AS_INSTANCE(receiver);
     ObjInstance* thatObject = newInstance(vm, OBJ_KLASS(receiver));
+    push(vm, OBJ_VAL(thatObject));
     tableAddAll(vm, &thisObject->fields, &thatObject->fields);
+    pop(vm);
     RETURN_OBJ(thatObject);
 }
 
@@ -560,6 +562,7 @@ LOX_METHOD(String, split) {
     ObjString* delimiter = AS_STRING(args[0]);
 
     ObjList* list = newList(vm);
+    push(vm, OBJ_VAL(list));
     char* string = _strdup(self->chars);
     char* next = NULL;
     char* token = strtok_s(string, delimiter->chars, &next);
@@ -568,6 +571,7 @@ LOX_METHOD(String, split) {
         token = strtok_s(NULL, delimiter->chars, &next);
     }
     free(string);
+    pop(vm);
     RETURN_OBJ(list);
 }
 

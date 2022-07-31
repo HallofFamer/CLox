@@ -155,6 +155,7 @@
     <ClCompile Include="src\vm\memory.c" />
     <ClCompile Include="src\vm\native.c" />
     <ClCompile Include="src\vm\object.c" />
+    <ClCompile Include="src\vm\parser.c" />
     <ClCompile Include="src\vm\scanner.c" />
     <ClCompile Include="src\vm\string.c" />
     <ClCompile Include="src\vm\table.c" />
@@ -201,6 +202,7 @@
     <ClInclude Include="src\vm\memory.h" />
     <ClInclude Include="src\vm\native.h" />
     <ClInclude Include="src\vm\object.h" />
+    <ClInclude Include="src\vm\parser.h" />
     <ClInclude Include="src\vm\scanner.h" />
     <ClInclude Include="src\vm\string.h" />
     <ClInclude Include="src\vm\table.h" />

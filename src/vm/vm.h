@@ -3,6 +3,7 @@
 #define clox_vm_h
 
 #include "common.h"
+#include "compiler.h"
 #include "object.h"
 #include "table.h"
 #include "value.h"
@@ -57,6 +58,7 @@ struct VM {
     size_t nextGC;
 
     Configuration config;
+    Compiler* currentCompiler;
     Obj* objects;
 
     int grayCount;

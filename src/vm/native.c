@@ -21,9 +21,11 @@ LOX_FUNCTION(dateNow) {
     struct tm now;
     localtime_s(&now, &nowTime);
     ObjInstance* date = newInstance(vm, getNativeClass(vm, "Date"));
+    push(vm, OBJ_VAL(date));
     setObjProperty(vm, date, "year", INT_VAL(1900 + now.tm_year));
     setObjProperty(vm, date, "month", INT_VAL(1 + now.tm_mon));
     setObjProperty(vm, date, "day", INT_VAL(now.tm_mday));
+    pop(vm);
     RETURN_OBJ(date);
 }
 
@@ -34,12 +36,14 @@ LOX_FUNCTION(dateTimeNow) {
     struct tm now;
     localtime_s(&now,&nowTime);
     ObjInstance* date = newInstance(vm, getNativeClass(vm, "DateTime"));
+    push(vm, OBJ_VAL(date));
     setObjProperty(vm, date, "year", INT_VAL(1900 + now.tm_year));
     setObjProperty(vm, date, "month", INT_VAL(1 + now.tm_mon));
     setObjProperty(vm, date, "day", INT_VAL(now.tm_mday));
     setObjProperty(vm, date, "hour", INT_VAL(now.tm_hour));
     setObjProperty(vm, date, "minute", INT_VAL(now.tm_min));
     setObjProperty(vm, date, "second", INT_VAL(now.tm_sec));
+    pop(vm);
     RETURN_OBJ(date);
 }
 

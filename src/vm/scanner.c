@@ -9,15 +9,15 @@ void initScanner(Scanner* scanner, const char* source) {
     scanner->current = source;
     scanner->line = 1;
 }
+
 static bool isAlpha(char c) {
-  return (c >= 'a' && c <= 'z') ||
-         (c >= 'A' && c <= 'Z') ||
-          c == '_';
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
 static bool isDigit(char c) {
     return c >= '0' && c <= '9';
 }
+
 static bool isAtEnd(Scanner* scanner) {
     return *scanner->current == '\0';
 }
@@ -207,6 +207,13 @@ static Token string(Scanner* scanner) {
 
     advance(scanner);
     return makeToken(scanner, TOKEN_STRING);
+}
+
+Token syntheticToken(const char* text) {
+    Token token;
+    token.start = text;
+    token.length = (int)strlen(text);
+    return token;
 }
 
 Token scanToken(Scanner* scanner) {
