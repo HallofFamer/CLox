@@ -835,28 +835,6 @@ static void whileStatement(VM* vm) {
     emitByte(vm, OP_POP);
 }
 
-static void synchronize(Parser* parser) {
-    parser->panicMode = false;
-
-    while (parser->current.type != TOKEN_EOF) {
-        if (parser->previous.type == TOKEN_SEMICOLON) return;
-        switch (parser->current.type) {
-            case TOKEN_CLASS:
-            case TOKEN_FUN:
-            case TOKEN_VAR:
-            case TOKEN_FOR:
-            case TOKEN_IF:
-            case TOKEN_WHILE:
-            case TOKEN_RETURN:
-                return;
-
-            default:
-                ;
-        }
-        advance(parser);
-    }
-}
-
 static void declaration(VM* vm) {
     if (match(current->parser, TOKEN_CLASS)) {
         classDeclaration(vm);
@@ -910,7 +888,7 @@ ObjFunction* compile(VM* vm, const char* source) {
     initCompiler(&compiler, &parser, TYPE_SCRIPT);
 
     advance(&parser);
-    while (!match(current->parser, TOKEN_EOF)) {
+    while (!match(&parser, TOKEN_EOF)) {
         declaration(vm);
     }
 
