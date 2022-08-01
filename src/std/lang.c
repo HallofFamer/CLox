@@ -183,7 +183,7 @@ LOX_METHOD(Int, clone) {
 LOX_METHOD(Int, factorial) {
     ASSERT_ARG_COUNT("Int::factorial()", 0);
     int self = AS_INT(receiver);
-    assertNumberPositive(vm, "Int::factorial()", self, -1);
+    assertNumberNonNegative(vm, "Int::factorial()", self, -1);
     RETURN_INT(factorial(self));
 }
 
