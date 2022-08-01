@@ -14,9 +14,9 @@ https://github.com/munificent/craftinginterpreters
 - If and Else Statement
 - Switch Statement
 - While and For Loop
-- Functions and Closures
-- Classes, Objects and Methods
-- Inheritance and this/super keywords
+- Functions and Closures with automatic upvalue capture
+- Classes, Objects, Methods and `this` keyword
+- Single Inheritance and `super` keyword
 - Embeddable VM for CLox in other host applications(since version 1.1)
 - `Object` root class for every class in Lox(since version 1.1)
 - Framework for creating native functions, methods and classes(since version 1.1)
@@ -31,37 +31,37 @@ https://github.com/munificent/craftinginterpreters
 ### CLox v1.1.0
 - VM is no longer a global variable, allowing CLox VM to be embedded in other host applications.
 - Full fledged Framework for writing Native functions, methods and classes.
-- Root class Object which serves as superclass of every class.
-- Remove print statement and replace it by print/println native functions.
+- Root class `Object` which serves as superclass of every class.
+- Remove print statement and replace it by `print` and `println` native functions.
 
 ### CLox v1.2.0(current version)
 - Improved object model - Everything is an object, and every object has a class, including `nil`, `true`, `false`, `number`, `string`, `function`, `class` etc.
 - CLox Standard Library for package `lang` and `util`, which contains classes such as `Boolean`, `Number`, `String`, `List`, `Dictionary`, `DateTime`, etc.
 - Allow customized runtime configurations for CLox at startup with clox.ini
-- Split the Number class, which will distinguish between integers and floating numbers.
+- Split the `Number` class into `Int` and `Float` classes, which will distinguish between integers and floating numbers.
 
 ### CLox v1.3.0(next version)
 - Array/Dictionary Literals and square bracket notation for array/dictionary access.
 - Anonymous Functions(local return) and Lambda Expressions(nonlocal return).
-- Replace C style for loop by Kotlin style for-in loop for collection.
+- Replace C style for loop by Kotlin style for-in loop for collection types.
 - Clox Standard Library improvement: New package `collection` and `io`.
 
 ### CLox 1.4.0
 - Immutable variable declaration with `val` keyword.
 - Function/Method parameters become immutable by default, but may be mutable if using `var` keyword.
 - Built-in classes and functions will be immutable, users will not be able to overwrite them. 
-- Allow inheritance for all built-in classes including `Boolean`, `Int`, `String`, etc.
+- Allow inheritance for all built-in classes including `Boolean`, `Int`, `String`, `Class`, etc.
 
 ### CLox 1.5.0
 - Refined object model which uses Smalltalk's metaclass system.
-- Metaclasses(which enables class methods) and Traits(can be implemented by classes).
+- Metaclasses(which enables class methods) and traits(can be implemented by classes).
 - Improved Clox standard library that makes use of metaclasses and traits. 
 - Anonymous classes/traits similar to anonymous functions/lambda.
 
 ## FAQ
 
-#### What is the purpose of this project? 
+#### What is the purpose of this project?
 CLox is an implementation of Lox language with bytecode VM instead of treewalk interpreter. It is the last experiment on feature implementations, before I will begin writing my own programming language `Mysidia` in C.
 
-#### What will happen to KtLox? 
+#### What will happen to KtLox?
 Nothing, KtLox development is on hold until I can figure out a way to generate JVM bytecode instead of running the interpreter by walking down the AST. Treewalk interpreters are way too slow to be practical without JIT. 
