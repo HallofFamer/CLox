@@ -1,3 +1,4 @@
+#pragma warning(disable : 26451)
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,6 +89,7 @@ void initVM(VM* vm) {
     resetStack(vm);
     initConfiguration(vm);
     vm->currentCompiler = NULL;
+    vm->currentClass = NULL;
     vm->objects = NULL;
     vm->bytesAllocated = 0;
     vm->nextGC = vm->config.gcHeapSize;

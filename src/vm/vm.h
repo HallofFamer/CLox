@@ -49,6 +49,10 @@ struct VM {
     Value stack[STACK_MAX];
     Value* stackTop;
 
+    Configuration config;
+    Compiler* currentCompiler;
+    ClassCompiler* currentClass;
+
     Table globals;
     Table strings;
     ObjString* initString;
@@ -56,9 +60,6 @@ struct VM {
 
     size_t bytesAllocated;
     size_t nextGC;
-
-    Configuration config;
-    Compiler* currentCompiler;
     Obj* objects;
 
     int grayCount;

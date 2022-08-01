@@ -22,7 +22,7 @@ https://github.com/munificent/craftinginterpreters
 - Framework for creating native functions, methods and classes(since version 1.1)
 - Print statement removed, use native function `print` and `println` instead(since version 1.1)
 - Improved Object Model - Everything is an object, and every object has a class(since version 1.2)
-- CLox Standard Library for package 'lang' and 'util'(since version 1.2)
+- CLox Standard Library for package `lang` and `util`(since version 1.2)
 - Customized Runtime configuration for CLox using clox.ini(since version 1.2)
 - Separated integer values and floating point values(since version 1.2).
 
@@ -35,16 +35,28 @@ https://github.com/munificent/craftinginterpreters
 - Remove print statement and replace it by print/println native functions.
 
 ### CLox v1.2.0(current version)
-- Improved object model - Everything is an object, and every object has a class, including nil, true, false, number, string, function, class etc.
-- CLox Standard Library for package `lang` and `util`, which contains classes such as Boolean, Number, String, List, Dictionary, DateTime, etc.
+- Improved object model - Everything is an object, and every object has a class, including `nil`, `true`, `false`, `number`, `string`, `function`, `class` etc.
+- CLox Standard Library for package `lang` and `util`, which contains classes such as `Boolean`, `Number`, `String`, `List`, `Dictionary`, `DateTime`, etc.
 - Allow customized runtime configurations for CLox at startup with clox.ini
 - Split the Number class, which will distinguish between integers and floating numbers.
 
-### CLox v1.3.0
+### CLox v1.3.0(next version)
 - Array/Dictionary Literals and square bracket notation for array/dictionary access.
-- Anonymous Functions and Closure(Lambda expression) with nonlocal returns.
+- Anonymous Functions(local return) and Lambda Expressions(nonlocal return).
 - Replace C style for loop by Kotlin style for-in loop for collection.
 - Clox Standard Library improvement: New package `collection` and `io`.
+
+### CLox 1.4.0
+- Immutable variable declaration with `val` keyword.
+- Function/Method parameters become immutable by default, but may be mutable if using `var` keyword.
+- Built-in classes and functions will be immutable, users will not be able to overwrite them. 
+- Allow inheritance for all built-in classes including `Boolean`, `Int`, `String`, etc.
+
+### CLox 1.5.0
+- Refined object model which uses Smalltalk's metaclass system.
+- Metaclasses(which enables class methods) and Traits(can be implemented by classes).
+- Improved Clox standard library that makes use of metaclasses and traits. 
+- Anonymous classes/traits similar to anonymous functions/lambda.
 
 ## FAQ
 

@@ -61,6 +61,14 @@ LOX_METHOD(Class, getClassName) {
     RETURN_OBJ(vm->classClass->name);
 }
 
+LOX_METHOD(Class, hasMethod) {
+    ASSERT_ARG_COUNT("Class::hasMethod(method)", 1);
+    ASSERT_ARG_TYPE("Class::hasMethod(method)", 0, String);
+    ObjClass* self = AS_CLASS(receiver);
+    Value value;
+    RETURN_BOOL(tableGet(&self->methods, AS_STRING(args[0]), &value));
+}
+
 LOX_METHOD(Class, init) {
     ASSERT_ARG_COUNT("Class::init(name, superclass)", 2);
     ASSERT_ARG_TYPE("Class::init(name, superclass)", 0, String);
@@ -628,6 +636,7 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->classClass, Class, clone, 0);
     DEF_METHOD(vm->classClass, Class, getClass, 0);
     DEF_METHOD(vm->classClass, Class, getClassName, 0);
+    DEF_METHOD(vm->classClass, Class, hasMethod, 1);
     DEF_METHOD(vm->classClass, Class, init, 2);
     DEF_METHOD(vm->classClass, Class, instanceOf, 1);
     DEF_METHOD(vm->classClass, Class, memberOf, 1);

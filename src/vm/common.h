@@ -19,5 +19,6 @@
 
 typedef struct VM VM;
 typedef struct Compiler Compiler;
+typedef struct ClassCompiler ClassCompiler;
 
 #endif // !clox_common_h
