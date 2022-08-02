@@ -229,6 +229,8 @@ Token scanToken(Scanner* scanner) {
     switch (c) {
         case '(': return makeToken(scanner, TOKEN_LEFT_PAREN);
         case ')': return makeToken(scanner, TOKEN_RIGHT_PAREN);
+        case '[': return makeToken(scanner, TOKEN_LEFT_BRACKET);
+        case ']': return makeToken(scanner, TOKEN_RIGHT_BRACKET);
         case '{': return makeToken(scanner, TOKEN_LEFT_BRACE);
         case '}': return makeToken(scanner, TOKEN_RIGHT_BRACE);
         case ';': return makeToken(scanner, TOKEN_SEMICOLON);

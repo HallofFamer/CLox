@@ -34,13 +34,13 @@ https://github.com/munificent/craftinginterpreters
 - Root class `Object` which serves as superclass of every class.
 - Remove print statement and replace it by `print` and `println` native functions.
 
-### CLox v1.2.0(current version)
+### CLox v1.2.0
 - Improved object model - Everything is an object, and every object has a class, including `nil`, `true`, `false`, `number`, `string`, `function`, `class` etc.
 - CLox Standard Library for package `lang` and `util`, which contains classes such as `Boolean`, `Number`, `String`, `List`, `Dictionary`, `DateTime`, etc.
 - Allow customized runtime configurations for CLox at startup with clox.ini
 - Split the `Number` class into `Int` and `Float` classes, which will distinguish between integers and floating numbers.
 
-### CLox v1.3.0(next version)
+### CLox v1.3.0(current version)
 - Array/Dictionary Literals and square bracket notation for array/dictionary access.
 - Anonymous Functions(local return) and Lambda Expressions(nonlocal return).
 - Replace C style for loop by Kotlin style for-in loop for collection types.

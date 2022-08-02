@@ -312,6 +312,21 @@ static void concatenate(VM* vm) {
     push(vm, OBJ_VAL(result));
 }
 
+static void makeList(VM* vm, uint8_t elementCount) {
+    ObjList* list = newList(vm);
+    push(vm, OBJ_VAL(list));
+    for (int i = elementCount; i > 0; i--) {
+        valueArrayWrite(vm, &list->elements, peek(vm, i));
+    }
+    pop(vm);
+
+    while (elementCount > 0) {
+        elementCount--;
+        pop(vm);
+    }
+    push(vm, OBJ_VAL(list));
+}
+
 static InterpretResult run(VM* vm) {
     CallFrame* frame = &vm->frames[vm->frameCount - 1];
 
@@ -432,6 +447,47 @@ static InterpretResult run(VM* vm) {
                 Value value = pop(vm);
                 pop(vm);
                 push(vm, value);
+                break;
+            }
+            case OP_GET_SUBSCRIPT: {
+                if (!IS_INT(peek(vm, 0))) {
+                    runtimeError(vm, "List index must be an integer.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                if (!IS_LIST(peek(vm, 1))) {
+                    runtimeError(vm, "Only List can have subscripts.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                int index = AS_INT(pop(vm));
+                ObjList* list = AS_LIST(pop(vm));
+                if (index < 0 || index > list->elements.count) {
+                    runtimeError(vm, "List index is out of bound.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                Value element = list->elements.values[index];
+                push(vm, element);
+                break;
+            }
+            case OP_SET_SUBSCRIPT: {
+                if (!IS_INT(peek(vm, 1))) {
+                    runtimeError(vm, "List index must be an integer.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                if (!IS_LIST(peek(vm, 2))) {
+                    runtimeError(vm, "Only List can have subscripts.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                Value element = pop(vm);
+                int index = AS_INT(pop(vm));
+                ObjList* list = AS_LIST(pop(vm));
+                if (index < 0 || index > list->elements.count) {
+                    runtimeError(vm, "List index is out of bound.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                valueArrayInsert(vm, &list->elements, index, element);
+                push(vm, OBJ_VAL(list));
                 break;
             }
             case OP_GET_SUPER: {
@@ -563,20 +619,6 @@ static InterpretResult run(VM* vm) {
                 closeUpvalues(vm, vm->stackTop - 1);
                 pop(vm);
                 break;
-            case OP_RETURN: {
-                Value result = pop(vm);
-                closeUpvalues(vm, frame->slots);
-                vm->frameCount--;
-                if (vm->frameCount == 0) {
-                    pop(vm);
-                    return INTERPRET_OK;
-                }
-
-                vm->stackTop = frame->slots;
-                push(vm, result);
-                frame = &vm->frames[vm->frameCount - 1];
-                break;
-            }
             case OP_CLASS:
                 push(vm, OBJ_VAL(newClass(vm, READ_STRING())));
                 break;
@@ -595,6 +637,28 @@ static InterpretResult run(VM* vm) {
             case OP_METHOD:
                 defineMethod(vm, READ_STRING());
                 break;
+            case OP_LIST: {
+                int elementCount = READ_BYTE();
+                makeList(vm, elementCount);
+                break;
+            }
+            case OP_DICTIONARY: {
+                break;
+            }
+            case OP_RETURN: {
+                Value result = pop(vm);
+                closeUpvalues(vm, frame->slots);
+                vm->frameCount--;
+                if (vm->frameCount == 0) {
+                    pop(vm);
+                    return INTERPRET_OK;
+                }
+
+                vm->stackTop = frame->slots;
+                push(vm, result);
+                frame = &vm->frames[vm->frameCount - 1];
+                break;
+            }
         }
     }
 

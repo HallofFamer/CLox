@@ -78,6 +78,7 @@ void synchronize(Parser* parser) {
         case TOKEN_VAR:
         case TOKEN_FOR:
         case TOKEN_IF:
+        case TOKEN_SWITCH:
         case TOKEN_WHILE:
         case TOKEN_RETURN:
             return;

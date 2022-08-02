@@ -1,30 +1,39 @@
-var list = List();
+var list = [];
 print("Creating empty list: ");
 println(list);
 var list2 = List();
 print("Two empty lists are equal: ");
 println(list.equals(list2));
+println("");
 
 print("Adding elements 2, 3.5, true and 'Hello World': ");
 list.add(2);
 list.add(3.5);
-list.add(true);
-list.add("Hello World");
+list[2] = true;
+list[3] = "Hello World";
 println(list);
 print("Testing two list equality again: ");
 println(list.equals(list2));
+print("Creating another list using literal: ");
+var list3 = [1 + 1, 3.5, true, "hello World".capitalize()];
+println(list3);
+print("The first and last list are equal: ");
+println(list.equals(list3));
+println("");
 
 print("Getting element at index 3: ");
 println(list.getAt(3));
 print("Index of element 'true': ");
 println(list.indexOf(true));
+println("");
 
 print("Setting element false at index 2: ");
-list.putAt(2, false);
+list[2] = false;
 println(list.toString());
 print("Inserting element nil at index 3: ");
 list.insertAt(3, nil);
 println(list.toString());
+println("");
 
 print("Remove element at index 1: ");
 var element = list.removeAt(1);
