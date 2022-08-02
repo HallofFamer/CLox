@@ -424,19 +424,49 @@ static void string(Compiler* compiler, bool canAssign) {
     emitConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, compiler->parser->previous.start + 1, compiler->parser->previous.length - 2)));
 }
 
-static void list(Compiler* compiler, bool canAssign) {
-    uint8_t elementCount = 0;
-    if (!check(compiler->parser, TOKEN_RIGHT_BRACKET)) {
-        do {
-            expression(compiler);
-            if (elementCount == UINT8_MAX) {
-                error(compiler->parser, "Cannot have more than 255 elements.");
-            }
-            elementCount++;
-        } while (match(compiler->parser, TOKEN_COMMA));
+static void list(Compiler* compiler) {
+    uint8_t elementCount = 1;
+    while (match(compiler->parser, TOKEN_COMMA)) {
+        expression(compiler);
+        if (elementCount == UINT8_MAX) {
+            error(compiler->parser, "Cannot have more than 255 elements.");
+        }
+        elementCount++;
     }
+
     consume(compiler->parser, TOKEN_RIGHT_BRACKET, "Expect ']' after elements.");
     emitBytes(compiler, OP_LIST, elementCount);
+}
+
+static void dictionary(Compiler* compiler) {
+    uint8_t entryCount = 1;
+    while (match(compiler->parser, TOKEN_COMMA)) {
+        expression(compiler);
+        consume(compiler->parser, TOKEN_COLON, "Expect ':' after entry key.");
+        expression(compiler);
+
+        if (entryCount == UINT8_MAX) {
+            error(compiler->parser, "Cannot have more than 255 entries.");
+        }
+        entryCount++;
+    }
+
+    consume(compiler->parser, TOKEN_RIGHT_BRACKET, "Expect ']' after entries.");
+    emitBytes(compiler, OP_DICTIONARY, entryCount);
+}
+
+static void collection(Compiler* compiler, bool canAssign) {
+    if (match(compiler->parser, TOKEN_RIGHT_BRACKET)) {
+        emitBytes(compiler, OP_LIST, 0);
+    }
+    else {
+        expression(compiler);
+        if (match(compiler->parser, TOKEN_COLON)) {
+            expression(compiler);
+            dictionary(compiler);
+        }
+        else list(compiler);
+    }
 }
 
 static void namedVariable(Compiler* compiler, Token name, bool canAssign) {
@@ -513,7 +543,7 @@ static void unary(Compiler* compiler, bool canAssign) {
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN]    = {grouping,   call,        PREC_CALL},
     [TOKEN_RIGHT_PAREN]   = {NULL,       NULL,        PREC_NONE},
-    [TOKEN_LEFT_BRACKET]  = {list,       subscript,   PREC_CALL},
+    [TOKEN_LEFT_BRACKET]  = {collection, subscript,   PREC_CALL},
     [TOKEN_RIGHT_BRACKET] = {NULL,       NULL,        PREC_NONE},
     [TOKEN_LEFT_BRACE]    = {NULL,       NULL,        PREC_NONE}, 
     [TOKEN_RIGHT_BRACE]   = {NULL,       NULL,        PREC_NONE},

@@ -191,18 +191,33 @@ ObjString* tableToString(VM* vm, Table* table) {
         for (int i = 0; i < table->capacity; i++) {
             Entry* entry = &table->entries[i];
             if (entry->key == NULL) continue;
-            if (startIndex == 0) startIndex = i;
-
             ObjString* key = entry->key;
             size_t keyLength = (size_t)key->length;
             Value value = entry->value;
             char* valueChars = valueToString(vm, value);
             size_t valueLength = strlen(valueChars);
 
-            if (i > startIndex) {
-                memcpy(string + offset, ", ", 2);
-                offset += 2;
-            }
+            memcpy(string + offset, key->chars, keyLength);
+            offset += keyLength;
+            memcpy(string + offset, ": ", 2);
+            offset += 2;
+            memcpy(string + offset, valueChars, valueLength);
+            offset += valueLength;
+            startIndex = i + 1;
+            break;
+        }
+
+        for (int i = startIndex; i < table->capacity; i++) {
+            Entry* entry = &table->entries[i];
+            if (entry->key == NULL) continue;
+            ObjString* key = entry->key;
+            size_t keyLength = (size_t)key->length;
+            Value value = entry->value;
+            char* valueChars = valueToString(vm, value);
+            size_t valueLength = strlen(valueChars);
+
+            memcpy(string + offset, ", ", 2);
+            offset += 2;
             memcpy(string + offset, key->chars, keyLength);
             offset += keyLength;
             memcpy(string + offset, ": ", 2);

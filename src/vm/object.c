@@ -164,10 +164,17 @@ static void printDictionary(ObjDictionary* dictionary) {
     for (int i = 0; i < dictionary->table.capacity; i++) {
         Entry* entry = &dictionary->table.entries[i];
         if (entry->key == NULL) continue;
-        if (startIndex == 0) startIndex = i;
-        if(i > startIndex) printf(", ");
         printf("%s: ", entry->key->chars);
-        printValue(entry->value);  
+        printValue(entry->value);
+        startIndex = i + 1;
+        break;
+    }
+
+    for (int i = startIndex; i < dictionary->table.capacity; i++) {
+        Entry* entry = &dictionary->table.entries[i];
+        if (entry->key == NULL) continue;
+        printf(", %s: ", entry->key->chars);
+        printValue(entry->value);
     }
     printf("]");
 }

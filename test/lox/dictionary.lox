@@ -3,21 +3,33 @@ print("Creating empty dictionary: ");
 println(dict);
 print("Dictionary is empty: ");
 println(dict.isEmpty());
+var dict2 = ["US": "United States", "CA": "Canada", "EU": "Europe", "JP": "Japan", "RU": "Russia"];
+print("Creating a dictionary using literals: ");
+println(dict2);
+print("The two dictionaries are equal: ");
+println(dict.equals(dict2));
+println("");
 
 print("Adding entries to the dictionary: ");
 dict.putAt("name", "Joe Doe");
 dict.putAt("age", 40);
-dict.putAt("isAdmin", false);
+dict["isAdmin"] = false;
 println(dict.toString());
-
 print("Dictionary contains key 'age': ");
 println(dict.containsKey("age"));
 print("Dictionary contains value true: ");
 println(dict.containsValue(true));
+println("");
+
 print("Getting value at key 'name': ");
 println(dict.getAt("name"));
+print("Getting value at key 'age': ");
+println(dict["age"]);
+print("Getting a nonexistent key: ");
+println(dict["gender"]);
 print("Current Length of the dictionary is: ");
 println(dict.length());
+println("");
 
 print("Removing key 'isAdmin': ");
 dict.removeAt("isAdmin");

@@ -327,6 +327,26 @@ static void makeList(VM* vm, uint8_t elementCount) {
     push(vm, OBJ_VAL(list));
 }
 
+static bool makeDictionary(VM* vm, uint8_t entryCount) {
+    ObjDictionary* dictionary = newDictionary(vm);
+    push(vm, OBJ_VAL(dictionary));
+    for (int i = 1; i <= entryCount; i++) {
+        Value key = peek(vm, 2 * i);
+        Value value = peek(vm, 2 * i - 1);
+        if (!IS_STRING(key)) return false;
+        tableSet(vm, &dictionary->table, AS_STRING(key), value);
+    }
+    pop(vm);
+
+    while (entryCount > 0) {
+        entryCount--;
+        pop(vm);
+        pop(vm);
+    }
+    push(vm, OBJ_VAL(dictionary));
+    return true;
+}
+
 static InterpretResult run(VM* vm) {
     CallFrame* frame = &vm->frames[vm->frameCount - 1];
 
@@ -450,44 +470,72 @@ static InterpretResult run(VM* vm) {
                 break;
             }
             case OP_GET_SUBSCRIPT: {
-                if (!IS_INT(peek(vm, 0))) {
-                    runtimeError(vm, "List index must be an integer.");
-                    return INTERPRET_RUNTIME_ERROR;
+                if (IS_INT(peek(vm, 0))) {
+                    if (!IS_LIST(peek(vm, 1))) {
+                        runtimeError(vm, "Only List can have integer subscripts.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    
+                    int index = AS_INT(pop(vm));
+                    ObjList* list = AS_LIST(pop(vm));
+                    if (index < 0 || index > list->elements.count) {
+                        runtimeError(vm, "List index is out of bound.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    Value element = list->elements.values[index];
+                    push(vm, element);
                 }
-                if (!IS_LIST(peek(vm, 1))) {
-                    runtimeError(vm, "Only List can have subscripts.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                else if (IS_STRING(peek(vm, 0))) {
+                    if (!IS_DICTIONARY(peek(vm, 1))) {
+                        runtimeError(vm, "Only Dictionary can have string subscripts.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
 
-                int index = AS_INT(pop(vm));
-                ObjList* list = AS_LIST(pop(vm));
-                if (index < 0 || index > list->elements.count) {
-                    runtimeError(vm, "List index is out of bound.");
+                    ObjString* key = AS_STRING(pop(vm));
+                    ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
+                    Value value;
+                    if (tableGet(&dictionary->table, key, &value)) push(vm, value);
+                    else push(vm, NIL_VAL);
+                }
+                else {
+                    runtimeError(vm, "Subscript must be integer or string.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                Value element = list->elements.values[index];
-                push(vm, element);
                 break;
             }
             case OP_SET_SUBSCRIPT: {
-                if (!IS_INT(peek(vm, 1))) {
-                    runtimeError(vm, "List index must be an integer.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
-                if (!IS_LIST(peek(vm, 2))) {
-                    runtimeError(vm, "Only List can have subscripts.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                if (IS_INT(peek(vm, 1))) {
+                    if (!IS_LIST(peek(vm, 2))) {
+                        runtimeError(vm, "Only List can have integer subscripts.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
 
-                Value element = pop(vm);
-                int index = AS_INT(pop(vm));
-                ObjList* list = AS_LIST(pop(vm));
-                if (index < 0 || index > list->elements.count) {
-                    runtimeError(vm, "List index is out of bound.");
+                    Value element = pop(vm);
+                    int index = AS_INT(pop(vm));
+                    ObjList* list = AS_LIST(pop(vm));
+                    if (index < 0 || index > list->elements.count) {
+                        runtimeError(vm, "List index is out of bound.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    valueArrayInsert(vm, &list->elements, index, element);
+                    push(vm, OBJ_VAL(list));
+                }
+                else if (IS_STRING(peek(vm, 1))) {
+                    if (!IS_DICTIONARY(peek(vm, 2))) {
+                        runtimeError(vm, "Only Dictionary can have string subscripts.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    Value value = pop(vm);
+                    ObjString* key = AS_STRING(pop(vm));
+                    ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
+                    tableSet(vm, &dictionary->table, key, value);
+                    push(vm, OBJ_VAL(dictionary));
+                }
+                else {
+                    runtimeError(vm, "Subscript must be integer or string.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                valueArrayInsert(vm, &list->elements, index, element);
-                push(vm, OBJ_VAL(list));
                 break;
             }
             case OP_GET_SUPER: {
@@ -643,6 +691,11 @@ static InterpretResult run(VM* vm) {
                 break;
             }
             case OP_DICTIONARY: {
+                int entryCount = READ_BYTE();
+                if (!makeDictionary(vm, entryCount)) { 
+                    runtimeError(vm, "keys for dictionary literal must be strings.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 break;
             }
             case OP_RETURN: {
