@@ -134,6 +134,39 @@ LOX_METHOD(Function, arity) {
     RETURN_INT(AS_CLOSURE(receiver)->function->arity);
 }
 
+LOX_METHOD(Function, call) {
+    ObjClosure* self = AS_CLOSURE(receiver);
+    ASSERT_ARG_COUNT("Function::call(..args)", self->function->arity);
+    if (callClosure(vm, self, argCount)) {
+        RETURN_VAL(args[0]);
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(Function, call0) {
+    ASSERT_ARG_COUNT("Function::call0()", 0);
+    if (callClosure(vm, AS_CLOSURE(receiver), argCount)) {
+        RETURN_VAL(args[0]);
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(Function, call1) {
+    ASSERT_ARG_COUNT("Function::call(arg)", 1);
+    if (callClosure(vm, AS_CLOSURE(receiver), argCount)) {
+        RETURN_VAL(args[0]);
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(Function, call2) {
+    ASSERT_ARG_COUNT("Function::call2(arg1, arg2)", 2);
+    if (callClosure(vm, AS_CLOSURE(receiver), argCount)) {
+        RETURN_VAL(args[0]);
+    }
+    RETURN_NIL;
+}
+
 LOX_METHOD(Function, clone) {
     ASSERT_ARG_COUNT("Function::clone()", 0);
     RETURN_OBJ(receiver);
@@ -144,9 +177,20 @@ LOX_METHOD(Function, init) {
     RETURN_NIL;
 }
 
+LOX_METHOD(Function, isAnonymous) {
+    ASSERT_ARG_COUNT("Function::isAnonymous()", 0);
+    if (IS_NATIVE_FUNCTION(receiver)) RETURN_FALSE;
+    RETURN_BOOL(AS_CLOSURE(receiver)->function->name->length == 0);
+}
+
 LOX_METHOD(Function, isNative) {
     ASSERT_ARG_COUNT("Function::isNative()", 0);
     RETURN_BOOL(IS_NATIVE_FUNCTION(receiver));
+}
+
+LOX_METHOD(Function, isVariadic) {
+    ASSERT_ARG_COUNT("Function::isVariadic()", 0);
+    RETURN_BOOL(AS_CLOSURE(receiver)->function->arity == -1);
 }
 
 LOX_METHOD(Function, name) {
@@ -154,6 +198,7 @@ LOX_METHOD(Function, name) {
     if (IS_NATIVE_FUNCTION(receiver)) {
         RETURN_OBJ(AS_NATIVE_FUNCTION(receiver)->name);
     }
+
     RETURN_OBJ(AS_CLOSURE(receiver)->function->name);
 }
 
@@ -734,9 +779,15 @@ void registerLangPackage(VM* vm){
     vm->functionClass = defineNativeClass(vm, "Function");
     bindSuperclass(vm, vm->functionClass, vm->objectClass);
     DEF_METHOD(vm->functionClass, Function, arity, 0);
+    DEF_METHOD(vm->functionClass, Function, call, -1);
+    DEF_METHOD(vm->functionClass, Function, call0, 0);
+    DEF_METHOD(vm->functionClass, Function, call1, 1);
+    DEF_METHOD(vm->functionClass, Function, call2, 2);
     DEF_METHOD(vm->functionClass, Function, clone, 0);
     DEF_METHOD(vm->functionClass, Function, init, 0);
+    DEF_METHOD(vm->functionClass, Function, isAnonymous, 0);
     DEF_METHOD(vm->functionClass, Function, isNative, 0);
+    DEF_METHOD(vm->functionClass, Function, isVariadic, 0);
     DEF_METHOD(vm->functionClass, Function, name, 0);
     DEF_METHOD(vm->functionClass, Function, toString, 0);
     DEF_METHOD(vm->functionClass, Function, upvalueCount, 0);

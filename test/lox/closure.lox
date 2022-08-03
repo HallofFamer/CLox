@@ -19,6 +19,10 @@ in();
 
 print("Class of function 'in()' is: ");
 println(in.getClassName());
+print("Name of function 'in()' is: ");
+println(in.name());
+print("function 'in()' is anonymous: ");
+println(in.isAnonymous());
 print("function 'in()' is native: ");
 println(in.isNative());
 

@@ -8,6 +8,7 @@
 typedef struct {
     VM* vm;
     Scanner* scanner;
+    Token next;
     Token current;
     Token previous;
     Token rootClass;
@@ -21,6 +22,7 @@ void errorAtCurrent(Parser* parser, const char* message);
 void advance(Parser* parser);
 void consume(Parser* parser, TokenType type, const char* message);
 bool check(Parser* parser, TokenType type);
+bool checkNext(Parser* parser, TokenType type);
 bool match(Parser* parser, TokenType type);
 void synchronize(Parser* parser);
 

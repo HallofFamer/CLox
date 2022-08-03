@@ -25,6 +25,7 @@ https://github.com/munificent/craftinginterpreters
 - CLox Standard Library for package `lang` and `util`(since version 1.2)
 - Customized Runtime configuration for CLox using clox.ini(since version 1.2)
 - Separated integer values and floating point values(since version 1.2).
+- Array/Dictionary Literals and square bracket notation for array/dictionary access(since version 1.3).
 
 ## Roadmap
 
@@ -41,7 +42,7 @@ https://github.com/munificent/craftinginterpreters
 - Split the `Number` class into `Int` and `Float` classes, which will distinguish between integers and floating numbers.
 
 ### CLox v1.3.0(current version)
-- Array/Dictionary Literals and square bracket notation for array/dictionary access.
+- Array/Dictionary Literals and square bracket(subscript) notation for array/dictionary access.
 - Anonymous Functions(local return) and Lambda Expressions(nonlocal return).
 - Replace C style for loop by Kotlin style for-in loop for collection types.
 - Clox Standard Library improvement: New package `collection` and `io`.
@@ -49,7 +50,7 @@ https://github.com/munificent/craftinginterpreters
 ### CLox 1.4.0
 - Immutable variable declaration with `val` keyword.
 - Function/Method parameters become immutable by default, but may be mutable if using `var` keyword.
-- Built-in classes and functions will be immutable, users will not be able to overwrite them. 
+- Built-in classes/functions and method parameters will be immutable, users will not be able to overwrite them. 
 - Allow inheritance for all built-in classes including `Boolean`, `Int`, `String`, `Class`, etc.
 
 ### CLox 1.5.0

@@ -144,7 +144,10 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     compiler->function = newFunction(parser->vm);
     parser->vm->currentCompiler = compiler;
     if (type != TYPE_SCRIPT) {
-        compiler->function->name = copyString(parser->vm, parser->previous.start, parser->previous.length);
+        if (parser->previous.length == 3 && memcmp(parser->previous.start, "fun", 3) == 0) {
+            compiler->function->name = copyString(parser->vm, "", 0);
+        }
+        else compiler->function->name = copyString(parser->vm, parser->previous.start, parser->previous.length);
     }
     
     Local* local = &compiler->locals[compiler->localCount++];
@@ -194,6 +197,8 @@ static void endScope(Compiler* compiler) {
 
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
+static void block(Compiler* compiler);
+static void function(Compiler* enclosing, FunctionType type);
 static void declaration(Compiler* compiler);
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
@@ -318,6 +323,24 @@ static uint8_t argumentList(Compiler* compiler) {
     }
     consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
     return argCount;
+}
+
+static void parameterList(Compiler* compiler) {
+    if (match(compiler->parser, TOKEN_DOT_DOT)) {
+        compiler->function->arity = -1;
+        uint8_t constant = parseVariable(compiler, "Expect variadic parameter name.");
+        defineVariable(compiler, constant);
+        return;
+    }
+
+    do {
+        compiler->function->arity++;
+        if (compiler->function->arity > UINT8_MAX) {
+            errorAtCurrent(compiler->parser, "Can't have more than 255 parameters.");
+        }
+        uint8_t constant = parseVariable(compiler, "Expect parameter name.");
+        defineVariable(compiler, constant);
+    } while (match(compiler->parser, TOKEN_COMMA));
 }
 
 static void and_(Compiler* compiler, bool canAssign) {
@@ -469,6 +492,10 @@ static void collection(Compiler* compiler, bool canAssign) {
     }
 }
 
+static void closure(Compiler* compiler, bool canAssign) {
+    function(compiler, TYPE_FUNCTION);
+}
+
 static void namedVariable(Compiler* compiler, Token name, bool canAssign) {
     uint8_t getOp, setOp;
     int arg = resolveLocal(compiler, &name);
@@ -548,7 +575,6 @@ ParseRule rules[] = {
     [TOKEN_LEFT_BRACE]    = {NULL,       NULL,        PREC_NONE}, 
     [TOKEN_RIGHT_BRACE]   = {NULL,       NULL,        PREC_NONE},
     [TOKEN_COMMA]         = {NULL,       NULL,        PREC_NONE},
-    [TOKEN_DOT]           = {NULL,       dot,         PREC_CALL},
     [TOKEN_MINUS]         = {unary,      binary,      PREC_TERM},
     [TOKEN_PLUS]          = {NULL,       binary,      PREC_TERM},
     [TOKEN_SEMICOLON]     = {NULL,       NULL,        PREC_NONE},
@@ -562,6 +588,8 @@ ParseRule rules[] = {
     [TOKEN_GREATER_EQUAL] = {NULL,       binary,      PREC_COMPARISON},
     [TOKEN_LESS]          = {NULL,       binary,      PREC_COMPARISON},
     [TOKEN_LESS_EQUAL]    = {NULL,       binary,      PREC_COMPARISON},
+    [TOKEN_DOT]           = {NULL,       dot,         PREC_CALL},
+    [TOKEN_DOT_DOT]       = {NULL,       NULL,        PREC_NONE},
     [TOKEN_IDENTIFIER]    = {variable,   NULL,        PREC_NONE},
     [TOKEN_STRING]        = {string,     NULL,        PREC_NONE},
     [TOKEN_NUMBER]        = {number,     NULL,        PREC_NONE},
@@ -571,7 +599,7 @@ ParseRule rules[] = {
     [TOKEN_ELSE]          = {NULL,       NULL,        PREC_NONE},
     [TOKEN_FALSE]         = {literal,    NULL,        PREC_NONE},
     [TOKEN_FOR]           = {NULL,       NULL,        PREC_NONE},
-    [TOKEN_FUN]           = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_FUN]           = {closure,    NULL,        PREC_NONE},
     [TOKEN_IF]            = {NULL,       NULL,        PREC_NONE},
     [TOKEN_NIL]           = {literal,    NULL,        PREC_NONE},
     [TOKEN_OR]            = {NULL,       or_,         PREC_OR},
@@ -628,16 +656,9 @@ static void function(Compiler* enclosing, FunctionType type) {
     initCompiler(&compiler, enclosing->parser, enclosing, type);
     beginScope(&compiler);
 
-    consume(compiler.parser, TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    consume(compiler.parser, TOKEN_LEFT_PAREN, "Expect '(' after function keyword/name.");
     if (!check(compiler.parser, TOKEN_RIGHT_PAREN)) {
-        do {
-            compiler.function->arity++;
-            if (compiler.function->arity > 255) {
-                errorAtCurrent(compiler.parser, "Can't have more than 255 parameters.");
-            }
-            uint8_t constant = parseVariable(&compiler, "Expect parameter name.");
-            defineVariable(&compiler, constant);
-        } while (match(compiler.parser, TOKEN_COMMA));
+        parameterList(&compiler);
     }
 
     consume(compiler.parser, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
@@ -897,7 +918,8 @@ static void declaration(Compiler* compiler) {
     if (match(compiler->parser, TOKEN_CLASS)) {
         classDeclaration(compiler);
     }
-    else if (match(compiler->parser, TOKEN_FUN)) {
+    else if (check(compiler->parser, TOKEN_FUN) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
+        advance(compiler->parser);
         funDeclaration(compiler);
     }
     else if (match(compiler->parser, TOKEN_VAR)) {
@@ -945,6 +967,7 @@ ObjFunction* compile(VM* vm, const char* source) {
     Compiler compiler;
     initCompiler(&compiler, &parser, NULL, TYPE_SCRIPT);
 
+    advance(&parser);
     advance(&parser);
     while (!match(&parser, TOKEN_EOF)) {
         declaration(&compiler);

@@ -128,8 +128,63 @@ static Value peek(VM* vm, int distance) {
     return vm->stackTop[-1 - distance];
 }
 
-static bool call(VM* vm, ObjClosure* closure, int argCount) {
-    if (argCount != closure->function->arity) {
+static bool isFalsey(Value value) {
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+}
+
+static void concatenate(VM* vm) {
+    ObjString* b = AS_STRING(peek(vm, 0));
+    ObjString* a = AS_STRING(peek(vm, 1));
+
+    int length = a->length + b->length;
+    char* chars = ALLOCATE(char, length + 1);
+    memcpy(chars, a->chars, a->length);
+    memcpy(chars + a->length, b->chars, b->length);
+    chars[length] = '\0';
+
+    ObjString* result = takeString(vm, chars, length);
+    pop(vm);
+    pop(vm);
+    push(vm, OBJ_VAL(result));
+}
+
+static void makeList(VM* vm, uint8_t elementCount) {
+    ObjList* list = newList(vm);
+    push(vm, OBJ_VAL(list));
+    for (int i = elementCount; i > 0; i--) {
+        valueArrayWrite(vm, &list->elements, peek(vm, i));
+    }
+    pop(vm);
+
+    while (elementCount > 0) {
+        elementCount--;
+        pop(vm);
+    }
+    push(vm, OBJ_VAL(list));
+}
+
+static bool makeDictionary(VM* vm, uint8_t entryCount) {
+    ObjDictionary* dictionary = newDictionary(vm);
+    push(vm, OBJ_VAL(dictionary));
+    for (int i = 1; i <= entryCount; i++) {
+        Value key = peek(vm, 2 * i);
+        Value value = peek(vm, 2 * i - 1);
+        if (!IS_STRING(key)) return false;
+        tableSet(vm, &dictionary->table, AS_STRING(key), value);
+    }
+    pop(vm);
+
+    while (entryCount > 0) {
+        entryCount--;
+        pop(vm);
+        pop(vm);
+    }
+    push(vm, OBJ_VAL(dictionary));
+    return true;
+}
+
+bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
+    if (closure->function->arity > 0 && argCount != closure->function->arity) {
         runtimeError(vm, "Expected %d arguments but got %d.", closure->function->arity, argCount);
         return false;
     }
@@ -137,6 +192,11 @@ static bool call(VM* vm, ObjClosure* closure, int argCount) {
     if (vm->frameCount == FRAMES_MAX) {
         runtimeError(vm, "Stack overflow.");
         return false;
+    }
+
+    if (closure->function->arity == -1) {
+        makeList(vm, argCount);
+        argCount = 1;
     }
 
     CallFrame* frame = &vm->frames[vm->frameCount++];
@@ -164,7 +224,7 @@ static bool callMethod(VM* vm, Value method, int argCount) {
     if (IS_NATIVE_METHOD(method)) {
         return callNativeMethod(vm, AS_NATIVE_METHOD(method)->method, argCount);
     }
-    else return call(vm, AS_CLOSURE(method), argCount);
+    else return callClosure(vm, AS_CLOSURE(method), argCount);
 }
 
 static bool callValue(VM* vm, Value callee, int argCount) {
@@ -190,7 +250,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
                 return true;
             }
             case OBJ_CLOSURE:
-                return call(vm, AS_CLOSURE(callee), argCount);
+                return callClosure(vm, AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE_FUNCTION: 
                 return callNativeFunction(vm, AS_NATIVE_FUNCTION(callee)->function, argCount);
             case OBJ_NATIVE_METHOD: 
@@ -290,61 +350,6 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     }
     subclass->superclass = superclass;
     tableAddAll(vm, &superclass->methods, &subclass->methods);
-}
-
-static bool isFalsey(Value value) {
-  return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
-}
-
-static void concatenate(VM* vm) {
-    ObjString* b = AS_STRING(peek(vm, 0));
-    ObjString* a = AS_STRING(peek(vm, 1));
-
-    int length = a->length + b->length;
-    char* chars = ALLOCATE(char, length + 1);
-    memcpy(chars, a->chars, a->length);
-    memcpy(chars + a->length, b->chars, b->length);
-    chars[length] = '\0';
-
-    ObjString* result = takeString(vm, chars, length);
-    pop(vm);
-    pop(vm);
-    push(vm, OBJ_VAL(result));
-}
-
-static void makeList(VM* vm, uint8_t elementCount) {
-    ObjList* list = newList(vm);
-    push(vm, OBJ_VAL(list));
-    for (int i = elementCount; i > 0; i--) {
-        valueArrayWrite(vm, &list->elements, peek(vm, i));
-    }
-    pop(vm);
-
-    while (elementCount > 0) {
-        elementCount--;
-        pop(vm);
-    }
-    push(vm, OBJ_VAL(list));
-}
-
-static bool makeDictionary(VM* vm, uint8_t entryCount) {
-    ObjDictionary* dictionary = newDictionary(vm);
-    push(vm, OBJ_VAL(dictionary));
-    for (int i = 1; i <= entryCount; i++) {
-        Value key = peek(vm, 2 * i);
-        Value value = peek(vm, 2 * i - 1);
-        if (!IS_STRING(key)) return false;
-        tableSet(vm, &dictionary->table, AS_STRING(key), value);
-    }
-    pop(vm);
-
-    while (entryCount > 0) {
-        entryCount--;
-        pop(vm);
-        pop(vm);
-    }
-    push(vm, OBJ_VAL(dictionary));
-    return true;
 }
 
 static InterpretResult run(VM* vm) {
@@ -735,6 +740,6 @@ InterpretResult interpret(VM* vm, const char* source) {
     ObjClosure* closure = newClosure(vm, function);
     pop(vm);
     push(vm, OBJ_VAL(closure));
-    call(vm, closure, 0);
+    callClosure(vm, closure, 0);
     return run(vm);
 }

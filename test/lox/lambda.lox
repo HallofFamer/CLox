@@ -1,0 +1,48 @@
+var square = fun(a){ 
+    return a * a;
+};
+print("Using anonymous function for square(2): ");
+println(square(2));
+print("Invoke anonymous function pow(2, 3) directly: ");
+fun(a, b){ println(a.pow(b)); }(2, 3);
+print("Class of anonymous function: ");
+println(square.getClassName());
+print("Arity of anonymous function: ");
+println(square.arity());
+print("Name of anonymous function: ");
+println(square.name());
+
+var calculate = fun(n, operation){ 
+    return operation(n);
+};
+print("Higher order function multiply(2, 3): ");
+println(calculate(2, fun(a){ return a * 3; }));
+var curry = fun(x){
+    return fun(y){
+        return x * y;
+    };
+};
+print("Curried Higher order function multiply(2)(3): ");
+println(curry(2)(3));
+
+var pow = fun(x, y) {
+    return x.pow(y);
+};
+print("Call function dynamically using pow.call(2, 3): ");
+println(pow.call(2, 3));
+println("");
+
+fun sum(..args){ 
+    var i = 0;
+    var sum = 0;
+    while(i < args.length()){
+        sum = sum + args[i];
+        i = i + 1;
+    }
+    return sum;
+}
+print("Creating a variadic function sum(..args): ");
+println(sum(1, 2, 3, 4, 5));
+print("Function sum is variadic: ");
+println(sum.isVariadic());
+println("");

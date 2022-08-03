@@ -39,12 +39,13 @@ void errorAtCurrent(Parser* parser, const char* message) {
 
 void advance(Parser* parser) {
     parser->previous = parser->current;
+    parser->current = parser->next;
 
     for (;;) {
-        parser->current = scanToken(parser->scanner);
-        if (parser->current.type != TOKEN_ERROR) break;
+        parser->next = scanToken(parser->scanner);
+        if (parser->next.type != TOKEN_ERROR) break;
 
-        errorAtCurrent(parser, parser->current.start);
+        errorAtCurrent(parser, parser->next.start);
     }
 }
 
@@ -53,12 +54,15 @@ void consume(Parser* parser, TokenType type, const char* message) {
         advance(parser);
         return;
     }
-
     errorAtCurrent(parser, message);
 }
 
 bool check(Parser* parser, TokenType type) {
     return parser->current.type == type;
+}
+
+bool checkNext(Parser* parser, TokenType type) {
+    return parser->next.type == type;
 }
 
 bool match(Parser* parser, TokenType type) {
