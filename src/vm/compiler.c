@@ -771,13 +771,14 @@ static void varDeclaration(Compiler* compiler) {
 }
 
 static void expressionStatement(Compiler* compiler) {
-    if (compiler->type == TYPE_LAMBDA) {
-        printf("lambda expression at line %d.\n", compiler->parser->current.line);
-    }
-
     expression(compiler);
-    consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after expression.");
-    emitByte(compiler, OP_POP);
+    if (compiler->type == TYPE_LAMBDA && !check(compiler->parser, TOKEN_SEMICOLON)) {
+        emitByte(compiler, OP_RETURN);
+    }
+    else {
+        consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after expression.");
+        emitByte(compiler, OP_POP);
+    }
 }
 
 static void forStatement(Compiler* compiler) {
