@@ -50,8 +50,7 @@ println("");
 var lambda0 = { 5 };
 var lambda1 = {|x| x * 2 };
 var lambda2 = {
-    |x, y|
-    x = x.pow(y); 
+    x = x.pow(y);
     x = x + 2;
     x
 };
@@ -62,3 +61,12 @@ print("Evaluate lambda with 1 parameter: ");
 println(lambda1(4));
 print("Evaluate lambda with 2 parameters: ");
 println(lambda2(2, 3));
+println("");
+
+println("Testing nonlocal return for lambda: ");
+fun nonlocal(closure) {
+    println("Start closure");
+    closure();
+    println("Local return");
+}
+nonlocal({ println("Nonlocal return"); return 5; });

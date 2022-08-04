@@ -100,14 +100,20 @@ static int emitJump(Compiler* compiler, uint8_t instruction) {
     return currentChunk(compiler)->count - 2;
 }
 
-static void emitReturn(Compiler* compiler) {
+static void emitReturn(Compiler* compiler, uint8_t depth) {
     if (compiler->type == TYPE_INITIALIZER) {
         emitBytes(compiler, OP_GET_LOCAL, 0);
     }
     else {
         emitByte(compiler, OP_NIL);
     }
-    emitByte(compiler, OP_RETURN);
+    
+    if (depth == 0) {
+        emitByte(compiler, OP_RETURN);
+    }
+    else {
+        emitBytes(compiler, OP_RETURN_NONLOCAL, depth);
+    }
 }
 
 static uint8_t makeConstant(Compiler* compiler, Value value) {
@@ -165,7 +171,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
 }
 
 static ObjFunction* endCompiler(Compiler* compiler) {
-    emitReturn(compiler);
+    emitReturn(compiler, 0);
     ObjFunction* function = compiler->function;
 
 #ifdef DEBUG_PRINT_CODE
@@ -673,6 +679,16 @@ static void lambdaParameters(Compiler* compiler) {
     consume(compiler->parser, TOKEN_PIPE, "Expect '|' after lambda parameters.");
 }
 
+static uint8_t lambdaDepth(Compiler* compiler) {
+    uint8_t depth = 1;
+    Compiler* current = compiler->enclosing;
+    while (current->type == TYPE_LAMBDA) {
+        depth++;
+        current = current->enclosing;
+    }
+    return depth;
+}
+
 static void function(Compiler* enclosing, FunctionType type) {
     Compiler compiler;
     initCompiler(&compiler, enclosing->parser, enclosing, type);
@@ -847,8 +863,11 @@ static void returnStatement(Compiler* compiler) {
         error(compiler->parser, "Can't return from top-level code.");
     }
 
+    uint8_t depth = 0;
+    if(compiler->type == TYPE_LAMBDA) depth = lambdaDepth(compiler);
+
     if (match(compiler->parser, TOKEN_SEMICOLON)) {
-        emitReturn(compiler);
+        emitReturn(compiler, depth);
     }
     else {
         if (compiler->type == TYPE_INITIALIZER) {
@@ -857,7 +876,13 @@ static void returnStatement(Compiler* compiler) {
 
         expression(compiler);
         consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after return value.");
-        emitByte(compiler, OP_RETURN);
+        
+        if (compiler->type == TYPE_LAMBDA) {
+            emitBytes(compiler, OP_RETURN_NONLOCAL, depth);
+        }
+        else {
+            emitByte(compiler, OP_RETURN);
+        }
     }
 }
 

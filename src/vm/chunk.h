@@ -45,7 +45,8 @@ typedef enum {
     OP_METHOD,
     OP_LIST,
     OP_DICTIONARY,
-    OP_RETURN
+    OP_RETURN,
+    OP_RETURN_NONLOCAL
 } OpCode;
 
 typedef struct {
