@@ -49,6 +49,7 @@ typedef enum {
     TYPE_FUNCTION,
     TYPE_INITIALIZER,
     TYPE_METHOD,
+    TYPE_LAMBDA,
     TYPE_SCRIPT
 } FunctionType;
 
@@ -153,7 +154,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     Local* local = &compiler->locals[compiler->localCount++];
     local->depth = 0;
     local->isCaptured = false;
-    if (type != TYPE_FUNCTION) {
+    if (type != TYPE_FUNCTION && type != TYPE_LAMBDA) {
         local->name.start = "this";
         local->name.length = 4;
     }
@@ -496,6 +497,10 @@ static void closure(Compiler* compiler, bool canAssign) {
     function(compiler, TYPE_FUNCTION);
 }
 
+static void lambda(Compiler* compiler, bool canAssign) {
+    function(compiler, TYPE_LAMBDA);
+}
+
 static void namedVariable(Compiler* compiler, Token name, bool canAssign) {
     uint8_t getOp, setOp;
     int arg = resolveLocal(compiler, &name);
@@ -572,7 +577,7 @@ ParseRule rules[] = {
     [TOKEN_RIGHT_PAREN]   = {NULL,       NULL,        PREC_NONE},
     [TOKEN_LEFT_BRACKET]  = {collection, subscript,   PREC_CALL},
     [TOKEN_RIGHT_BRACKET] = {NULL,       NULL,        PREC_NONE},
-    [TOKEN_LEFT_BRACE]    = {NULL,       NULL,        PREC_NONE}, 
+    [TOKEN_LEFT_BRACE]    = {lambda,     NULL,        PREC_NONE}, 
     [TOKEN_RIGHT_BRACE]   = {NULL,       NULL,        PREC_NONE},
     [TOKEN_COMMA]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_MINUS]         = {unary,      binary,      PREC_TERM},
@@ -651,20 +656,32 @@ static void block(Compiler* compiler) {
     consume(compiler->parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
 }
 
+static void functionParameters(Compiler* compiler) {
+    consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after function keyword/name.");
+    if (!check(compiler->parser, TOKEN_RIGHT_PAREN)) {
+        parameterList(compiler);
+    }
+    consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(compiler->parser, TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+}
+
+static void lambdaParameters(Compiler* compiler) {
+    if (!match(compiler->parser, TOKEN_PIPE)) return;
+    if (!check(compiler->parser, TOKEN_PIPE)) {
+        parameterList(compiler);
+    }
+    consume(compiler->parser, TOKEN_PIPE, "Expect '|' after lambda parameters.");
+}
+
 static void function(Compiler* enclosing, FunctionType type) {
     Compiler compiler;
     initCompiler(&compiler, enclosing->parser, enclosing, type);
     beginScope(&compiler);
 
-    consume(compiler.parser, TOKEN_LEFT_PAREN, "Expect '(' after function keyword/name.");
-    if (!check(compiler.parser, TOKEN_RIGHT_PAREN)) {
-        parameterList(&compiler);
-    }
+    if (type == TYPE_LAMBDA) lambdaParameters(&compiler);
+    else functionParameters(&compiler);
 
-    consume(compiler.parser, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
-    consume(compiler.parser, TOKEN_LEFT_BRACE, "Expect '{' before function body.");
     block(&compiler);
-
     ObjFunction* function = endCompiler(&compiler);
     emitBytes(enclosing, OP_CLOSURE, makeConstant(enclosing, OBJ_VAL(function)));
 
@@ -754,6 +771,10 @@ static void varDeclaration(Compiler* compiler) {
 }
 
 static void expressionStatement(Compiler* compiler) {
+    if (compiler->type == TYPE_LAMBDA) {
+        printf("lambda expression at line %d.\n", compiler->parser->current.line);
+    }
+
     expression(compiler);
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after expression.");
     emitByte(compiler, OP_POP);

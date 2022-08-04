@@ -46,3 +46,14 @@ println(sum(1, 2, 3, 4, 5));
 print("Function sum is variadic: ");
 println(sum.isVariadic());
 println("");
+
+var lambda0 = { return 5; };
+var lambda1 = {|x| x = x * 2; return x; };
+var lambda2 = {|x, y| return x.pow(y); };
+println("Creating lambda closures: ");
+print("Evaluate lambda without parameter: ");
+println(lambda0());
+print("Evaluate lambda with 1 parameter: ");
+println(lambda1(4));
+print("Evaluate lambda with 2 parameters: ");
+println(lambda2(2, 4));
