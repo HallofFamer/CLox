@@ -1,0 +1,14 @@
+var list = [2, 3.5, true, "Hello World"];
+println("Enumerating list with each method: ");
+list.each(fun(element){ 
+    println("Element: " + element.toString());
+});
+println("");
+
+/*
+var list2 = list.select(fun(x){ 
+    return x.instanceOf(Number);
+});
+println("Selecting elements that are numbers: ");
+println(list2);
+*/

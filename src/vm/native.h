@@ -11,6 +11,7 @@
 #define DEF_FUNCTION(name, arity) defineNativeFunction(vm, #name, arity, name##NativeFunction)
 #define DEF_METHOD(klass, className, name, arity) defineNativeMethod(vm, klass, #name, arity, name##NativeMethodFor##className)
 
+#define RETURN_VAL(value) return (value)
 #define RETURN_NIL return NIL_VAL
 #define RETURN_FALSE return BOOL_VAL(false)
 #define RETURN_TRUE return BOOL_VAL(true)
@@ -21,7 +22,6 @@
 #define RETURN_STRING(chars, length) return OBJ_VAL(copyString(vm, chars, length))
 #define RETURN_STRING_FMT(...) return OBJ_VAL(formattedString(vm, __VA_ARGS__))
 #define RETURN_STRING_FMTL(...) return OBJ_VAL(formattedLongString(vm, __VA_ARGS__))
-#define RETURN_VAL(value) return (value)
 
 ObjClass* defineNativeClass(VM* vm, const char* name);
 void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction function);

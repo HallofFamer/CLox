@@ -50,6 +50,7 @@ println("");
 var lambda0 = { 5 };
 var lambda1 = {|x| x * 2 };
 var lambda2 = {
+    |x, y|
     x = x.pow(y);
     x = x + 2;
     x

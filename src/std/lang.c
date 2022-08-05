@@ -136,9 +136,13 @@ LOX_METHOD(Function, arity) {
 
 LOX_METHOD(Function, call) {
     ObjClosure* self = AS_CLOSURE(receiver);
-    ASSERT_ARG_COUNT("Function::call(..args)", self->function->arity);
     if (callClosure(vm, self, argCount)) {
-        RETURN_VAL(args[0]);
+        int i = 0;
+        while (i < argCount) {
+            push(vm, args[i]);
+            i++;
+        }
+        RETURN_VAL(args[argCount - 1]);
     }
     RETURN_NIL;
 }
@@ -154,6 +158,7 @@ LOX_METHOD(Function, call0) {
 LOX_METHOD(Function, call1) {
     ASSERT_ARG_COUNT("Function::call(arg)", 1);
     if (callClosure(vm, AS_CLOSURE(receiver), argCount)) {
+        push(vm, args[0]);
         RETURN_VAL(args[0]);
     }
     RETURN_NIL;
@@ -162,7 +167,9 @@ LOX_METHOD(Function, call1) {
 LOX_METHOD(Function, call2) {
     ASSERT_ARG_COUNT("Function::call2(arg1, arg2)", 2);
     if (callClosure(vm, AS_CLOSURE(receiver), argCount)) {
-        RETURN_VAL(args[0]);
+        push(vm, args[0]);
+        push(vm, args[1]);
+        RETURN_VAL(args[1]);
     }
     RETURN_NIL;
 }
