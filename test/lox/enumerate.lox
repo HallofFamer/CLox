@@ -5,10 +5,22 @@ list.each(fun(element){
 });
 println("");
 
-/*
-var list2 = list.select(fun(x){ 
-    return x.instanceOf(Number);
-});
+var selected = list.select({|x| x.instanceOf(Number) });
 println("Selecting elements that are numbers: ");
-println(list2);
-*/
+println(selected);
+
+var rejected = list.reject({|x| x.instanceOf(Number) });
+println("Rejecting elements that are numebrs: ");
+println(rejected);
+println("");
+
+var list2 = [1, 2, 3, 4, 5];
+println("Enumerating a number list with index: ");
+list2.eachIndex({|element, index| println("Element " + (index + 1).toString() + ": " + element.toString())});
+println("");
+
+println("Collect a number list by square: ");
+println(list2.collect({|x| x * x}));
+println("Detecting first even number: ");
+println(list2.detect({|x| x.isEven() }));
+println("");

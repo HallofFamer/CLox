@@ -484,23 +484,6 @@ LOX_METHOD(List, contains) {
     RETURN_BOOL(valueArrayFirstIndex(vm, &AS_LIST(receiver)->elements, args[0]) != -1);
 }
 
-LOX_METHOD(List, each) {
-    ASSERT_ARG_COUNT("List::each(closure)", 1);
-    ASSERT_ARG_TYPE("List::each(closure)", 0, Closure);
-    ObjList* self = AS_LIST(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
-    for (int i = self->elements.count - 1; i >= 0; i--) {
-        push(vm, args[0]);
-        push(vm, self->elements.values[i]);
-        callClosure(vm, closure, 1);
-    }
-    callClosure(vm, closure, 1);
-    push(vm, args[0]);
-    push(vm, receiver);
-    vm->frameCount --;
-    RETURN_NIL;
-}
-
 LOX_METHOD(List, equals) {
     ASSERT_ARG_COUNT("List::equals(other)", 1);
     if (!IS_LIST(args[0])) RETURN_FALSE;
@@ -691,14 +674,14 @@ LOX_METHOD(Regex, toString) {
 }
 
 void registerUtilPackage(VM* vm) {
-    vm->listClass = defineNativeClass(vm, "List");
-    bindSuperclass(vm, vm->listClass, vm->objectClass);
+    initNativePackage(vm, "src/std/util.lox");
+
+    vm->listClass = getNativeClass(vm, "List");
     DEF_METHOD(vm->listClass, List, add, 1);
     DEF_METHOD(vm->listClass, List, addAll, 1);
     DEF_METHOD(vm->listClass, List, clear, 0);
     DEF_METHOD(vm->listClass, List, clone, 0);
     DEF_METHOD(vm->listClass, List, contains, 1);
-    DEF_METHOD(vm->listClass, List, each, 1);
     DEF_METHOD(vm->listClass, List, equals, 1);
     DEF_METHOD(vm->listClass, List, getAt, 1);
     DEF_METHOD(vm->listClass, List, indexOf, 1);

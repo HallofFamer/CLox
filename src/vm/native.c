@@ -159,6 +159,12 @@ ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
     return AS_NATIVE_METHOD(method);
 }
 
+void initNativePackage(VM* vm, const char* filePath) {
+    char* source = readFile(filePath);
+    interpret(vm, source);
+    free(source);
+}
+
 void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(clock, 0);
     DEF_FUNCTION(dateNow, 0);

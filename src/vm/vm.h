@@ -78,6 +78,7 @@ void freeVM(VM* vm);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void runtimeError(VM* vm, const char* format, ...);
+char* readFile(const char* path);
 InterpretResult interpret(VM* vm, const char* source);
 void push(VM* vm, Value value);
 Value pop(VM* vm);
