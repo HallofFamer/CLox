@@ -697,20 +697,19 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->classClass, Class, toString, 0);
     vm->objectClass->obj.klass = vm->classClass;
 
-    vm->nilClass = defineNativeClass(vm, "Nil");
-    bindSuperclass(vm, vm->nilClass, vm->objectClass);
+    initNativePackage(vm, "src/std/lang.lox");
+
+    vm->nilClass = getNativeClass(vm, "Nil");
     DEF_METHOD(vm->nilClass, Nil, clone, 0);
     DEF_METHOD(vm->nilClass, Nil, init, 0);
     DEF_METHOD(vm->nilClass, Nil, toString, 0);
     
-    vm->boolClass = defineNativeClass(vm, "Bool");
-    bindSuperclass(vm, vm->boolClass, vm->objectClass);
+    vm->boolClass = getNativeClass(vm, "Bool");
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
     DEF_METHOD(vm->boolClass, Bool, init, 0);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
     
-    vm->numberClass = defineNativeClass(vm, "Number");
-    bindSuperclass(vm, vm->numberClass, vm->objectClass);
+    vm->numberClass = getNativeClass(vm, "Number");
     DEF_METHOD(vm->numberClass, Number, abs, 0);
     DEF_METHOD(vm->numberClass, Number, acos, 0);
     DEF_METHOD(vm->numberClass, Number, asin, 0);
@@ -736,8 +735,7 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->numberClass, Number, toInt, 0);
     DEF_METHOD(vm->numberClass, Number, toString, 0);
 
-    vm->intClass = defineNativeClass(vm, "Int");
-    bindSuperclass(vm, vm->intClass, vm->numberClass);
+    vm->intClass = getNativeClass(vm, "Int");
     DEF_METHOD(vm->intClass, Int, abs, 0);
     DEF_METHOD(vm->intClass, Int, clone, 0);
     DEF_METHOD(vm->intClass, Int, factorial, 0);

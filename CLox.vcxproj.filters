@@ -156,6 +156,9 @@
     <None Include="src\std\util.lox">
       <Filter>Source Files\std</Filter>
     </None>
+    <None Include="src\std\lang.lox">
+      <Filter>Source Files\std</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">

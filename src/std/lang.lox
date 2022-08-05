@@ -1,0 +1,54 @@
+class Nil { 
+
+}
+
+class Bool { 
+
+}
+
+class Number { 
+    step(to, by, closure){ 
+        var from = this;
+        if(by == 0) error("Step size cannot be 0");
+        else{ 
+            if(by > 0){ 
+                while(from < to){
+                    closure(from);
+                    from = from + by;
+                }
+            }
+            else{
+                while(from > to){ 
+                    closure(from);
+                    from = from - by;
+                }
+            }
+        }
+    }
+}
+
+class Int < Number {
+    downTo(to, closure){
+        var from = this;
+        while(from > to){
+            closure(from);
+            from = from - 1;
+        }
+    }
+
+    timesRepeat(closure){ 
+        var i = 0;
+        while(i < this){
+            closure(i);
+            i = i + 1;
+        }
+    }
+
+    upTo(to, closure){ 
+        var from = this;
+        while(from < to){ 
+            closure(from);
+            from = from + 1;
+        }
+    }
+}
