@@ -24,6 +24,20 @@ static bool fileExists(ObjFile* file, struct stat* fileStat) {
     return (stat(file->name->chars, fileStat) == 0);
 }
 
+LOX_METHOD(File, create) {
+    ASSERT_ARG_COUNT("File::create()", 0);
+    ObjFile* self = AS_FILE(receiver);
+    struct stat fileStat;
+    if (fileExists(self, &fileStat)) raiseError(vm, "Cannot create new file because it already exists.");
+    FILE* file;
+    fopen_s(&file, self->name->chars, "w");
+    if (file != NULL) {
+        fclose(file);
+        RETURN_TRUE;
+    }
+    RETURN_FALSE;
+}
+
 LOX_METHOD(File, delete) {
     ASSERT_ARG_COUNT("File::delete()", 0);
     ObjFile* self = AS_FILE(receiver);
@@ -169,6 +183,14 @@ LOX_METHOD(File, setWritable) {
     else RETURN_BOOL(_chmod(self->name->chars, ~S_IWRITE));
 }
 
+LOX_METHOD(File, size) {
+    ASSERT_ARG_COUNT("File::size()", 0);
+    ObjFile* self = AS_FILE(receiver);
+    struct stat fileStat;
+    if (!fileExists(self, &fileStat)) raiseError(vm, "Cannot get file size because it does not exist.");
+    RETURN_NUMBER(fileStat.st_size);
+}
+
 LOX_METHOD(File, toString) {
     ASSERT_ARG_COUNT("File::toString()", 0);
     RETURN_OBJ(AS_FILE(receiver)->name);
@@ -177,6 +199,7 @@ LOX_METHOD(File, toString) {
 void registerIOPackage(VM* vm) {
     vm->fileClass = defineNativeClass(vm, "File");
     bindSuperclass(vm, vm->fileClass, vm->objectClass);
+    DEF_METHOD(vm->fileClass, File, create, 0);
     DEF_METHOD(vm->fileClass, File, delete, 0);
     DEF_METHOD(vm->fileClass, File, exists, 0);
     DEF_METHOD(vm->fileClass, File, init, 1);
@@ -194,5 +217,6 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(vm->fileClass, File, setExecutable, 1);
     DEF_METHOD(vm->fileClass, File, setReadable, 1);
     DEF_METHOD(vm->fileClass, File, setWritable, 1);
+    DEF_METHOD(vm->fileClass, File, size, 0);
     DEF_METHOD(vm->fileClass, File, toString, 0);
 }

@@ -15,6 +15,8 @@ print("File last accessed: ");
 println(file.lastAccessed());
 print("File last modified: ");
 println(file.lastModified());
+print("File size: ");
+println(file.size());
 println("");
 
 var dir = File("test/others");
