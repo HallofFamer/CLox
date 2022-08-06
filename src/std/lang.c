@@ -576,9 +576,7 @@ LOX_METHOD(String, getChar) {
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "String::getChar(index)", index, 0, self->length, 0);
 
-    char chars[2];
-    chars[0] = self->chars[index];
-    chars[1] = '\n';
+    char chars[2] = { self->chars[index], '\0' };
     RETURN_STRING(chars, 1);
 }
 
@@ -599,6 +597,33 @@ LOX_METHOD(String, init) {
 LOX_METHOD(String, length) {
     ASSERT_ARG_COUNT("String::length()", 0);
     RETURN_INT(AS_STRING(receiver)->length);
+}
+
+
+LOX_METHOD(String, next) {
+    ASSERT_ARG_COUNT("String::next(index)", 1);
+    ObjString* self = AS_STRING(receiver);
+    if (IS_NIL(args[0])) {
+        if (self->length == 0) RETURN_FALSE;
+        RETURN_INT(0);
+    }
+
+    ASSERT_ARG_TYPE("Stirng::next(index)", 0, Int);
+    int index = AS_INT(args[0]);
+    if (index < 0 || index < self->length - 1) RETURN_INT(index + 1);
+    RETURN_NIL;
+}
+
+LOX_METHOD(String, nextValue) {
+    ASSERT_ARG_COUNT("String::nextValue(index)", 1);
+    ASSERT_ARG_TYPE("String::nextValue(index)", 0, Int);
+    ObjString* self = AS_STRING(receiver);
+    int index = AS_INT(args[0]);
+    if (index > -1 && index < self->length) {
+        char chars[2] = { self->chars[index], '\0' };
+        RETURN_STRING(chars, 1);
+    }
+    RETURN_NIL;
 }
 
 LOX_METHOD(String, replace) {
@@ -767,6 +792,8 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->stringClass, String, indexOf, 1);
     DEF_METHOD(vm->stringClass, String, init, 1);
     DEF_METHOD(vm->stringClass, String, length, 0);
+    DEF_METHOD(vm->stringClass, String, next, 1);
+    DEF_METHOD(vm->stringClass, String, nextValue, 1);
     DEF_METHOD(vm->stringClass, String, replace, 2);
     DEF_METHOD(vm->stringClass, String, reverse, 0);
     DEF_METHOD(vm->stringClass, String, split, 1);

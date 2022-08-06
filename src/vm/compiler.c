@@ -48,8 +48,8 @@ typedef struct {
 typedef enum {
     TYPE_FUNCTION,
     TYPE_INITIALIZER,
-    TYPE_METHOD,
     TYPE_LAMBDA,
+    TYPE_METHOD,
     TYPE_SCRIPT
 } FunctionType;
 
@@ -635,8 +635,10 @@ ParseRule rules[] = {
     [TOKEN_RIGHT_BRACKET] = {NULL,       NULL,        PREC_NONE},
     [TOKEN_LEFT_BRACE]    = {lambda,     NULL,        PREC_NONE}, 
     [TOKEN_RIGHT_BRACE]   = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_COLON]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_COMMA]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_MINUS]         = {unary,      binary,      PREC_TERM},
+    [TOKEN_PIPE]          = {NULL,       NULL,        PREC_NONE},
     [TOKEN_PLUS]          = {NULL,       binary,      PREC_TERM},
     [TOKEN_SEMICOLON]     = {NULL,       NULL,        PREC_NONE},
     [TOKEN_SLASH]         = {NULL,       binary,      PREC_FACTOR},
@@ -656,7 +658,11 @@ ParseRule rules[] = {
     [TOKEN_NUMBER]        = {number,     NULL,        PREC_NONE},
     [TOKEN_INT]           = {integer,    NULL,        PREC_NONE},
     [TOKEN_AND]           = {NULL,       and_,        PREC_AND},
+    [TOKEN_BREAK]         = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_CASE]          = {NULL,       NULL,        PREC_NONE},
     [TOKEN_CLASS]         = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_CONTINUE]      = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_DEFAULT]       = {NULL,       NULL,        PREC_NONE},
     [TOKEN_ELSE]          = {NULL,       NULL,        PREC_NONE},
     [TOKEN_FALSE]         = {literal,    NULL,        PREC_NONE},
     [TOKEN_FOR]           = {NULL,       NULL,        PREC_NONE},
@@ -666,6 +672,7 @@ ParseRule rules[] = {
     [TOKEN_OR]            = {NULL,       or_,         PREC_OR},
     [TOKEN_RETURN]        = {NULL,       NULL,        PREC_NONE},
     [TOKEN_SUPER]         = {super_,     NULL,        PREC_NONE},
+    [TOKEN_SWITCH]        = {NULL,       NULL,        PREC_NONE},
     [TOKEN_THIS]          = {this_,      NULL,        PREC_NONE},
     [TOKEN_TRUE]          = {literal,    NULL,        PREC_NONE},
     [TOKEN_VAR]           = {NULL,       NULL,        PREC_NONE},

@@ -223,7 +223,8 @@ void printObject(Value value) {
             printDictionary(AS_DICTIONARY(value));
             break;
         case OBJ_FILE:
-            printf("<file %s>", AS_FILE(value)->name->chars);
+            printf("<file \"%s\">", AS_FILE(value)->name->chars);
+            break;
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value));
             break;

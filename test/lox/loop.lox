@@ -22,11 +22,17 @@ for(var element : list){
 }
 println("");
 
-
 println("Looping through a list of values using 'for-in' with index: ");
 var list2 = [2, 3.5, true, nil, "Hello World"];
 for(var index, value : list2){ 
     println("Element" + index.toString() + ": " + value.toString());
+}
+println("");
+
+println("Looping through a string: ");
+var str = "Hello World";
+for(var char : str) { 
+    println("Char: " + char);
 }
 println("");
 

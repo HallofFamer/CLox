@@ -20,6 +20,9 @@
     <Filter Include="Test Files\lox">
       <UniqueIdentifier>{4b0ff55b-3c99-4e35-9ec3-f6b1541000ec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Test Files\others">
+      <UniqueIdentifier>{6c1efef5-3d78-4ab4-a783-36b01e9cbb9a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
@@ -79,6 +82,9 @@
     </ClCompile>
     <ClCompile Include="src\vm\parser.c">
       <Filter>Source Files\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="src\std\io.c">
+      <Filter>Source Files\std</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +165,12 @@
     <None Include="src\std\lang.lox">
       <Filter>Source Files\std</Filter>
     </None>
+    <None Include="test\lox\io.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
+    <None Include="test\lox\file.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">
@@ -221,5 +233,16 @@
     <ClInclude Include="src\vm\parser.h">
       <Filter>Source Files\vm</Filter>
     </ClInclude>
+    <ClInclude Include="src\std\io.h">
+      <Filter>Source Files\std</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="test\others\file_input.txt">
+      <Filter>Test Files\others</Filter>
+    </Text>
+    <Text Include="test\others\file_output.txt">
+      <Filter>Test Files\others</Filter>
+    </Text>
   </ItemGroup>
 </Project>

@@ -146,6 +146,7 @@
     <ClCompile Include="src\inc\ini.c" />
     <ClCompile Include="src\inc\pcg.c" />
     <ClCompile Include="src\inc\regex.c" />
+    <ClCompile Include="src\std\io.c" />
     <ClCompile Include="src\std\lang.c" />
     <ClCompile Include="src\std\util.c" />
     <ClCompile Include="src\vm\assert.c" />
@@ -174,9 +175,11 @@
     <None Include="test\lox\dictionary.lox" />
     <None Include="test\lox\enumerate.lox" />
     <None Include="test\lox\fibonacci.lox" />
+    <None Include="test\lox\file.lox" />
     <None Include="test\lox\fraction.lox" />
     <None Include="test\lox\initializer.lox" />
     <None Include="test\lox\invoke.lox" />
+    <None Include="test\lox\io.lox" />
     <None Include="test\lox\lambda.lox" />
     <None Include="test\lox\lang.lox" />
     <None Include="test\lox\list.lox" />
@@ -196,6 +199,7 @@
     <ClInclude Include="src\inc\ini.h" />
     <ClInclude Include="src\inc\pcg.h" />
     <ClInclude Include="src\inc\regex.h" />
+    <ClInclude Include="src\std\io.h" />
     <ClInclude Include="src\std\lang.h" />
     <ClInclude Include="src\std\util.h" />
     <ClInclude Include="src\vm\assert.h" />
@@ -213,6 +217,10 @@
     <ClInclude Include="src\vm\table.h" />
     <ClInclude Include="src\vm\value.h" />
     <ClInclude Include="src\vm\vm.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="test\others\file_input.txt" />
+    <Text Include="test\others\file_output.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

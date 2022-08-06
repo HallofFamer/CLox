@@ -374,7 +374,6 @@ LOX_METHOD(Dictionary, next) {
     int index = 0;
     if (!IS_NIL(args[0])) {
         ObjString* key = AS_STRING(args[0]);
-        //index = AS_INT(args[0]);
         index = tableFindIndex(&self->table, key);
         if (index < 0 || index >= self->table.capacity) RETURN_FALSE;
         index++;
@@ -766,9 +765,6 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, putAt, 2);
     DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
-
-    vm->fileClass = defineNativeClass(vm, "File");
-    bindSuperclass(vm, vm->fileClass, vm->objectClass);
     
     ObjClass* randomClass = defineNativeClass(vm, "Random");
     bindSuperclass(vm, randomClass, vm->objectClass);

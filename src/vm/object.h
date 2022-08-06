@@ -3,6 +3,7 @@
 #define clox_object_h
 
 #include <stdio.h>
+#include <sys/stat.h>
 
 #include "common.h"
 #include "chunk.h"

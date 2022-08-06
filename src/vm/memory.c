@@ -94,6 +94,12 @@ static void blackenObject(VM* vm, Obj* object) {
             markTable(vm, &dictionary->table);
             break;
         }
+        case OBJ_FILE: {
+            ObjFile* file = (ObjFile*)object;
+            markObject(vm, (Obj*)file->name);
+            markObject(vm, (Obj*)file->mode);
+            break;
+        }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*)object;
             markObject(vm, (Obj*)function->name);
@@ -155,6 +161,10 @@ static void freeObject(VM* vm, Obj* object) {
             ObjDictionary* dictionary = (ObjDictionary*)object;
             freeTable(vm, &dictionary->table);
             FREE(ObjDictionary, object);
+            break;
+        }
+        case OBJ_FILE: {
+            FREE(ObjFile, object);
             break;
         }
         case OBJ_FUNCTION: {

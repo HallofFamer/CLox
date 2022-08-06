@@ -10,6 +10,7 @@
 #include "string.h"
 #include "vm.h"
 #include "../inc/ini.h"
+#include "../std/io.h"
 #include "../std/lang.h"
 #include "../std/util.h"
 
@@ -135,6 +136,7 @@ void initVM(VM* vm) {
 
     registerLangPackage(vm);
     registerUtilPackage(vm);
+    registerIOPackage(vm);
     registerNativeFunctions(vm);
 }
 
@@ -507,19 +509,30 @@ static InterpretResult run(VM* vm) {
             }
             case OP_GET_SUBSCRIPT: {
                 if (IS_INT(peek(vm, 0))) {
-                    if (!IS_LIST(peek(vm, 1))) {
-                        runtimeError(vm, "Only List can have integer subscripts.");
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    
                     int index = AS_INT(pop(vm));
-                    ObjList* list = AS_LIST(pop(vm));
-                    if (index < 0 || index > list->elements.count) {
-                        runtimeError(vm, "List index is out of bound.");
+                    if (IS_STRING(peek(vm, 0))) {
+                        ObjString* string = AS_STRING(pop(vm));
+                        if (index < 0 || index > string->length) {
+                            runtimeError(vm, "string index is out of bound.");
+                            return INTERPRET_RUNTIME_ERROR;
+                        }
+                        char chars[2] = { string->chars[index], '\0' };
+                        ObjString* element = copyString(vm, chars, 1);
+                        push(vm, OBJ_VAL(element));
+                    }
+                    else if (IS_LIST(peek(vm, 0))) {
+                        ObjList* list = AS_LIST(pop(vm));
+                        if (index < 0 || index > list->elements.count) {
+                            runtimeError(vm, "List index is out of bound.");
+                            return INTERPRET_RUNTIME_ERROR;
+                        }
+                        Value element = list->elements.values[index];
+                        push(vm, element);
+                    }
+                    else {
+                        runtimeError(vm, "Only String or List can have integer subscripts.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
-                    Value element = list->elements.values[index];
-                    push(vm, element);
                 }
                 else if (IS_STRING(peek(vm, 0))) {
                     if (!IS_DICTIONARY(peek(vm, 1))) {
