@@ -3,7 +3,6 @@
 
 #include "memory.h"
 #include "object.h"
-#include "string.h"
 #include "table.h"
 
 #define TABLE_MAX_LOAD 0.75
@@ -133,6 +132,28 @@ int tableLength(Table* table) {
         if (entry->key != NULL) length++;
     }
     return length;
+}
+
+int tableFindIndex(Table* table, ObjString* key) {
+    int index = key->hash & (table->capacity - 1);
+    Entry* tombstone = NULL;
+
+    for (;;) {
+        Entry* entry = &table->entries[index];
+        if (entry->key == NULL) {
+            if (IS_NIL(entry->value)) {
+                return -1;
+            }
+            else {
+                if (tombstone == NULL) tombstone = entry;
+            }
+        }
+        else if (entry->key == key) {
+            return index;
+        }
+
+        index = (index + 1) & (table->capacity - 1);
+    }
 }
 
 ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t hash) {

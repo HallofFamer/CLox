@@ -3,6 +3,7 @@
 #define clox_table_h
 
 #include "common.h"
+#include "string.h"
 #include "value.h"
 
 typedef struct {
@@ -25,6 +26,7 @@ bool tableSet(VM* vm, Table* table, ObjString* key, Value value);
 bool tableDelete(Table* table, ObjString* key);
 void tableAddAll(VM* vm, Table* from, Table* to);
 int tableLength(Table* table);
+int tableFindIndex(Table* table, ObjString* key);
 ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t hash);
 void tableRemoveWhite(Table* table);
 bool tablesEqual(Table* aTable, Table* bTable);

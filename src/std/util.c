@@ -366,6 +366,34 @@ LOX_METHOD(Dictionary, length) {
     RETURN_INT(tableLength(&AS_DICTIONARY(receiver)->table));
 }
 
+LOX_METHOD(Dictionary, next) {
+    ASSERT_ARG_COUNT("Dictionary::next(index)", 1);
+    ObjDictionary* self = AS_DICTIONARY(receiver);
+    if (self->table.count == 0) RETURN_FALSE;
+
+    int index = 0;
+    if (!IS_NIL(args[0])) {
+        ObjString* key = AS_STRING(args[0]);
+        //index = AS_INT(args[0]);
+        index = tableFindIndex(&self->table, key);
+        if (index < 0 || index >= self->table.capacity) RETURN_FALSE;
+        index++;
+    }
+
+    for (; index < self->table.capacity; index++) {
+        if (self->table.entries[index].key != NULL) RETURN_OBJ(self->table.entries[index].key);
+    }
+    RETURN_FALSE;
+}
+
+LOX_METHOD(Dictionary, nextValue) {
+    ASSERT_ARG_COUNT("Dictionary::nextValue(key)", 1);
+    ASSERT_ARG_TYPE("Dictionary::nextValue(key)", 0, String);
+    ObjDictionary* self = AS_DICTIONARY(receiver);
+    int index = tableFindIndex(&self->table, AS_STRING(args[0]));
+    RETURN_VAL(self->table.entries[index].value);
+}
+
 LOX_METHOD(Dictionary, putAll) {
     ASSERT_ARG_COUNT("Dictionary::putAll(dictionary)", 1);
     ASSERT_ARG_TYPE("Dictionary::putAll(dictionary)", 0, Dictionary);
@@ -548,8 +576,8 @@ LOX_METHOD(List, next) {
 
     ASSERT_ARG_TYPE("List::next(index)", 0, Int);
     int index = AS_INT(args[0]);
-    if (index < self->elements.count - 1) RETURN_INT(index + 1);
-    else RETURN_NIL;
+    if (index < 0 || index < self->elements.count - 1) RETURN_INT(index + 1);
+    RETURN_NIL;
 }
 
 LOX_METHOD(List, nextValue) {
@@ -558,7 +586,7 @@ LOX_METHOD(List, nextValue) {
     ObjList* self = AS_LIST(receiver);
     int index = AS_INT(args[0]);
     if (index > -1 && index < self->elements.count) RETURN_VAL(self->elements.values[index]);
-    else RETURN_NIL;
+    RETURN_NIL;
 }
 
 LOX_METHOD(List, putAt) {
@@ -732,6 +760,8 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, init, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, isEmpty, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, length, 0);
+    DEF_METHOD(vm->dictionaryClass, Dictionary, next, 1);
+    DEF_METHOD(vm->dictionaryClass, Dictionary, nextValue, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, putAll, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, putAt, 2);
     DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);

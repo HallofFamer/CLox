@@ -872,7 +872,18 @@ static void forStatement(Compiler* compiler) {
     consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
     consume(compiler->parser, TOKEN_VAR, "Expect 'var' keyword after '(' in For loop.");
     consume(compiler->parser, TOKEN_IDENTIFIER, "Expect variable name after 'var'.");
-    Token valueToken = compiler->parser->previous;
+
+    Token indexToken, valueToken;
+    if (check(compiler->parser, TOKEN_COMMA)) {
+        indexToken = compiler->parser->previous;
+        advance(compiler->parser);
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect variable name after ','.");
+        valueToken = compiler->parser->previous;
+    }
+    else { 
+        indexToken = syntheticToken("index ");
+        valueToken = compiler->parser->previous;
+    }
     
     consume(compiler->parser, TOKEN_COLON, "Expect ':' after variable name.");
     expression(compiler);
@@ -880,9 +891,10 @@ static void forStatement(Compiler* compiler) {
         error(compiler->parser, "for loop can only contain up to 252 variables.");
     }
 
-    int seqSlot = addLocal(compiler, syntheticToken("seq "));
+    int collectionSlot = addLocal(compiler, syntheticToken("collection "));
     emitByte(compiler, OP_NIL);
-    int iterSlot = addLocal(compiler, syntheticToken("iter "));
+    int indexSlot = addLocal(compiler, indexToken);
+    markInitialized(compiler);
     consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
 
     int loopStart = compiler->innermostLoopStart;
@@ -890,14 +902,15 @@ static void forStatement(Compiler* compiler) {
     compiler->innermostLoopStart = currentChunk(compiler)->count;
     compiler->innermostLoopScopeDepth = compiler->scopeDepth;
 
-    getLocal(compiler, seqSlot);
-    getLocal(compiler, iterSlot);
+    getLocal(compiler, collectionSlot);
+    getLocal(compiler, indexSlot);
     invokeMethod(compiler, 1, "next", 4);
-    setLocal(compiler, iterSlot);
+    setLocal(compiler, indexSlot);
+    emitByte(compiler, OP_POP);
     int exitJump = emitJump(compiler, OP_JUMP_IF_FALSE);
 
-    getLocal(compiler, seqSlot);
-    getLocal(compiler, iterSlot);
+    getLocal(compiler, collectionSlot);
+    getLocal(compiler, indexSlot);
     invokeMethod(compiler, 1, "nextValue", 9);
 
     beginScope(compiler);
@@ -909,9 +922,11 @@ static void forStatement(Compiler* compiler) {
 
     emitLoop(compiler, compiler->innermostLoopStart);
     patchJump(compiler, exitJump);
+    endLoop(compiler);
+    emitByte(compiler, OP_POP);
     emitByte(compiler, OP_POP);
 
-    endLoop(compiler);
+    compiler->localCount -= 2;
     compiler->innermostLoopStart = loopStart;
     compiler->innermostLoopScopeDepth = scopeDepth;
     endScope(compiler);
