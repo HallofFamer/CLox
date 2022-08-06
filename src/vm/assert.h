@@ -15,6 +15,7 @@ void assertArgIsBool(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClass(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClosure(VM* vm, const char* method, Value* args, int index);
 void assertArgIsDictionary(VM* vm, const char* method, Value* args, int index);
+void assertArgIsFile(VM* vm, const char* method, Value* args, int index);
 void assertArgIsFloat(VM* vm, const char* method, Value* args, int index);
 void assertArgIsInt(VM* vm, const char* method, Value* args, int index);
 void assertArgIsList(VM* vm, const char* method, Value* args, int index);

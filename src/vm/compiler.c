@@ -62,7 +62,10 @@ struct Compiler {
     Local locals[UINT8_COUNT];
     int localCount;
     Upvalue upvalues[UINT8_COUNT];
+
     int scopeDepth;
+    int innermostLoopStart;
+    int innermostLoopScopeDepth;
 };
 
 struct ClassCompiler {
@@ -141,6 +144,20 @@ static void patchJump(Compiler* compiler, int offset) {
     currentChunk(compiler)->code[offset + 1] = jump & 0xff;
 }
 
+static void endLoop(Compiler* compiler) {
+    int offset = compiler->innermostLoopStart;
+    Chunk* chunk = currentChunk(compiler);
+    while (offset < chunk->count) {
+        if (chunk->code[offset] == OP_END) {
+            chunk->code[offset] = OP_JUMP;
+            patchJump(compiler, offset + 1);
+        }
+        else {
+            offset += 1 + opCodeOffset(chunk, offset);
+        }
+    }
+}
+
 static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing, FunctionType type) {
     compiler->parser = parser;
     compiler->enclosing = enclosing;
@@ -148,6 +165,8 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    compiler->innermostLoopStart = -1;
+    compiler->innermostLoopScopeDepth = 0;
     compiler->function = newFunction(parser->vm);
     parser->vm->currentCompiler = compiler;
     if (type != TYPE_SCRIPT) {
@@ -268,16 +287,47 @@ static int resolveUpvalue(Compiler* compiler, Token* name) {
     return -1;
 }
 
-static void addLocal(Compiler* compiler, Token name) {
+static int addLocal(Compiler* compiler, Token name) {
     if (compiler->localCount == UINT8_COUNT) {
         error(compiler->parser, "Too many local variables in function.");
-        return;
+        return -1;
     }
 
     Local* local = &compiler->locals[compiler->localCount++];
     local->name = name;
     local->depth = -1;
     local->isCaptured = false;
+    return compiler->localCount - 1;
+}
+
+static void getLocal(Compiler* compiler, int slot) {
+    emitByte(compiler, OP_GET_LOCAL);
+    emitByte(compiler, slot);
+}
+
+static void setLocal(Compiler* compiler, int slot) {
+    emitByte(compiler, OP_SET_LOCAL);
+    emitByte(compiler, slot);
+}
+
+static int discardLocals(Compiler* compiler) {
+    int i = compiler->localCount - 1;
+    for (; i >= 0 && compiler->locals[i].depth > compiler->innermostLoopScopeDepth; i--) {
+        if (compiler->locals[i].isCaptured) {
+            emitByte(compiler, OP_CLOSE_UPVALUE);
+        }
+        else {
+            emitByte(compiler, OP_POP);
+        }
+    }
+    return compiler->localCount - i - 1;
+}
+
+static void invokeMethod(Compiler* compiler, int args, const char* name, int length) {
+    int slot = makeConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, name, length)));
+    emitByte(compiler, OP_INVOKE);
+    emitByte(compiler, slot);
+    emitByte(compiler, args);
 }
 
 static void declareVariable(Compiler* compiler) {
@@ -786,6 +836,26 @@ static void varDeclaration(Compiler* compiler) {
     defineVariable(compiler, global);
 }
 
+static void breakStatement(Compiler* compiler) {
+    if (compiler->innermostLoopStart == -1) {
+        error(compiler->parser, "Cannot use 'break' outside of a loop.");
+    }
+    consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after 'break'.");
+
+    discardLocals(compiler);
+    emitJump(compiler, OP_END);
+}
+
+static void continueStatement(Compiler* compiler) {
+    if (compiler->innermostLoopStart == -1) {
+        error(compiler->parser, "Can't use 'continue' outside of a loop.");
+    }
+    consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
+
+    discardLocals(compiler);
+    emitLoop(compiler, compiler->innermostLoopStart);
+}
+
 static void expressionStatement(Compiler* compiler) {
     expression(compiler);
     if (compiler->type == TYPE_LAMBDA && !check(compiler->parser, TOKEN_SEMICOLON)) {
@@ -800,44 +870,50 @@ static void expressionStatement(Compiler* compiler) {
 static void forStatement(Compiler* compiler) {
     beginScope(compiler);
     consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
-    if (match(compiler->parser, TOKEN_SEMICOLON)) {
-
-    }
-    else if (match(compiler->parser, TOKEN_VAR)) {
-        varDeclaration(compiler);
-    }
-    else {
-        expressionStatement(compiler);
-    }
-
-    int loopStart = currentChunk(compiler)->count;
-    int exitJump = -1;
-    if (!match(compiler->parser, TOKEN_SEMICOLON)) {
-        expression(compiler);
-        consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after loop condition.");
-        exitJump = emitJump(compiler, OP_JUMP_IF_FALSE);
-        emitByte(compiler, OP_POP);
+    consume(compiler->parser, TOKEN_VAR, "Expect 'var' keyword after '(' in For loop.");
+    consume(compiler->parser, TOKEN_IDENTIFIER, "Expect variable name after 'var'.");
+    Token valueToken = compiler->parser->previous;
+    
+    consume(compiler->parser, TOKEN_COLON, "Expect ':' after variable name.");
+    expression(compiler);
+    if (compiler->localCount + 3 > UINT8_MAX) {
+        error(compiler->parser, "for loop can only contain up to 252 variables.");
     }
 
-    if (!match(compiler->parser, TOKEN_RIGHT_PAREN)) {
-        int bodyJump = emitJump(compiler, OP_JUMP);
-        int incrementStart = currentChunk(compiler)->count;
-        expression(compiler);
-        emitByte(compiler, OP_POP);
-        consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+    int seqSlot = addLocal(compiler, syntheticToken("seq "));
+    emitByte(compiler, OP_NIL);
+    int iterSlot = addLocal(compiler, syntheticToken("iter "));
+    consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
 
-        emitLoop(compiler, loopStart);
-        loopStart = incrementStart;
-        patchJump(compiler, bodyJump);
-    }
+    int loopStart = compiler->innermostLoopStart;
+    int scopeDepth = compiler->innermostLoopScopeDepth;
+    compiler->innermostLoopStart = currentChunk(compiler)->count;
+    compiler->innermostLoopScopeDepth = compiler->scopeDepth;
 
+    getLocal(compiler, seqSlot);
+    getLocal(compiler, iterSlot);
+    invokeMethod(compiler, 1, "next", 4);
+    setLocal(compiler, iterSlot);
+    int exitJump = emitJump(compiler, OP_JUMP_IF_FALSE);
+
+    getLocal(compiler, seqSlot);
+    getLocal(compiler, iterSlot);
+    invokeMethod(compiler, 1, "nextValue", 9);
+
+    beginScope(compiler);
+    int valueSlot = addLocal(compiler, valueToken);
+    markInitialized(compiler);
+    setLocal(compiler, valueSlot);
     statement(compiler);
-    emitLoop(compiler, loopStart);
+    endScope(compiler);
 
-    if (exitJump != -1) {
-        patchJump(compiler, exitJump);
-        emitByte(compiler, OP_POP);
-    }
+    emitLoop(compiler, compiler->innermostLoopStart);
+    patchJump(compiler, exitJump);
+    emitByte(compiler, OP_POP);
+
+    endLoop(compiler);
+    compiler->innermostLoopStart = loopStart;
+    compiler->innermostLoopScopeDepth = scopeDepth;
     endScope(compiler);
 }
 
@@ -947,7 +1023,11 @@ static void switchStatement(Compiler* compiler) {
 }
 
 static void whileStatement(Compiler* compiler) {
-    int loopStart = currentChunk(compiler)->count;
+    int loopStart = compiler->innermostLoopStart;
+    int scopeDepth = compiler->innermostLoopScopeDepth;
+    compiler->innermostLoopStart = currentChunk(compiler)->count;
+    compiler->innermostLoopScopeDepth = compiler->scopeDepth;
+
     consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
     expression(compiler);
     consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
@@ -955,10 +1035,14 @@ static void whileStatement(Compiler* compiler) {
     int exitJump = emitJump(compiler, OP_JUMP_IF_FALSE);
     emitByte(compiler, OP_POP);
     statement(compiler);
-    emitLoop(compiler, loopStart);
+    emitLoop(compiler, compiler->innermostLoopStart);
 
     patchJump(compiler, exitJump);
     emitByte(compiler, OP_POP);
+
+    endLoop(compiler);
+    compiler->innermostLoopStart = loopStart;
+    compiler->innermostLoopScopeDepth = scopeDepth;
 }
 
 static void declaration(Compiler* compiler) {
@@ -979,7 +1063,13 @@ static void declaration(Compiler* compiler) {
 }
 
 static void statement(Compiler* compiler) {
-    if (match(compiler->parser, TOKEN_FOR)) {
+    if (match(compiler->parser, TOKEN_BREAK)) {
+        breakStatement(compiler);
+    }
+    else if (match(compiler->parser, TOKEN_CONTINUE)) {
+        continueStatement(compiler);
+    }
+    else if (match(compiler->parser, TOKEN_FOR)) {
         forStatement(compiler);
     }
     else if (match(compiler->parser, TOKEN_IF)) {

@@ -538,6 +538,29 @@ LOX_METHOD(List, length) {
     RETURN_INT(AS_LIST(receiver)->elements.count);
 }
 
+LOX_METHOD(List, next) {
+    ASSERT_ARG_COUNT("List::next(index)", 1);
+    ObjList* self = AS_LIST(receiver);
+    if (IS_NIL(args[0])) {
+        if (self->elements.count == 0) RETURN_FALSE;
+        RETURN_INT(0);
+    }
+
+    ASSERT_ARG_TYPE("List::next(index)", 0, Int);
+    int index = AS_INT(args[0]);
+    if (index < self->elements.count - 1) RETURN_INT(index + 1);
+    else RETURN_NIL;
+}
+
+LOX_METHOD(List, nextValue) {
+    ASSERT_ARG_COUNT("List::nextValue(index)", 1);
+    ASSERT_ARG_TYPE("List::nextValue(index)", 0, Int);
+    ObjList* self = AS_LIST(receiver);
+    int index = AS_INT(args[0]);
+    if (index > -1 && index < self->elements.count) RETURN_VAL(self->elements.values[index]);
+    else RETURN_NIL;
+}
+
 LOX_METHOD(List, putAt) {
     ASSERT_ARG_COUNT("List::putAt(index, element)", 2);
     ASSERT_ARG_TYPE("List::putAt(index, element)", 0, Int);
@@ -690,6 +713,8 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->listClass, List, isEmpty, 0);
     DEF_METHOD(vm->listClass, List, lastIndexOf, 1);
     DEF_METHOD(vm->listClass, List, length, 0);
+    DEF_METHOD(vm->listClass, List, next, 1);
+    DEF_METHOD(vm->listClass, List, nextValue, 1);
     DEF_METHOD(vm->listClass, List, putAt, 2);
     DEF_METHOD(vm->listClass, List, remove, 1);
     DEF_METHOD(vm->listClass, List, removeAt, 1);
@@ -711,6 +736,9 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, putAt, 2);
     DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
+
+    vm->fileClass = defineNativeClass(vm, "File");
+    bindSuperclass(vm, vm->fileClass, vm->objectClass);
     
     ObjClass* randomClass = defineNativeClass(vm, "Random");
     bindSuperclass(vm, randomClass, vm->objectClass);

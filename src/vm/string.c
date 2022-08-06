@@ -50,6 +50,10 @@ ObjString* newString(VM* vm, const char* chars) {
     return copyString(vm, chars, (int)strlen(chars));
 }
 
+ObjString* emptyString(VM* vm) {
+    return copyString(vm, "", 0);
+}
+
 ObjString* formattedString(VM* vm, const char* format, ...) {
     char chars[UINT8_MAX];
     va_list args;

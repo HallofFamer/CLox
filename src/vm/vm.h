@@ -42,6 +42,7 @@ struct VM {
     ObjClass* methodClass;
     ObjClass* listClass;
     ObjClass* dictionaryClass;
+    ObjClass* fileClass;
 
     CallFrame frames[FRAMES_MAX];
     int frameCount;
@@ -75,6 +76,7 @@ typedef enum {
 
 void initVM(VM* vm);
 void freeVM(VM* vm);
+bool isFalsey(Value value);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void runtimeError(VM* vm, const char* format, ...);

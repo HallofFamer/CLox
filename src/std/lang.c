@@ -736,6 +736,7 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->numberClass, Number, toString, 0);
 
     vm->intClass = getNativeClass(vm, "Int");
+    bindSuperclass(vm, vm->intClass, vm->numberClass);
     DEF_METHOD(vm->intClass, Int, abs, 0);
     DEF_METHOD(vm->intClass, Int, clone, 0);
     DEF_METHOD(vm->intClass, Int, factorial, 0);

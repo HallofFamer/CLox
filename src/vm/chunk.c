@@ -38,3 +38,45 @@ int addConstant(VM* vm, Chunk* chunk, Value value) {
     pop(vm);
     return chunk->constants.count - 1;
 }
+
+int opCodeOffset(Chunk* chunk, int ip) {
+    OpCode code = chunk->code[ip];
+    switch (code) {
+        case OP_CALL:
+        case OP_GET_SUBSCRIPT:
+            return 1;
+
+        case OP_DEFINE_GLOBAL:
+        case OP_GET_GLOBAL:
+        case OP_SET_GLOBAL:
+        case OP_GET_LOCAL:
+        case OP_SET_LOCAL:
+        case OP_GET_UPVALUE:
+        case OP_SET_UPVALUE:
+        case OP_JUMP_IF_FALSE:
+        case OP_JUMP:
+        case OP_END:
+        case OP_LOOP:
+        case OP_CONSTANT:
+        case OP_CLASS:
+        case OP_GET_PROPERTY:
+        case OP_SET_PROPERTY:
+        case OP_LIST:
+        case OP_DICTIONARY:
+        case OP_METHOD:
+            return 2;
+
+        case OP_INVOKE:
+        case OP_SUPER_INVOKE:
+            return 3;
+
+        case OP_CLOSURE: {
+            int constant = (chunk->code[ip + 1] << 8) | chunk->code[ip + 2];
+            ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
+            return 2 + (function->upvalueCount * 3);
+        }
+
+        default:
+            return 0;
+    }
+}

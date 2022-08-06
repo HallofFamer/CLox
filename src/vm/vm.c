@@ -155,12 +155,12 @@ Value pop(VM* vm) {
     return *vm->stackTop;
 }
 
-static Value peek(VM* vm, int distance) {
-    return vm->stackTop[-1 - distance];
+bool isFalsey(Value value) {
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
-static bool isFalsey(Value value) {
-    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+static Value peek(VM* vm, int distance) {
+    return vm->stackTop[-1 - distance];
 }
 
 static void concatenate(VM* vm) {

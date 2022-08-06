@@ -46,7 +46,8 @@ typedef enum {
     OP_LIST,
     OP_DICTIONARY,
     OP_RETURN,
-    OP_RETURN_NONLOCAL
+    OP_RETURN_NONLOCAL,
+    OP_END
 } OpCode;
 
 typedef struct {
@@ -61,5 +62,6 @@ void initChunk(Chunk* chunk);
 void freeChunk(VM* vm, Chunk* chunk);
 void writeChunk(VM* vm, Chunk* chunk, uint8_t byte, int line);
 int addConstant(VM* vm, Chunk* chunk, Value value);
+int opCodeOffset(Chunk* chunk, int ip);
 
 #endif // !clox_chunk_h

@@ -48,6 +48,13 @@ void assertArgIsDictionary(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
+void assertArgIsFile(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_FILE(args[index])) {
+        runtimeError(vm, "method %s expects argument %d to be a file.", method, index + 1);
+        exit(70);
+    }
+}
+
 void assertArgIsFloat(VM* vm, const char* method, Value* args, int index) {
     if (!IS_FLOAT(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be a floating point number.", method, index + 1);

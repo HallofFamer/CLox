@@ -11,9 +11,9 @@ https://github.com/munificent/craftinginterpreters
 - Scanner, Parser and Single-Pass Compiler
 - Stacked based bytecote VM with the basic Op Code support
 - Unary and Binary Expression/Operators
-- If and Else Statement
-- Switch Statement
-- While and For Loop
+- If and Else condition Statement
+- Switch Condition Statement
+- While Loop, Break and Continue Statement
 - Functions and Closures with automatic upvalue capture
 - Classes, Objects, Methods and `this` keyword
 - Single Inheritance and `super` keyword
@@ -24,9 +24,10 @@ https://github.com/munificent/craftinginterpreters
 - Improved Object Model - Everything is an object, and every object has a class(since version 1.2)
 - CLox Standard Library for package `lang` and `util`(since version 1.2)
 - Customized Runtime configuration for CLox using clox.ini(since version 1.2)
-- Separated integer values and floating point values(since version 1.2).
-- Array/Dictionary Literals and square bracket notation for array/dictionary access(since version 1.3).
-- Anonymous Functions and Lambda Expressions(since version 1.3).
+- Separated integer values and floating point values(since version 1.2)
+- Array/Dictionary Literals and square bracket notation for array/dictionary access(since version 1.3)
+- Anonymous Functions and Lambda Expressions(since version 1.3)
+- C style For Loop replaced with Kotlin style for-in Loop(since version 1.3)
 
 ## Roadmap
 

@@ -9,7 +9,16 @@
 #include "string.h"
 #include "vm.h"
 
-LOX_FUNCTION(clock){
+LOX_FUNCTION(assert) {
+    ASSERT_ARG_COUNT("assert(expression, message)", 2);
+    ASSERT_ARG_TYPE("assert(expression, message)", 1, String);
+    if (isFalsey(args[0])) {
+        raiseError(vm, AS_CSTRING(args[1]));
+    }
+    RETURN_NIL;
+}
+
+LOX_FUNCTION(clock) {
     ASSERT_ARG_COUNT("clock()", 0);
     RETURN_NUMBER((double)clock() / CLOCKS_PER_SEC);
 }
@@ -166,6 +175,7 @@ void initNativePackage(VM* vm, const char* filePath) {
 }
 
 void registerNativeFunctions(VM* vm){
+    DEF_FUNCTION(assert, 2);
     DEF_FUNCTION(clock, 0);
     DEF_FUNCTION(dateNow, 0);
     DEF_FUNCTION(dateTimeNow, 0);

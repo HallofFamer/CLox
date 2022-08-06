@@ -63,10 +63,19 @@ ObjDictionary* newDictionary(VM* vm) {
 }
 
 ObjDictionary* copyDictionary(VM* vm, Table table) {
-    ObjDictionary* dictionary = ALLOCATE_OBJ(ObjDictionary, OBJ_DICTIONARY, vm->dictionaryClass);
-    initTable(&dictionary->table);
+    ObjDictionary* dictionary = newDictionary(vm);
+    push(vm, OBJ_VAL(dictionary));
     tableAddAll(vm, &table, &dictionary->table);
+    pop(vm);
     return dictionary;
+}
+
+ObjFile* newFile(VM* vm, ObjString* name) {
+    ObjFile* file = ALLOCATE_OBJ(ObjFile, OBJ_FILE, vm->fileClass);
+    file->name = name;
+    file->mode = emptyString(vm);
+    file->isOpen = false;
+    return file;
 }
 
 ObjFunction* newFunction(VM* vm) {
@@ -91,11 +100,12 @@ ObjList* newList(VM* vm) {
 }
 
 ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
-    ObjList* list = ALLOCATE_OBJ(ObjList, OBJ_LIST, vm->listClass);
-    initValueArray(&list->elements);
+    ObjList* list = newList(vm);
+    push(vm, OBJ_VAL(list));
     for (int i = fromIndex; i < toIndex; i++) {
         valueArrayWrite(vm, &list->elements, elements.values[i]);
     }
+    pop(vm);
     return list;
 }
 
@@ -182,9 +192,11 @@ static void printDictionary(ObjDictionary* dictionary) {
 static void printFunction(ObjFunction* function) {
     if (function->name == NULL) {
         printf("<script>");
-        return;
     }
-    printf("<fn %s>", function->name->chars);
+    else if (function->name->length == 0) {
+        printf("<function>");
+    }
+    else printf("<function %s>", function->name->chars);
 }
 
 static void printList(ObjList* list) {
@@ -210,6 +222,8 @@ void printObject(Value value) {
         case OBJ_DICTIONARY:
             printDictionary(AS_DICTIONARY(value));
             break;
+        case OBJ_FILE:
+            printf("<file %s>", AS_FILE(value)->name->chars);
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value));
             break;
@@ -220,10 +234,10 @@ void printObject(Value value) {
             printList(AS_LIST(value));
             break;
         case OBJ_NATIVE_FUNCTION:
-            printf("<native function>");
+            printf("<native function %s>", AS_NATIVE_FUNCTION(value)->name->chars);
             break;
         case OBJ_NATIVE_METHOD:
-            printf("<native method>");
+            printf("<native method %s::%s>", AS_NATIVE_METHOD(value)->klass->name->chars, AS_NATIVE_METHOD(value)->name->chars);
             break;
         case OBJ_STRING:
             printf("%s", AS_CSTRING(value));
