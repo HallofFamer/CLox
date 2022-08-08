@@ -726,6 +726,9 @@ LOX_METHOD(Regex, toString) {
 void registerUtilPackage(VM* vm) {
     initNativePackage(vm, "src/std/util.lox");
 
+    ObjClass* collectionClass = getNativeClass(vm, "Collection");
+    bindSuperclass(vm, collectionClass, vm->objectClass);
+
     vm->listClass = getNativeClass(vm, "List");
     DEF_METHOD(vm->listClass, List, add, 1);
     DEF_METHOD(vm->listClass, List, addAll, 1);
@@ -748,8 +751,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->listClass, List, subList, 2);
     DEF_METHOD(vm->listClass, List, toString, 0);
 
-    vm->dictionaryClass = defineNativeClass(vm, "Dictionary");
-    bindSuperclass(vm, vm->dictionaryClass, vm->objectClass);
+    vm->dictionaryClass = getNativeClass(vm, "Dictionary");
     DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, containsKey, 1);

@@ -876,11 +876,27 @@ static void expressionStatement(Compiler* compiler) {
 
 static void forStatement(Compiler* compiler) {
     beginScope(compiler);
+    Token indexToken, valueToken;
     consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+    consume(compiler->parser, TOKEN_VAR, "Expect 'var' keyword after '(' in For loop.");
+    if (match(compiler->parser, TOKEN_LEFT_PAREN)) {
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect first variable name after '('.");
+        indexToken = compiler->parser->previous;
+        consume(compiler->parser, TOKEN_COMMA, "Expect ',' after first variable declaration.");
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect second variable name after ','.");
+        valueToken = compiler->parser->previous;
+        consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after second variable declaration.");
+    }
+    else {
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect variable name after 'var'.");
+        indexToken = syntheticToken("index ");
+        valueToken = compiler->parser->previous;
+    }
+
+    /*
     consume(compiler->parser, TOKEN_VAR, "Expect 'var' keyword after '(' in For loop.");
     consume(compiler->parser, TOKEN_IDENTIFIER, "Expect variable name after 'var'.");
 
-    Token indexToken, valueToken;
     if (check(compiler->parser, TOKEN_COMMA)) {
         indexToken = compiler->parser->previous;
         advance(compiler->parser);
@@ -891,7 +907,8 @@ static void forStatement(Compiler* compiler) {
         indexToken = syntheticToken("index ");
         valueToken = compiler->parser->previous;
     }
-    
+    */
+
     consume(compiler->parser, TOKEN_COLON, "Expect ':' after variable name.");
     expression(compiler);
     if (compiler->localCount + 3 > UINT8_MAX) {

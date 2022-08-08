@@ -8,9 +8,7 @@ println("");
 
 var list = [2, 3.5, true, "Hello World"];
 println("Enumerating list with each method: ");
-list.each(fun(element){ 
-    println("Element: " + element.toString());
-});
+list.each({|element| println("Element: " + element.toString()) });
 println("");
 
 var selected = list.select({|x| x.instanceOf(Number) });
@@ -24,7 +22,7 @@ println("");
 
 var list2 = [1, 2, 3, 4, 5];
 println("Enumerating a number list with index: ");
-list2.eachIndex({|element, index| println("Element " + (index + 1).toString() + ": " + element.toString())});
+list2.eachIndex({|index, element| println("Element " + index.toString() + ": " + element.toString())});
 println("");
 
 println("Collect a number list by square: ");
@@ -32,3 +30,10 @@ println(list2.collect({|x| x * x}));
 println("Detecting first even number: ");
 println(list2.detect({|x| x.isEven() }));
 println("");
+
+var dict = ["US": "United States", "CA": "Canada", "EU": "Europe", "JP": "Japan", "RU": "Russia"];
+println("Enumerating a dictionary of countries: ");
+dict.each({|key, value| println("Key: " + key + ", Value: " + value.toString())});
+println("Select countries with length 6: ");
+var dict2 = dict.select({|key, value| value.length() == 6 });
+println(dict2);

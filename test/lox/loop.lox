@@ -24,7 +24,7 @@ println("");
 
 println("Looping through a list of values using 'for-in' with index: ");
 var list2 = [2, 3.5, true, nil, "Hello World"];
-for(var index, value : list2){ 
+for(var (index, value) : list2){ 
     println("Element" + index.toString() + ": " + value.toString());
 }
 println("");
@@ -38,6 +38,6 @@ println("");
 
 println("Looping through a dictionary using 'for-in' with key: ");
 var dict = ["name": "Joe Doe", "age": 40, "isAdmin": false];
-for(var key, value : dict){ 
+for(var (key, value) : dict){ 
     println(key.toString() + ": " + value.toString());
 }

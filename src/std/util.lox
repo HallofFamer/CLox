@@ -1,55 +1,129 @@
-class List { 
-
-    collect(closure) { 
-        var collected = [];
-        var i = 0;
-        while(i < this.length()){
-            collected.add(closure(this[i]));
-            i = i + 1;
+class Collection { 
+    
+    collect(closure) {
+        var collected = this.getClass()();
+        for(var element : this){
+            collected.add(closure(element));
         }
         return collected;
     }
 
     detect(closure) { 
-        var i = 0;
-        while(i < this.length()){
-            if(closure(this[i])) return this[i];
-            i = i + 1;
+        for(var element : this){
+            if(closure(element)) return element;
+        }
+        return nil;
+    }
+
+    each(closure) {
+        for(var element : this){ 
+            closure(element);
         }
     }
 
-    each(closure) { 
+    isEmpty(){
         var i = 0;
-        while(i < this.length()){
-            closure(this[i]);
+        for(var element : this){
             i = i + 1;
         }
+        return (i == 0);
     }
 
-    eachIndex(closure) { 
+    length(){
         var i = 0;
-        while(i < this.length()){
-            closure(this[i], i);
+        for(var element : this){
             i = i + 1;
         }
+        return i;
+    }
+
+    next(index) { 
+        error("Not implemented, subclass responsibility.");
+    }
+
+    nextValue(index) { 
+        error("Not implemented, subclass responsibility.");
     }
 
     reject(closure) {
-        var selected = [];
-        var i = 0;
-        while(i < this.length()){
-            if(!closure(this[i])) selected.add(this[i]);
-            i = i + 1;
+        var selected = this.getClass()();
+        for(var element : this){ 
+            if(!closure(element)) selected.add(element);
         }
         return selected;
     }
 
     select(closure) { 
-        var selected = [];
-        var i = 0;
-        while(i < this.length()){
-            if(closure(this[i])) selected.add(this[i]);
-            i = i + 1;
+        var selected = this.getClass()();
+        for(var element : this){ 
+            if(closure(element)) selected.add(element);
+        }
+        return selected;
+    }
+
+    toList(){ 
+        var list = [];
+        for(var element : this){
+            list.add(element);
+        }
+        return list;
+    }
+}
+
+class List < Collection { 
+
+    eachIndex(closure) { 
+        for(var (index, element) : this){ 
+            closure(index, element);
+        }
+    }
+}
+
+class Dictionary < Collection {
+    collect(closure){
+        var collected = this.getClass()();
+        for(var (key, value) : this){ 
+            collected[key] = closure(key, value);
+        }
+        return collected;
+    }
+
+    detect(closure){ 
+        for(var (key, value) : this){ 
+            if(closure(key, value)) return value;
+        }
+        return nil;
+    }
+
+    each(closure){
+        for(var (key, value) : this){ 
+            closure(key, value);
+        }
+    }
+
+    eachKey(closure){ 
+        for(var (key, value) : this){ 
+            closure(key);
+        } 
+    }
+
+    eachValue(closure){
+        for(var (key, value) : this){ 
+            closure(value);
+        } 
+    }
+
+    reject(closure){
+        var selected = this.getClass()();
+        for(var (key, value) : this){ 
+            if(!closure(key, value)) selected[key] = value;
+        }
+    }
+
+    select(closure){ 
+        var selected = this.getClass()();
+        for(var (key, value) : this){ 
+            if(closure(key, value)) selected[key] = value;
         }
         return selected;
     }
