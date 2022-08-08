@@ -126,6 +126,12 @@ ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int a
     return nativeMethod;
 }
 
+ObjRecord* newRecord(VM* vm, void* data) {
+    ObjRecord* record = ALLOCATE_OBJ(ObjRecord, OBJ_RECORD, NULL);
+    record->data = data;
+    return record;
+}
+
 ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
     ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE, NULL);
     upvalue->closed = NIL_VAL;
@@ -239,6 +245,9 @@ void printObject(Value value) {
             break;
         case OBJ_NATIVE_METHOD:
             printf("<native method %s::%s>", AS_NATIVE_METHOD(value)->klass->name->chars, AS_NATIVE_METHOD(value)->name->chars);
+            break;
+        case OBJ_RECORD:
+            printf("record");
             break;
         case OBJ_STRING:
             printf("%s", AS_CSTRING(value));

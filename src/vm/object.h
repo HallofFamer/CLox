@@ -23,6 +23,7 @@
 #define IS_LIST(value)             isObjType(value, OBJ_LIST)
 #define IS_NATIVE_FUNCTION(value)  isObjType(value, OBJ_NATIVE_FUNCTION)
 #define IS_NATIVE_METHOD(value)    isObjType(value, OBJ_NATIVE_METHOD)
+#define IS_RECORD(value)           isObjType(value, OBJ_RECORD)
 #define IS_STRING(value)           isObjType(value, OBJ_STRING)
 
 #define AS_BOUND_METHOD(value)     ((ObjBoundMethod*)AS_OBJ(value))
@@ -35,6 +36,8 @@
 #define AS_LIST(value)             ((ObjList*)AS_OBJ(value))
 #define AS_NATIVE_FUNCTION(value)  ((ObjNativeFunction*)AS_OBJ(value))
 #define AS_NATIVE_METHOD(value)    ((ObjNativeMethod*)AS_OBJ(value))
+#define AS_RECORD(value)           ((ObjRecord*)AS_OBJ(value))
+#define AS_CRECORD(value, type)    ((type*)((ObjRecord*)AS_OBJ(value)->data))
 #define AS_STRING(value)           ((ObjString*)AS_OBJ(value))
 #define AS_CSTRING(value)          (((ObjString*)AS_OBJ(value))->chars)
 
@@ -49,6 +52,7 @@ typedef enum {
     OBJ_LIST,
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
+    OBJ_RECORD,
     OBJ_STRING,
     OBJ_UPVALUE
 } ObjType;
@@ -111,6 +115,11 @@ typedef struct ObjFile {
     FILE* file;
 } ObjFile;
 
+typedef struct ObjRecord {
+    Obj obj;
+    void* data;
+} ObjRecord;
+
 typedef struct ObjUpvalue {
     Obj obj;
     Value* location;
@@ -157,6 +166,7 @@ ObjList* newList(VM* vm);
 ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
+ObjRecord* newRecord(VM* vm, void* data);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 
 ObjClass* getObjClass(VM* vm, Value value);

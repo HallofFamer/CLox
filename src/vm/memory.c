@@ -131,6 +131,8 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)nativeMethod->name);
             break;
         }
+        case OBJ_RECORD:
+            break;
         case OBJ_STRING:
             break;
     }
@@ -191,6 +193,12 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_NATIVE_METHOD:
             FREE(ObjNativeMethod, object);
             break;
+        case OBJ_RECORD: {
+            ObjRecord* record = (ObjRecord*)object;
+            if (record->data != NULL) free(record->data);
+            FREE(ObjRecord, object);
+            break;
+        }
         case OBJ_STRING: {
             FREE(ObjString, object);
             break;
