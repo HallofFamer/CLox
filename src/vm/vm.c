@@ -10,6 +10,7 @@
 #include "string.h"
 #include "vm.h"
 #include "../inc/ini.h"
+#include "../std/collection.h"
 #include "../std/io.h"
 #include "../std/lang.h"
 #include "../std/util.h"
@@ -135,8 +136,9 @@ void initVM(VM* vm) {
     vm->initString = copyString(vm, "init", 4);
 
     registerLangPackage(vm);
-    registerUtilPackage(vm);
+    registerCollectionPackage(vm);
     registerIOPackage(vm);
+    registerUtilPackage(vm);
     registerNativeFunctions(vm);
 }
 

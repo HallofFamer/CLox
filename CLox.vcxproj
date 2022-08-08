@@ -146,6 +146,7 @@
     <ClCompile Include="src\inc\ini.c" />
     <ClCompile Include="src\inc\pcg.c" />
     <ClCompile Include="src\inc\regex.c" />
+    <ClCompile Include="src\std\collection.c" />
     <ClCompile Include="src\std\io.c" />
     <ClCompile Include="src\std\lang.c" />
     <ClCompile Include="src\std\util.c" />
@@ -167,8 +168,8 @@
   <ItemGroup>
     <None Include="clox.ini" />
     <None Include="README.md" />
+    <None Include="src\std\collection.lox" />
     <None Include="src\std\lang.lox" />
-    <None Include="src\std\util.lox" />
     <None Include="test\lox\benchmark.lox" />
     <None Include="test\lox\closure.lox" />
     <None Include="test\lox\date.lox" />
@@ -199,6 +200,7 @@
     <ClInclude Include="src\inc\ini.h" />
     <ClInclude Include="src\inc\pcg.h" />
     <ClInclude Include="src\inc\regex.h" />
+    <ClInclude Include="src\std\collection.h" />
     <ClInclude Include="src\std\io.h" />
     <ClInclude Include="src\std\lang.h" />
     <ClInclude Include="src\std\util.h" />

@@ -893,22 +893,6 @@ static void forStatement(Compiler* compiler) {
         valueToken = compiler->parser->previous;
     }
 
-    /*
-    consume(compiler->parser, TOKEN_VAR, "Expect 'var' keyword after '(' in For loop.");
-    consume(compiler->parser, TOKEN_IDENTIFIER, "Expect variable name after 'var'.");
-
-    if (check(compiler->parser, TOKEN_COMMA)) {
-        indexToken = compiler->parser->previous;
-        advance(compiler->parser);
-        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect variable name after ','.");
-        valueToken = compiler->parser->previous;
-    }
-    else { 
-        indexToken = syntheticToken("index ");
-        valueToken = compiler->parser->previous;
-    }
-    */
-
     consume(compiler->parser, TOKEN_COLON, "Expect ':' after variable name.");
     expression(compiler);
     if (compiler->localCount + 3 > UINT8_MAX) {
