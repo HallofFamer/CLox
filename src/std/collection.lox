@@ -1,5 +1,9 @@
 class Collection { 
     
+    init(){
+        error("Cannot instantiate from class Collection.");
+    }
+
     collect(closure) {
         var collected = this.getClass()();
         for(var element : this){

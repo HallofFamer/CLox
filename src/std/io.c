@@ -24,8 +24,23 @@ static bool fileExists(ObjFile* file, struct stat* fileStat) {
     return (stat(file->name->chars, fileStat) == 0);
 }
 
+static ObjFile* getFileArgument(VM* vm, Value arg) {
+    ObjFile* file = NULL;
+    if (IS_STRING(arg)) file = newFile(vm, AS_STRING(arg));
+    else if (IS_FILE(arg)) file = AS_FILE(arg);
+    return file;
+}
+
 static ObjFile* getFileProperty(VM* vm, ObjInstance* object, char* field) {
     return AS_FILE(getObjProperty(vm, object, field));
+}
+
+static void setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, char* mode) {
+    fopen_s(&file->file, file->name->chars, mode);
+    if (file->file == NULL) raiseError(vm, "Cannot create stream object because file does not exist.");
+    file->isOpen = true;
+    file->mode = newString(vm, mode);
+    setObjProperty(vm, object, "file", OBJ_VAL(file));
 }
 
 LOX_METHOD(File, create) {
@@ -200,37 +215,13 @@ LOX_METHOD(File, toString) {
     RETURN_OBJ(AS_FILE(receiver)->name);
 }
 
-LOX_METHOD(FileReadStream, close) {
-    ASSERT_ARG_COUNT("FileReadStream::close()", 0);
-    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    file->isOpen = false;
-    RETURN_BOOL(fclose(file->file) == 0);
-}
-
-LOX_METHOD(FileReadStream, getPosition) {
-    ASSERT_ARG_COUNT("FileReadStream::getPosition()", 0);
-    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot read the next char because file is already closed.");
-    if (file->file == NULL) RETURN_INT(0);
-    else RETURN_INT(ftell(file->file));
-}
 
 LOX_METHOD(FileReadStream, init) {
     ASSERT_ARG_COUNT("FileReadStream::init(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjFile* file = NULL;
-    if (IS_STRING(args[0])) file = newFile(vm, AS_STRING(args[0]));
-    else if (IS_FILE(args[0])) file = AS_FILE(args[0]);
-    else raiseError(vm, "method FileReadStream::init(file) expects argument 1 to be a string or file.");
-
-    struct stat fileStat;
-    if (!fileExists(file, &fileStat)) raiseError(vm, "Cannot open stream to read file because it does not exist.");
-    if (file != NULL) {
-        file->isOpen = true;
-        file->mode = copyString(vm, "r", 1);
-        fopen_s(&file->file, file->name->chars, "r");
-        setObjProperty(vm, self, "file", OBJ_VAL(file));
-    }
+    ObjFile* file = getFileArgument(vm, args[0]);
+    if(file == NULL) raiseError(vm, "Method FileReadStream::init(file) expects argument 1 to be a string or file.");
+    setFileProperty(vm, AS_INSTANCE(receiver), file, "r");
     RETURN_OBJ(self);
 }
 
@@ -280,14 +271,6 @@ LOX_METHOD(FileReadStream, peek) {
     }
 }
 
-LOX_METHOD(FileReadStream, reset) {
-    ASSERT_ARG_COUNT("FileReadStream::peek()", 0);
-    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot reset file stream because file is already closed.");
-    if (file->file != NULL) rewind(file->file);
-    RETURN_NIL;
-}
-
 LOX_METHOD(FileReadStream, skip) {
     ASSERT_ARG_COUNT("FileReadStream::skip(offset)", 1);
     ASSERT_ARG_TYPE("FileReadStream::offset(offset)", 0, Int);
@@ -295,6 +278,94 @@ LOX_METHOD(FileReadStream, skip) {
     if (!file->isOpen) raiseError(vm, "Cannot skip by offset because file is already closed.");
     if (file->file == NULL) RETURN_FALSE;
     RETURN_BOOL(fseek(file->file, (long)AS_INT(args[0]), SEEK_CUR));
+}
+
+LOX_METHOD(FileWriteStream, flush) {
+    ASSERT_ARG_COUNT("FileWriteStream::flush()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot flush file stream because file is already closed.");
+    if (file->file == NULL) RETURN_FALSE;
+    RETURN_BOOL(fflush(file->file) == 0);
+}
+
+LOX_METHOD(FileWriteStream, init) {
+    ASSERT_ARG_COUNT("FileWriteStream::init(file)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjFile* file = getFileArgument(vm, args[0]);
+    if(file == NULL) raiseError(vm, "Method FileWriteStream::init(file) expects argument 1 to be a string or file.");
+    setFileProperty(vm, AS_INSTANCE(receiver), file, "w");
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(FileWriteStream, put) {
+    ASSERT_ARG_COUNT("FileWriteStream::put(char)", 1);
+    ASSERT_ARG_TYPE("FileWriteStream::put(char)", 0, String);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot write character to stream because file is already closed.");
+    if (file->file == NULL) RETURN_NIL;
+
+    ObjString* character = AS_STRING(args[0]);
+    if (character->length != 1) raiseError(vm, "Method FileWriteStream::put(char) expects argument 1 to be a character(string of length 1)");
+    fputc(character->chars[0], file->file);
+    RETURN_NIL;
+}
+
+LOX_METHOD(FileWriteStream, putLine) {
+    ASSERT_ARG_COUNT("FileWriteStream::putLine()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot write new line to stream because file is already closed.");
+    if (file->file == NULL) RETURN_NIL;
+    fputc('\n', file->file);
+    RETURN_NIL;
+}
+
+LOX_METHOD(FileWriteStream, putSpace) {
+    ASSERT_ARG_COUNT("FileWriteStream::putSpace()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot write empty space to stream because file is already closed.");
+    if (file->file == NULL) RETURN_NIL;
+    fputc(' ', file->file);
+    RETURN_NIL;
+}
+
+LOX_METHOD(FileWriteStream, putString) {
+    ASSERT_ARG_COUNT("FileWriteStream::putString(string)", 1);
+    ASSERT_ARG_TYPE("FileWriteStream::putString(string)", 0, String);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot write string to stream because file is already closed.");
+    if (file->file == NULL) RETURN_NIL;
+
+    ObjString* string = AS_STRING(args[0]);
+    fputs(string->chars, file->file);
+    RETURN_NIL;
+}
+
+LOX_METHOD(IOStream, close) {
+    ASSERT_ARG_COUNT("IOStream::close()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    file->isOpen = false;
+    RETURN_BOOL(fclose(file->file) == 0);
+}
+
+LOX_METHOD(IOStream, getPosition) {
+    ASSERT_ARG_COUNT("IOStream::getPosition()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot get stream position because file is already closed.");
+    if (file->file == NULL) RETURN_INT(0);
+    else RETURN_INT(ftell(file->file));
+}
+
+LOX_METHOD(IOStream, init) {
+    raiseError(vm, "Cannot instantiate from class IOStream.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(IOStream, reset) {
+    ASSERT_ARG_COUNT("IOStream::reset()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot reset stream because file is already closed.");
+    if (file->file != NULL) rewind(file->file);
+    RETURN_NIL;
 }
 
 void registerIOPackage(VM* vm) {
@@ -321,15 +392,28 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(vm->fileClass, File, size, 0);
     DEF_METHOD(vm->fileClass, File, toString, 0);
 
+    ObjClass* ioStreamClass = defineNativeClass(vm, "IOStream");
+    bindSuperclass(vm, ioStreamClass, vm->objectClass);
+    DEF_METHOD(ioStreamClass, IOStream, close, 0);
+    DEF_METHOD(ioStreamClass, IOStream, getPosition, 0);
+    DEF_METHOD(ioStreamClass, IOStream, init, 1);
+    DEF_METHOD(ioStreamClass, IOStream, reset, 0);
+
     ObjClass* fileReadStreamClass = defineNativeClass(vm, "FileReadStream");
-    bindSuperclass(vm, fileReadStreamClass, vm->objectClass);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, close, 0);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, getPosition, 0);
+    bindSuperclass(vm, fileReadStreamClass, ioStreamClass);
     DEF_METHOD(fileReadStreamClass, FileReadStream, init, 1);
     DEF_METHOD(fileReadStreamClass, FileReadStream, isAtEnd, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, next, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, nextLine, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, peek, 0);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, reset, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, skip, 1);
+
+    ObjClass* fileWriteStreamClass = defineNativeClass(vm, "FileWriteStream");
+    bindSuperclass(vm, fileWriteStreamClass, ioStreamClass);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, flush, 0);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, init, 1);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, put, 1);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putLine, 0);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putSpace, 0);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putString, 1);
 }

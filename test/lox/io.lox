@@ -1,2 +1,19 @@
 var file = File("test/others/file_input.txt");
 println(file);
+println("Creating a read stream for file. ");
+var fileReader = FileReadStream(file);
+println("The first character of the file is: " + fileReader.peek());
+println("");
+
+println("Now reading the entire file:");
+println("");
+while(!fileReader.isAtEnd()){
+    print(fileReader.nextLine());
+}
+println("");
+
+println("");
+print("File stream is at end: ");
+println(fileReader.isAtEnd());
+println("Closing read stream for file.");
+fileReader.close();
