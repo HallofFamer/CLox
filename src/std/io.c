@@ -24,6 +24,10 @@ static bool fileExists(ObjFile* file, struct stat* fileStat) {
     return (stat(file->name->chars, fileStat) == 0);
 }
 
+static ObjFile* getFileProperty(VM* vm, ObjInstance* object, char* field) {
+    return AS_FILE(getObjProperty(vm, object, field));
+}
+
 LOX_METHOD(File, create) {
     ASSERT_ARG_COUNT("File::create()", 0);
     ObjFile* self = AS_FILE(receiver);
@@ -196,6 +200,103 @@ LOX_METHOD(File, toString) {
     RETURN_OBJ(AS_FILE(receiver)->name);
 }
 
+LOX_METHOD(FileReadStream, close) {
+    ASSERT_ARG_COUNT("FileReadStream::close()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    file->isOpen = false;
+    RETURN_BOOL(fclose(file->file) == 0);
+}
+
+LOX_METHOD(FileReadStream, getPosition) {
+    ASSERT_ARG_COUNT("FileReadStream::getPosition()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot read the next char because file is already closed.");
+    if (file->file == NULL) RETURN_INT(0);
+    else RETURN_INT(ftell(file->file));
+}
+
+LOX_METHOD(FileReadStream, init) {
+    ASSERT_ARG_COUNT("FileReadStream::init(file)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjFile* file = NULL;
+    if (IS_STRING(args[0])) file = newFile(vm, AS_STRING(args[0]));
+    else if (IS_FILE(args[0])) file = AS_FILE(args[0]);
+    else raiseError(vm, "method FileReadStream::init(file) expects argument 1 to be a string or file.");
+
+    struct stat fileStat;
+    if (!fileExists(file, &fileStat)) raiseError(vm, "Cannot open stream to read file because it does not exist.");
+    if (file != NULL) {
+        file->isOpen = true;
+        file->mode = copyString(vm, "r", 1);
+        fopen_s(&file->file, file->name->chars, "r");
+        setObjProperty(vm, self, "file", OBJ_VAL(file));
+    }
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(FileReadStream, isAtEnd) {
+    ASSERT_ARG_COUNT("FileReadStream::next()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen || file->file == NULL) RETURN_FALSE;
+    else RETURN_BOOL(feof(file->file) != 0);
+}
+
+LOX_METHOD(FileReadStream, next) {
+    ASSERT_ARG_COUNT("FileReadStream::next()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot read the next char because file is already closed.");
+    if (file->file == NULL) RETURN_NIL;
+    else {
+        int c = fgetc(file->file);
+        if (c == EOF) RETURN_NIL;
+        char ch[2] = { c, '\0' };
+        RETURN_STRING(ch, 1);
+    }
+}
+
+LOX_METHOD(FileReadStream, nextLine) {
+    ASSERT_ARG_COUNT("FileReadStream::nextLine()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot read the next line because file is already closed.");
+    if (file->file == NULL) RETURN_NIL;
+    else {
+        char line[UINT8_MAX];
+        if (fgets(line, sizeof line, file->file) == NULL) RETURN_NIL;
+        RETURN_STRING(line, (int)strlen(line));
+    }
+}
+
+LOX_METHOD(FileReadStream, peek) {
+    ASSERT_ARG_COUNT("FileReadStream::peek()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot peek the next char because file is already closed.");
+    if (file->file == NULL) RETURN_NIL;
+    else {
+        int c = fgetc(file->file);
+        ungetc(c, file->file);
+        if (c == EOF) RETURN_NIL;
+        char ch[2] = { c, '\0' };
+        RETURN_STRING(ch, 1);
+    }
+}
+
+LOX_METHOD(FileReadStream, reset) {
+    ASSERT_ARG_COUNT("FileReadStream::peek()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot reset file stream because file is already closed.");
+    if (file->file != NULL) rewind(file->file);
+    RETURN_NIL;
+}
+
+LOX_METHOD(FileReadStream, skip) {
+    ASSERT_ARG_COUNT("FileReadStream::skip(offset)", 1);
+    ASSERT_ARG_TYPE("FileReadStream::offset(offset)", 0, Int);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) raiseError(vm, "Cannot skip by offset because file is already closed.");
+    if (file->file == NULL) RETURN_FALSE;
+    RETURN_BOOL(fseek(file->file, (long)AS_INT(args[0]), SEEK_CUR));
+}
+
 void registerIOPackage(VM* vm) {
     vm->fileClass = defineNativeClass(vm, "File");
     bindSuperclass(vm, vm->fileClass, vm->objectClass);
@@ -219,4 +320,16 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(vm->fileClass, File, setWritable, 1);
     DEF_METHOD(vm->fileClass, File, size, 0);
     DEF_METHOD(vm->fileClass, File, toString, 0);
+
+    ObjClass* fileReadStreamClass = defineNativeClass(vm, "FileReadStream");
+    bindSuperclass(vm, fileReadStreamClass, vm->objectClass);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, close, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, getPosition, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, init, 1);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, isAtEnd, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, next, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, nextLine, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, peek, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, reset, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, skip, 1);
 }
