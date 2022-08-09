@@ -1,7 +1,7 @@
-var file = File("test/others/file_input.txt");
-println(file);
-println("Creating a read stream for file. ");
-var fileReader = FileReadStream(file);
+var fileIn = File("test/others/file_input.txt");
+println(fileIn);
+println("Creating a read stream for input file.");
+var fileReader = FileReadStream(fileIn);
 println("The first character of the file is: " + fileReader.peek());
 println("");
 
@@ -17,3 +17,31 @@ print("File stream is at end: ");
 println(fileReader.isAtEnd());
 println("Closing read stream for file.");
 fileReader.close();
+
+var fileOut = File("test/others/file_output.txt");
+println(fileOut);
+println("Creating a write stream for out file.");
+var fileWriter = FileWriteStream(fileOut);
+println("");
+
+println("Now write character 'B' to file.");
+fileWriter.put("B");
+println("Then write a new line, and string 'x = 32'.");
+fileWriter.putLine();
+fileWriter.putString("x = 32");
+println("Then write a new line, and string 'Hello World!'.");
+fileWriter.putLine();
+fileWriter.putString("Hello World!");
+println("Close write stream for file.");
+fileWriter.close();
+
+var fileBinaryOut = File("test/others/file_binary.bin");
+println(fileBinaryOut);
+println("Creating a binary write stream.");
+print("Now write to a binary file with the following bytes: ");
+var binaryWriter = BinaryWriteStream(fileBinaryOut);
+var bytes = [5, 37, 0, 88, 255, 12];
+println(bytes);
+binaryWriter.putBytes(bytes);
+println("Close binary write stream.");
+binaryWriter.close();
