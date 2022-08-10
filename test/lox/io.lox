@@ -34,7 +34,21 @@ fileWriter.putLine();
 fileWriter.putString("Hello World!");
 println("Close write stream for file.");
 fileWriter.close();
+println("");
 
+var binaryFileIn = File("test/others/file_binary.bin");
+println(binaryFileIn);
+println("Creating a binary read stream.");
+println("Now read the binary file to the screen:");
+var binaryReader = BinaryReadStream(binaryFileIn);
+while(!binaryReader.isAtEnd()){
+    print(binaryReader.next());
+    print(" ");
+}
+println("");
+binaryReader.close();
+
+println("");
 var fileBinaryOut = File("test/others/file_binary.bin");
 println(fileBinaryOut);
 println("Creating a binary write stream.");

@@ -8,6 +8,7 @@
 #else
 #include <unistd.h>
 #define _chmod(path, mode) chmod(path, mode)
+#define fopen_s(fp,filename,mode) ((*(fp))=fopen((filename),(mode)))==NULL
 #define _getcwd(buffer, size) getcwd(buffer, size)
 #define _mkdir(path) mkdir(path, 777)
 #define _rmdir(path) rmdir(path)
@@ -62,7 +63,7 @@ LOX_METHOD(BinaryReadStream, next) {
         if (fread(&byte, sizeof(char), 1, file->file) > 0) {
             RETURN_INT((int)byte);
         }
-        else raiseError(vm, "Cannot read more byte, file is already at the end.");
+        RETURN_NIL;
     }
     RETURN_NIL;
 }
@@ -452,7 +453,11 @@ LOX_METHOD(ReadStream, isAtEnd) {
     ASSERT_ARG_COUNT("ReadStream::next()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen || file->file == NULL) RETURN_FALSE;
-    else RETURN_BOOL(feof(file->file) != 0);
+    else {
+        int c = getc(file->file);
+        ungetc(c, file->file);
+        RETURN_BOOL(c == EOF);
+    }
 }
 
 LOX_METHOD(ReadStream, next) {
@@ -483,7 +488,7 @@ LOX_METHOD(WriteStream, init) {
 }
 
 LOX_METHOD(WriteStream, put) {
-    raiseError(vm, "Cannot call method WriteStream::put(), it must be implemented by subclasses.");
+    raiseError(vm, "Cannot call method WriteStream::put(param), it must be implemented by subclasses.");
     RETURN_NIL;
 }
 
