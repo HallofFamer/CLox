@@ -22,12 +22,13 @@ https://github.com/munificent/craftinginterpreters
 - Framework for creating native functions, methods and classes(since version 1.1)
 - Print statement removed, use native function `print` and `println` instead(since version 1.1)
 - Improved Object Model - Everything is an object, and every object has a class(since version 1.2)
-- CLox Standard Library for package `lang` and `util`(since version 1.2)
+- CLox Standard Library for packages `lang` and `util`(since version 1.2)
 - Customized Runtime configuration for CLox using clox.ini(since version 1.2)
 - Separated integer values and floating point values(since version 1.2)
 - Array/Dictionary Literals and square bracket notation for array/dictionary access(since version 1.3)
 - Anonymous Functions and Lambda Expressions(since version 1.3)
 - C style For Loop replaced with Kotlin style for-in Loop(since version 1.3)
+- Clox Standard Library for new packages `collection` and `io`(since version 1.3)
 
 ## Roadmap
 
