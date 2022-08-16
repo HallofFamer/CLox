@@ -304,9 +304,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->listClass, List, subList, 2);
     DEF_METHOD(vm->listClass, List, toString, 0);
 
-    ObjClass* setClass = defineNativeClass(vm, "Set");
-    bindSuperclass(vm, setClass, collectionClass);
-
     vm->dictionaryClass = getNativeClass(vm, "Dictionary");
     DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
@@ -323,4 +320,10 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, putAt, 2);
     DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
+
+    ObjClass* setClass = defineNativeClass(vm, "Set");
+    bindSuperclass(vm, setClass, collectionClass);
+
+    ObjClass* mapClass = defineNativeClass(vm, "Map");
+    bindSuperclass(vm, mapClass, collectionClass);
 }
