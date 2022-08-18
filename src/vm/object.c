@@ -118,6 +118,9 @@ ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
 
 ObjMap* newMap(VM* vm) {
     ObjMap* map = ALLOCATE_OBJ(ObjMap, OBJ_MAP, NULL);
+    map->count = 0;
+    map->capacity = 0;
+    map->entry = NULL;
     return map;
 }
 
