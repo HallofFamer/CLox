@@ -326,4 +326,7 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* mapClass = defineNativeClass(vm, "Map");
     bindSuperclass(vm, mapClass, collectionClass);
+
+    ObjClass* entryClass = defineNativeClass(vm, "Entry");
+    bindSuperclass(vm, entryClass, vm->objectClass);
 }

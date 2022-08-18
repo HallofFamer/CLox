@@ -50,6 +50,7 @@ typedef enum {
     OBJ_FUNCTION,
     OBJ_INSTANCE,
     OBJ_LIST,
+    OBJ_MAP,
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
     OBJ_RECORD,
