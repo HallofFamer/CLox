@@ -321,12 +321,9 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
 
-    ObjClass* setClass = defineNativeClass(vm, "Set");
-    bindSuperclass(vm, setClass, collectionClass);
-
-    ObjClass* mapClass = defineNativeClass(vm, "Map");
-    bindSuperclass(vm, mapClass, collectionClass);
-
     ObjClass* entryClass = defineNativeClass(vm, "Entry");
     bindSuperclass(vm, entryClass, vm->objectClass);
+
+    ObjClass* setClass = defineNativeClass(vm, "Set");
+    bindSuperclass(vm, setClass, collectionClass);
 }

@@ -1,0 +1,56 @@
+class List { 
+
+    collect(closure) { 
+        var collected = [];
+        var i = 0;
+        while(i < this.length()){
+            collected.add(closure(this[i]));
+            i = i + 1;
+        }
+        return collected;
+    }
+
+    detect(closure) { 
+        var i = 0;
+        while(i < this.length()){
+            if(closure(this[i])) return this[i];
+            i = i + 1;
+        }
+    }
+
+    each(closure) { 
+        var i = 0;
+        while(i < this.length()){
+            closure(this[i]);
+            i = i + 1;
+        }
+    }
+
+    eachIndex(closure) { 
+        var i = 0;
+        while(i < this.length()){
+            closure(this[i], i);
+            i = i + 1;
+        }
+    }
+
+    reject(closure) {
+        var selected = [];
+        var i = 0;
+        while(i < this.length()){
+            if(!closure(this[i])) selected.add(this[i]);
+            i = i + 1;
+        }
+        return selected;
+    }
+
+    select(closure) { 
+        var selected = [];
+        var i = 0;
+        while(i < this.length()){
+            if(closure(this[i])) selected.add(this[i]);
+            i = i + 1;
+        }
+        return selected;
+    }
+}
