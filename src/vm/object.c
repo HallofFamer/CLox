@@ -116,14 +116,6 @@ ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
     return list;
 }
 
-ObjMap* newMap(VM* vm) {
-    ObjMap* map = ALLOCATE_OBJ(ObjMap, OBJ_MAP, NULL);
-    map->count = 0;
-    map->capacity = 0;
-    map->entry = NULL;
-    return map;
-}
-
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function) {
     ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, vm->functionClass);
     nativeFunction->name = name;
