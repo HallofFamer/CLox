@@ -108,6 +108,19 @@ typedef struct ObjDictionary {
     Table table;
 } ObjDictionary;
 
+typedef struct ObjEntry {
+    Obj obj;
+    Value key;
+    Value value;
+} ObjEntry;
+
+typedef struct ObjMap {
+    Obj obj;
+    int count;
+    int capacity;
+    ObjEntry* entry;
+} ObjMap;
+
 typedef struct ObjFile {
     Obj obj;
     ObjString* name;
