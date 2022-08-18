@@ -46,6 +46,7 @@ typedef enum {
     OBJ_CLASS,
     OBJ_CLOSURE,
     OBJ_DICTIONARY,
+    OBJ_ENTRY,
     OBJ_FILE,
     OBJ_FUNCTION,
     OBJ_INSTANCE,
@@ -173,11 +174,13 @@ ObjClass* newClass(VM* vm, ObjString* name);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
 ObjDictionary* newDictionary(VM* vm);
 ObjDictionary* copyDictionary(VM* vm, Table table);
+ObjEntry* newEntry(VM* vm, Value key, Value value);
 ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjList* newList(VM* vm);
 ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex);
+ObjMap* newMap(VM* vm);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjRecord* newRecord(VM* vm, void* data);

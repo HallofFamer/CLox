@@ -70,6 +70,13 @@ ObjDictionary* copyDictionary(VM* vm, Table table) {
     return dictionary;
 }
 
+ObjEntry* newEntry(VM* vm, Value key, Value value) {
+    ObjEntry* entry = ALLOCATE_OBJ(ObjEntry, OBJ_ENTRY, NULL);
+    entry->key = key;
+    entry->value = value;
+    return entry;
+}
+
 ObjFile* newFile(VM* vm, ObjString* name) {
     ObjFile* file = ALLOCATE_OBJ(ObjFile, OBJ_FILE, vm->fileClass);
     file->name = name;
@@ -107,6 +114,11 @@ ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
     }
     pop(vm);
     return list;
+}
+
+ObjMap* newMap(VM* vm) {
+    ObjMap* map = ALLOCATE_OBJ(ObjMap, OBJ_MAP, NULL);
+    return map;
 }
 
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function) {
