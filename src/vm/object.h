@@ -103,16 +103,16 @@ typedef struct ObjList {
     ValueArray elements;
 } ObjList;
 
-typedef struct ObjDictionary {
-    Obj obj;
-    Table table;
-} ObjDictionary;
-
 typedef struct ObjEntry {
     Obj obj;
     Value key;
     Value value;
 } ObjEntry;
+
+typedef struct ObjDictionary {
+    Obj obj;
+    Table table;
+} ObjDictionary;
 
 typedef struct ObjFile {
     Obj obj;
