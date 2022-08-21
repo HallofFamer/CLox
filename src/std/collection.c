@@ -33,6 +33,34 @@ static ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
     }
 }
 
+static bool DictContainsKey(ObjDictionary* dict, Value key) {
+    if (dict->count == 0) return false;
+    ObjEntry* entry = findEntry(dict->entries, dict->capacity, key);
+    return entry->key != NULL;
+}
+
+static bool tableContainsValue(ObjDictionary* dict, Value value) {
+    if (dict->count == 0) return false;
+    for (int i = 0; i < dict->capacity; i++) {
+        ObjEntry* entry = &dict->entries[i];
+        if (entry->key == NULL) continue;
+        if (valuesEqual(entry->value, value)) return true;
+    }
+    return false;
+}
+
+static bool dictGet(ObjDictionary* dict, Value key, Value* value) {
+    if (dict->count == 0) return false;
+    ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
+    if (entry->key == NULL) return false;
+    *value = entry->value;
+    return true;
+}
+
+static bool dictSet(VM* vm, ObjDictionary dict, Value key, Value value) {
+
+}
+
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     freeTable(vm, &AS_DICTIONARY(receiver)->table);
