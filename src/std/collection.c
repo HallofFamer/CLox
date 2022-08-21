@@ -3,11 +3,35 @@
 
 #include "collection.h"
 #include "../vm/assert.h"
+#include "../vm/hash.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
 #include "../vm/string.h"
 #include "../vm/value.h"
 #include "../vm/vm.h"
+
+static ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
+    uint32_t hash = hashValue(key);
+    uint32_t index = hash & (capacity - 1);
+    ObjEntry* tombstone = NULL;
+
+    for (;;) {
+        ObjEntry* entry = &entries[index];
+        if (entry->key == NULL) {
+            if (IS_NIL(entry->value)) {
+                return tombstone != NULL ? tombstone : entry;
+            }
+            else {
+                if (tombstone == NULL) tombstone = entry;
+            }
+        }
+        else if (entry->key == key) {
+            return entry;
+        }
+
+        index = (index + 1) & (capacity - 1);
+    }
+}
 
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
