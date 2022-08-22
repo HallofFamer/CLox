@@ -4,6 +4,7 @@
 #include "collection.h"
 #include "../vm/assert.h"
 #include "../vm/hash.h"
+#include "../vm/memory.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
 #include "../vm/string.h"
@@ -33,9 +34,32 @@ static ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
     }
 }
 
+static void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
+    Entry* entries = ALLOCATE(ObjEntry, capacity);
+    for (int i = 0; i < capacity; i++) {
+        entries[i].key = NULL;
+        entries[i].value = NIL_VAL;
+    }
+
+    dict->count = 0;
+    for (int i = 0; i < dict->capacity; i++) {
+        Entry* entry = &dict->entries[i];
+        if (entry->key == NULL) continue;
+
+        Entry* dest = dictFindEntry(entries, capacity, entry->key);
+        dest->key = entry->key;
+        dest->value = entry->value;
+        dict->count++;
+    }
+
+    FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
+    dict->entries = entries;
+    dict->capacity = capacity;
+}
+
 static bool DictContainsKey(ObjDictionary* dict, Value key) {
     if (dict->count == 0) return false;
-    ObjEntry* entry = findEntry(dict->entries, dict->capacity, key);
+    ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
     return entry->key != NULL;
 }
 

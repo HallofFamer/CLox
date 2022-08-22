@@ -90,8 +90,13 @@ static void blackenObject(VM* vm, Obj* object) {
             break;
         }
         case OBJ_DICTIONARY: {
-            ObjDictionary* dictionary = (ObjDictionary*)object;
-            markTable(vm, &dictionary->table);
+            ObjDictionary* dict = (ObjDictionary*)object;
+            markTable(vm, &dict->table);
+            for (int i = 0; i < dict->capacity; i++) {
+                ObjEntry* entry = &dict->entries[i];
+                markValue(vm, entry->key);
+                markValue(vm, entry->value);
+            }
             break;
         }
         case OBJ_FILE: {
