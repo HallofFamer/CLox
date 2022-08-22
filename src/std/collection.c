@@ -81,8 +81,32 @@ static bool dictGet(ObjDictionary* dict, Value key, Value* value) {
     return true;
 }
 
-static bool dictSet(VM* vm, ObjDictionary dict, Value key, Value value) {
+static bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
+    if (dict->count + 1 > dict->capacity * TABLE_MAX_LOAD) {
+        int capacity = GROW_CAPACITY(dict->capacity);
+        ObjEntry* entries = ALLOCATE(ObjEntry, capacity);
+        for (int i = 0; i < capacity; i++) {
+            entries[i].key = NULL;
+            entries[i].value = NIL_VAL;
+        }
 
+        dict->count = 0;
+        for (int i = 0; i < dict->capacity; i++) {
+            ObjEntry* entry = &dict->entries[i];
+            if (entry->key == NULL) continue;
+
+            ObjEntry* dest = dictFindEntry(entries, capacity, entry->key);
+            dest->key = entry->key;
+            dest->value = entry->value;
+            dict->count++;
+        }
+
+        FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
+        dict->entries = entries;
+        dict->capacity = capacity;
+
+        ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
+    }
 }
 
 LOX_METHOD(Dictionary, clear) {

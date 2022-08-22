@@ -6,6 +6,8 @@
 #include "string.h"
 #include "value.h"
 
+#define TABLE_MAX_LOAD 0.75
+
 typedef struct {
     ObjString* key;
     Value value;
