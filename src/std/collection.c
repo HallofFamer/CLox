@@ -115,6 +115,26 @@ static bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
     }
 }
 
+static bool dictDelete(ObjDictionary* dict, Value key) {
+    if (dict->count == 0) return false;
+
+    ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
+    if (entry->key == NULL) return false;
+
+    entry->key = NULL;
+    entry->value = BOOL_VAL(true);
+    return true;
+}
+
+static void dictAddAll(VM* vm, ObjDictionary* from, ObjDictionary* to) {
+    for (int i = 0; i < from->capacity; i++) {
+        ObjEntry* entry = &from->entries[i];
+        if (entry->key != NULL) {
+            dictSet(vm, to, entry->key, entry->value);
+        }
+    }
+}
+
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     freeTable(vm, &AS_DICTIONARY(receiver)->table);
