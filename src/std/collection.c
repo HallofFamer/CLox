@@ -106,6 +106,12 @@ static bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
         dict->capacity = capacity;
 
         ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
+        bool isNewKey = entry->key == NULL;
+        if (isNewKey && IS_NIL(entry->value)) dict->count++;
+
+        entry->key = key;
+        entry->value = value;
+        return isNewKey;
     }
 }
 
