@@ -155,7 +155,7 @@ LOX_METHOD(Dictionary, containsKey) {
 
 LOX_METHOD(Dictionary, containsValue) {
     ASSERT_ARG_COUNT("Dictionary::containsValue(value)", 1);
-    RETURN_BOOL(tableContainsValue(&AS_DICTIONARY(receiver)->table, args[0]));
+    RETURN_BOOL(dictContainsValue(&AS_DICTIONARY(receiver)->table, args[0]));
 }
 
 LOX_METHOD(Dictionary, equals) {
@@ -168,7 +168,7 @@ LOX_METHOD(Dictionary, getAt) {
     ASSERT_ARG_COUNT("Dictionary::getAt(key)", 1);
     ASSERT_ARG_TYPE("Dictionary::getAt(key)", 0, String);
     Value value;
-    bool valueExists = tableGet(&AS_DICTIONARY(receiver)->table, AS_STRING(args[0]), &value);
+    bool valueExists = dictGet(AS_DICTIONARY(receiver), args[0], &value);
     if (!valueExists) RETURN_NIL;
     RETURN_VAL(value);
 }
@@ -180,7 +180,7 @@ LOX_METHOD(Dictionary, init) {
 
 LOX_METHOD(Dictionary, isEmpty) {
     ASSERT_ARG_COUNT("Dictionary::isEmpty()", 0);
-    RETURN_BOOL(AS_DICTIONARY(receiver)->table.count == 0);
+    RETURN_BOOL(AS_DICTIONARY(receiver)->count == 0);
 }
 
 LOX_METHOD(Dictionary, length) {
