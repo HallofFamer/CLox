@@ -57,9 +57,12 @@ ObjClosure* newClosure(VM* vm, ObjFunction* function) {
 }
 
 ObjDictionary* newDictionary(VM* vm) {
-    ObjDictionary* dictionary = ALLOCATE_OBJ(ObjDictionary, OBJ_DICTIONARY, vm->dictionaryClass);
-    initTable(&dictionary->table);
-    return dictionary;
+    ObjDictionary* dict = ALLOCATE_OBJ(ObjDictionary, OBJ_DICTIONARY, vm->dictionaryClass);
+    initTable(&dict->table);
+    dict->count = 0;
+    dict->capacity = 0;
+    dict->entries = NULL;
+    return dict;
 }
 
 ObjDictionary* copyDictionary(VM* vm, Table table) {
