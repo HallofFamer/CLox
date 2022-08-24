@@ -18,7 +18,7 @@ static ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
 
     for (;;) {
         ObjEntry* entry = &entries[index];
-        if (entry->key == NULL) {
+        if (IS_UNDEFINED(entry->key)) {
             if (IS_NIL(entry->value)) {
                 return tombstone != NULL ? tombstone : entry;
             }
@@ -35,18 +35,18 @@ static ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
 }
 
 static void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
-    Entry* entries = ALLOCATE(ObjEntry, capacity);
+    ObjEntry* entries = ALLOCATE(ObjEntry, capacity);
     for (int i = 0; i < capacity; i++) {
-        entries[i].key = NULL;
+        entries[i].key = UNDEFINED_VAL;
         entries[i].value = NIL_VAL;
     }
 
     dict->count = 0;
     for (int i = 0; i < dict->capacity; i++) {
-        Entry* entry = &dict->entries[i];
-        if (entry->key == NULL) continue;
+        ObjEntry* entry = &dict->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
 
-        Entry* dest = dictFindEntry(entries, capacity, entry->key);
+        ObjEntry* dest = dictFindEntry(entries, capacity, entry->key);
         dest->key = entry->key;
         dest->value = entry->value;
         dict->count++;
@@ -57,17 +57,17 @@ static void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
     dict->capacity = capacity;
 }
 
-static bool DictContainsKey(ObjDictionary* dict, Value key) {
+static bool dictContainsKey(ObjDictionary* dict, Value key) {
     if (dict->count == 0) return false;
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
-    return entry->key != NULL;
+    return !IS_UNDEFINED(entry->key);
 }
 
-static bool tableContainsValue(ObjDictionary* dict, Value value) {
+static bool dictContainsValue(ObjDictionary* dict, Value value) {
     if (dict->count == 0) return false;
     for (int i = 0; i < dict->capacity; i++) {
         ObjEntry* entry = &dict->entries[i];
-        if (entry->key == NULL) continue;
+        if (IS_UNDEFINED(entry->key)) continue;
         if (valuesEqual(entry->value, value)) return true;
     }
     return false;
@@ -76,7 +76,7 @@ static bool tableContainsValue(ObjDictionary* dict, Value value) {
 static bool dictGet(ObjDictionary* dict, Value key, Value* value) {
     if (dict->count == 0) return false;
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
-    if (entry->key == NULL) return false;
+    if (IS_UNDEFINED(entry->key)) return false;
     *value = entry->value;
     return true;
 }
@@ -86,14 +86,14 @@ static bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
         int capacity = GROW_CAPACITY(dict->capacity);
         ObjEntry* entries = ALLOCATE(ObjEntry, capacity);
         for (int i = 0; i < capacity; i++) {
-            entries[i].key = NULL;
+            entries[i].key = UNDEFINED_VAL;
             entries[i].value = NIL_VAL;
         }
 
         dict->count = 0;
         for (int i = 0; i < dict->capacity; i++) {
             ObjEntry* entry = &dict->entries[i];
-            if (entry->key == NULL) continue;
+            if (IS_UNDEFINED(entry->key)) continue;
 
             ObjEntry* dest = dictFindEntry(entries, capacity, entry->key);
             dest->key = entry->key;
@@ -106,7 +106,7 @@ static bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
         dict->capacity = capacity;
 
         ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
-        bool isNewKey = entry->key == NULL;
+        bool isNewKey = IS_UNDEFINED(entry->key);
         if (isNewKey && IS_NIL(entry->value)) dict->count++;
 
         entry->key = key;
@@ -119,9 +119,9 @@ static bool dictDelete(ObjDictionary* dict, Value key) {
     if (dict->count == 0) return false;
 
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
-    if (entry->key == NULL) return false;
+    if (IS_UNDEFINED(entry->key)) return false;
 
-    entry->key = NULL;
+    entry->key = UNDEFINED_VAL;
     entry->value = BOOL_VAL(true);
     return true;
 }
@@ -129,7 +129,7 @@ static bool dictDelete(ObjDictionary* dict, Value key) {
 static void dictAddAll(VM* vm, ObjDictionary* from, ObjDictionary* to) {
     for (int i = 0; i < from->capacity; i++) {
         ObjEntry* entry = &from->entries[i];
-        if (entry->key != NULL) {
+        if (!IS_UNDEFINED(entry->key)) {
             dictSet(vm, to, entry->key, entry->value);
         }
     }
@@ -150,7 +150,7 @@ LOX_METHOD(Dictionary, clone) {
 LOX_METHOD(Dictionary, containsKey) {
     ASSERT_ARG_COUNT("Dictionary::containsKey(key)", 1);
     ASSERT_ARG_TYPE("Dictionary::containsKey(key)", 0, String);
-    RETURN_BOOL(tableContainsKey(&AS_DICTIONARY(receiver)->table, AS_STRING(args[0])));
+    RETURN_BOOL(dictContainsKey(AS_DICTIONARY(receiver), args[0]));
 }
 
 LOX_METHOD(Dictionary, containsValue) {
