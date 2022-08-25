@@ -168,7 +168,6 @@ ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method);
 ObjClass* newClass(VM* vm, ObjString* name);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
 ObjDictionary* newDictionary(VM* vm);
-ObjDictionary* copyDictionary(VM* vm, Table table);
 ObjEntry* newEntry(VM* vm, Value key, Value value);
 ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);

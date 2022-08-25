@@ -73,6 +73,35 @@ static bool dictContainsValue(ObjDictionary* dict, Value value) {
     return false;
 }
 
+static ObjDictionary* dictCopy(VM* vm, ObjDictionary* original) {
+    ObjDictionary* copied = newDictionary(vm);
+    push(vm, OBJ_VAL(copied));
+    dictAddAll(vm, original, copied);
+    pop(vm);
+    return copied;
+}
+
+
+static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {
+    for (int i = 0; i < aDict->capacity; i++) {
+        ObjEntry* entry = &aDict->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
+        Value bValue;
+        bool keyExists = dictGet(dict2, entry->key, &bValue);
+        if (!keyExists || entry->value != bValue) return false;
+    }
+
+    for (int i = 0; i < dict2->capacity; i++) {
+        Entry* entry = &dict2->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
+        Value aValue;
+        bool keyExists = dictGet(aDict, entry->key, &aValue);
+        if (!keyExists || entry->value != aValue) return false;
+    }
+
+    return true;
+}
+
 static bool dictGet(ObjDictionary* dict, Value key, Value* value) {
     if (dict->count == 0) return false;
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
@@ -135,6 +164,39 @@ static void dictAddAll(VM* vm, ObjDictionary* from, ObjDictionary* to) {
     }
 }
 
+static int dictLength(ObjDictionary* dict) {
+    if (dict->count == 0) return 0;
+    int length = 0;
+    for (int i = 0; i < dict->capacity; i++) {
+        ObjEntry* entry = &dict->entries[i];
+        if (!IS_UNDEFINED(entry->key)) length++;
+    }
+    return length;
+}
+
+static int dictFindIndex(ObjDictionary* dict, Value key) {
+    uint32_t hash = hashValue(key);
+    uint32_t index = hash & (dict->capacity - 1);
+    ObjEntry* tombstone = NULL;
+
+    for (;;) {
+        ObjEntry* entry = &dict->entries[index];
+        if (IS_UNDEFINED(entry->key)) {
+            if (IS_NIL(entry->value)) {
+                return -1;
+            }
+            else {
+                if (tombstone == NULL) tombstone = entry;
+            }
+        }
+        else if (entry->key == key) {
+            return entry;
+        }
+
+        index = (index + 1) & (dict->capacity - 1);
+    }
+}
+
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     freeTable(vm, &AS_DICTIONARY(receiver)->table);
@@ -143,8 +205,7 @@ LOX_METHOD(Dictionary, clear) {
 
 LOX_METHOD(Dictionary, clone) {
     ASSERT_ARG_COUNT("Dictionary::clone()", 0);
-    ObjDictionary* self = AS_DICTIONARY(receiver);
-    RETURN_OBJ(copyDictionary(vm, self->table));
+    RETURN_OBJ(dictCopy(vm, AS_DICTIONARY(receiver)));
 }
 
 LOX_METHOD(Dictionary, containsKey) {
@@ -161,7 +222,7 @@ LOX_METHOD(Dictionary, containsValue) {
 LOX_METHOD(Dictionary, equals) {
     ASSERT_ARG_COUNT("Dictionary::equals(other)", 1);
     if (!IS_DICTIONARY(args[0])) RETURN_FALSE;
-    RETURN_BOOL(tablesEqual(&AS_DICTIONARY(receiver)->table, &AS_DICTIONARY(args[0])->table));
+    RETURN_BOOL(dictsEqual(AS_DICTIONARY(receiver), AS_DICTIONARY(args[0])));
 }
 
 LOX_METHOD(Dictionary, getAt) {
@@ -185,25 +246,24 @@ LOX_METHOD(Dictionary, isEmpty) {
 
 LOX_METHOD(Dictionary, length) {
     ASSERT_ARG_COUNT("Dictionary::length()", 0);
-    ObjDictionary* self = AS_DICTIONARY(receiver);
-    RETURN_INT(tableLength(&AS_DICTIONARY(receiver)->table));
+    RETURN_INT(dictLength(AS_DICTIONARY(receiver)));
 }
 
 LOX_METHOD(Dictionary, next) {
     ASSERT_ARG_COUNT("Dictionary::next(index)", 1);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    if (self->table.count == 0) RETURN_FALSE;
+    if (self->count == 0) RETURN_FALSE;
 
     int index = 0;
     if (!IS_NIL(args[0])) {
-        ObjString* key = AS_STRING(args[0]);
-        index = tableFindIndex(&self->table, key);
-        if (index < 0 || index >= self->table.capacity) RETURN_FALSE;
+        Value key = args[0];
+        index = dictFindIndex(self, key);
+        if (index < 0 || index >= self->capacity) RETURN_FALSE;
         index++;
     }
 
-    for (; index < self->table.capacity; index++) {
-        if (self->table.entries[index].key != NULL) RETURN_OBJ(self->table.entries[index].key);
+    for (; index < self->capacity; index++) {
+        if (!IS_UNDEFINED(self->entries[index].key)) RETURN_VAL(self->entries[index].key);
     }
     RETURN_FALSE;
 }
@@ -212,8 +272,8 @@ LOX_METHOD(Dictionary, nextValue) {
     ASSERT_ARG_COUNT("Dictionary::nextValue(key)", 1);
     ASSERT_ARG_TYPE("Dictionary::nextValue(key)", 0, String);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    int index = tableFindIndex(&self->table, AS_STRING(args[0]));
-    RETURN_VAL(self->table.entries[index].value);
+    int index = dictFindIndex(self, args[0]);
+    RETURN_VAL(self->entries[index].value);
 }
 
 LOX_METHOD(Dictionary, putAll) {

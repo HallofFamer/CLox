@@ -38,22 +38,6 @@ static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
     }
 }
 
-bool tableContainsKey(Table* table, ObjString* key) {
-    if (table->count == 0) return false;
-    Entry* entry = findEntry(table->entries, table->capacity, key);
-    return entry->key != NULL;
-}
-
-bool tableContainsValue(Table* table, Value value) {
-    if (table->count == 0) return false;
-    for (int i = 0; i < table->capacity; i++) {
-        Entry* entry = &table->entries[i];
-        if (entry->key == NULL) continue;
-        if (valuesEqual(entry->value, value)) return true;
-    }
-    return false;
-}
-
 bool tableGet(Table* table, ObjString* key, Value* value) {
     if (table->count == 0) return false;
 
@@ -122,38 +106,6 @@ void tableAddAll(VM* vm, Table* from, Table* to) {
     }
 }
 
-int tableLength(Table* table) {
-    if (table->count == 0) return 0;
-    int length = 0;
-    for (int i = 0; i < table->capacity; i++) {
-        Entry* entry = &table->entries[i];
-        if (entry->key != NULL) length++;
-    }
-    return length;
-}
-
-int tableFindIndex(Table* table, ObjString* key) {
-    int index = key->hash & (table->capacity - 1);
-    Entry* tombstone = NULL;
-
-    for (;;) {
-        Entry* entry = &table->entries[index];
-        if (entry->key == NULL) {
-            if (IS_NIL(entry->value)) {
-                return -1;
-            }
-            else {
-                if (tombstone == NULL) tombstone = entry;
-            }
-        }
-        else if (entry->key == key) {
-            return index;
-        }
-
-        index = (index + 1) & (table->capacity - 1);
-    }
-}
-
 ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t hash) {
     if (table->count == 0) return NULL;
 
@@ -177,26 +129,6 @@ void tableRemoveWhite(Table* table) {
             tableDelete(table, entry->key);
         }
     }
-}
-
-bool tablesEqual(Table* aTable, Table* bTable) {
-    for (int i = 0; i < aTable->capacity; i++) {
-        Entry* entry = &aTable->entries[i];
-        if (entry->key == NULL) continue;
-        Value bValue;
-        bool keyExists = tableGet(bTable, entry->key, &bValue);
-        if (!keyExists || entry->value != bValue) return false;
-    }
-
-    for (int i = 0; i < bTable->capacity; i++) {
-        Entry* entry = &bTable->entries[i];
-        if (entry->key == NULL) continue;
-        Value aValue;
-        bool keyExists = tableGet(aTable, entry->key, &aValue);
-        if (!keyExists || entry->value != aValue) return false;
-    }
-
-    return true;
 }
 
 ObjString* tableToString(VM* vm, Table* table) {
