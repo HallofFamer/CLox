@@ -199,7 +199,11 @@ static int dictFindIndex(ObjDictionary* dict, Value key) {
 
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
-    freeTable(vm, &AS_DICTIONARY(receiver)->table);
+    ObjDictionary* self = AS_DICTIONARY(receiver);
+    FREE_ARRAY(ObjEntry, self->entries, self->capacity);
+    self->count = 0;
+    self->capacity = 0;
+    self->entries = NULL;
     RETURN_OBJ(receiver);
 }
 
@@ -279,14 +283,14 @@ LOX_METHOD(Dictionary, nextValue) {
 LOX_METHOD(Dictionary, putAll) {
     ASSERT_ARG_COUNT("Dictionary::putAll(dictionary)", 1);
     ASSERT_ARG_TYPE("Dictionary::putAll(dictionary)", 0, Dictionary);
-    tableAddAll(vm, &AS_DICTIONARY(args[0])->table, &AS_DICTIONARY(receiver)->table);
+    dictAddAll(vm, AS_DICTIONARY(args[0]), AS_DICTIONARY(receiver));
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Dictionary, putAt) {
     ASSERT_ARG_COUNT("Dictionary::putAt(key, value)", 2);
     ASSERT_ARG_TYPE("Dictionary::putAt(key, valuue)", 0, String);
-    tableSet(vm, &AS_DICTIONARY(receiver)->table, AS_STRING(args[0]), args[1]);
+    dictSet(vm, AS_DICTIONARY(receiver), args[0], args[1]);
     RETURN_OBJ(receiver);
 }
 
@@ -294,12 +298,12 @@ LOX_METHOD(Dictionary, removeAt) {
     ASSERT_ARG_COUNT("Dictionary::removeAt(key)", 1);
     ASSERT_ARG_TYPE("Dictionary::removeAt(key)", 0, String);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    ObjString* key = AS_STRING(args[0]);
+    Value key = args[0];
     Value value;
 
-    bool keyExists = tableGet(&self->table, key, &value);
+    bool keyExists = dictGet(self, key, &value);
     if (!keyExists) RETURN_NIL;
-    tableDelete(&self->table, key);
+    dictDelete(self, key);
     RETURN_VAL(value);
 }
 
