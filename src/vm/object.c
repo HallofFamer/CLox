@@ -58,7 +58,6 @@ ObjClosure* newClosure(VM* vm, ObjFunction* function) {
 
 ObjDictionary* newDictionary(VM* vm) {
     ObjDictionary* dict = ALLOCATE_OBJ(ObjDictionary, OBJ_DICTIONARY, vm->dictionaryClass);
-    initTable(&dict->table);
     dict->count = 0;
     dict->capacity = 0;
     dict->entries = NULL;
@@ -66,7 +65,7 @@ ObjDictionary* newDictionary(VM* vm) {
 }
 
 ObjEntry* newEntry(VM* vm, Value key, Value value) {
-    ObjEntry* entry = ALLOCATE_OBJ(ObjEntry, OBJ_ENTRY, NULL);
+    ObjEntry* entry = ALLOCATE_OBJ(ObjEntry, OBJ_ENTRY, vm->entryClass);
     entry->key = key;
     entry->value = value;
     return entry;
@@ -179,19 +178,22 @@ void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
 static void printDictionary(ObjDictionary* dictionary) {
     printf("[");
     int startIndex = 0;
-    for (int i = 0; i < dictionary->table.capacity; i++) {
-        Entry* entry = &dictionary->table.entries[i];
-        if (entry->key == NULL) continue;
-        printf("%s: ", entry->key->chars);
+    for (int i = 0; i < dictionary->capacity; i++) {
+        ObjEntry* entry = &dictionary->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
+        printValue(entry->key);
+        printf(": ");
         printValue(entry->value);
         startIndex = i + 1;
         break;
     }
 
-    for (int i = startIndex; i < dictionary->table.capacity; i++) {
-        Entry* entry = &dictionary->table.entries[i];
-        if (entry->key == NULL) continue;
-        printf(", %s: ", entry->key->chars);
+    for (int i = startIndex; i < dictionary->capacity; i++) {
+        Entry* entry = &dictionary->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
+        printf(", ");
+        printValue(entry->key);
+        printf(": ");
         printValue(entry->value);
     }
     printf("]");

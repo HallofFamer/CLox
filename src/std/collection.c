@@ -197,6 +197,60 @@ static int dictFindIndex(ObjDictionary* dict, Value key) {
     }
 }
 
+ObjString* dictToString(VM* vm, ObjDictionary* dict) {
+    if (dict->count == 0) return copyString(vm, "[]", 2);
+    else {
+        char string[UINT8_MAX] = "";
+        string[0] = '[';
+        size_t offset = 1;
+        int startIndex = 0;
+
+        for (int i = 0; i < dict->capacity; i++) {
+            ObjEntry* entry = &dict->entries[i];
+            if (IS_UNDEFINED(entry->key)) continue;
+            Value key = entry->key;
+            char* keyChars = valueToString(vm, key);
+            size_t keyLength = strlen(keyChars);
+            Value value = entry->value;
+            char* valueChars = valueToString(vm, value);
+            size_t valueLength = strlen(valueChars);
+
+            memcpy(string + offset, keyChars, keyLength);
+            offset += keyLength;
+            memcpy(string + offset, ": ", 2);
+            offset += 2;
+            memcpy(string + offset, valueChars, valueLength);
+            offset += valueLength;
+            startIndex = i + 1;
+            break;
+        }
+
+        for (int i = startIndex; i < dict->capacity; i++) {
+            Entry* entry = &dict->entries[i];
+            if (IS_UNDEFINED(entry->key)) continue;
+            Value key = entry->key;
+            char* keyChars = valueToString(vm, key);
+            size_t keyLength = strlen(keyChars);
+            Value value = entry->value;
+            char* valueChars = valueToString(vm, value);
+            size_t valueLength = strlen(valueChars);
+
+            memcpy(string + offset, ", ", 2);
+            offset += 2;
+            memcpy(string + offset, keyChars, keyLength);
+            offset += keyLength;
+            memcpy(string + offset, ": ", 2);
+            offset += 2;
+            memcpy(string + offset, valueChars, valueLength);
+            offset += valueLength;
+        }
+
+        string[offset] = ']';
+        string[offset + 1] = '\0';
+        return copyString(vm, string, (int)offset + 1);
+    }
+}
+
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
@@ -309,7 +363,7 @@ LOX_METHOD(Dictionary, removeAt) {
 
 LOX_METHOD(Dictionary, toString) {
     ASSERT_ARG_COUNT("Dictionary::toString()", 0);
-    RETURN_OBJ(tableToString(vm, &AS_DICTIONARY(receiver)->table));
+    RETURN_OBJ(dictToString(vm, AS_DICTIONARY(receiver)));
 }
 
 LOX_METHOD(List, add) {
@@ -494,6 +548,9 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->listClass, List, subList, 2);
     DEF_METHOD(vm->listClass, List, toString, 0);
 
+    vm->entryClass = defineNativeClass(vm, "Entry");
+    bindSuperclass(vm, vm->entryClass, vm->objectClass);
+
     vm->dictionaryClass = getNativeClass(vm, "Dictionary");
     DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
@@ -510,9 +567,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, putAt, 2);
     DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
-
-    ObjClass* entryClass = defineNativeClass(vm, "Entry");
-    bindSuperclass(vm, entryClass, vm->objectClass);
 
     ObjClass* setClass = defineNativeClass(vm, "Set");
     bindSuperclass(vm, setClass, collectionClass);
