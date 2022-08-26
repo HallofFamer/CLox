@@ -174,6 +174,10 @@ static void freeObject(VM* vm, Obj* object) {
             FREE(ObjDictionary, object);
             break;
         }
+        case OBJ_ENTRY: {
+            FREE(ObjEntry, object);
+            break;
+        }
         case OBJ_FILE: {
             ObjFile* file = (ObjFile*)object;
             if (file->file != NULL && file->isOpen) fclose(file->file);
