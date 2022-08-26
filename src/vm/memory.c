@@ -169,8 +169,8 @@ static void freeObject(VM* vm, Obj* object) {
             break;
         }
         case OBJ_DICTIONARY: {
-            ObjDictionary* dictionary = (ObjDictionary*)object;
-            freeTable(vm, &dictionary->table);
+            ObjDictionary* dict = (ObjDictionary*)object;
+            FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
             FREE(ObjDictionary, object);
             break;
         }
