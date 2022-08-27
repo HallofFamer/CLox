@@ -81,7 +81,6 @@ static ObjDictionary* dictCopy(VM* vm, ObjDictionary* original) {
     return copied;
 }
 
-
 static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {
     for (int i = 0; i < aDict->capacity; i++) {
         ObjEntry* entry = &aDict->entries[i];
@@ -102,7 +101,7 @@ static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {
     return true;
 }
 
-static bool dictGet(ObjDictionary* dict, Value key, Value* value) {
+bool dictGet(ObjDictionary* dict, Value key, Value* value) {
     if (dict->count == 0) return false;
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
     if (IS_UNDEFINED(entry->key)) return false;
@@ -110,7 +109,7 @@ static bool dictGet(ObjDictionary* dict, Value key, Value* value) {
     return true;
 }
 
-static bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
+bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
     if (dict->count + 1 > dict->capacity * TABLE_MAX_LOAD) {
         int capacity = GROW_CAPACITY(dict->capacity);
         ObjEntry* entries = ALLOCATE(ObjEntry, capacity);
@@ -274,7 +273,7 @@ LOX_METHOD(Dictionary, containsKey) {
 
 LOX_METHOD(Dictionary, containsValue) {
     ASSERT_ARG_COUNT("Dictionary::containsValue(value)", 1);
-    RETURN_BOOL(dictContainsValue(&AS_DICTIONARY(receiver)->table, args[0]));
+    RETURN_BOOL(dictContainsValue(AS_DICTIONARY(receiver), args[0]));
 }
 
 LOX_METHOD(Dictionary, equals) {
