@@ -204,8 +204,7 @@ static bool makeDictionary(VM* vm, uint8_t entryCount) {
     for (int i = 1; i <= entryCount; i++) {
         Value key = peek(vm, 2 * i);
         Value value = peek(vm, 2 * i - 1);
-        if (!IS_STRING(key)) return false;
-        tableSet(vm, &dictionary->table, AS_STRING(key), value);
+        dictSet(vm, dictionary, key, value);
     }
     pop(vm);
 
@@ -542,10 +541,10 @@ static InterpretResult run(VM* vm) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
 
-                    ObjString* key = AS_STRING(pop(vm));
+                    Value key = pop(vm);
                     ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
                     Value value;
-                    if (tableGet(&dictionary->table, key, &value)) push(vm, value);
+                    if (dictGet(dictionary, key, &value)) push(vm, value);
                     else push(vm, NIL_VAL);
                 }
                 else {
@@ -578,9 +577,9 @@ static InterpretResult run(VM* vm) {
                     }
 
                     Value value = pop(vm);
-                    ObjString* key = AS_STRING(pop(vm));
+                    Value key = pop(vm);
                     ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
-                    tableSet(vm, &dictionary->table, key, value);
+                    dictGet(vm, dictionary, key, value);
                     push(vm, OBJ_VAL(dictionary));
                 }
                 else {

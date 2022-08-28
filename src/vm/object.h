@@ -114,7 +114,6 @@ typedef struct ObjDictionary {
     int capacity;
     int count;
     ObjEntry* entries;
-    Table table;
 } ObjDictionary;
 
 typedef struct ObjFile {

@@ -189,7 +189,7 @@ static void printDictionary(ObjDictionary* dictionary) {
     }
 
     for (int i = startIndex; i < dictionary->capacity; i++) {
-        Entry* entry = &dictionary->entries[i];
+        ObjEntry* entry = &dictionary->entries[i];
         if (IS_UNDEFINED(entry->key)) continue;
         printf(", ");
         printValue(entry->key);

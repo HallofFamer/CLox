@@ -73,34 +73,6 @@ static bool dictContainsValue(ObjDictionary* dict, Value value) {
     return false;
 }
 
-static ObjDictionary* dictCopy(VM* vm, ObjDictionary* original) {
-    ObjDictionary* copied = newDictionary(vm);
-    push(vm, OBJ_VAL(copied));
-    dictAddAll(vm, original, copied);
-    pop(vm);
-    return copied;
-}
-
-static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {
-    for (int i = 0; i < aDict->capacity; i++) {
-        ObjEntry* entry = &aDict->entries[i];
-        if (IS_UNDEFINED(entry->key)) continue;
-        Value bValue;
-        bool keyExists = dictGet(dict2, entry->key, &bValue);
-        if (!keyExists || entry->value != bValue) return false;
-    }
-
-    for (int i = 0; i < dict2->capacity; i++) {
-        Entry* entry = &dict2->entries[i];
-        if (IS_UNDEFINED(entry->key)) continue;
-        Value aValue;
-        bool keyExists = dictGet(aDict, entry->key, &aValue);
-        if (!keyExists || entry->value != aValue) return false;
-    }
-
-    return true;
-}
-
 bool dictGet(ObjDictionary* dict, Value key, Value* value) {
     if (dict->count == 0) return false;
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
@@ -163,6 +135,14 @@ static void dictAddAll(VM* vm, ObjDictionary* from, ObjDictionary* to) {
     }
 }
 
+static ObjDictionary* dictCopy(VM* vm, ObjDictionary* original) {
+    ObjDictionary* copied = newDictionary(vm);
+    push(vm, OBJ_VAL(copied));
+    dictAddAll(vm, original, copied);
+    pop(vm);
+    return copied;
+}
+
 static int dictLength(ObjDictionary* dict) {
     if (dict->count == 0) return 0;
     int length = 0;
@@ -171,6 +151,26 @@ static int dictLength(ObjDictionary* dict) {
         if (!IS_UNDEFINED(entry->key)) length++;
     }
     return length;
+}
+
+static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {
+    for (int i = 0; i < aDict->capacity; i++) {
+        ObjEntry* entry = &aDict->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
+        Value bValue;
+        bool keyExists = dictGet(dict2, entry->key, &bValue);
+        if (!keyExists || entry->value != bValue) return false;
+    }
+
+    for (int i = 0; i < dict2->capacity; i++) {
+        ObjEntry* entry = &dict2->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
+        Value aValue;
+        bool keyExists = dictGet(aDict, entry->key, &aValue);
+        if (!keyExists || entry->value != aValue) return false;
+    }
+
+    return true;
 }
 
 static int dictFindIndex(ObjDictionary* dict, Value key) {
@@ -225,7 +225,7 @@ ObjString* dictToString(VM* vm, ObjDictionary* dict) {
         }
 
         for (int i = startIndex; i < dict->capacity; i++) {
-            Entry* entry = &dict->entries[i];
+            ObjEntry* entry = &dict->entries[i];
             if (IS_UNDEFINED(entry->key)) continue;
             Value key = entry->key;
             char* keyChars = valueToString(vm, key);
