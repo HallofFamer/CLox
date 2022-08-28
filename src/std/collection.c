@@ -55,16 +55,6 @@ static ObjDictionary* dictCopy(VM* vm, ObjDictionary* original) {
     return copied;
 }
 
-static int dictLength(ObjDictionary* dict) {
-    if (dict->count == 0) return 0;
-    int length = 0;
-    for (int i = 0; i < dict->capacity; i++) {
-        ObjEntry* entry = &dict->entries[i];
-        if (!IS_UNDEFINED(entry->key)) length++;
-    }
-    return length;
-}
-
 static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {
     for (int i = 0; i < aDict->capacity; i++) {
         ObjEntry* entry = &aDict->entries[i];
@@ -106,6 +96,16 @@ static int dictFindIndex(ObjDictionary* dict, Value key) {
 
         index = (index + 1) & (dict->capacity - 1);
     }
+}
+
+static int dictLength(ObjDictionary* dict) {
+    if (dict->count == 0) return 0;
+    int length = 0;
+    for (int i = 0; i < dict->capacity; i++) {
+        ObjEntry* entry = &dict->entries[i];
+        if (!IS_UNDEFINED(entry->key)) length++;
+    }
+    return length;
 }
 
 ObjString* dictToString(VM* vm, ObjDictionary* dict) {
