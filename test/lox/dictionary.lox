@@ -39,3 +39,8 @@ println(dict.length());
 print("Clearing dictionary: ");
 dict.clear();
 println(dict.toString());
+println("");
+
+print("Testing dictionary with non-string keys: ");
+var dict3 = [2: 3.5, true: nil];
+println(dict3);
