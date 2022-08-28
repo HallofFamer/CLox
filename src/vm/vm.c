@@ -256,26 +256,7 @@ bool dictGet(ObjDictionary* dict, Value key, Value* value) {
 bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
     if (dict->count + 1 > dict->capacity * TABLE_MAX_LOAD) {
         int capacity = GROW_CAPACITY(dict->capacity);
-        ObjEntry* entries = ALLOCATE(ObjEntry, capacity);
-        for (int i = 0; i < capacity; i++) {
-            entries[i].key = UNDEFINED_VAL;
-            entries[i].value = NIL_VAL;
-        }
-
-        dict->count = 0;
-        for (int i = 0; i < dict->capacity; i++) {
-            ObjEntry* entry = &dict->entries[i];
-            if (IS_UNDEFINED(entry->key)) continue;
-
-            ObjEntry* dest = dictFindEntry(entries, capacity, entry->key);
-            dest->key = entry->key;
-            dest->value = entry->value;
-            dict->count++;
-        }
-
-        FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
-        dict->entries = entries;
-        dict->capacity = capacity;
+        dictAdjustCapacity(vm, dict, capacity);
     }
 
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
