@@ -100,16 +100,6 @@ ObjList* newList(VM* vm) {
     return list;
 }
 
-ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
-    ObjList* list = newList(vm);
-    push(vm, OBJ_VAL(list));
-    for (int i = fromIndex; i < toIndex; i++) {
-        valueArrayWrite(vm, &list->elements, elements.values[i]);
-    }
-    pop(vm);
-    return list;
-}
-
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function) {
     ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, vm->functionClass);
     nativeFunction->name = name;

@@ -162,6 +162,57 @@ ObjString* dictToString(VM* vm, ObjDictionary* dict) {
     }
 }
 
+ObjList* listCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
+    ObjList* list = newList(vm);
+    push(vm, OBJ_VAL(list));
+    for (int i = fromIndex; i < toIndex; i++) {
+        valueArrayWrite(vm, &list->elements, elements.values[i]);
+    }
+    pop(vm);
+    return list;
+}
+
+ObjString* setToString(VM* vm, ObjInstance* set) {
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, set, "dict"));
+    if (dict->count == 0) return copyString(vm, "[]", 2);
+    else {
+        char string[UINT8_MAX] = "";
+        string[0] = '[';
+        size_t offset = 1;
+        int startIndex = 0;
+
+        for (int i = 0; i < dict->capacity; i++) {
+            ObjEntry* entry = &dict->entries[i];
+            if (IS_UNDEFINED(entry->key)) continue;
+            Value key = entry->key;
+            char* keyChars = valueToString(vm, key);
+            size_t keyLength = strlen(keyChars);
+
+            memcpy(string + offset, keyChars, keyLength);
+            offset += keyLength;
+            startIndex = i + 1;
+            break;
+        }
+
+        for (int i = startIndex; i < dict->capacity; i++) {
+            ObjEntry* entry = &dict->entries[i];
+            if (IS_UNDEFINED(entry->key)) continue;
+            Value key = entry->key;
+            char* keyChars = valueToString(vm, key);
+            size_t keyLength = strlen(keyChars);
+
+            memcpy(string + offset, ", ", 2);
+            offset += 2;
+            memcpy(string + offset, keyChars, keyLength);
+            offset += keyLength;
+        }
+
+        string[offset] = ']';
+        string[offset + 1] = '\0';
+        return copyString(vm, string, (int)offset + 1);
+    }
+}
+
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
@@ -299,7 +350,7 @@ LOX_METHOD(List, clear) {
 LOX_METHOD(List, clone) {
     ASSERT_ARG_COUNT("List::clone()", 0);
     ObjList* self = AS_LIST(receiver);
-    RETURN_OBJ(copyList(vm, self->elements, 0, self->elements.count));
+    RETURN_OBJ(listCopy(vm, self->elements, 0, self->elements.count));
 }
 
 LOX_METHOD(List, contains) {
@@ -424,12 +475,25 @@ LOX_METHOD(List, subList) {
 
     assertIntWithinRange(vm, "List::subList(from, to)", fromIndex, 0, self->elements.count, 0);
     assertIntWithinRange(vm, "List::subList(from, to", toIndex, fromIndex, self->elements.count, 1);
-    RETURN_OBJ(copyList(vm, self->elements, fromIndex, toIndex));
+    RETURN_OBJ(listCopy(vm, self->elements, fromIndex, toIndex));
 }
 
 LOX_METHOD(List, toString) {
     ASSERT_ARG_COUNT("List::toString()", 0);
     RETURN_OBJ(valueArrayToString(vm, &AS_LIST(receiver)->elements));
+}
+
+LOX_METHOD(Set, init) {
+    ASSERT_ARG_COUNT("Set::init()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "dict", newDictionary(vm));
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Set, toString) {
+    ASSERT_ARG_COUNT("Set::toString()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    RETURN_OBJ(setToString(vm, self));   
 }
 
 void registerCollectionPackage(VM* vm) {
@@ -478,4 +542,5 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* setClass = defineNativeClass(vm, "Set");
     bindSuperclass(vm, setClass, collectionClass);
+    DEF_METHOD(setClass, Set, init, 0);
 }

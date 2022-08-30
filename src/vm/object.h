@@ -172,7 +172,6 @@ ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjList* newList(VM* vm);
-ObjList* copyList(VM* vm, ValueArray elements, int fromIndex, int toIndex);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjRecord* newRecord(VM* vm, void* data);
