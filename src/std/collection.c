@@ -459,9 +459,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->listClass, List, subList, 2);
     DEF_METHOD(vm->listClass, List, toString, 0);
 
-    vm->entryClass = defineNativeClass(vm, "Entry");
-    bindSuperclass(vm, vm->entryClass, vm->objectClass);
-
     vm->dictionaryClass = getNativeClass(vm, "Dictionary");
     DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);

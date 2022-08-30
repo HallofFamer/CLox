@@ -65,7 +65,7 @@ ObjDictionary* newDictionary(VM* vm) {
 }
 
 ObjEntry* newEntry(VM* vm, Value key, Value value) {
-    ObjEntry* entry = ALLOCATE_OBJ(ObjEntry, OBJ_ENTRY, vm->entryClass);
+    ObjEntry* entry = ALLOCATE_OBJ(ObjEntry, OBJ_ENTRY, NULL);
     entry->key = key;
     entry->value = value;
     return entry;
