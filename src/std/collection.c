@@ -488,10 +488,21 @@ LOX_METHOD(List, subList) {
     assertIntWithinRange(vm, "List::subList(from, to", toIndex, fromIndex, self->elements.count, 1);
     RETURN_OBJ(listCopy(vm, self->elements, fromIndex, toIndex));
 }
-
+ 
 LOX_METHOD(List, toString) {
     ASSERT_ARG_COUNT("List::toString()", 0);
     RETURN_OBJ(valueArrayToString(vm, &AS_LIST(receiver)->elements));
+}
+
+LOX_METHOD(Set, clear) {
+    ASSERT_ARG_COUNT("Set::clear()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
+    FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
+    dict->count = 0;
+    dict->capacity = 0;
+    dict->entries = NULL;
+    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Set, clone) {
@@ -558,6 +569,7 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* setClass = defineNativeClass(vm, "Set");
     bindSuperclass(vm, setClass, collectionClass);
+    DEF_METHOD(setClass, Set, clear, 0);
     DEF_METHOD(setClass, Set, clone, 0);
     DEF_METHOD(setClass, Set, init, 0);
     DEF_METHOD(setClass, Set, toString, 0);
