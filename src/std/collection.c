@@ -172,6 +172,17 @@ ObjList* listCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
     return list;
 }
 
+ObjInstance* setCopy(VM* vm, ObjInstance* original) {
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, original, "dict"));
+    ObjDictionary* dict2 = newDictionary(vm);
+    push(vm, OBJ_VAL(dict2));
+    dictAddAll(vm, dict, dict2);
+    pop(vm);
+    ObjInstance* copied = newInstance(vm, getNativeClass(vm, "Set"));
+    setObjProperty(vm, copied, "dict", OBJ_VAL(dict2));
+    return copied;
+}
+
 ObjString* setToString(VM* vm, ObjInstance* set) {
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, set, "dict"));
     if (dict->count == 0) return copyString(vm, "[]", 2);
@@ -483,6 +494,11 @@ LOX_METHOD(List, toString) {
     RETURN_OBJ(valueArrayToString(vm, &AS_LIST(receiver)->elements));
 }
 
+LOX_METHOD(Set, clone) {
+    ASSERT_ARG_COUNT("Set::clone()", 0);
+    RETURN_OBJ(setCopy(vm, AS_INSTANCE(receiver)));
+}
+
 LOX_METHOD(Set, init) {
     ASSERT_ARG_COUNT("Set::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -542,5 +558,7 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* setClass = defineNativeClass(vm, "Set");
     bindSuperclass(vm, setClass, collectionClass);
+    DEF_METHOD(setClass, Set, clone, 0);
     DEF_METHOD(setClass, Set, init, 0);
+    DEF_METHOD(setClass, Set, toString, 0);
 }
