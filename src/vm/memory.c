@@ -2,6 +2,7 @@
 
 #include "compiler.h"
 #include "memory.h"
+#include "object.h"
 
 #ifdef DEBUG_LOG_GC
 #include <stdio.h>

@@ -1,3 +1,23 @@
 var set = Set();
 println("Testing class Set...");
 println("Class for set object: " + set.getClassName());
+print("Set is currently empty: ");
+println(set.isEmpty());
+println("");
+
+println("Now adding elements to set...");
+set.add(2);
+set.add(3.5);
+set.add(true);
+set.add(nil);
+set.add("Hello World");
+print("Initial elements in set: ");
+println(set.toString());
+println("Add a new element current date to set: ");
+set.add(dateNow());
+print("Current elements in set: ");
+println(set.toString());
+println("Now add a duplicate element 2 to the set: ");
+set.add(2);
+print("Current elements in set: ");
+println(set.toString());
