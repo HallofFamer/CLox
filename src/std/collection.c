@@ -531,7 +531,7 @@ LOX_METHOD(Set, equals) {
 LOX_METHOD(Set, init) {
     ASSERT_ARG_COUNT("Set::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "dict", newDictionary(vm));
+    setObjProperty(vm, self, "dict", OBJ_VAL(newDictionary(vm)));
     RETURN_OBJ(receiver);
 }
 

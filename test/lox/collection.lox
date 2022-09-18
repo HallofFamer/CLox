@@ -1,1 +1,3 @@
 var set = Set();
+println("Testing class Set...");
+println("Class for set object: " + set.getClassName());
