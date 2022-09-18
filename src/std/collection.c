@@ -241,7 +241,6 @@ LOX_METHOD(Dictionary, clone) {
 
 LOX_METHOD(Dictionary, containsKey) {
     ASSERT_ARG_COUNT("Dictionary::containsKey(key)", 1);
-    ASSERT_ARG_TYPE("Dictionary::containsKey(key)", 0, String);
     RETURN_BOOL(dictContainsKey(AS_DICTIONARY(receiver), args[0]));
 }
 
@@ -258,7 +257,6 @@ LOX_METHOD(Dictionary, equals) {
 
 LOX_METHOD(Dictionary, getAt) {
     ASSERT_ARG_COUNT("Dictionary::getAt(key)", 1);
-    ASSERT_ARG_TYPE("Dictionary::getAt(key)", 0, String);
     Value value;
     bool valueExists = dictGet(AS_DICTIONARY(receiver), args[0], &value);
     if (!valueExists) RETURN_NIL;
@@ -301,7 +299,6 @@ LOX_METHOD(Dictionary, next) {
 
 LOX_METHOD(Dictionary, nextValue) {
     ASSERT_ARG_COUNT("Dictionary::nextValue(key)", 1);
-    ASSERT_ARG_TYPE("Dictionary::nextValue(key)", 0, String);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     int index = dictFindIndex(self, args[0]);
     RETURN_VAL(self->entries[index].value);
@@ -316,14 +313,12 @@ LOX_METHOD(Dictionary, putAll) {
 
 LOX_METHOD(Dictionary, putAt) {
     ASSERT_ARG_COUNT("Dictionary::putAt(key, value)", 2);
-    ASSERT_ARG_TYPE("Dictionary::putAt(key, valuue)", 0, String);
     dictSet(vm, AS_DICTIONARY(receiver), args[0], args[1]);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Dictionary, removeAt) {
     ASSERT_ARG_COUNT("Dictionary::removeAt(key)", 1);
-    ASSERT_ARG_TYPE("Dictionary::removeAt(key)", 0, String);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     Value key = args[0];
     Value value;
@@ -494,6 +489,13 @@ LOX_METHOD(List, toString) {
     RETURN_OBJ(valueArrayToString(vm, &AS_LIST(receiver)->elements));
 }
 
+LOX_METHOD(Set, add) {
+    ASSERT_ARG_COUNT("Set::add(element)", 1);
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
+    dictSet(vm, dict, args[0], NIL_VAL);
+    RETURN_OBJ(receiver);
+}
+
 LOX_METHOD(Set, clear) {
     ASSERT_ARG_COUNT("Set::clear()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -510,11 +512,78 @@ LOX_METHOD(Set, clone) {
     RETURN_OBJ(setCopy(vm, AS_INSTANCE(receiver)));
 }
 
+LOX_METHOD(Set, contains) {
+    ASSERT_ARG_COUNT("Set::contains(element)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
+    RETURN_BOOL(dictContainsKey(dict, args[0]));
+}
+
+LOX_METHOD(Set, equals) {
+    ASSERT_ARG_COUNT("Set::equals(other)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    if (!isObjInstanceOf(vm, args[0], self->obj.klass)) RETURN_FALSE;
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
+    ObjDictionary* dict2 = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(args[0]), "dict"));
+    RETURN_BOOL(dictsEqual(dict, dict2));
+}
+
 LOX_METHOD(Set, init) {
     ASSERT_ARG_COUNT("Set::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "dict", newDictionary(vm));
     RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Set, isEmpty) {
+    ASSERT_ARG_COUNT("Set::isEmpty()", 0);
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
+    RETURN_BOOL(dict->count == 0);
+}
+
+LOX_METHOD(Set, length) {
+    ASSERT_ARG_COUNT("Set::length()", 0);
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
+    RETURN_INT(dictLength(dict));
+}
+
+LOX_METHOD(Set, next) {
+    ASSERT_ARG_COUNT("Set::next(index)", 1);
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
+    if (dict->count == 0) RETURN_FALSE;
+
+    int index = 0;
+    if (!IS_NIL(args[0])) {
+        Value key = args[0];
+        index = dictFindIndex(dict, key);
+        if (index < 0 || index >= dict->capacity) RETURN_FALSE;
+        index++;
+    }
+
+    for (; index < dict->capacity; index++) {
+        if (!IS_UNDEFINED(dict->entries[index].key)) RETURN_VAL(dict->entries[index].key);
+    }
+    RETURN_FALSE;
+}
+
+LOX_METHOD(Set, nextValue) {
+    ASSERT_ARG_COUNT("Set::nextValue(index)", 1);
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
+    int index = dictFindIndex(dict, args[0]);
+    RETURN_VAL(dict->entries[index].key);
+}
+
+LOX_METHOD(Set, remove) {
+    ASSERT_ARG_COUNT("Set::removeAt(element)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
+    Value key = args[0];
+    Value value;
+
+    bool keyExists = dictGet(dict, key, &value);
+    if (!keyExists) RETURN_NIL;
+    dictDelete(dict, key);
+    RETURN_VAL(value);
 }
 
 LOX_METHOD(Set, toString) {
@@ -569,8 +638,16 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* setClass = defineNativeClass(vm, "Set");
     bindSuperclass(vm, setClass, collectionClass);
+    DEF_METHOD(setClass, Set, add, 1);
     DEF_METHOD(setClass, Set, clear, 0);
     DEF_METHOD(setClass, Set, clone, 0);
+    DEF_METHOD(setClass, Set, contains, 1);
+    DEF_METHOD(setClass, Set, equals, 1);
     DEF_METHOD(setClass, Set, init, 0);
+    DEF_METHOD(setClass, Set, isEmpty, 0);
+    DEF_METHOD(setClass, Set, length, 0);
+    DEF_METHOD(setClass, Set, next, 1);
+    DEF_METHOD(setClass, Set, nextValue, 1);
+    DEF_METHOD(setClass, Set, remove, 1);
     DEF_METHOD(setClass, Set, toString, 0);
 }
