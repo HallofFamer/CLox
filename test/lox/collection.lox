@@ -23,6 +23,9 @@ println("Now add a duplicate element 2 to the set: ");
 set.add(2);
 print("Current elements in set: ");
 println(set.toString());
+print("Remove an element 'nil' from Set: ");
+set.remove(nil);
+println(set.toString());
 println("Looping through elements in set...");
 for(var element : set){
     println("Element: " + element.toString());

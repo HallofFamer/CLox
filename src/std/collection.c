@@ -651,6 +651,9 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(setClass, Set, remove, 1);
     DEF_METHOD(setClass, Set, toString, 0);
 
+    ObjClass* nodeClass = defineNativeClass(vm, "Node");
+    bindSuperclass(vm, nodeClass, vm->objectClass);
+
     ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, collectionClass);
 }
