@@ -489,6 +489,38 @@ LOX_METHOD(List, toString) {
     RETURN_OBJ(valueArrayToString(vm, &AS_LIST(receiver)->elements));
 }
 
+LOX_METHOD(Node, clone) {
+    ASSERT_ARG_COUNT("Node::clone()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjInstance* node = newInstance(vm, self->obj.klass);
+    setObjProperty(vm, node, "element", getObjProperty(vm, self, "element"));
+    setObjProperty(vm, node, "next", getObjProperty(vm, self, "next"));
+    RETURN_OBJ(node);
+}
+
+LOX_METHOD(Node, element) {
+    ASSERT_ARG_COUNT("Node::element()", 0);
+    RETURN_VAL(getObjProperty(vm, AS_INSTANCE(receiver), "element"));
+}
+
+LOX_METHOD(Node, init) {
+    ASSERT_ARG_COUNT("Node::init(element, next)", 2);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "element", args[0]);
+    setObjProperty(vm, self, "next", args[1]);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Node, next) {
+    ASSERT_ARG_COUNT("Node::next()", 0);
+    RETURN_OBJ(getObjProperty(vm, AS_INSTANCE(receiver), "next"));
+}
+
+LOX_METHOD(Node, toString) {
+    ASSERT_ARG_COUNT("Node::toString()", 0);
+    RETURN_STRING("Node", 0);
+}
+
 LOX_METHOD(Set, add) {
     ASSERT_ARG_COUNT("Set::add(element)", 1);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
@@ -653,6 +685,11 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* nodeClass = defineNativeClass(vm, "Node");
     bindSuperclass(vm, nodeClass, vm->objectClass);
+    DEF_METHOD(nodeClass, Node, clone, 0);
+    DEF_METHOD(nodeClass, Node, element, 0);
+    DEF_METHOD(nodeClass, Node, init, 2);
+    DEF_METHOD(nodeClass, Node, next, 0);
+    DEF_METHOD(nodeClass, Node, toString, 0);
 
     ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, collectionClass);
