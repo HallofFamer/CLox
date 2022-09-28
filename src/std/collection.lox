@@ -4,6 +4,12 @@ class Collection {
         error("Cannot instantiate from class Collection.");
     }
 
+    addAll(collection){ 
+        for(var element : collection){ 
+            this.add(element);
+        }
+    }
+
     collect(closure) {
         var collected = this.getClass()();
         for(var element : this){
