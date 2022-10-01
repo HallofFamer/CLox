@@ -518,7 +518,15 @@ LOX_METHOD(Node, next) {
 
 LOX_METHOD(Node, toString) {
     ASSERT_ARG_COUNT("Node::toString()", 0);
-    RETURN_STRING("Node", 0);
+    char nodeString[UINT8_MAX] = "";
+    memcpy(nodeString, "Node: ", 6);
+
+    Value nodeElement = getObjProperty(vm, AS_INSTANCE(receiver), "element");
+    char* nodeChars = valueToString(vm, nodeElement);
+    size_t nodeLength = strlen(nodeElement);
+    memcpy(nodeString + 6, nodeChars, nodeLength);
+    nodeString[nodeLength + 6] = '\0';
+    RETURN_STRING(nodeString, nodeLength + 6);
 }
 
 LOX_METHOD(Set, add) {
