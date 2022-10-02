@@ -334,6 +334,43 @@ LOX_METHOD(Dictionary, toString) {
     RETURN_OBJ(dictToString(vm, AS_DICTIONARY(receiver)));
 }
 
+LOX_METHOD(Entry, clone) {
+    ASSERT_ARG_COUNT("Entry::clone()", 0);
+    ObjEntry* self = AS_ENTRY(receiver);
+    ObjEntry* entry = newEntry(vm, getObjProperty(vm, self, "element"), getObjProperty(vm, self, "next"));
+    RETURN_OBJ(entry);
+}
+
+LOX_METHOD(Entry, init) {
+    ASSERT_ARG_COUNT("Entry::init(key, value)", 2);
+    ObjEntry* self = AS_ENTRY(receiver);
+    self->key = args[0];
+    self->value = args[1];
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Entry, toString) {
+    ASSERT_ARG_COUNT("Entry::toString()", 0);
+    ObjEntry* self = AS_ENTRY(receiver);
+    char string[UINT8_MAX] = "";
+    Value key = self->key;
+    char* keyChars = valueToString(vm, key);
+    size_t keyLength = strlen(keyChars);
+    Value value = self->value;
+    char* valueChars = valueToString(vm, value);
+    size_t valueLength = strlen(valueChars);
+
+    size_t offset = 0;
+    memcpy(string, keyChars, keyLength);
+    offset += keyLength;
+    memcpy(string + offset, ": ", 2);
+    offset += 2;
+    memcpy(string + offset, valueChars, valueLength);
+    offset += valueLength;
+    string[offset + 1] = '\0';
+    return copyString(vm, string, (int)offset + 1);
+}
+
 LOX_METHOD(List, add) {
     ASSERT_ARG_COUNT("List::add(element)", 1);
     valueArrayWrite(vm, &AS_LIST(receiver)->elements, args[0]);
@@ -675,6 +712,12 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, putAt, 2);
     DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
+
+    ObjClass* entryClass = defineNativeClass(vm, "Entry");
+    bindSuperclass(vm, entryClass, vm->objectClass);
+    DEF_METHOD(entryClass, Entry, clone, 0);
+    DEF_METHOD(entryClass, Entry, init, 2);
+    DEF_METHOD(entryClass, Entry, toString, 0);
 
     ObjClass* setClass = defineNativeClass(vm, "Set");
     bindSuperclass(vm, setClass, collectionClass);
