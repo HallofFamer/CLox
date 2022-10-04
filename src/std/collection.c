@@ -341,12 +341,31 @@ LOX_METHOD(Entry, clone) {
     RETURN_OBJ(entry);
 }
 
+LOX_METHOD(Entry, getKey) {
+    ASSERT_ARG_COUNT("Entry::getKey()", 0);
+    ObjEntry* self = AS_ENTRY(receiver);
+    RETURN_VAL(self->key);
+}
+
+LOX_METHOD(Entry, getValue) {
+    ASSERT_ARG_COUNT("Entry::getValue()", 0);
+    ObjEntry* self = AS_ENTRY(receiver);
+    RETURN_VAL(self->value);
+}
+
 LOX_METHOD(Entry, init) {
     ASSERT_ARG_COUNT("Entry::init(key, value)", 2);
     ObjEntry* self = AS_ENTRY(receiver);
     self->key = args[0];
     self->value = args[1];
     RETURN_OBJ(self);
+}
+
+LOX_METHOD(Entry, setValue) {
+    ASSERT_ARG_COUNT("Entry::setValue()", 1);
+    ObjEntry* self = AS_ENTRY(receiver);
+    self->value = args[0];
+    RETURN_VAL(self->value);
 }
 
 LOX_METHOD(Entry, toString) {
@@ -716,7 +735,10 @@ void registerCollectionPackage(VM* vm) {
     ObjClass* entryClass = defineNativeClass(vm, "Entry");
     bindSuperclass(vm, entryClass, vm->objectClass);
     DEF_METHOD(entryClass, Entry, clone, 0);
+    DEF_METHOD(entryClass, Entry, getKey, 0);
+    DEF_METHOD(entryClass, Entry, getValue, 0);
     DEF_METHOD(entryClass, Entry, init, 2);
+    DEF_METHOD(entryClass, Entry, setValue, 1);
     DEF_METHOD(entryClass, Entry, toString, 0);
 
     ObjClass* setClass = defineNativeClass(vm, "Set");
