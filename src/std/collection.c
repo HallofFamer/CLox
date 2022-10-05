@@ -390,12 +390,39 @@ LOX_METHOD(Entry, toString) {
     return copyString(vm, string, (int)offset + 1);
 }
 
+LOX_METHOD(LinkedList, clone) {
+    ASSERT_ARG_COUNT("LinkedList::clone()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjInstance* list = newInstance(vm, self->obj.klass);
+    setObjProperty(vm, list, "first", getObjProperty(vm, self, "first"));
+    setObjProperty(vm, list, "last", getObjProperty(vm, self, "last"));
+    setObjProperty(vm, list, "size", getObjProperty(vm, self, "size"));
+    RETURN_OBJ(list);
+}
+
+LOX_METHOD(LinkedList, first) {
+    ASSERT_ARG_COUNT("LinkedList::first()", 0);
+    RETURN_VAL(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
+}
+
 LOX_METHOD(LinkedList, init) {
     ASSERT_ARG_COUNT("LinkedList::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "head", NIL_VAL);
+    setObjProperty(vm, self, "first", NIL_VAL);
+    setObjProperty(vm, self, "last", NIL_VAL);
     setObjProperty(vm, self, "size", INT_VAL(0));
     RETURN_OBJ(self);
+}
+
+LOX_METHOD(LinkedList, last) {
+    ASSERT_ARG_COUNT("LinkedList::last()", 0);
+    RETURN_OBJ(getObjProperty(vm, AS_INSTANCE(receiver), "last"));
+}
+
+LOX_METHOD(LinkedList, size) {
+    ASSERT_ARG_COUNT("LinkedList::size()", 0);
+    Value size = getObjProperty(vm, AS_INSTANCE(receiver), "last");
+    RETURN_INT(size);
 }
 
 LOX_METHOD(List, add) {
@@ -766,7 +793,11 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, collectionClass);
+    DEF_METHOD(linkedListClass, LinkedList, clone, 0);
+    DEF_METHOD(linkedListClass, LinkedList, first, 0);
     DEF_METHOD(linkedListClass, LinkedList, init, 0);
+    DEF_METHOD(linkedListClass, LinkedList, last, 0);
+    DEF_METHOD(linkedListClass, LinkedList, size, 0);
 
     ObjClass* nodeClass = defineNativeClass(vm, "Node");
     bindSuperclass(vm, nodeClass, vm->objectClass);
