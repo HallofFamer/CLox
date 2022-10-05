@@ -390,6 +390,14 @@ LOX_METHOD(Entry, toString) {
     return copyString(vm, string, (int)offset + 1);
 }
 
+LOX_METHOD(LinkedList, init) {
+    ASSERT_ARG_COUNT("LinkedList::init()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "head", NIL_VAL);
+    setObjProperty(vm, self, "size", INT_VAL(0));
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(List, add) {
     ASSERT_ARG_COUNT("List::add(element)", 1);
     valueArrayWrite(vm, &AS_LIST(receiver)->elements, args[0]);
@@ -756,6 +764,10 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(setClass, Set, remove, 1);
     DEF_METHOD(setClass, Set, toString, 0);
 
+    ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
+    bindSuperclass(vm, linkedListClass, collectionClass);
+    DEF_METHOD(linkedListClass, LinkedList, init, 0);
+
     ObjClass* nodeClass = defineNativeClass(vm, "Node");
     bindSuperclass(vm, nodeClass, vm->objectClass);
     DEF_METHOD(nodeClass, Node, clone, 0);
@@ -763,7 +775,4 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(nodeClass, Node, init, 2);
     DEF_METHOD(nodeClass, Node, next, 0);
     DEF_METHOD(nodeClass, Node, toString, 0);
-
-    ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
-    bindSuperclass(vm, linkedListClass, collectionClass);
 }
