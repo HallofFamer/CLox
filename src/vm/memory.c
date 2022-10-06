@@ -2,7 +2,6 @@
 
 #include "compiler.h"
 #include "memory.h"
-#include "object.h"
 
 #ifdef DEBUG_LOG_GC
 #include <stdio.h>
@@ -141,6 +140,13 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)nativeMethod->name);
             break;
         }
+        case OBJ_NODE: {
+            ObjNode* node = (ObjNode*)object;
+            markValue(vm, node->element);
+            markObject(vm, (Obj*)node->prev);
+            markObject(vm, (Obj*)node->next);
+            break;
+        }
         case OBJ_RECORD:
             break;
         case OBJ_STRING:
@@ -209,6 +215,10 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_NATIVE_METHOD:
             FREE(ObjNativeMethod, object);
             break;
+        case OBJ_NODE: {
+            FREE(ObjNode, object);
+            break;
+        }
         case OBJ_RECORD: {
             ObjRecord* record = (ObjRecord*)object;
             if (record->data != NULL) free(record->data);

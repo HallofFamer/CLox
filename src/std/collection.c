@@ -337,7 +337,7 @@ LOX_METHOD(Dictionary, toString) {
 LOX_METHOD(Entry, clone) {
     ASSERT_ARG_COUNT("Entry::clone()", 0);
     ObjEntry* self = AS_ENTRY(receiver);
-    ObjEntry* entry = newEntry(vm, getObjProperty(vm, self, "element"), getObjProperty(vm, self, "next"));
+    ObjEntry* entry = newEntry(vm, self->key, self->value);
     RETURN_OBJ(entry);
 }
 
@@ -387,7 +387,16 @@ LOX_METHOD(Entry, toString) {
     memcpy(string + offset, valueChars, valueLength);
     offset += valueLength;
     string[offset + 1] = '\0';
-    return copyString(vm, string, (int)offset + 1);
+    RETURN_STRING(string, (int)offset + 1);
+}
+
+LOX_METHOD(LinkedList, clear) {
+    ASSERT_ARG_COUNT("LinkedList::clear()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "first", NIL_VAL);
+    setObjProperty(vm, self, "last", NIL_VAL);
+    setObjProperty(vm, self, "size", INT_VAL(0));
+    RETURN_NIL;
 }
 
 LOX_METHOD(LinkedList, clone) {
@@ -582,29 +591,33 @@ LOX_METHOD(List, toString) {
 
 LOX_METHOD(Node, clone) {
     ASSERT_ARG_COUNT("Node::clone()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    ObjInstance* node = newInstance(vm, self->obj.klass);
-    setObjProperty(vm, node, "element", getObjProperty(vm, self, "element"));
-    setObjProperty(vm, node, "next", getObjProperty(vm, self, "next"));
+    ObjNode* self = AS_NODE(receiver);
+    ObjNode* node = newNode(vm, self->element, self->prev, self->next);
     RETURN_OBJ(node);
 }
 
 LOX_METHOD(Node, element) {
     ASSERT_ARG_COUNT("Node::element()", 0);
-    RETURN_VAL(getObjProperty(vm, AS_INSTANCE(receiver), "element"));
+    RETURN_VAL(AS_NODE(receiver)->element);
 }
 
 LOX_METHOD(Node, init) {
-    ASSERT_ARG_COUNT("Node::init(element, next)", 2);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "element", args[0]);
-    setObjProperty(vm, self, "next", args[1]);
-    RETURN_OBJ(receiver);
+    ASSERT_ARG_COUNT("Node::init(element, prev, next)", 3);
+    ObjNode* self = AS_NODE(receiver);
+    self->element = args[0];
+    if (!IS_NIL(args[1])) self->prev = AS_NODE(args[1]);
+    if (!IS_NIL(args[2])) self->next = AS_NODE(args[2]);
+    RETURN_OBJ(self);
 }
 
 LOX_METHOD(Node, next) {
     ASSERT_ARG_COUNT("Node::next()", 0);
-    RETURN_OBJ(getObjProperty(vm, AS_INSTANCE(receiver), "next"));
+    RETURN_OBJ(AS_NODE(receiver)->next);
+}
+
+LOX_METHOD(Node, prev) {
+    ASSERT_ARG_COUNT("Node::prev()", 0);
+    RETURN_OBJ(AS_NODE(receiver)->prev);
 }
 
 LOX_METHOD(Node, toString) {
@@ -612,12 +625,12 @@ LOX_METHOD(Node, toString) {
     char nodeString[UINT8_MAX] = "";
     memcpy(nodeString, "Node: ", 6);
 
-    Value nodeElement = getObjProperty(vm, AS_INSTANCE(receiver), "element");
+    Value nodeElement = AS_NODE(receiver)->element;
     char* nodeChars = valueToString(vm, nodeElement);
-    size_t nodeLength = strlen(nodeElement);
+    size_t nodeLength = strlen(nodeChars);
     memcpy(nodeString + 6, nodeChars, nodeLength);
     nodeString[nodeLength + 6] = '\0';
-    RETURN_STRING(nodeString, nodeLength + 6);
+    RETURN_STRING(nodeString, (int)nodeLength + 6);
 }
 
 LOX_METHOD(Set, add) {
@@ -793,6 +806,7 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, collectionClass);
+    DEF_METHOD(linkedListClass, LinkedList, clear, 0);
     DEF_METHOD(linkedListClass, LinkedList, clone, 0);
     DEF_METHOD(linkedListClass, LinkedList, first, 0);
     DEF_METHOD(linkedListClass, LinkedList, init, 0);
@@ -803,7 +817,8 @@ void registerCollectionPackage(VM* vm) {
     bindSuperclass(vm, nodeClass, vm->objectClass);
     DEF_METHOD(nodeClass, Node, clone, 0);
     DEF_METHOD(nodeClass, Node, element, 0);
-    DEF_METHOD(nodeClass, Node, init, 2);
+    DEF_METHOD(nodeClass, Node, init, 3);
     DEF_METHOD(nodeClass, Node, next, 0);
+    DEF_METHOD(nodeClass, Node, prev, 0);
     DEF_METHOD(nodeClass, Node, toString, 0);
 }

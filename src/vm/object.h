@@ -24,6 +24,7 @@
 #define IS_LIST(value)             isObjType(value, OBJ_LIST)
 #define IS_NATIVE_FUNCTION(value)  isObjType(value, OBJ_NATIVE_FUNCTION)
 #define IS_NATIVE_METHOD(value)    isObjType(value, OBJ_NATIVE_METHOD)
+#define IS_NODE(value)             isObjType(value, OBJ_NODE)
 #define IS_RECORD(value)           isObjType(value, OBJ_RECORD)
 #define IS_STRING(value)           isObjType(value, OBJ_STRING)
 
@@ -38,6 +39,7 @@
 #define AS_LIST(value)             ((ObjList*)AS_OBJ(value))
 #define AS_NATIVE_FUNCTION(value)  ((ObjNativeFunction*)AS_OBJ(value))
 #define AS_NATIVE_METHOD(value)    ((ObjNativeMethod*)AS_OBJ(value))
+#define AS_NODE(value)             ((ObjNode*)AS_OBJ(value))
 #define AS_RECORD(value)           ((ObjRecord*)AS_OBJ(value))
 #define AS_CRECORD(value, type)    ((type*)((ObjRecord*)AS_OBJ(value)->data))
 #define AS_STRING(value)           ((ObjString*)AS_OBJ(value))
@@ -55,6 +57,7 @@ typedef enum {
     OBJ_LIST,
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
+    OBJ_NODE,
     OBJ_RECORD,
     OBJ_STRING,
     OBJ_UPVALUE
@@ -93,6 +96,14 @@ typedef struct {
     NativeMethod method;
 } ObjNativeMethod;
 
+typedef struct ObjNode ObjNode;
+struct ObjNode {
+    Obj obj;
+    Value element;
+    struct ObjNode* prev;
+    struct ObjNode* next;
+};
+
 struct ObjString {
     Obj obj;
     int length;
@@ -104,7 +115,7 @@ typedef struct ObjList {
     Obj obj;
     ValueArray elements;
 } ObjList;
-
+ 
 typedef struct ObjEntry {
     Obj obj;
     Value key;
@@ -176,6 +187,7 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjList* newList(VM* vm);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
+ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
 ObjRecord* newRecord(VM* vm, void* data);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 

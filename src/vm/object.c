@@ -5,6 +5,7 @@
 
 #include "hash.h"
 #include "memory.h"
+#include "native.h"
 #include "object.h"
 #include "string.h"
 #include "vm.h"
@@ -65,7 +66,7 @@ ObjDictionary* newDictionary(VM* vm) {
 }
 
 ObjEntry* newEntry(VM* vm, Value key, Value value) {
-    ObjEntry* entry = ALLOCATE_OBJ(ObjEntry, OBJ_ENTRY, NULL);
+    ObjEntry* entry = ALLOCATE_OBJ(ObjEntry, OBJ_ENTRY, getNativeClass(vm, "Entry"));
     entry->key = key;
     entry->value = value;
     return entry;
@@ -115,6 +116,14 @@ ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int a
     nativeMethod->arity = arity;
     nativeMethod->method = method;
     return nativeMethod;
+}
+
+ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next) {
+    ObjNode* node = ALLOCATE_OBJ(ObjNode, OBJ_NODE, getNativeClass(vm, "Node"));
+    node->element = element;
+    node->prev = prev;
+    node->next = next;
+    return node;
 }
 
 ObjRecord* newRecord(VM* vm, void* data) {
