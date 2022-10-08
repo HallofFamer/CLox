@@ -416,6 +416,24 @@ LOX_METHOD(Entry, toString) {
     RETURN_STRING(string, (int)offset + 1);
 }
 
+LOX_METHOD(LinkedList, add) {
+    ASSERT_ARG_COUNT("LinkedList::add(element)", 1);
+    linkLast(vm, AS_INSTANCE(receiver), args[0]);
+    RETURN_TRUE;
+}
+
+LOX_METHOD(LinkedList, addFirst) {
+    ASSERT_ARG_COUNT("LinkedList::addFirst(element)", 1);
+    linkFirst(vm, AS_INSTANCE(receiver), args[0]);
+    RETURN_NIL;
+}
+
+LOX_METHOD(LinkedList, addLast) {
+    ASSERT_ARG_COUNT("LinkedList::addLast(element)", 1);
+    linkLast(vm, AS_INSTANCE(receiver), args[0]);
+    RETURN_NIL;
+}
+
 LOX_METHOD(LinkedList, clear) {
     ASSERT_ARG_COUNT("LinkedList::clear()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -832,6 +850,9 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, collectionClass);
+    DEF_METHOD(linkedListClass, LinkedList, add, 1);
+    DEF_METHOD(linkedListClass, LinkedList, addFirst, 1);
+    DEF_METHOD(linkedListClass, LinkedList, addLast, 1);
     DEF_METHOD(linkedListClass, LinkedList, clear, 0);
     DEF_METHOD(linkedListClass, LinkedList, clone, 0);
     DEF_METHOD(linkedListClass, LinkedList, first, 0);
