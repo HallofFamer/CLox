@@ -96,13 +96,12 @@ typedef struct {
     NativeMethod method;
 } ObjNativeMethod;
 
-typedef struct ObjNode ObjNode;
-struct ObjNode {
+typedef struct ObjNode {
     Obj obj;
     Value element;
     struct ObjNode* prev;
     struct ObjNode* next;
-};
+} ObjNode;
 
 struct ObjString {
     Obj obj;
