@@ -162,7 +162,42 @@ ObjString* dictToString(VM* vm, ObjDictionary* dict) {
     }
 }
 
-void linkFirst(VM* vm, ObjInstance* linkedList, Value element) {
+static void linkBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNode* succ) {
+    if (succ == NULL) raiseError(vm, "The next element cannot be nil.");
+    else {
+        ObjNode* pred = succ->prev;
+        ObjNode* new = newNode(vm, element, pred, succ);
+        succ->prev = newNode;
+
+        if (pred == NULL) setObjProperty(vm, linkedList, "first", new);
+        else pred->next = new;
+        linkSizeIncrement(vm, linkedList);
+    }
+}
+
+static int linkFindIndex(VM* vm, ObjInstance* linkedList, Value element) {
+    int index = 0;
+    Value f = getObjProperty(vm, linkedList, "first");
+    ObjNode* first = IS_NIL(f) ? NULL : AS_NODE(f);
+    for (ObjNode* node = first; node != NULL; node = node->next) {
+        if (valuesEqual(element, node->element)) return index;
+        index++;
+    }
+    return -1;
+}
+
+static int linkFindLastIndex(VM* vm, ObjInstance* linkedList, Value element) {
+    int index = AS_INT(getObjProperty(vm, linkedList, "size"));
+    Value l = getObjProperty(vm, linkedList, "last");
+    ObjNode* last = IS_NIL(l) ? NULL : AS_NODE(l);
+    for (ObjNode* node = last; node != NULL; node = node->prev) {
+        index--;
+        if (valuesEqual(element, node->element)) return index;
+    }
+    return -1;
+}
+
+static void linkFirst(VM* vm, ObjInstance* linkedList, Value element) {
     Value f = getObjProperty(vm, linkedList, "first");
     ObjNode* first = IS_NIL(f) ? NULL : AS_NODE(f);
     ObjNode* new = newNode(vm, element, NULL, first);
@@ -170,12 +205,21 @@ void linkFirst(VM* vm, ObjInstance* linkedList, Value element) {
     setObjProperty(vm, linkedList, "first", new);
     if (first == NULL) setObjProperty(vm, linkedList, "last", new);
     else first->prev = new;
-    
-    int size = getObjProperty(vm, linkedList, "size");
-    setObjProperty(vm, linkedList, "size", INT_VAL(size + 1));
+    linkSizeIncrement(vm, linkedList);
 }
 
-void linkLast(VM* vm, ObjInstance* linkedList, Value element) {
+static bool linkIndexIsValid(VM* vm, ObjInstance* linkedList, int index) {
+    int size = AS_INT(getObjProperty(vm, linkedList, "size"));
+    return (index >= 0 && index < size);
+}
+
+static void linkIndexValidate(VM* vm, ObjInstance* linkedList, int index) {
+    if (!linkIndexIsValid(vm, linkedList, index)) {
+        raiseError(vm, "Index out of bound for LinkedList.");
+    }
+}
+
+static void linkLast(VM* vm, ObjInstance* linkedList, Value element) {
     Value l = getObjProperty(vm, linkedList, "last");
     ObjNode* last = IS_NIL(l) ? NULL : AS_NODE(l);
     ObjNode* new = newNode(vm, element, NULL, last);
@@ -183,8 +227,11 @@ void linkLast(VM* vm, ObjInstance* linkedList, Value element) {
     setObjProperty(vm, linkedList, "last", new);
     if (last == NULL) setObjProperty(vm, linkedList, "last", new);
     else last->next = new;
+    linkSizeIncrement(vm, linkedList);
+}
 
-    int size = getObjProperty(vm, linkedList, "size");
+static void linkSizeIncrement(VM* vm, ObjInstance* linkedList) {
+    int size = AS_INT(getObjProperty(vm, linkedList, "size"));
     setObjProperty(vm, linkedList, "size", INT_VAL(size + 1));
 }
 
@@ -458,6 +505,11 @@ LOX_METHOD(LinkedList, first) {
     RETURN_VAL(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
 }
 
+LOX_METHOD(LinkedList, indexOf) {
+    ASSERT_ARG_COUNT("LinkedList::indexOf(element)", 1);
+    RETURN_INT(linkFindIndex(vm, AS_INSTANCE(receiver), args[0]));
+}
+
 LOX_METHOD(LinkedList, init) {
     ASSERT_ARG_COUNT("LinkedList::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -470,6 +522,11 @@ LOX_METHOD(LinkedList, init) {
 LOX_METHOD(LinkedList, last) {
     ASSERT_ARG_COUNT("LinkedList::last()", 0);
     RETURN_OBJ(getObjProperty(vm, AS_INSTANCE(receiver), "last"));
+}
+
+LOX_METHOD(LinkedList, lastIndexOf) {
+    ASSERT_ARG_COUNT("LinkedList::lastIndexOf(element)", 1);
+    RETURN_INT(linkFindLastIndex(vm, AS_INSTANCE(receiver), args[0]));
 }
 
 LOX_METHOD(LinkedList, size) {
@@ -856,8 +913,10 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, clear, 0);
     DEF_METHOD(linkedListClass, LinkedList, clone, 0);
     DEF_METHOD(linkedListClass, LinkedList, first, 0);
+    DEF_METHOD(linkedListClass, LinkedList, indexOf, 1);
     DEF_METHOD(linkedListClass, LinkedList, init, 0);
     DEF_METHOD(linkedListClass, LinkedList, last, 0);
+    DEF_METHOD(linkedListClass, LinkedList, lastIndexOf, 0);
     DEF_METHOD(linkedListClass, LinkedList, size, 0);
 
     ObjClass* nodeClass = defineNativeClass(vm, "Node");
