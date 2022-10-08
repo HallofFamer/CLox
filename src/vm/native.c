@@ -6,6 +6,7 @@
 #include "assert.h"
 #include "memory.h"
 #include "native.h"
+#include "object.h"
 #include "string.h"
 #include "vm.h"
 

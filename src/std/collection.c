@@ -230,6 +230,40 @@ static void linkLast(VM* vm, ObjInstance* linkedList, Value element) {
     linkSizeIncrement(vm, linkedList);
 }
 
+static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
+    if (node == NULL) raiseError(vm, "Cannot unlink NULL node.");
+    else {
+        Value element = node->element;
+        ObjNode* next = node->next;
+        ObjNode* prev = node->prev;
+
+        if (prev == NULL) {
+            setObjProperty(vm, linkedList, "first", next);
+        }
+        else {
+            prev->next = next;
+            node->prev = NULL;
+        }
+
+        if (next = NULL) {
+            setObjProperty(vm, linkedList, "last", prev);
+        }
+        else {
+            next->prev = prev;
+            node->next = NULL;
+        }
+
+        node->element = NIL_VAL;
+        linkSizeDecrement(vm, linkedList);
+        RETURN_VAL(element);
+    }
+}
+
+static void linkSizeDecrement(VM* vm, ObjInstance* linkedList) {
+    int size = AS_INT(getObjProperty(vm, linkedList, "size"));
+    setObjProperty(vm, linkedList, "size", INT_VAL(size - 1));
+}
+
 static void linkSizeIncrement(VM* vm, ObjInstance* linkedList) {
     int size = AS_INT(getObjProperty(vm, linkedList, "size"));
     setObjProperty(vm, linkedList, "size", INT_VAL(size + 1));
