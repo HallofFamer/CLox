@@ -162,6 +162,32 @@ ObjString* dictToString(VM* vm, ObjDictionary* dict) {
     }
 }
 
+void linkFirst(VM* vm, ObjInstance* linkedList, Value element) {
+    Value f = getObjProperty(vm, linkedList, "first");
+    ObjNode* first = IS_NIL(f) ? NULL : AS_NODE(f);
+    ObjNode* new = newNode(vm, element, NULL, first);
+    
+    setObjProperty(vm, linkedList, "first", new);
+    if (first == NULL) setObjProperty(vm, linkedList, "last", new);
+    else first->prev = new;
+    
+    int size = getObjProperty(vm, linkedList, "size");
+    setObjProperty(vm, linkedList, "size", INT_VAL(size + 1));
+}
+
+void linkLast(VM* vm, ObjInstance* linkedList, Value element) {
+    Value l = getObjProperty(vm, linkedList, "last");
+    ObjNode* last = IS_NIL(l) ? NULL : AS_NODE(l);
+    ObjNode* new = newNode(vm, element, NULL, last);
+
+    setObjProperty(vm, linkedList, "last", new);
+    if (last == NULL) setObjProperty(vm, linkedList, "last", new);
+    else last->next = new;
+
+    int size = getObjProperty(vm, linkedList, "size");
+    setObjProperty(vm, linkedList, "size", INT_VAL(size + 1));
+}
+
 ObjList* listCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
     ObjList* list = newList(vm);
     push(vm, OBJ_VAL(list));
