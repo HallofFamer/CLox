@@ -162,7 +162,7 @@ ObjString* dictToString(VM* vm, ObjDictionary* dict) {
     }
 }
 
-static void linkBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNode* succ) {
+static void linkAddBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNode* succ) {
     if (succ == NULL) raiseError(vm, "The next element cannot be nil.");
     else {
         ObjNode* pred = succ->prev;
@@ -173,6 +173,28 @@ static void linkBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNode* 
         else pred->next = new;
         linkSizeIncrement(vm, linkedList);
     }
+}
+
+static void linkAddFirst(VM* vm, ObjInstance* linkedList, Value element) {
+    Value f = getObjProperty(vm, linkedList, "first");
+    ObjNode* first = IS_NIL(f) ? NULL : AS_NODE(f);
+    ObjNode* new = newNode(vm, element, NULL, first);
+
+    setObjProperty(vm, linkedList, "first", new);
+    if (first == NULL) setObjProperty(vm, linkedList, "last", new);
+    else first->prev = new;
+    linkSizeIncrement(vm, linkedList);
+}
+
+static void linkAddLast(VM* vm, ObjInstance* linkedList, Value element) {
+    Value l = getObjProperty(vm, linkedList, "last");
+    ObjNode* last = IS_NIL(l) ? NULL : AS_NODE(l);
+    ObjNode* new = newNode(vm, element, NULL, last);
+
+    setObjProperty(vm, linkedList, "last", new);
+    if (last == NULL) setObjProperty(vm, linkedList, "last", new);
+    else last->next = new;
+    linkSizeIncrement(vm, linkedList);
 }
 
 static int linkFindIndex(VM* vm, ObjInstance* linkedList, Value element) {
@@ -197,17 +219,6 @@ static int linkFindLastIndex(VM* vm, ObjInstance* linkedList, Value element) {
     return -1;
 }
 
-static void linkFirst(VM* vm, ObjInstance* linkedList, Value element) {
-    Value f = getObjProperty(vm, linkedList, "first");
-    ObjNode* first = IS_NIL(f) ? NULL : AS_NODE(f);
-    ObjNode* new = newNode(vm, element, NULL, first);
-    
-    setObjProperty(vm, linkedList, "first", new);
-    if (first == NULL) setObjProperty(vm, linkedList, "last", new);
-    else first->prev = new;
-    linkSizeIncrement(vm, linkedList);
-}
-
 static bool linkIndexIsValid(VM* vm, ObjInstance* linkedList, int index) {
     int size = AS_INT(getObjProperty(vm, linkedList, "size"));
     return (index >= 0 && index < size);
@@ -217,17 +228,6 @@ static void linkIndexValidate(VM* vm, ObjInstance* linkedList, int index) {
     if (!linkIndexIsValid(vm, linkedList, index)) {
         raiseError(vm, "Index out of bound for LinkedList.");
     }
-}
-
-static void linkLast(VM* vm, ObjInstance* linkedList, Value element) {
-    Value l = getObjProperty(vm, linkedList, "last");
-    ObjNode* last = IS_NIL(l) ? NULL : AS_NODE(l);
-    ObjNode* new = newNode(vm, element, NULL, last);
-
-    setObjProperty(vm, linkedList, "last", new);
-    if (last == NULL) setObjProperty(vm, linkedList, "last", new);
-    else last->next = new;
-    linkSizeIncrement(vm, linkedList);
 }
 
 static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
@@ -257,6 +257,30 @@ static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
         linkSizeDecrement(vm, linkedList);
         RETURN_VAL(element);
     }
+}
+
+static void linkRemoveFirst(VM* vm, ObjInstance* linkedList, ObjNode* first) {
+    Value element = first->element;
+    ObjNode* next = first->next;
+    first->element = NIL_VAL;
+    first->next = NULL;
+    setObjProperty(vm, linkedList, "first", next);
+    if (next == NULL) setObjProperty(vm, linkedList, "last", NIL_VAL);
+    else next->prev = NULL;
+    linkSizeDecrement(vm, linkedList);
+    RETURN_VAL(element);
+}
+
+static void linkRemoveLast(VM* vm, ObjInstance* linkedList, ObjNode* last) {
+    Value element = last->element;
+    ObjNode* prev = last->prev;
+    last->element = NIL_VAL;
+    last->next = NULL;
+    setObjProperty(vm, linkedList, "last", prev);
+    if (prev == NULL) setObjProperty(vm, linkedList, "first", NIL_VAL);
+    else prev->next = NULL;
+    linkSizeDecrement(vm, linkedList);
+    RETURN_VAL(element);
 }
 
 static void linkSizeDecrement(VM* vm, ObjInstance* linkedList) {
@@ -499,19 +523,19 @@ LOX_METHOD(Entry, toString) {
 
 LOX_METHOD(LinkedList, add) {
     ASSERT_ARG_COUNT("LinkedList::add(element)", 1);
-    linkLast(vm, AS_INSTANCE(receiver), args[0]);
+    linkAddLast(vm, AS_INSTANCE(receiver), args[0]);
     RETURN_TRUE;
 }
 
 LOX_METHOD(LinkedList, addFirst) {
     ASSERT_ARG_COUNT("LinkedList::addFirst(element)", 1);
-    linkFirst(vm, AS_INSTANCE(receiver), args[0]);
+    linkAddFirst(vm, AS_INSTANCE(receiver), args[0]);
     RETURN_NIL;
 }
 
 LOX_METHOD(LinkedList, addLast) {
     ASSERT_ARG_COUNT("LinkedList::addLast(element)", 1);
-    linkLast(vm, AS_INSTANCE(receiver), args[0]);
+    linkAddLast(vm, AS_INSTANCE(receiver), args[0]);
     RETURN_NIL;
 }
 
