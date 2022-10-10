@@ -230,6 +230,24 @@ static void linkIndexValidate(VM* vm, ObjInstance* linkedList, int index) {
     }
 }
 
+static ObjNode* linkNode(VM* vm, ObjInstance* linkedList, int index) {
+    int size = AS_INT(getObjProperty(vm, linkedList, "size"));
+    if (index < (size >> 1)) {
+        ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "first"));
+        for (int i = 0; i < index; i++) {
+            node = node->next;
+        }
+        return node;
+    }
+    else {
+        ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "last"));
+        for (int i = size - 1; i > index; i--) {
+            node = node->prev;
+        }
+        return node;
+    }
+}
+
 static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
     if (node == NULL) raiseError(vm, "Cannot unlink NULL node.");
     else {
@@ -259,7 +277,7 @@ static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
     }
 }
 
-static void linkRemoveFirst(VM* vm, ObjInstance* linkedList, ObjNode* first) {
+static Value linkRemoveFirst(VM* vm, ObjInstance* linkedList, ObjNode* first) {
     Value element = first->element;
     ObjNode* next = first->next;
     first->element = NIL_VAL;
@@ -271,7 +289,7 @@ static void linkRemoveFirst(VM* vm, ObjInstance* linkedList, ObjNode* first) {
     RETURN_VAL(element);
 }
 
-static void linkRemoveLast(VM* vm, ObjInstance* linkedList, ObjNode* last) {
+static Value linkRemoveLast(VM* vm, ObjInstance* linkedList, ObjNode* last) {
     Value element = last->element;
     ObjNode* prev = last->prev;
     last->element = NIL_VAL;
@@ -558,9 +576,20 @@ LOX_METHOD(LinkedList, clone) {
     RETURN_OBJ(list);
 }
 
+LOX_METHOD(LinkedList, contains) {
+    ASSERT_ARG_COUNT("LinkedList::contains(element)", 1);
+    RETURN_BOOL(linkFindIndex(vm, AS_INSTANCE(receiver), args[0]) != -1);
+}
+
 LOX_METHOD(LinkedList, first) {
     ASSERT_ARG_COUNT("LinkedList::first()", 0);
     RETURN_VAL(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
+}
+
+LOX_METHOD(LinkedList, getAt) {
+    ASSERT_ARG_COUNT("LinkedList::getAt(index)", 1);
+    ASSERT_ARG_TYPE("LinkedList::getAt(index)", 0, Int);
+    RETURN_VAL(linkNode(vm, AS_INSTANCE(receiver), AS_INT(args[0]))->element);
 }
 
 LOX_METHOD(LinkedList, indexOf) {
@@ -585,6 +614,45 @@ LOX_METHOD(LinkedList, last) {
 LOX_METHOD(LinkedList, lastIndexOf) {
     ASSERT_ARG_COUNT("LinkedList::lastIndexOf(element)", 1);
     RETURN_INT(linkFindLastIndex(vm, AS_INSTANCE(receiver), args[0]));
+}
+
+LOX_METHOD(LinkedList, node) {
+    ASSERT_ARG_COUNT("LinkedList::node(index)", 1);
+    ASSERT_ARG_TYPE("LinkedList::node(index)", 0, Int);
+    RETURN_OBJ(linkNode(vm, AS_INSTANCE(receiver), AS_INT(args[0])));
+}
+
+LOX_METHOD(LinkedList, putAt) {
+    ASSERT_ARG_COUNT("LinkedList::putAt(index, element)", 2);
+    ASSERT_ARG_TYPE("LinkedList::putAt(index, element)", 0, Int);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int index = AS_INT(args[0]);
+    linkIndexValidate(vm, self, index);
+    ObjNode* node = linkNode(vm, self, index);
+    Value old = node->element;
+    node->element = args[1];
+    RETURN_VAL(old);
+}
+
+LOX_METHOD(LinkedList, remove) {
+    ASSERT_ARG_COUNT("LinkedList::remove()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    Value first = getObjProperty(vm, self, "first");
+    RETURN_VAL(linkRemoveFirst(vm, self, IS_NIL(first) ? NULL : AS_NODE(first)));
+}
+
+LOX_METHOD(LinkedList, removeFirst) {
+    ASSERT_ARG_COUNT("LinkedList::removeFirst()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    Value first = getObjProperty(vm, self, "first");
+    RETURN_VAL(linkRemoveFirst(vm, self, IS_NIL(first) ? NULL : AS_NODE(first)));
+}
+
+LOX_METHOD(LinkedList, removeLast) {
+    ASSERT_ARG_COUNT("LinkedList::removeLast()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    Value last = getObjProperty(vm, self, "last");
+    RETURN_VAL(linkRemoveLast(vm, self, IS_NIL(last) ? NULL : AS_NODE(last)));
 }
 
 LOX_METHOD(LinkedList, size) {
@@ -970,11 +1038,18 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, addLast, 1);
     DEF_METHOD(linkedListClass, LinkedList, clear, 0);
     DEF_METHOD(linkedListClass, LinkedList, clone, 0);
+    DEF_METHOD(linkedListClass, LinkedList, contains, 1);
     DEF_METHOD(linkedListClass, LinkedList, first, 0);
+    DEF_METHOD(linkedListClass, LinkedList, getAt, 1);
     DEF_METHOD(linkedListClass, LinkedList, indexOf, 1);
     DEF_METHOD(linkedListClass, LinkedList, init, 0);
     DEF_METHOD(linkedListClass, LinkedList, last, 0);
     DEF_METHOD(linkedListClass, LinkedList, lastIndexOf, 0);
+    DEF_METHOD(linkedListClass, LinkedList, node, 1);
+    DEF_METHOD(linkedListClass, LinkedList, putAt, 2);
+    DEF_METHOD(linkedListClass, LinkedList, remove, 0);
+    DEF_METHOD(linkedListClass, LinkedList, removeFirst, 0);
+    DEF_METHOD(linkedListClass, LinkedList, removeLast, 0);
     DEF_METHOD(linkedListClass, LinkedList, size, 0);
 
     ObjClass* nodeClass = defineNativeClass(vm, "Node");
