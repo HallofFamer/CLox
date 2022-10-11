@@ -545,6 +545,19 @@ LOX_METHOD(LinkedList, add) {
     RETURN_TRUE;
 }
 
+LOX_METHOD(LinkedList, addAt) {
+    ASSERT_ARG_COUNT("LinkedList::addAt(index, element)", 2);
+    ASSERT_ARG_TYPE("LinkedList::addAt(index, element)", 0, Int);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int index = AS_INT(args[0]);
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    if (index == size) linkAddLast(vm, self, args[1]);
+    else {
+        linkIndexValidate(vm, self, index);
+        linkAddBefore(vm, self, args[1], linkNode(vm, self, index));
+    }
+}
+
 LOX_METHOD(LinkedList, addFirst) {
     ASSERT_ARG_COUNT("LinkedList::addFirst(element)", 1);
     linkAddFirst(vm, AS_INSTANCE(receiver), args[0]);
@@ -1034,6 +1047,7 @@ void registerCollectionPackage(VM* vm) {
     ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, collectionClass);
     DEF_METHOD(linkedListClass, LinkedList, add, 1);
+    DEF_METHOD(linkedListClass, LinkedList, addAt, 2);
     DEF_METHOD(linkedListClass, LinkedList, addFirst, 1);
     DEF_METHOD(linkedListClass, LinkedList, addLast, 1);
     DEF_METHOD(linkedListClass, LinkedList, clear, 0);
