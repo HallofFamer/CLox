@@ -583,9 +583,11 @@ LOX_METHOD(LinkedList, clone) {
     ASSERT_ARG_COUNT("LinkedList::clone()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* list = newInstance(vm, self->obj.klass);
+    push(vm, OBJ_VAL(list));
     setObjProperty(vm, list, "first", getObjProperty(vm, self, "first"));
     setObjProperty(vm, list, "last", getObjProperty(vm, self, "last"));
     setObjProperty(vm, list, "size", getObjProperty(vm, self, "size"));
+    pop(vm);
     RETURN_OBJ(list);
 }
 
@@ -596,7 +598,8 @@ LOX_METHOD(LinkedList, contains) {
 
 LOX_METHOD(LinkedList, first) {
     ASSERT_ARG_COUNT("LinkedList::first()", 0);
-    RETURN_VAL(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
+    ObjNode* first = getObjProperty(vm, AS_INSTANCE(receiver), "first");
+    RETURN_VAL(first->element);
 }
 
 LOX_METHOD(LinkedList, getAt) {
@@ -621,7 +624,8 @@ LOX_METHOD(LinkedList, init) {
 
 LOX_METHOD(LinkedList, last) {
     ASSERT_ARG_COUNT("LinkedList::last()", 0);
-    RETURN_OBJ(getObjProperty(vm, AS_INSTANCE(receiver), "last"));
+    ObjNode* last = getObjProperty(vm, AS_INSTANCE(receiver), "last");
+    RETURN_VAL(last->element);
 }
 
 LOX_METHOD(LinkedList, lastIndexOf) {
@@ -670,8 +674,23 @@ LOX_METHOD(LinkedList, removeLast) {
 
 LOX_METHOD(LinkedList, size) {
     ASSERT_ARG_COUNT("LinkedList::size()", 0);
-    Value size = getObjProperty(vm, AS_INSTANCE(receiver), "last");
+    Value size = getObjProperty(vm, AS_INSTANCE(receiver), "size");
     RETURN_INT(size);
+}
+
+LOX_METHOD(LinkedList, toList) {
+    ASSERT_ARG_COUNT("LinkedList::toList()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int size = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "size"));
+    ObjList* list = newList(vm);
+    push(vm, OBJ_VAL(list));
+    if (size > 0) {
+        for (ObjNode* node = getObjProperty(vm, self, "first"); node != NULL; node = node->next) {
+            valueArrayWrite(vm, &list->elements, node->element);
+        }
+    }
+    pop(vm);
+    RETURN_OBJ(list);
 }
 
 LOX_METHOD(List, add) {
@@ -1065,6 +1084,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, removeFirst, 0);
     DEF_METHOD(linkedListClass, LinkedList, removeLast, 0);
     DEF_METHOD(linkedListClass, LinkedList, size, 0);
+    DEF_METHOD(linkedListClass, LinkedList, toList, 0);
 
     ObjClass* nodeClass = defineNativeClass(vm, "Node");
     bindSuperclass(vm, nodeClass, vm->objectClass);
