@@ -639,6 +639,12 @@ LOX_METHOD(LinkedList, node) {
     RETURN_OBJ(linkNode(vm, AS_INSTANCE(receiver), AS_INT(args[0])));
 }
 
+LOX_METHOD(LinkedList, peek) {
+    ASSERT_ARG_COUNT("LinkedList::peek()", 0);
+    ObjNode* first = getObjProperty(vm, AS_INSTANCE(receiver), "first");
+    RETURN_VAL(first->element);
+}
+
 LOX_METHOD(LinkedList, putAt) {
     ASSERT_ARG_COUNT("LinkedList::putAt(index, element)", 2);
     ASSERT_ARG_TYPE("LinkedList::putAt(index, element)", 0, Int);
@@ -1079,6 +1085,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, last, 0);
     DEF_METHOD(linkedListClass, LinkedList, lastIndexOf, 0);
     DEF_METHOD(linkedListClass, LinkedList, node, 1);
+    DEF_METHOD(linkedListClass, LinkedList, peek, 0);
     DEF_METHOD(linkedListClass, LinkedList, putAt, 2);
     DEF_METHOD(linkedListClass, LinkedList, remove, 0);
     DEF_METHOD(linkedListClass, LinkedList, removeFirst, 0);
