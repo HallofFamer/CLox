@@ -633,6 +633,31 @@ LOX_METHOD(LinkedList, lastIndexOf) {
     RETURN_INT(linkFindLastIndex(vm, AS_INSTANCE(receiver), args[0]));
 }
 
+LOX_METHOD(LinkedList, next) {
+    ASSERT_ARG_COUNT("LinkedList::next(index)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    if (IS_NIL(args[0])) {
+        if (size == 0) RETURN_FALSE;
+        RETURN_INT(0);
+    }
+
+    ASSERT_ARG_TYPE("LinkedList::next(index)", 0, Int);
+    int index = AS_INT(args[0]);
+    if (index < 0 || index < size - 1) RETURN_INT(index + 1);
+    RETURN_NIL;
+}
+
+LOX_METHOD(LinkedList, nextValue) {
+    ASSERT_ARG_COUNT("LinkedList::nextValue(index)", 1);
+    ASSERT_ARG_TYPE("LinkedList::nextValue(index)", 0, Int);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    int index = AS_INT(args[0]);
+    if (index > -1 && index < size) RETURN_VAL(linkNode(vm, self, index)->element);
+    RETURN_NIL;
+}
+
 LOX_METHOD(LinkedList, node) {
     ASSERT_ARG_COUNT("LinkedList::node(index)", 1);
     ASSERT_ARG_TYPE("LinkedList::node(index)", 0, Int);
@@ -1084,6 +1109,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, init, 0);
     DEF_METHOD(linkedListClass, LinkedList, last, 0);
     DEF_METHOD(linkedListClass, LinkedList, lastIndexOf, 0);
+    DEF_METHOD(linkedListClass, LinkedList, next, 1);
+    DEF_METHOD(linkedListClass, LinkedList, nextValue, 1);
     DEF_METHOD(linkedListClass, LinkedList, node, 1);
     DEF_METHOD(linkedListClass, LinkedList, peek, 0);
     DEF_METHOD(linkedListClass, LinkedList, putAt, 2);
