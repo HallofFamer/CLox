@@ -575,6 +575,7 @@ LOX_METHOD(LinkedList, clear) {
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", NIL_VAL);
     setObjProperty(vm, self, "last", NIL_VAL);
+    setObjProperty(vm, self, "current", NIL_VAL);
     setObjProperty(vm, self, "size", INT_VAL(0));
     RETURN_NIL;
 }
@@ -586,6 +587,7 @@ LOX_METHOD(LinkedList, clone) {
     push(vm, OBJ_VAL(list));
     setObjProperty(vm, list, "first", getObjProperty(vm, self, "first"));
     setObjProperty(vm, list, "last", getObjProperty(vm, self, "last"));
+    setObjProperty(vm, list, "current", getObjProperty(vm, self, "current"));
     setObjProperty(vm, list, "size", getObjProperty(vm, self, "size"));
     pop(vm);
     RETURN_OBJ(list);
@@ -618,6 +620,7 @@ LOX_METHOD(LinkedList, init) {
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", NIL_VAL);
     setObjProperty(vm, self, "last", NIL_VAL);
+    setObjProperty(vm, self, "current", NIL_VAL);
     setObjProperty(vm, self, "size", INT_VAL(0));
     RETURN_OBJ(self);
 }
@@ -644,8 +647,15 @@ LOX_METHOD(LinkedList, next) {
 
     ASSERT_ARG_TYPE("LinkedList::next(index)", 0, Int);
     int index = AS_INT(args[0]);
-    if (index < 0 || index < size - 1) RETURN_INT(index + 1);
-    RETURN_NIL;
+    if (index < 0 || index < size - 1) {
+        ObjNode* current = getObjProperty(vm, self, "current");
+        setObjProperty(vm, self, "current", current->next);
+        RETURN_INT(index + 1);
+    }
+    else {
+        setObjProperty(vm, self, "current", getObjProperty(vm, self, "first"));
+        RETURN_NIL;
+    }
 }
 
 LOX_METHOD(LinkedList, nextValue) {
@@ -654,7 +664,7 @@ LOX_METHOD(LinkedList, nextValue) {
     ObjInstance* self = AS_INSTANCE(receiver);
     int size = AS_INT(getObjProperty(vm, self, "size"));
     int index = AS_INT(args[0]);
-    if (index > -1 && index < size) RETURN_VAL(linkNode(vm, self, index)->element);
+    if (index > -1 && index < size) RETURN_VAL(getObjProperty(vm, self, "current"));
     RETURN_NIL;
 }
 
@@ -1128,4 +1138,10 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(nodeClass, Node, next, 0);
     DEF_METHOD(nodeClass, Node, prev, 0);
     DEF_METHOD(nodeClass, Node, toString, 0);
+
+    ObjClass* stackClass = defineNativeClass(vm, "Stack");
+    bindSuperclass(vm, stackClass, collectionClass);
+
+    ObjClass* queueClass = defineNativeClass(vm, "Queue");
+    bindSuperclass(vm, queueClass, collectionClass);
 }
