@@ -311,6 +311,33 @@ static void linkSizeIncrement(VM* vm, ObjInstance* linkedList) {
     setObjProperty(vm, linkedList, "size", INT_VAL(size + 1));
 }
 
+static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
+    int size = AS_INT(getObjProperty(vm, linkedList, "size"));
+    if (size == 0) return copyString(vm, "[]", 2);
+    else {
+        char string[UINT8_MAX] = "";
+        string[0] = '[';
+        size_t offset = 1;
+        ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "first"));
+        for (int i = 0; i < size; i++) {
+            char* chars = valueToString(vm, node->element);
+            size_t length = strlen(chars);
+            memcpy(string + offset, chars, length);
+            if (i == size - 1) {
+                offset += length;
+            }
+            else {
+                memcpy(string + offset + length, ", ", 2);
+                offset += length + 2;
+            }
+            node = node->next;
+        }
+        string[offset] = ']';
+        string[offset + 1] = '\0';
+        return copyString(vm, string, (int)offset + 1);
+    }
+}
+
 ObjList* listCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
     ObjList* list = newList(vm);
     push(vm, OBJ_VAL(list));
@@ -734,6 +761,12 @@ LOX_METHOD(LinkedList, toList) {
     RETURN_OBJ(list);
 }
 
+LOX_METHOD(LinkedList, toString) {
+    ASSERT_ARG_COUNT("LinkedList::toString()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    RETURN_OBJ(linkToString(vm, self));
+}
+
 LOX_METHOD(List, add) {
     ASSERT_ARG_COUNT("List::add(element)", 1);
     valueArrayWrite(vm, &AS_LIST(receiver)->elements, args[0]);
@@ -1033,7 +1066,7 @@ LOX_METHOD(Set, remove) {
 LOX_METHOD(Set, toString) {
     ASSERT_ARG_COUNT("Set::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    RETURN_OBJ(setToString(vm, self));   
+    RETURN_OBJ(setToString(vm, self));
 }
 
 void registerCollectionPackage(VM* vm) {

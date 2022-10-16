@@ -1,4 +1,4 @@
-class Collection { 
+class Collection {
     
     init(){
         error("Cannot instantiate from class Collection.");
