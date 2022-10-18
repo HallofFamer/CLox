@@ -1080,8 +1080,38 @@ LOX_METHOD(Stack, clone) {
 LOX_METHOD(Stack, init) {
     ASSERT_ARG_COUNT("Stack::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "top", NIL_VAL);
+    setObjProperty(vm, self, "top", newNode(vm, NIL_VAL, NULL, NULL));
     RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Stack, peek) {
+    ASSERT_ARG_COUNT("Stack::peek()", 0);
+    ObjNode* top = getObjProperty(vm, AS_INSTANCE(receiver), "top");
+    RETURN_VAL(top->element);
+}
+
+LOX_METHOD(Stack, pop) {
+    ASSERT_ARG_COUNT("Stack::pop()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjNode* top = getObjProperty(vm, self, "top");
+    if (IS_NIL(top->element)) RETURN_NIL;
+    else {
+        Value element = top->element;
+        setObjProperty(vm, self, "top", top->next == NULL ? NIL_VAL : top->next);
+        RETURN_VAL(element);
+    }
+}
+
+LOX_METHOD(Stack, push) {
+    ASSERT_ARG_COUNT("Stack::push(element)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
+    ObjNode* new = newNode(vm, args[0], NULL, NULL);
+    if (!IS_NIL(top->element)) {
+        new->next = top;
+    }
+    setObjProperty(vm, self, "top", new);
+    RETURN_VAL(args[0]);
 }
 
 void registerCollectionPackage(VM* vm) {
@@ -1191,6 +1221,9 @@ void registerCollectionPackage(VM* vm) {
     bindSuperclass(vm, stackClass, collectionClass);
     DEF_METHOD(stackClass, Stack, clone, 0);
     DEF_METHOD(stackClass, Stack, init, 0);
+    DEF_METHOD(stackClass, Stack, peek, 0);
+    DEF_METHOD(stackClass, Stack, pop, 0);
+    DEF_METHOD(stackClass, Stack, push, 1);
 
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
     bindSuperclass(vm, queueClass, collectionClass);
