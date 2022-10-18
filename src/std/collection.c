@@ -966,6 +966,68 @@ LOX_METHOD(Node, toString) {
     RETURN_STRING(nodeString, (int)nodeLength + 6);
 }
 
+LOX_METHOD(Queue, clear) {
+    ASSERT_ARG_COUNT("Queue::clear()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "size", INT_VAL(0));
+    setObjProperty(vm, self, "top", NIL_VAL);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Queue, clone) {
+    ASSERT_ARG_COUNT("Queue::clone()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjInstance* queue = newInstance(vm, self->obj.klass);
+    setObjProperty(vm, queue, "size", getObjProperty(vm, self, "size"));
+    setObjProperty(vm, queue, "top", getObjProperty(vm, self, "top"));
+    setObjProperty(vm, queue, "bottom", getObjProperty(vm, self, "bottom"));
+    RETURN_OBJ(queue);
+}
+
+LOX_METHOD(Queue, init) {
+    ASSERT_ARG_COUNT("Queue::init()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "size", 0);
+    setObjProperty(vm, self, "top", newNode(vm, NIL_VAL, NULL, NULL));
+    setObjProperty(vm, self, "bottom", newNode(vm, NIL_VAL, NULL, NULL));
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Queue, size) {
+    ASSERT_ARG_COUNT("Queue::size()", 0);
+    Value size = getObjProperty(vm, AS_INSTANCE(receiver), "size");
+    RETURN_INT(size);
+}
+
+LOX_METHOD(Queue, toString) {
+    ASSERT_ARG_COUNT("Stack::toString()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    if (size == 0) return copyString(vm, "[]", 2);
+    else {
+        char string[UINT8_MAX] = "";
+        string[0] = '[';
+        size_t offset = 1;
+        for (int i = 0; i < size; i++) {
+            char* chars = valueToString(vm, top->element);
+            size_t length = strlen(chars);
+            memcpy(string + offset, chars, length);
+            if (i == size - 1) {
+                offset += length;
+            }
+            else {
+                memcpy(string + offset + length, ", ", 2);
+                offset += length + 2;
+            }
+            top = top->next;
+        }
+        string[offset] = ']';
+        string[offset + 1] = '\0';
+        RETURN_STRING(string, (int)offset + 1);
+    }
+}
+
 LOX_METHOD(Set, add) {
     ASSERT_ARG_COUNT("Set::add(element)", 1);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
@@ -1069,11 +1131,19 @@ LOX_METHOD(Set, toString) {
     RETURN_OBJ(setToString(vm, self));
 }
 
+LOX_METHOD(Stack, clear) {
+    ASSERT_ARG_COUNT("Stack::clear()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "size", INT_VAL(0));
+    setObjProperty(vm, self, "top", NIL_VAL);
+    RETURN_NIL;
+}
+
 LOX_METHOD(Stack, clone) {
     ASSERT_ARG_COUNT("Stack::clone()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* stack = newInstance(vm, self->obj.klass);
-    setObjProperty(vm, self, "size", getObjProperty(vm, self, "size"));
+    setObjProperty(vm, stack, "size", getObjProperty(vm, self, "size"));
     setObjProperty(vm, stack, "top", getObjProperty(vm, self, "top"));
     RETURN_OBJ(stack);
 }
@@ -1281,6 +1351,7 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* stackClass = defineNativeClass(vm, "Stack");
     bindSuperclass(vm, stackClass, collectionClass);
+    DEF_METHOD(stackClass, Stack, clear, 0);
     DEF_METHOD(stackClass, Stack, clone, 0);
     DEF_METHOD(stackClass, Stack, init, 0);
     DEF_METHOD(stackClass, Stack, isEmpty, 0);
@@ -1293,4 +1364,9 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
     bindSuperclass(vm, queueClass, collectionClass);
+    DEF_METHOD(queueClass, Queue, clear, 0);
+    DEF_METHOD(queueClass, Queue, clone, 0);
+    DEF_METHOD(queueClass, Queue, init, 0);
+    DEF_METHOD(queueClass, Queue, size, 0);
+    DEF_METHOD(queueClass, Queue, toString, 0);
 }
