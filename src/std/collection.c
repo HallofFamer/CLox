@@ -11,6 +11,16 @@
 #include "../vm/value.h"
 #include "../vm/vm.h"
 
+static void collectionSizeDecrement(VM* vm, ObjInstance* collection) {
+    int size = AS_INT(getObjProperty(vm, collection, "size"));
+    setObjProperty(vm, collection, "size", INT_VAL(size - 1));
+}
+
+static void collectionSizeIncrement(VM* vm, ObjInstance* collection) {
+    int size = AS_INT(getObjProperty(vm, collection, "size"));
+    setObjProperty(vm, collection, "size", INT_VAL(size + 1));
+}
+
 static bool dictContainsKey(ObjDictionary* dict, Value key) {
     if (dict->count == 0) return false;
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
@@ -171,7 +181,7 @@ static void linkAddBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNod
 
         if (pred == NULL) setObjProperty(vm, linkedList, "first", new);
         else pred->next = new;
-        linkSizeIncrement(vm, linkedList);
+        collectionSizeIncrement(vm, linkedList);
     }
 }
 
@@ -183,7 +193,7 @@ static void linkAddFirst(VM* vm, ObjInstance* linkedList, Value element) {
     setObjProperty(vm, linkedList, "first", new);
     if (first == NULL) setObjProperty(vm, linkedList, "last", new);
     else first->prev = new;
-    linkSizeIncrement(vm, linkedList);
+    collectionSizeIncrement(vm, linkedList);
 }
 
 static void linkAddLast(VM* vm, ObjInstance* linkedList, Value element) {
@@ -194,7 +204,7 @@ static void linkAddLast(VM* vm, ObjInstance* linkedList, Value element) {
     setObjProperty(vm, linkedList, "last", new);
     if (last == NULL) setObjProperty(vm, linkedList, "last", new);
     else last->next = new;
-    linkSizeIncrement(vm, linkedList);
+    collectionSizeIncrement(vm, linkedList);
 }
 
 static int linkFindIndex(VM* vm, ObjInstance* linkedList, Value element) {
@@ -263,7 +273,7 @@ static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
             node->prev = NULL;
         }
 
-        if (next = NULL) {
+        if (next == NULL) {
             setObjProperty(vm, linkedList, "last", prev);
         }
         else {
@@ -272,7 +282,7 @@ static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
         }
 
         node->element = NIL_VAL;
-        linkSizeDecrement(vm, linkedList);
+        collectionSizeDecrement(vm, linkedList);
         RETURN_VAL(element);
     }
 }
@@ -285,7 +295,7 @@ static Value linkRemoveFirst(VM* vm, ObjInstance* linkedList, ObjNode* first) {
     setObjProperty(vm, linkedList, "first", next);
     if (next == NULL) setObjProperty(vm, linkedList, "last", NIL_VAL);
     else next->prev = NULL;
-    linkSizeDecrement(vm, linkedList);
+    collectionSizeDecrement(vm, linkedList);
     RETURN_VAL(element);
 }
 
@@ -297,18 +307,8 @@ static Value linkRemoveLast(VM* vm, ObjInstance* linkedList, ObjNode* last) {
     setObjProperty(vm, linkedList, "last", prev);
     if (prev == NULL) setObjProperty(vm, linkedList, "first", NIL_VAL);
     else prev->next = NULL;
-    linkSizeDecrement(vm, linkedList);
+    collectionSizeDecrement(vm, linkedList);
     RETURN_VAL(element);
-}
-
-static void linkSizeDecrement(VM* vm, ObjInstance* linkedList) {
-    int size = AS_INT(getObjProperty(vm, linkedList, "size"));
-    setObjProperty(vm, linkedList, "size", INT_VAL(size - 1));
-}
-
-static void linkSizeIncrement(VM* vm, ObjInstance* linkedList) {
-    int size = AS_INT(getObjProperty(vm, linkedList, "size"));
-    setObjProperty(vm, linkedList, "size", INT_VAL(size + 1));
 }
 
 static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
@@ -1073,6 +1073,7 @@ LOX_METHOD(Stack, clone) {
     ASSERT_ARG_COUNT("Stack::clone()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* stack = newInstance(vm, self->obj.klass);
+    setObjProperty(vm, self, "size", getObjProperty(vm, self, "size"));
     setObjProperty(vm, stack, "top", getObjProperty(vm, self, "top"));
     RETURN_OBJ(stack);
 }
@@ -1080,6 +1081,7 @@ LOX_METHOD(Stack, clone) {
 LOX_METHOD(Stack, init) {
     ASSERT_ARG_COUNT("Stack::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "size", 0);
     setObjProperty(vm, self, "top", newNode(vm, NIL_VAL, NULL, NULL));
     RETURN_OBJ(receiver);
 }
@@ -1105,6 +1107,7 @@ LOX_METHOD(Stack, pop) {
     else {
         Value element = top->element;
         setObjProperty(vm, self, "top", top->next == NULL ? NIL_VAL : top->next);
+        collectionSizeDecrement(vm, self);
         RETURN_VAL(element);
     }
 }
@@ -1118,22 +1121,58 @@ LOX_METHOD(Stack, push) {
         new->next = top;
     }
     setObjProperty(vm, self, "top", new);
+    collectionSizeIncrement(vm, self);
     RETURN_VAL(args[0]);
 }
 
 LOX_METHOD(Stack, search) {
     ASSERT_ARG_COUNT("Stack::search(element)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
-    if (IS_NIL(top->element)) RETURN_INT(-1);
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    if (size == 0) RETURN_INT(-1);
     else {
-        int i = 0;
-        while (top != NULL) {
+        ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
+        for (int i = 0; i < size; i++) {
             if (valuesEqual(args[0], top->element)) RETURN_INT(i);
             top = top->next;
             i++;
         }
         RETURN_INT(-1);
+    }
+}
+
+LOX_METHOD(Stack, size) {
+    ASSERT_ARG_COUNT("Stack::size()", 0);
+    Value size = getObjProperty(vm, AS_INSTANCE(receiver), "size");
+    RETURN_INT(size);
+}
+
+LOX_METHOD(Stack, toString) {
+    ASSERT_ARG_COUNT("Stack::toString()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    if (size == 0) return copyString(vm, "[]", 2);
+    else {
+        char string[UINT8_MAX] = "";
+        string[0] = '[';
+        size_t offset = 1;
+        for (int i = 0; i < size; i++) {
+            char* chars = valueToString(vm, top->element);
+            size_t length = strlen(chars);
+            memcpy(string + offset, chars, length);
+            if (i == size - 1) {
+                offset += length;
+            }
+            else {
+                memcpy(string + offset + length, ", ", 2);
+                offset += length + 2;
+            }
+            top = top->next;
+        }
+        string[offset] = ']';
+        string[offset + 1] = '\0';
+        RETURN_STRING(string, (int)offset + 1);
     }
 }
 
@@ -1249,6 +1288,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(stackClass, Stack, pop, 0);
     DEF_METHOD(stackClass, Stack, push, 1);
     DEF_METHOD(stackClass, Stack, search, 1);
+    DEF_METHOD(stackClass, Stack, size, 0);
+    DEF_METHOD(stackClass, Stack, toString, 0);
 
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
     bindSuperclass(vm, queueClass, collectionClass);
