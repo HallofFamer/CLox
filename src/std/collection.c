@@ -232,20 +232,11 @@ static void linkIndexValidate(VM* vm, ObjInstance* linkedList, int index) {
 
 static ObjNode* linkNode(VM* vm, ObjInstance* linkedList, int index) {
     int size = AS_INT(getObjProperty(vm, linkedList, "size"));
-    if (index < (size >> 1)) {
-        ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "first"));
-        for (int i = 0; i < index; i++) {
-            node = node->next;
-        }
-        return node;
+    ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "first"));
+    for (int i = 0; i < index; i++) {
+        node = node->next;
     }
-    else {
-        ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "last"));
-        for (int i = size - 1; i > index; i--) {
-            node = node->prev;
-        }
-        return node;
-    }
+    return node;
 }
 
 static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
