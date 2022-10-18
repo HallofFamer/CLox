@@ -232,11 +232,20 @@ static void linkIndexValidate(VM* vm, ObjInstance* linkedList, int index) {
 
 static ObjNode* linkNode(VM* vm, ObjInstance* linkedList, int index) {
     int size = AS_INT(getObjProperty(vm, linkedList, "size"));
-    ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "first"));
-    for (int i = 0; i < index; i++) {
-        node = node->next;
+    if (index < (size >> 1)) {
+        ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "first"));
+        for (int i = 0; i < index; i++) {
+            node = node->next;
+        }
+        return node;
     }
-    return node;
+    else {
+        ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "last"));
+        for (int i = size - 1; i > index; i--) {
+            node = node->prev;
+        }
+        return node;
+    }
 }
 
 static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
@@ -1060,6 +1069,21 @@ LOX_METHOD(Set, toString) {
     RETURN_OBJ(setToString(vm, self));
 }
 
+LOX_METHOD(Stack, clone) {
+    ASSERT_ARG_COUNT("Stack::clone()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjInstance* stack = newInstance(vm, self->obj.klass);
+    setObjProperty(vm, stack, "top", getObjProperty(vm, self, "top"));
+    RETURN_OBJ(stack);
+}
+
+LOX_METHOD(Stack, init) {
+    ASSERT_ARG_COUNT("Stack::init()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "top", NIL_VAL);
+    RETURN_OBJ(receiver);
+}
+
 void registerCollectionPackage(VM* vm) {
     initNativePackage(vm, "src/std/collection.lox");
     ObjClass* collectionClass = getNativeClass(vm, "Collection");
@@ -1165,6 +1189,8 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* stackClass = defineNativeClass(vm, "Stack");
     bindSuperclass(vm, stackClass, collectionClass);
+    DEF_METHOD(stackClass, Stack, clone, 0);
+    DEF_METHOD(stackClass, Stack, init, 0);
 
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
     bindSuperclass(vm, queueClass, collectionClass);
