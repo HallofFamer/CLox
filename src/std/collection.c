@@ -1084,6 +1084,13 @@ LOX_METHOD(Stack, init) {
     RETURN_OBJ(receiver);
 }
 
+LOX_METHOD(Stack, isEmpty) {
+    ASSERT_ARG_COUNT("Stack::pop()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjNode* top = getObjProperty(vm, self, "top");
+    RETURN_BOOL(IS_NIL(top->element));
+}
+
 LOX_METHOD(Stack, peek) {
     ASSERT_ARG_COUNT("Stack::peek()", 0);
     ObjNode* top = getObjProperty(vm, AS_INSTANCE(receiver), "top");
@@ -1112,6 +1119,22 @@ LOX_METHOD(Stack, push) {
     }
     setObjProperty(vm, self, "top", new);
     RETURN_VAL(args[0]);
+}
+
+LOX_METHOD(Stack, search) {
+    ASSERT_ARG_COUNT("Stack::search(element)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
+    if (IS_NIL(top->element)) RETURN_INT(-1);
+    else {
+        int i = 0;
+        while (top != NULL) {
+            if (valuesEqual(args[0], top->element)) RETURN_INT(i);
+            top = top->next;
+            i++;
+        }
+        RETURN_INT(-1);
+    }
 }
 
 void registerCollectionPackage(VM* vm) {
@@ -1221,9 +1244,11 @@ void registerCollectionPackage(VM* vm) {
     bindSuperclass(vm, stackClass, collectionClass);
     DEF_METHOD(stackClass, Stack, clone, 0);
     DEF_METHOD(stackClass, Stack, init, 0);
+    DEF_METHOD(stackClass, Stack, isEmpty, 0);
     DEF_METHOD(stackClass, Stack, peek, 0);
     DEF_METHOD(stackClass, Stack, pop, 0);
     DEF_METHOD(stackClass, Stack, push, 1);
+    DEF_METHOD(stackClass, Stack, search, 1);
 
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
     bindSuperclass(vm, queueClass, collectionClass);
