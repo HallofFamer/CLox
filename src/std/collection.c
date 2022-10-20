@@ -984,6 +984,24 @@ LOX_METHOD(Queue, clone) {
     RETURN_OBJ(queue);
 }
 
+LOX_METHOD(Queue, enqueue) {
+    ASSERT_ARG_COUNT("Queue::enqueue(element)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
+    ObjNode* bottom = AS_NODE(getObjProperty(vm, self, "bottom"));
+    ObjNode* new = newNode(vm, args[0], NULL, NULL);
+    if (!IS_NIL(bottom->element)) {
+        setObjProperty(vm, self, "top", new);
+        setObjProperty(vm, self, "bottom", new);
+    }
+    else {
+        bottom->next = new;
+        setObjProperty(vm, self, "bottom", new);
+    }
+    collectionSizeIncrement(vm, self);
+    RETURN_VAL(args[0]);
+}
+
 LOX_METHOD(Queue, init) {
     ASSERT_ARG_COUNT("Queue::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -1000,7 +1018,7 @@ LOX_METHOD(Queue, size) {
 }
 
 LOX_METHOD(Queue, toString) {
-    ASSERT_ARG_COUNT("Stack::toString()", 0);
+    ASSERT_ARG_COUNT("Queue::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
     int size = AS_INT(getObjProperty(vm, self, "size"));
