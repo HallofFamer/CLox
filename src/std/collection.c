@@ -984,6 +984,19 @@ LOX_METHOD(Queue, clone) {
     RETURN_OBJ(queue);
 }
 
+LOX_METHOD(Queue, dequeue) {
+    ASSERT_ARG_COUNT("Queue::dequeue()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
+    if (IS_NIL(top->element)) RETURN_NIL;
+
+    ObjNode* node = top;
+    setObjProperty(vm, self, "top", top->next);
+    if (IS_NIL(top->next->element)) setObjProperty(vm, self, "bottom", top->next);
+    collectionSizeDecrement(vm, self);
+    RETURN_VAL(top->element);
+}
+
 LOX_METHOD(Queue, enqueue) {
     ASSERT_ARG_COUNT("Queue::enqueue(element)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -1384,6 +1397,8 @@ void registerCollectionPackage(VM* vm) {
     bindSuperclass(vm, queueClass, collectionClass);
     DEF_METHOD(queueClass, Queue, clear, 0);
     DEF_METHOD(queueClass, Queue, clone, 0);
+    DEF_METHOD(queueClass, Queue, dequeue, 0);
+    DEF_METHOD(queueClass, Queue, enqueue, 1);
     DEF_METHOD(queueClass, Queue, init, 0);
     DEF_METHOD(queueClass, Queue, size, 0);
     DEF_METHOD(queueClass, Queue, toString, 0);
