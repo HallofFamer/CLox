@@ -978,9 +978,9 @@ LOX_METHOD(Queue, clone) {
     ASSERT_ARG_COUNT("Queue::clone()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* queue = newInstance(vm, self->obj.klass);
-    setObjProperty(vm, queue, "size", getObjProperty(vm, self, "size"));
     setObjProperty(vm, queue, "top", getObjProperty(vm, self, "top"));
     setObjProperty(vm, queue, "bottom", getObjProperty(vm, self, "bottom"));
+    setObjProperty(vm, queue, "size", getObjProperty(vm, self, "size"));
     RETURN_OBJ(queue);
 }
 
@@ -1018,10 +1018,17 @@ LOX_METHOD(Queue, enqueue) {
 LOX_METHOD(Queue, init) {
     ASSERT_ARG_COUNT("Queue::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "size", 0);
     setObjProperty(vm, self, "top", newNode(vm, NIL_VAL, NULL, NULL));
     setObjProperty(vm, self, "bottom", newNode(vm, NIL_VAL, NULL, NULL));
+    setObjProperty(vm, self, "size", 0);
     RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Queue, isEmpty) {
+    ASSERT_ARG_COUNT("Queue::pop()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    RETURN_BOOL(size == 0);
 }
 
 LOX_METHOD(Queue, size) {
@@ -1190,8 +1197,8 @@ LOX_METHOD(Stack, init) {
 LOX_METHOD(Stack, isEmpty) {
     ASSERT_ARG_COUNT("Stack::pop()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjNode* top = getObjProperty(vm, self, "top");
-    RETURN_BOOL(IS_NIL(top->element));
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    RETURN_BOOL(size == 0);
 }
 
 LOX_METHOD(Stack, peek) {
@@ -1400,6 +1407,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(queueClass, Queue, dequeue, 0);
     DEF_METHOD(queueClass, Queue, enqueue, 1);
     DEF_METHOD(queueClass, Queue, init, 0);
+    DEF_METHOD(queueClass, Queue, isEmpty, 0);
     DEF_METHOD(queueClass, Queue, size, 0);
     DEF_METHOD(queueClass, Queue, toString, 0);
 }
