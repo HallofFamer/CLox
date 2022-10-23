@@ -1031,6 +1031,12 @@ LOX_METHOD(Queue, isEmpty) {
     RETURN_BOOL(size == 0);
 }
 
+LOX_METHOD(Queue, peek) {
+    ASSERT_ARG_COUNT("Queue::peek()", 0);
+    ObjNode* top = getObjProperty(vm, AS_INSTANCE(receiver), "top");
+    RETURN_VAL(top->element);
+}
+
 LOX_METHOD(Queue, size) {
     ASSERT_ARG_COUNT("Queue::size()", 0);
     Value size = getObjProperty(vm, AS_INSTANCE(receiver), "size");
@@ -1408,6 +1414,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(queueClass, Queue, enqueue, 1);
     DEF_METHOD(queueClass, Queue, init, 0);
     DEF_METHOD(queueClass, Queue, isEmpty, 0);
+    DEF_METHOD(queueClass, Queue, peek, 0);
     DEF_METHOD(queueClass, Queue, size, 0);
     DEF_METHOD(queueClass, Queue, toString, 0);
 }
