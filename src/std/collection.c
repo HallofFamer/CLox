@@ -1043,6 +1043,21 @@ LOX_METHOD(Queue, size) {
     RETURN_INT(size);
 }
 
+LOX_METHOD(Queue, toList) {
+    ASSERT_ARG_COUNT("Queue::toList()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    ObjList* list = newList(vm);
+    push(vm, OBJ_VAL(list));
+    if (size > 0) {
+        for (ObjNode* node = getObjProperty(vm, self, "top"); node != NULL; node = node->next) {
+            valueArrayWrite(vm, &list->elements, node->element);
+        }
+    }
+    pop(vm);
+    RETURN_OBJ(list);
+}
+
 LOX_METHOD(Queue, toString) {
     ASSERT_ARG_COUNT("Queue::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -1259,6 +1274,21 @@ LOX_METHOD(Stack, size) {
     ASSERT_ARG_COUNT("Stack::size()", 0);
     Value size = getObjProperty(vm, AS_INSTANCE(receiver), "size");
     RETURN_INT(size);
+}
+
+LOX_METHOD(Stack, toList) {
+    ASSERT_ARG_COUNT("Stack::toList()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int size = AS_INT(getObjProperty(vm, self, "size"));
+    ObjList* list = newList(vm);
+    push(vm, OBJ_VAL(list));
+    if (size > 0) {
+        for (ObjNode* node = getObjProperty(vm, self, "top"); node != NULL; node = node->next) {
+            valueArrayWrite(vm, &list->elements, node->element);
+        }
+    }
+    pop(vm);
+    RETURN_OBJ(list);
 }
 
 LOX_METHOD(Stack, toString) {
