@@ -21,6 +21,8 @@ static void collectionSizeIncrement(VM* vm, ObjInstance* collection) {
     setObjProperty(vm, collection, "size", INT_VAL(size + 1));
 }
 
+
+
 static bool dictContainsKey(ObjDictionary* dict, Value key) {
     if (dict->count == 0) return false;
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
@@ -309,6 +311,19 @@ static Value linkRemoveLast(VM* vm, ObjInstance* linkedList, ObjNode* last) {
     else prev->next = NULL;
     collectionSizeDecrement(vm, linkedList);
     RETURN_VAL(element);
+}
+
+static int linkSearchElement(VM* vm, ObjInstance* linkedList, Value element) {
+    int size = AS_INT(getObjProperty(vm, linkedList, "size"));
+    if (size > 0) {
+        ObjNode * first = getObjProperty(vm, linkedList, "first");
+        for (int i = 0; i < size; i++) {
+            if (valuesEqual(element, first->element)) return i;
+            first = first->next;
+            i++;
+        }
+    }
+    return -1;
 }
 
 static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
@@ -969,8 +984,9 @@ LOX_METHOD(Node, toString) {
 LOX_METHOD(Queue, clear) {
     ASSERT_ARG_COUNT("Queue::clear()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "first", newNode(vm, NIL_VAL, NULL, NULL));
+    setObjProperty(vm, self, "last", newNode(vm, NIL_VAL, NULL, NULL));
     setObjProperty(vm, self, "size", INT_VAL(0));
-    setObjProperty(vm, self, "top", NIL_VAL);
     RETURN_NIL;
 }
 
@@ -978,8 +994,8 @@ LOX_METHOD(Queue, clone) {
     ASSERT_ARG_COUNT("Queue::clone()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* queue = newInstance(vm, self->obj.klass);
-    setObjProperty(vm, queue, "top", getObjProperty(vm, self, "top"));
-    setObjProperty(vm, queue, "bottom", getObjProperty(vm, self, "bottom"));
+    setObjProperty(vm, queue, "first", getObjProperty(vm, self, "first"));
+    setObjProperty(vm, queue, "last", getObjProperty(vm, self, "last"));
     setObjProperty(vm, queue, "size", getObjProperty(vm, self, "size"));
     RETURN_OBJ(queue);
 }
@@ -987,29 +1003,29 @@ LOX_METHOD(Queue, clone) {
 LOX_METHOD(Queue, dequeue) {
     ASSERT_ARG_COUNT("Queue::dequeue()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
-    if (IS_NIL(top->element)) RETURN_NIL;
+    ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
+    if (IS_NIL(first->element)) RETURN_NIL;
 
-    ObjNode* node = top;
-    setObjProperty(vm, self, "top", top->next);
-    if (IS_NIL(top->next->element)) setObjProperty(vm, self, "bottom", top->next);
+    ObjNode* node = first;
+    setObjProperty(vm, self, "first", first->next);
+    if (IS_NIL(first->next->element)) setObjProperty(vm, self, "last", first->next);
     collectionSizeDecrement(vm, self);
-    RETURN_VAL(top->element);
+    RETURN_VAL(first->element);
 }
 
 LOX_METHOD(Queue, enqueue) {
     ASSERT_ARG_COUNT("Queue::enqueue(element)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
-    ObjNode* bottom = AS_NODE(getObjProperty(vm, self, "bottom"));
+    ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
+    ObjNode* last = AS_NODE(getObjProperty(vm, self, "last"));
     ObjNode* new = newNode(vm, args[0], NULL, NULL);
-    if (!IS_NIL(bottom->element)) {
-        setObjProperty(vm, self, "top", new);
-        setObjProperty(vm, self, "bottom", new);
+    if (!IS_NIL(last->element)) {
+        setObjProperty(vm, self, "first", new);
+        setObjProperty(vm, self, "last", new);
     }
     else {
-        bottom->next = new;
-        setObjProperty(vm, self, "bottom", new);
+        last->next = new;
+        setObjProperty(vm, self, "last", new);
     }
     collectionSizeIncrement(vm, self);
     RETURN_VAL(args[0]);
@@ -1018,8 +1034,8 @@ LOX_METHOD(Queue, enqueue) {
 LOX_METHOD(Queue, init) {
     ASSERT_ARG_COUNT("Queue::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "top", newNode(vm, NIL_VAL, NULL, NULL));
-    setObjProperty(vm, self, "bottom", newNode(vm, NIL_VAL, NULL, NULL));
+    setObjProperty(vm, self, "first", newNode(vm, NIL_VAL, NULL, NULL));
+    setObjProperty(vm, self, "last", newNode(vm, NIL_VAL, NULL, NULL));
     setObjProperty(vm, self, "size", 0);
     RETURN_OBJ(receiver);
 }
@@ -1033,8 +1049,14 @@ LOX_METHOD(Queue, isEmpty) {
 
 LOX_METHOD(Queue, peek) {
     ASSERT_ARG_COUNT("Queue::peek()", 0);
-    ObjNode* top = getObjProperty(vm, AS_INSTANCE(receiver), "top");
-    RETURN_VAL(top->element);
+    ObjNode* first = getObjProperty(vm, AS_INSTANCE(receiver), "first");
+    RETURN_VAL(first->element);
+}
+
+LOX_METHOD(Queue, search) {
+    ASSERT_ARG_COUNT("Queue::search(element)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    RETURN_INT(linkSearchElement(vm, self, args[0]));
 }
 
 LOX_METHOD(Queue, size) {
@@ -1050,7 +1072,7 @@ LOX_METHOD(Queue, toList) {
     ObjList* list = newList(vm);
     push(vm, OBJ_VAL(list));
     if (size > 0) {
-        for (ObjNode* node = getObjProperty(vm, self, "top"); node != NULL; node = node->next) {
+        for (ObjNode* node = getObjProperty(vm, self, "first"); node != NULL; node = node->next) {
             valueArrayWrite(vm, &list->elements, node->element);
         }
     }
@@ -1061,30 +1083,7 @@ LOX_METHOD(Queue, toList) {
 LOX_METHOD(Queue, toString) {
     ASSERT_ARG_COUNT("Queue::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
-    int size = AS_INT(getObjProperty(vm, self, "size"));
-    if (size == 0) return copyString(vm, "[]", 2);
-    else {
-        char string[UINT8_MAX] = "";
-        string[0] = '[';
-        size_t offset = 1;
-        for (int i = 0; i < size; i++) {
-            char* chars = valueToString(vm, top->element);
-            size_t length = strlen(chars);
-            memcpy(string + offset, chars, length);
-            if (i == size - 1) {
-                offset += length;
-            }
-            else {
-                memcpy(string + offset + length, ", ", 2);
-                offset += length + 2;
-            }
-            top = top->next;
-        }
-        string[offset] = ']';
-        string[offset + 1] = '\0';
-        RETURN_STRING(string, (int)offset + 1);
-    }
+    RETURN_OBJ(linkToString(vm, self));
 }
 
 LOX_METHOD(Set, add) {
@@ -1193,8 +1192,8 @@ LOX_METHOD(Set, toString) {
 LOX_METHOD(Stack, clear) {
     ASSERT_ARG_COUNT("Stack::clear()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "first", NIL_VAL);
     setObjProperty(vm, self, "size", INT_VAL(0));
-    setObjProperty(vm, self, "top", NIL_VAL);
     RETURN_NIL;
 }
 
@@ -1202,16 +1201,16 @@ LOX_METHOD(Stack, clone) {
     ASSERT_ARG_COUNT("Stack::clone()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* stack = newInstance(vm, self->obj.klass);
+    setObjProperty(vm, stack, "first", getObjProperty(vm, self, "first"));
     setObjProperty(vm, stack, "size", getObjProperty(vm, self, "size"));
-    setObjProperty(vm, stack, "top", getObjProperty(vm, self, "top"));
     RETURN_OBJ(stack);
 }
 
 LOX_METHOD(Stack, init) {
     ASSERT_ARG_COUNT("Stack::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "first", newNode(vm, NIL_VAL, NULL, NULL));
     setObjProperty(vm, self, "size", 0);
-    setObjProperty(vm, self, "top", newNode(vm, NIL_VAL, NULL, NULL));
     RETURN_OBJ(receiver);
 }
 
@@ -1224,18 +1223,18 @@ LOX_METHOD(Stack, isEmpty) {
 
 LOX_METHOD(Stack, peek) {
     ASSERT_ARG_COUNT("Stack::peek()", 0);
-    ObjNode* top = getObjProperty(vm, AS_INSTANCE(receiver), "top");
-    RETURN_VAL(top->element);
+    ObjNode* first = getObjProperty(vm, AS_INSTANCE(receiver), "first");
+    RETURN_VAL(first->element);
 }
 
 LOX_METHOD(Stack, pop) {
     ASSERT_ARG_COUNT("Stack::pop()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjNode* top = getObjProperty(vm, self, "top");
-    if (IS_NIL(top->element)) RETURN_NIL;
+    ObjNode* first = getObjProperty(vm, self, "first");
+    if (IS_NIL(first->element)) RETURN_NIL;
     else {
-        Value element = top->element;
-        setObjProperty(vm, self, "top", top->next == NULL ? NIL_VAL : top->next);
+        Value element = first->element;
+        setObjProperty(vm, self, "first", first->next == NULL ? NIL_VAL : first->next);
         collectionSizeDecrement(vm, self);
         RETURN_VAL(element);
     }
@@ -1244,12 +1243,12 @@ LOX_METHOD(Stack, pop) {
 LOX_METHOD(Stack, push) {
     ASSERT_ARG_COUNT("Stack::push(element)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
+    ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
     ObjNode* new = newNode(vm, args[0], NULL, NULL);
-    if (!IS_NIL(top->element)) {
-        new->next = top;
+    if (!IS_NIL(first->element)) {
+        new->next = first;
     }
-    setObjProperty(vm, self, "top", new);
+    setObjProperty(vm, self, "first", new);
     collectionSizeIncrement(vm, self);
     RETURN_VAL(args[0]);
 }
@@ -1257,17 +1256,7 @@ LOX_METHOD(Stack, push) {
 LOX_METHOD(Stack, search) {
     ASSERT_ARG_COUNT("Stack::search(element)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
-    int size = AS_INT(getObjProperty(vm, self, "size"));
-    if (size == 0) RETURN_INT(-1);
-    else {
-        ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
-        for (int i = 0; i < size; i++) {
-            if (valuesEqual(args[0], top->element)) RETURN_INT(i);
-            top = top->next;
-            i++;
-        }
-        RETURN_INT(-1);
-    }
+    RETURN_INT(linkSearchElement(vm, self, args[0]));
 }
 
 LOX_METHOD(Stack, size) {
@@ -1283,7 +1272,7 @@ LOX_METHOD(Stack, toList) {
     ObjList* list = newList(vm);
     push(vm, OBJ_VAL(list));
     if (size > 0) {
-        for (ObjNode* node = getObjProperty(vm, self, "top"); node != NULL; node = node->next) {
+        for (ObjNode* node = getObjProperty(vm, self, "first"); node != NULL; node = node->next) {
             valueArrayWrite(vm, &list->elements, node->element);
         }
     }
@@ -1294,30 +1283,7 @@ LOX_METHOD(Stack, toList) {
 LOX_METHOD(Stack, toString) {
     ASSERT_ARG_COUNT("Stack::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjNode* top = AS_NODE(getObjProperty(vm, self, "top"));
-    int size = AS_INT(getObjProperty(vm, self, "size"));
-    if (size == 0) return copyString(vm, "[]", 2);
-    else {
-        char string[UINT8_MAX] = "";
-        string[0] = '[';
-        size_t offset = 1;
-        for (int i = 0; i < size; i++) {
-            char* chars = valueToString(vm, top->element);
-            size_t length = strlen(chars);
-            memcpy(string + offset, chars, length);
-            if (i == size - 1) {
-                offset += length;
-            }
-            else {
-                memcpy(string + offset + length, ", ", 2);
-                offset += length + 2;
-            }
-            top = top->next;
-        }
-        string[offset] = ']';
-        string[offset + 1] = '\0';
-        RETURN_STRING(string, (int)offset + 1);
-    }
+    RETURN_OBJ(linkToString(vm, self));
 }
 
 void registerCollectionPackage(VM* vm) {
