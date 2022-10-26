@@ -1400,6 +1400,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(stackClass, Stack, push, 1);
     DEF_METHOD(stackClass, Stack, search, 1);
     DEF_METHOD(stackClass, Stack, size, 0);
+    DEF_METHOD(stackClass, Stack, toList, 0);
     DEF_METHOD(stackClass, Stack, toString, 0);
 
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
@@ -1412,5 +1413,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(queueClass, Queue, isEmpty, 0);
     DEF_METHOD(queueClass, Queue, peek, 0);
     DEF_METHOD(queueClass, Queue, size, 0);
+    DEF_METHOD(queueClass, Queue, toList, 0);
     DEF_METHOD(queueClass, Queue, toString, 0);
 }
