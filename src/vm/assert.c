@@ -48,6 +48,13 @@ void assertArgIsDictionary(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
+void assertArgIsEntry(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_ENTRY(args[index])) {
+        runtimeError(vm, "method %s expects argument %d to be a map entry.", method, index + 1);
+        exit(70);
+    }
+}
+
 void assertArgIsFile(VM* vm, const char* method, Value* args, int index) {
     if (!IS_FILE(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be a file.", method, index + 1);
@@ -72,6 +79,13 @@ void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
 void assertArgIsList(VM* vm, const char* method, Value* args, int index) {
     if (!IS_LIST(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be a list.", method, index + 1);
+        exit(70);
+    }
+}
+
+void assertArgIsNode(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_NODE(args[index])) {
+        runtimeError(vm, "method %s expects argument %d to be a link node.", method, index + 1);
         exit(70);
     }
 }
