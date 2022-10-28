@@ -538,6 +538,19 @@ LOX_METHOD(Dictionary, toString) {
     RETURN_OBJ(dictToString(vm, AS_DICTIONARY(receiver)));
 }
 
+LOX_METHOD(Dictionary, valueSet) {
+    ASSERT_ARG_COUNT("Dictionary::ValueSet()", 0);
+    ObjDictionary* self = AS_DICTIONARY(receiver);
+    ObjDictionary* valueDict = newDictionary(vm);
+    for (int i = 0; i < self->count; i++) {
+        ObjEntry* entry = &self->entries[i];
+        dictSet(vm, valueDict, entry->value, NIL_VAL);
+    }
+    ObjInstance* valueSet = newInstance(vm, getNativeClass(vm, "Set"));
+    setObjProperty(vm, valueSet, "dict", valueDict);
+    RETURN_OBJ(valueSet);
+}
+
 LOX_METHOD(Entry, clone) {
     ASSERT_ARG_COUNT("Entry::clone()", 0);
     ObjEntry* self = AS_ENTRY(receiver);
@@ -1343,6 +1356,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, putAt, 2);
     DEF_METHOD(vm->dictionaryClass, Dictionary, removeAt, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
+    DEF_METHOD(vm->dictionaryClass, Dictionary, valueSet, 0);
 
     ObjClass* entryClass = defineNativeClass(vm, "Entry");
     bindSuperclass(vm, entryClass, vm->objectClass);
