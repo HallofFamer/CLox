@@ -22,6 +22,7 @@ void assertArgIsInt(VM* vm, const char* method, Value* args, int index);
 void assertArgIsList(VM* vm, const char* method, Value* args, int index);
 void assertArgIsNode(VM* vm, const char* method, Value* args, int index);
 void assertArgIsNumber(VM* vm, const char* method, Value* args, int index);
+void assertArgIsRecord(VM* vm, const char* method, Value* args, int index);
 void assertArgIsString(VM* vm, const char* method, Value* args, int index);
 void assertIntWithinRange(VM* vm, const char* method, int value, int min, int max, int index);
 void assertNumberNonNegative(VM* vm, const char* method, double number, int index);
