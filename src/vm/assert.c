@@ -97,13 +97,6 @@ void assertArgIsNumber(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
-void assertArgIsRecord(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_RECORD(args[index])) {
-        runtimeError(vm, "method %s expects argument %d to be a record/c struct.", method, index + 1);
-        exit(70);
-    }
-}
-
 void assertArgIsString(VM* vm, const char* method, Value* args, int index) {
     if (!IS_STRING(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be a string.", method, index + 1);
