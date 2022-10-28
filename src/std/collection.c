@@ -464,6 +464,19 @@ LOX_METHOD(Dictionary, isEmpty) {
     RETURN_BOOL(AS_DICTIONARY(receiver)->count == 0);
 }
 
+LOX_METHOD(Dictionary, keySet) {
+    ASSERT_ARG_COUNT("Dictionary::keySet()", 0);
+    ObjDictionary* self = AS_DICTIONARY(receiver);
+    ObjDictionary* keyDict = dictCopy(vm, self);
+    for (int i = 0; i < keyDict->count; i++) {
+        ObjEntry* entry = &keyDict->entries[i];
+        entry->value = NIL_VAL;
+    }
+    ObjInstance* keySet = newInstance(vm, getNativeClass(vm, "Set"));
+    setObjProperty(vm, keySet, "dict", keyDict);
+    RETURN_OBJ(keySet);
+}
+
 LOX_METHOD(Dictionary, length) {
     ASSERT_ARG_COUNT("Dictionary::length()", 0);
     RETURN_INT(dictLength(AS_DICTIONARY(receiver)));
@@ -1323,6 +1336,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, init, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, isEmpty, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, length, 0);
+    DEF_METHOD(vm->dictionaryClass, Dictionary, keySet, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, next, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, nextValue, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, putAll, 1);
