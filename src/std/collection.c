@@ -1231,7 +1231,7 @@ LOX_METHOD(Stack, clear) {
     ASSERT_ARG_COUNT("Stack::clear()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", NIL_VAL);
-    setObjProperty(vm, self, "size", INT_VAL(0));
+    setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_NIL;
 }
 
@@ -1240,7 +1240,7 @@ LOX_METHOD(Stack, clone) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* stack = newInstance(vm, self->obj.klass);
     setObjProperty(vm, stack, "first", getObjProperty(vm, self, "first"));
-    setObjProperty(vm, stack, "size", getObjProperty(vm, self, "size"));
+    setObjProperty(vm, stack, "length", getObjProperty(vm, self, "length"));
     RETURN_OBJ(stack);
 }
 
@@ -1248,15 +1248,21 @@ LOX_METHOD(Stack, init) {
     ASSERT_ARG_COUNT("Stack::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", newNode(vm, NIL_VAL, NULL, NULL));
-    setObjProperty(vm, self, "size", 0);
+    setObjProperty(vm, self, "length", 0);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Stack, isEmpty) {
     ASSERT_ARG_COUNT("Stack::pop()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    int size = AS_INT(getObjProperty(vm, self, "size"));
-    RETURN_BOOL(size == 0);
+    int length = AS_INT(getObjProperty(vm, self, "length"));
+    RETURN_BOOL(length == 0);
+}
+
+LOX_METHOD(Stack, length) {
+    ASSERT_ARG_COUNT("Stack::length()", 0);
+    Value length = getObjProperty(vm, AS_INSTANCE(receiver), "length");
+    RETURN_INT(length);
 }
 
 LOX_METHOD(Stack, peek) {
@@ -1297,19 +1303,13 @@ LOX_METHOD(Stack, search) {
     RETURN_INT(linkSearchElement(vm, self, args[0]));
 }
 
-LOX_METHOD(Stack, size) {
-    ASSERT_ARG_COUNT("Stack::size()", 0);
-    Value size = getObjProperty(vm, AS_INSTANCE(receiver), "size");
-    RETURN_INT(size);
-}
-
 LOX_METHOD(Stack, toList) {
     ASSERT_ARG_COUNT("Stack::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    int size = AS_INT(getObjProperty(vm, self, "size"));
+    int length = AS_INT(getObjProperty(vm, self, "length"));
     ObjList* list = newList(vm);
     push(vm, OBJ_VAL(list));
-    if (size > 0) {
+    if (length > 0) {
         for (ObjNode* node = getObjProperty(vm, self, "first"); node != NULL; node = node->next) {
             valueArrayWrite(vm, &list->elements, node->element);
         }
@@ -1437,11 +1437,11 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(stackClass, Stack, clone, 0);
     DEF_METHOD(stackClass, Stack, init, 0);
     DEF_METHOD(stackClass, Stack, isEmpty, 0);
+    DEF_METHOD(stackClass, Stack, length, 0);
     DEF_METHOD(stackClass, Stack, peek, 0);
     DEF_METHOD(stackClass, Stack, pop, 0);
     DEF_METHOD(stackClass, Stack, push, 1);
     DEF_METHOD(stackClass, Stack, search, 1);
-    DEF_METHOD(stackClass, Stack, size, 0);
     DEF_METHOD(stackClass, Stack, toList, 0);
     DEF_METHOD(stackClass, Stack, toString, 0);
 
