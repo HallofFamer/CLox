@@ -1010,7 +1010,7 @@ LOX_METHOD(Queue, clear) {
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", newNode(vm, NIL_VAL, NULL, NULL));
     setObjProperty(vm, self, "last", newNode(vm, NIL_VAL, NULL, NULL));
-    setObjProperty(vm, self, "size", INT_VAL(0));
+    setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_NIL;
 }
 
@@ -1020,7 +1020,7 @@ LOX_METHOD(Queue, clone) {
     ObjInstance* queue = newInstance(vm, self->obj.klass);
     setObjProperty(vm, queue, "first", getObjProperty(vm, self, "first"));
     setObjProperty(vm, queue, "last", getObjProperty(vm, self, "last"));
-    setObjProperty(vm, queue, "size", getObjProperty(vm, self, "size"));
+    setObjProperty(vm, queue, "length", getObjProperty(vm, self, "length"));
     RETURN_OBJ(queue);
 }
 
@@ -1060,15 +1060,21 @@ LOX_METHOD(Queue, init) {
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", newNode(vm, NIL_VAL, NULL, NULL));
     setObjProperty(vm, self, "last", newNode(vm, NIL_VAL, NULL, NULL));
-    setObjProperty(vm, self, "size", 0);
+    setObjProperty(vm, self, "length", 0);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Queue, isEmpty) {
     ASSERT_ARG_COUNT("Queue::pop()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    int size = AS_INT(getObjProperty(vm, self, "size"));
-    RETURN_BOOL(size == 0);
+    int length = AS_INT(getObjProperty(vm, self, "length"));
+    RETURN_BOOL(length == 0);
+}
+
+LOX_METHOD(Queue, length) {
+    ASSERT_ARG_COUNT("Queue::length()", 0);
+    Value length = getObjProperty(vm, AS_INSTANCE(receiver), "length");
+    RETURN_INT(length);
 }
 
 LOX_METHOD(Queue, peek) {
@@ -1083,19 +1089,13 @@ LOX_METHOD(Queue, search) {
     RETURN_INT(linkSearchElement(vm, self, args[0]));
 }
 
-LOX_METHOD(Queue, size) {
-    ASSERT_ARG_COUNT("Queue::size()", 0);
-    Value size = getObjProperty(vm, AS_INSTANCE(receiver), "size");
-    RETURN_INT(size);
-}
-
 LOX_METHOD(Queue, toList) {
     ASSERT_ARG_COUNT("Queue::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    int size = AS_INT(getObjProperty(vm, self, "size"));
+    int length = AS_INT(getObjProperty(vm, self, "length"));
     ObjList* list = newList(vm);
     push(vm, OBJ_VAL(list));
-    if (size > 0) {
+    if (length > 0) {
         for (ObjNode* node = getObjProperty(vm, self, "first"); node != NULL; node = node->next) {
             valueArrayWrite(vm, &list->elements, node->element);
         }
@@ -1453,8 +1453,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(queueClass, Queue, enqueue, 1);
     DEF_METHOD(queueClass, Queue, init, 0);
     DEF_METHOD(queueClass, Queue, isEmpty, 0);
+    DEF_METHOD(queueClass, Queue, length, 0);
     DEF_METHOD(queueClass, Queue, peek, 0);
-    DEF_METHOD(queueClass, Queue, size, 0);
     DEF_METHOD(queueClass, Queue, toList, 0);
     DEF_METHOD(queueClass, Queue, toString, 0);
 }
