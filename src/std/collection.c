@@ -691,6 +691,13 @@ LOX_METHOD(LinkedList, init) {
     RETURN_OBJ(self);
 }
 
+LOX_METHOD(LinkedList, isEmpty) {
+    ASSERT_ARG_COUNT("LinkedList::isEmpty()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int length = AS_INT(getObjProperty(vm, self, "length"));
+    RETURN_BOOL(length == 0);
+}
+
 LOX_METHOD(LinkedList, last) {
     ASSERT_ARG_COUNT("LinkedList::last()", 0);
     ObjNode* last = getObjProperty(vm, AS_INSTANCE(receiver), "last");
@@ -1065,7 +1072,7 @@ LOX_METHOD(Queue, init) {
 }
 
 LOX_METHOD(Queue, isEmpty) {
-    ASSERT_ARG_COUNT("Queue::pop()", 0);
+    ASSERT_ARG_COUNT("Queue::isEmpty()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, self, "length"));
     RETURN_BOOL(length == 0);
@@ -1408,6 +1415,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, getAt, 1);
     DEF_METHOD(linkedListClass, LinkedList, indexOf, 1);
     DEF_METHOD(linkedListClass, LinkedList, init, 0);
+    DEF_METHOD(linkedListClass, LinkedList, isEmpty, 0);
     DEF_METHOD(linkedListClass, LinkedList, last, 0);
     DEF_METHOD(linkedListClass, LinkedList, lastIndexOf, 0);
     DEF_METHOD(linkedListClass, LinkedList, length, 0);
