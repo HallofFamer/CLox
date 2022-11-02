@@ -11,6 +11,11 @@
 #include "../vm/value.h"
 #include "../vm/vm.h"
 
+static bool collectionIsEmpty(VM* vm, ObjInstance* collection) {
+    int length = AS_INT(getObjProperty(vm, collection, "length"));
+    return (length == 0);
+}
+
 static void collectionLengthDecrement(VM* vm, ObjInstance* collection) {
     int length = AS_INT(getObjProperty(vm, collection, "length"));
     setObjProperty(vm, collection, "length", INT_VAL(length - 1));
@@ -693,9 +698,7 @@ LOX_METHOD(LinkedList, init) {
 
 LOX_METHOD(LinkedList, isEmpty) {
     ASSERT_ARG_COUNT("LinkedList::isEmpty()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    int length = AS_INT(getObjProperty(vm, self, "length"));
-    RETURN_BOOL(length == 0);
+    RETURN_BOOL(collectionIsEmpty(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(LinkedList, last) {
@@ -1073,9 +1076,7 @@ LOX_METHOD(Queue, init) {
 
 LOX_METHOD(Queue, isEmpty) {
     ASSERT_ARG_COUNT("Queue::isEmpty()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    int length = AS_INT(getObjProperty(vm, self, "length"));
-    RETURN_BOOL(length == 0);
+    RETURN_BOOL(collectionIsEmpty(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Queue, length) {
@@ -1260,10 +1261,8 @@ LOX_METHOD(Stack, init) {
 }
 
 LOX_METHOD(Stack, isEmpty) {
-    ASSERT_ARG_COUNT("Stack::pop()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    int length = AS_INT(getObjProperty(vm, self, "length"));
-    RETURN_BOOL(length == 0);
+    ASSERT_ARG_COUNT("Stack::isEmpty()", 0);
+    RETURN_BOOL(collectionIsEmpty(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Stack, length) {
