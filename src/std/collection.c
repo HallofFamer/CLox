@@ -182,9 +182,9 @@ static void linkAddBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNod
     else {
         ObjNode* pred = succ->prev;
         ObjNode* new = newNode(vm, element, pred, succ);
-        succ->prev = newNode;
+        succ->prev = new;
 
-        if (pred == NULL) setObjProperty(vm, linkedList, "first", new);
+        if (pred == NULL) setObjProperty(vm, linkedList, "first", OBJ_VAL(new));
         else pred->next = new;
         collectionLengthIncrement(vm, linkedList);
     }
@@ -195,8 +195,8 @@ static void linkAddFirst(VM* vm, ObjInstance* linkedList, Value element) {
     ObjNode* first = IS_NIL(f) ? NULL : AS_NODE(f);
     ObjNode* new = newNode(vm, element, NULL, first);
 
-    setObjProperty(vm, linkedList, "first", new);
-    if (first == NULL) setObjProperty(vm, linkedList, "last", new);
+    setObjProperty(vm, linkedList, "first", OBJ_VAL(new));
+    if (first == NULL) setObjProperty(vm, linkedList, "last", OBJ_VAL(new));
     else first->prev = new;
     collectionLengthIncrement(vm, linkedList);
 }
@@ -206,8 +206,8 @@ static void linkAddLast(VM* vm, ObjInstance* linkedList, Value element) {
     ObjNode* last = IS_NIL(l) ? NULL : AS_NODE(l);
     ObjNode* new = newNode(vm, element, NULL, last);
 
-    setObjProperty(vm, linkedList, "last", new);
-    if (last == NULL) setObjProperty(vm, linkedList, "last", new);
+    setObjProperty(vm, linkedList, "last", OBJ_VAL(new));
+    if (last == NULL) setObjProperty(vm, linkedList, "last", OBJ_VAL(new));
     else last->next = new;
     collectionLengthIncrement(vm, linkedList);
 }
@@ -271,7 +271,7 @@ static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
         ObjNode* prev = node->prev;
 
         if (prev == NULL) {
-            setObjProperty(vm, linkedList, "first", next);
+            setObjProperty(vm, linkedList, "first", OBJ_VAL(next));
         }
         else {
             prev->next = next;
@@ -279,7 +279,7 @@ static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
         }
 
         if (next == NULL) {
-            setObjProperty(vm, linkedList, "last", prev);
+            setObjProperty(vm, linkedList, "last", OBJ_VAL(prev));
         }
         else {
             next->prev = prev;
@@ -297,7 +297,7 @@ static Value linkRemoveFirst(VM* vm, ObjInstance* linkedList, ObjNode* first) {
     ObjNode* next = first->next;
     first->element = NIL_VAL;
     first->next = NULL;
-    setObjProperty(vm, linkedList, "first", next);
+    setObjProperty(vm, linkedList, "first", OBJ_VAL(next));
     if (next == NULL) setObjProperty(vm, linkedList, "last", NIL_VAL);
     else next->prev = NULL;
     collectionLengthDecrement(vm, linkedList);
@@ -309,7 +309,7 @@ static Value linkRemoveLast(VM* vm, ObjInstance* linkedList, ObjNode* last) {
     ObjNode* prev = last->prev;
     last->element = NIL_VAL;
     last->next = NULL;
-    setObjProperty(vm, linkedList, "last", prev);
+    setObjProperty(vm, linkedList, "last", OBJ_VAL(prev));
     if (prev == NULL) setObjProperty(vm, linkedList, "first", NIL_VAL);
     else prev->next = NULL;
     collectionLengthDecrement(vm, linkedList);
@@ -319,7 +319,7 @@ static Value linkRemoveLast(VM* vm, ObjInstance* linkedList, ObjNode* last) {
 static int linkSearchElement(VM* vm, ObjInstance* linkedList, Value element) {
     int length = AS_INT(getObjProperty(vm, linkedList, "length"));
     if (length > 0) {
-        ObjNode * first = getObjProperty(vm, linkedList, "first");
+        ObjNode * first = AS_NODE(getObjProperty(vm, linkedList, "first"));
         for (int i = 0; i < length; i++) {
             if (valuesEqual(element, first->element)) return i;
             first = first->next;
@@ -449,10 +449,10 @@ LOX_METHOD(Dictionary, entrySet) {
     ObjDictionary* entryDict = newDictionary(vm);
     for (int i = 0; i < self->count; i++) {
         ObjEntry* entry = &self->entries[i];
-        dictSet(vm, entryDict, entry, NIL_VAL);
+        dictSet(vm, entryDict, OBJ_VAL(entry), NIL_VAL);
     }
     ObjInstance* entrySet = newInstance(vm, getNativeClass(vm, "Set"));
-    setObjProperty(vm, entrySet, "dict", entryDict);
+    setObjProperty(vm, entrySet, "dict", OBJ_VAL(entryDict));
     RETURN_OBJ(entrySet);
 }
 
@@ -489,7 +489,7 @@ LOX_METHOD(Dictionary, keySet) {
         entry->value = NIL_VAL;
     }
     ObjInstance* keySet = newInstance(vm, getNativeClass(vm, "Set"));
-    setObjProperty(vm, keySet, "dict", keyDict);
+    setObjProperty(vm, keySet, "dict", OBJ_VAL(keyDict));
     RETURN_OBJ(keySet);
 }
 
@@ -563,7 +563,7 @@ LOX_METHOD(Dictionary, valueSet) {
         dictSet(vm, valueDict, entry->value, NIL_VAL);
     }
     ObjInstance* valueSet = newInstance(vm, getNativeClass(vm, "Set"));
-    setObjProperty(vm, valueSet, "dict", valueDict);
+    setObjProperty(vm, valueSet, "dict", OBJ_VAL(valueDict));
     RETURN_OBJ(valueSet);
 }
 
@@ -640,6 +640,7 @@ LOX_METHOD(LinkedList, addAt) {
         linkIndexValidate(vm, self, index);
         linkAddBefore(vm, self, args[1], linkNode(vm, self, index));
     }
+    RETURN_VAL(args[1]);
 }
 
 LOX_METHOD(LinkedList, addFirst) {
@@ -684,7 +685,7 @@ LOX_METHOD(LinkedList, contains) {
 
 LOX_METHOD(LinkedList, first) {
     ASSERT_ARG_COUNT("LinkedList::first()", 0);
-    ObjNode* first = getObjProperty(vm, AS_INSTANCE(receiver), "first");
+    ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
     RETURN_VAL(first->element);
 }
 
@@ -716,7 +717,7 @@ LOX_METHOD(LinkedList, isEmpty) {
 
 LOX_METHOD(LinkedList, last) {
     ASSERT_ARG_COUNT("LinkedList::last()", 0);
-    ObjNode* last = getObjProperty(vm, AS_INSTANCE(receiver), "last");
+    ObjNode* last = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "last"));
     RETURN_VAL(last->element);
 }
 
@@ -743,8 +744,8 @@ LOX_METHOD(LinkedList, next) {
     ASSERT_ARG_TYPE("LinkedList::next(index)", 0, Int);
     int index = AS_INT(args[0]);
     if (index < 0 || index < length - 1) {
-        ObjNode* current = getObjProperty(vm, self, "current");
-        setObjProperty(vm, self, "current", current->next);
+        ObjNode* current = AS_NODE(getObjProperty(vm, self, "current"));
+        setObjProperty(vm, self, "current", OBJ_VAL(current->next));
         RETURN_INT(index + 1);
     }
     else {
@@ -771,7 +772,7 @@ LOX_METHOD(LinkedList, node) {
 
 LOX_METHOD(LinkedList, peek) {
     ASSERT_ARG_COUNT("LinkedList::peek()", 0);
-    ObjNode* first = getObjProperty(vm, AS_INSTANCE(receiver), "first");
+    ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
     RETURN_VAL(first->element);
 }
 
@@ -815,7 +816,7 @@ LOX_METHOD(LinkedList, toList) {
     ObjList* list = newList(vm);
     push(vm, OBJ_VAL(list));
     if (length > 0) {
-        for (ObjNode* node = getObjProperty(vm, self, "first"); node != NULL; node = node->next) {
+        for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
             valueArrayWrite(vm, &list->elements, node->element);
         }
     }
@@ -1031,8 +1032,8 @@ LOX_METHOD(Node, toString) {
 LOX_METHOD(Queue, clear) {
     ASSERT_ARG_COUNT("Queue::clear()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "first", newNode(vm, NIL_VAL, NULL, NULL));
-    setObjProperty(vm, self, "last", newNode(vm, NIL_VAL, NULL, NULL));
+    setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "last", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
     setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_NIL;
 }
@@ -1054,8 +1055,8 @@ LOX_METHOD(Queue, dequeue) {
     if (IS_NIL(first->element)) RETURN_NIL;
 
     ObjNode* node = first;
-    setObjProperty(vm, self, "first", first->next);
-    if (IS_NIL(first->next->element)) setObjProperty(vm, self, "last", first->next);
+    setObjProperty(vm, self, "first", OBJ_VAL(first->next));
+    if (IS_NIL(first->next->element)) setObjProperty(vm, self, "last", OBJ_VAL(first->next));
     collectionLengthDecrement(vm, self);
     RETURN_VAL(first->element);
 }
@@ -1067,12 +1068,12 @@ LOX_METHOD(Queue, enqueue) {
     ObjNode* last = AS_NODE(getObjProperty(vm, self, "last"));
     ObjNode* new = newNode(vm, args[0], NULL, NULL);
     if (!IS_NIL(last->element)) {
-        setObjProperty(vm, self, "first", new);
-        setObjProperty(vm, self, "last", new);
+        setObjProperty(vm, self, "first", OBJ_VAL(new));
+        setObjProperty(vm, self, "last", OBJ_VAL(new));
     }
     else {
         last->next = new;
-        setObjProperty(vm, self, "last", new);
+        setObjProperty(vm, self, "last", OBJ_VAL(new));
     }
     collectionLengthIncrement(vm, self);
     RETURN_VAL(args[0]);
@@ -1081,9 +1082,9 @@ LOX_METHOD(Queue, enqueue) {
 LOX_METHOD(Queue, init) {
     ASSERT_ARG_COUNT("Queue::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "first", newNode(vm, NIL_VAL, NULL, NULL));
-    setObjProperty(vm, self, "last", newNode(vm, NIL_VAL, NULL, NULL));
-    setObjProperty(vm, self, "length", 0);
+    setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "last", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_OBJ(receiver);
 }
 
@@ -1100,7 +1101,7 @@ LOX_METHOD(Queue, length) {
 
 LOX_METHOD(Queue, peek) {
     ASSERT_ARG_COUNT("Queue::peek()", 0);
-    ObjNode* first = getObjProperty(vm, AS_INSTANCE(receiver), "first");
+    ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
     RETURN_VAL(first->element);
 }
 
@@ -1117,7 +1118,7 @@ LOX_METHOD(Queue, toList) {
     ObjList* list = newList(vm);
     push(vm, OBJ_VAL(list));
     if (length > 0) {
-        for (ObjNode* node = getObjProperty(vm, self, "first"); node != NULL; node = node->next) {
+        for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
             valueArrayWrite(vm, &list->elements, node->element);
         }
     }
@@ -1233,7 +1234,7 @@ LOX_METHOD(Set, toList) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
     ObjList* list = newList(vm);
-    push(vm, list);
+    push(vm, OBJ_VAL(list));
     for (int i = 0; i < dict->count; i++) {
         ObjEntry* entry = &dict->entries[i];
         if (!IS_UNDEFINED(entry->key)) valueArrayWrite(vm, &list->elements, entry->key);
@@ -1268,8 +1269,8 @@ LOX_METHOD(Stack, clone) {
 LOX_METHOD(Stack, init) {
     ASSERT_ARG_COUNT("Stack::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "first", newNode(vm, NIL_VAL, NULL, NULL));
-    setObjProperty(vm, self, "length", 0);
+    setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_OBJ(receiver);
 }
 
@@ -1286,18 +1287,18 @@ LOX_METHOD(Stack, length) {
 
 LOX_METHOD(Stack, peek) {
     ASSERT_ARG_COUNT("Stack::peek()", 0);
-    ObjNode* first = getObjProperty(vm, AS_INSTANCE(receiver), "first");
+    ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
     RETURN_VAL(first->element);
 }
 
 LOX_METHOD(Stack, pop) {
     ASSERT_ARG_COUNT("Stack::pop()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjNode* first = getObjProperty(vm, self, "first");
+    ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
     if (IS_NIL(first->element)) RETURN_NIL;
     else {
         Value element = first->element;
-        setObjProperty(vm, self, "first", first->next == NULL ? NIL_VAL : first->next);
+        setObjProperty(vm, self, "first", first->next == NULL ? NIL_VAL : OBJ_VAL(first->next));
         collectionLengthDecrement(vm, self);
         RETURN_VAL(element);
     }
@@ -1311,7 +1312,7 @@ LOX_METHOD(Stack, push) {
     if (!IS_NIL(first->element)) {
         new->next = first;
     }
-    setObjProperty(vm, self, "first", new);
+    setObjProperty(vm, self, "first", OBJ_VAL(new));
     collectionLengthIncrement(vm, self);
     RETURN_VAL(args[0]);
 }
@@ -1329,7 +1330,7 @@ LOX_METHOD(Stack, toList) {
     ObjList* list = newList(vm);
     push(vm, OBJ_VAL(list));
     if (length > 0) {
-        for (ObjNode* node = getObjProperty(vm, self, "first"); node != NULL; node = node->next) {
+        for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
             valueArrayWrite(vm, &list->elements, node->element);
         }
     }
