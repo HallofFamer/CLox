@@ -443,6 +443,19 @@ LOX_METHOD(Dictionary, containsValue) {
     RETURN_BOOL(dictContainsValue(AS_DICTIONARY(receiver), args[0]));
 }
 
+LOX_METHOD(Dictionary, entrySet) {
+    ASSERT_ARG_COUNT("Dictionary::entrySet()", 0);
+    ObjDictionary* self = AS_DICTIONARY(receiver);
+    ObjDictionary* entryDict = newDictionary(vm);
+    for (int i = 0; i < self->count; i++) {
+        ObjEntry* entry = &self->entries[i];
+        dictSet(vm, entryDict, entry, NIL_VAL);
+    }
+    ObjInstance* entrySet = newInstance(vm, getNativeClass(vm, "Set"));
+    setObjProperty(vm, entrySet, "dict", entryDict);
+    RETURN_OBJ(entrySet);
+}
+
 LOX_METHOD(Dictionary, equals) {
     ASSERT_ARG_COUNT("Dictionary::equals(other)", 1);
     if (!IS_DICTIONARY(args[0])) RETURN_FALSE;
@@ -1362,6 +1375,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, containsKey, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, containsValue, 1);
+    DEF_METHOD(vm->dictionaryClass, Dictionary, entrySet, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, equals, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, getAt, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, init, 0);
