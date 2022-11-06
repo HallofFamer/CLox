@@ -14,17 +14,15 @@ set.add("Hello World");
 print("Initial elements in set: ");
 println(set.toString());
 println("Add a new element current date to set: ");
-/*
 set.add(dateNow());
 print("Current elements in set: ");
 println(set.toString());
-*/
 println("Now add a duplicate element 2 to the set: ");
 set.add(2);
 print("Current elements in set: ");
 println(set.toString());
-print("Remove an element 'nil' from Set: ");
-set.remove(nil);
+print("Remove an element 3.5 from Set: ");
+set.remove(3.5);
 println(set.toString());
 println("Looping through elements in set...");
 for(var element : set){
