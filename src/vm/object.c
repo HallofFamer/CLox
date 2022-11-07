@@ -170,7 +170,7 @@ Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
     ObjString* key = newString(vm, name);
     push(vm, OBJ_VAL(key));
-    tableSet(vm, &object->fields, key, (value == NULL) ? NIL_VAL : value);
+    tableSet(vm, &object->fields, key, ((void*)value == NULL) ? NIL_VAL : value);
     pop(vm);
 }
 

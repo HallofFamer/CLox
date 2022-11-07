@@ -14,7 +14,7 @@ set.add("Hello World");
 print("Initial elements in set: ");
 println(set.toString());
 println("Add a new element current date to set: ");
-set.add(dateNow());
+//set.add(dateNow());
 print("Current elements in set: ");
 println(set.toString());
 println("Now add a duplicate element 2 to the set: ");

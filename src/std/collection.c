@@ -26,6 +26,69 @@ static void collectionLengthIncrement(VM* vm, ObjInstance* collection) {
     setObjProperty(vm, collection, "length", INT_VAL(length + 1));
 }
 
+ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
+    return findEntryKey(entries, capacity, key);
+}
+
+static void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
+    ObjEntry* entries = ALLOCATE(ObjEntry, capacity);
+    for (int i = 0; i < capacity; i++) {
+        entries[i].key = UNDEFINED_VAL;
+        entries[i].value = NIL_VAL;
+    }
+
+    dict->count = 0;
+    for (int i = 0; i < dict->capacity; i++) {
+        ObjEntry* entry = &dict->entries[i];
+        if (IS_UNDEFINED(entry->key)) continue;
+
+        ObjEntry* dest = dictFindEntry(entries, capacity, entry->key);
+        dest->key = entry->key;
+        dest->value = entry->value;
+        dict->count++;
+    }
+
+    FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
+    dict->entries = entries;
+    dict->capacity = capacity;
+}
+
+static bool dictGet(ObjDictionary* dict, Value key, Value* value) {
+    return getEntryValue(dict, key, value);
+}
+
+static bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
+    if (dict->count + 1 > dict->capacity * TABLE_MAX_LOAD) {
+        int capacity = GROW_CAPACITY(dict->capacity);
+        dictAdjustCapacity(vm, dict, capacity);
+    }
+
+    ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
+    bool isNewKey = IS_UNDEFINED(entry->key);
+    if (isNewKey && IS_NIL(entry->value)) dict->count++;
+
+    entry->key = key;
+    entry->value = value;
+    return isNewKey;
+}
+
+static void dictAddAll(VM* vm, ObjDictionary* from, ObjDictionary* to) {
+    for (int i = 0; i < from->capacity; i++) {
+        ObjEntry* entry = &from->entries[i];
+        if (!IS_UNDEFINED(entry->key)) {
+            dictSet(vm, to, entry->key, entry->value);
+        }
+    }
+}
+
+static ObjDictionary* dictCopy(VM* vm, ObjDictionary* original) {
+    ObjDictionary* copied = newDictionary(vm);
+    push(vm, OBJ_VAL(copied));
+    dictAddAll(vm, original, copied);
+    pop(vm);
+    return copied;
+}
+
 static bool dictContainsKey(ObjDictionary* dict, Value key) {
     if (dict->count == 0) return false;
     ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
@@ -51,23 +114,6 @@ static bool dictDelete(ObjDictionary* dict, Value key) {
     entry->key = UNDEFINED_VAL;
     entry->value = BOOL_VAL(true);
     return true;
-}
-
-static void dictAddAll(VM* vm, ObjDictionary* from, ObjDictionary* to) {
-    for (int i = 0; i < from->capacity; i++) {
-        ObjEntry* entry = &from->entries[i];
-        if (!IS_UNDEFINED(entry->key)) {
-            dictSet(vm, to, entry->key, entry->value);
-        }
-    }
-}
-
-static ObjDictionary* dictCopy(VM* vm, ObjDictionary* original) {
-    ObjDictionary* copied = newDictionary(vm);
-    push(vm, OBJ_VAL(copied));
-    dictAddAll(vm, original, copied);
-    pop(vm);
-    return copied;
 }
 
 static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {

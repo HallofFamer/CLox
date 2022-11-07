@@ -200,7 +200,15 @@ static void makeList(VM* vm, uint8_t elementCount) {
     push(vm, OBJ_VAL(list));
 }
 
-ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
+static int initCapacity(int count) {
+    int capacity = 8;
+    while (capacity < count) {
+        capacity *= 2;
+    }
+    return capacity;
+}
+
+ObjEntry* findEntryKey(ObjEntry* entries, int capacity, Value key) {
     uint32_t hash = hashValue(key);
     uint32_t index = hash & (capacity - 1);
     ObjEntry* tombstone = NULL;
@@ -223,59 +231,31 @@ ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
     }
 }
 
-static void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
-    ObjEntry* entries = ALLOCATE(ObjEntry, capacity);
-    for (int i = 0; i < capacity; i++) {
-        entries[i].key = UNDEFINED_VAL;
-        entries[i].value = NIL_VAL;
-    }
-
-    dict->count = 0;
-    for (int i = 0; i < dict->capacity; i++) {
-        ObjEntry* entry = &dict->entries[i];
-        if (IS_UNDEFINED(entry->key)) continue;
-
-        ObjEntry* dest = dictFindEntry(entries, capacity, entry->key);
-        dest->key = entry->key;
-        dest->value = entry->value;
-        dict->count++;
-    }
-
-    FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
-    dict->entries = entries;
-    dict->capacity = capacity;
-}
-
-bool dictGet(ObjDictionary* dict, Value key, Value* value) {
+bool getEntryValue(ObjDictionary* dict, Value key, Value* value) {
     if (dict->count == 0) return false;
-    ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
+    ObjEntry* entry = findEntryKey(dict->entries, dict->capacity, key);
     if (IS_UNDEFINED(entry->key)) return false;
     *value = entry->value;
     return true;
 }
 
-bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
-    if (dict->count + 1 > dict->capacity * TABLE_MAX_LOAD) {
-        int capacity = GROW_CAPACITY(dict->capacity);
-        dictAdjustCapacity(vm, dict, capacity);
-    }
-
-    ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
-    bool isNewKey = IS_UNDEFINED(entry->key);
-    if (isNewKey && IS_NIL(entry->value)) dict->count++;
-
-    entry->key = key;
-    entry->value = value;
-    return isNewKey;
-}
-
 static bool makeDictionary(VM* vm, uint8_t entryCount) {
     ObjDictionary* dictionary = newDictionary(vm);
     push(vm, OBJ_VAL(dictionary));
+    dictionary->capacity = initCapacity(entryCount);
+    dictionary->count = entryCount;
+    dictionary->entries = ALLOCATE(ObjEntry, dictionary->capacity);
+    for (int i = 0; i < dictionary->capacity; i++) {
+        dictionary->entries[i].key = UNDEFINED_VAL;
+        dictionary->entries[i].value = NIL_VAL;
+    }
+
     for (int i = 1; i <= entryCount; i++) {
         Value key = peek(vm, 2 * i);
         Value value = peek(vm, 2 * i - 1);
-        dictSet(vm, dictionary, key, value);
+        ObjEntry* entry = findEntryKey(dictionary->entries, dictionary->capacity, key);
+        entry->key = key;
+        entry->value = value;
     }
     pop(vm);
 
@@ -615,7 +595,7 @@ static InterpretResult run(VM* vm) {
                     Value key = pop(vm);
                     ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
                     Value value;
-                    if (dictGet(dictionary, key, &value)) push(vm, value);
+                    if (getEntryValue(dictionary, key, &value)) push(vm, value);
                     else push(vm, NIL_VAL);
                 }
                 else {
@@ -650,7 +630,7 @@ static InterpretResult run(VM* vm) {
                     Value value = pop(vm);
                     Value key = pop(vm);
                     ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
-                    dictGet(dictionary, key, &value);
+                    getEntryValue(dictionary, key, &value);
                     push(vm, OBJ_VAL(dictionary));
                 }
                 else {

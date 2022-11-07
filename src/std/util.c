@@ -174,7 +174,7 @@ LOX_METHOD(Date, init) {
     ASSERT_ARG_TYPE("Date::init(year, month, day)", 2, Int);
 
     ObjInstance* self = AS_INSTANCE(receiver);
-    push(vm, self);
+    push(vm, OBJ_VAL(self));
     setObjProperty(vm, self, "year", args[0]);
     setObjProperty(vm, self, "month", args[1]);
     setObjProperty(vm, self, "day", args[2]);
