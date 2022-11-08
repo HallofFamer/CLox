@@ -504,7 +504,7 @@ static void string(Compiler* compiler, bool canAssign) {
     emitConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, compiler->parser->previous.start + 1, compiler->parser->previous.length - 2)));
 }
 
-static void list(Compiler* compiler) {
+static void array(Compiler* compiler) {
     uint8_t elementCount = 1;
     while (match(compiler->parser, TOKEN_COMMA)) {
         expression(compiler);
@@ -515,7 +515,7 @@ static void list(Compiler* compiler) {
     }
 
     consume(compiler->parser, TOKEN_RIGHT_BRACKET, "Expect ']' after elements.");
-    emitBytes(compiler, OP_LIST, elementCount);
+    emitBytes(compiler, OP_ARRAY, elementCount);
 }
 
 static void dictionary(Compiler* compiler) {
@@ -537,7 +537,7 @@ static void dictionary(Compiler* compiler) {
 
 static void collection(Compiler* compiler, bool canAssign) {
     if (match(compiler->parser, TOKEN_RIGHT_BRACKET)) {
-        emitBytes(compiler, OP_LIST, 0);
+        emitBytes(compiler, OP_ARRAY, 0);
     }
     else {
         expression(compiler);
@@ -545,7 +545,7 @@ static void collection(Compiler* compiler, bool canAssign) {
             expression(compiler);
             dictionary(compiler);
         }
-        else list(compiler);
+        else array(compiler);
     }
 }
 

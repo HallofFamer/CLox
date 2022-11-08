@@ -78,7 +78,7 @@ LOX_METHOD(BinaryReadStream, nextBytes) {
     if (!file->isOpen) raiseError(vm, "Cannot read the next byte because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
     else {
-        ObjArray* bytes = newList(vm);
+        ObjArray* bytes = newArray(vm);
         push(vm, OBJ_VAL(bytes));
         for (int i = 0; i < length; i++) {
             unsigned char byte;

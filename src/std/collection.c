@@ -26,6 +26,16 @@ static void collectionLengthIncrement(VM* vm, ObjInstance* collection) {
     setObjProperty(vm, collection, "length", INT_VAL(length + 1));
 }
 
+ObjArray* arrayCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
+    ObjArray* list = newArray(vm);
+    push(vm, OBJ_VAL(list));
+    for (int i = fromIndex; i < toIndex; i++) {
+        valueArrayWrite(vm, &list->elements, elements.values[i]);
+    }
+    pop(vm);
+    return list;
+}
+
 static ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
     return findEntryKey(entries, capacity, key);
 }
@@ -400,16 +410,6 @@ static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
         string[offset + 1] = '\0';
         return copyString(vm, string, (int)offset + 1);
     }
-}
-
-ObjArray* listCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
-    ObjArray* list = newList(vm);
-    push(vm, OBJ_VAL(list));
-    for (int i = fromIndex; i < toIndex; i++) {
-        valueArrayWrite(vm, &list->elements, elements.values[i]);
-    }
-    pop(vm);
-    return list;
 }
 
 ObjInstance* setCopy(VM* vm, ObjInstance* original) {
@@ -859,7 +859,7 @@ LOX_METHOD(LinkedList, toList) {
     ASSERT_ARG_COUNT("LinkedList::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
-    ObjArray* list = newList(vm);
+    ObjArray* list = newArray(vm);
     push(vm, OBJ_VAL(list));
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
@@ -898,7 +898,7 @@ LOX_METHOD(List, clear) {
 LOX_METHOD(List, clone) {
     ASSERT_ARG_COUNT("List::clone()", 0);
     ObjArray* self = AS_ARRAY(receiver);
-    RETURN_OBJ(listCopy(vm, self->elements, 0, self->elements.count));
+    RETURN_OBJ(arrayCopy(vm, self->elements, 0, self->elements.count));
 }
 
 LOX_METHOD(List, contains) {
@@ -930,7 +930,7 @@ LOX_METHOD(List, indexOf) {
 
 LOX_METHOD(List, init) {
     ASSERT_ARG_COUNT("List::init()", 0);
-    RETURN_OBJ(newList(vm));
+    RETURN_OBJ(newArray(vm));
 }
 
 LOX_METHOD(List, insertAt) {
@@ -1023,7 +1023,7 @@ LOX_METHOD(List, subList) {
 
     assertIntWithinRange(vm, "List::subList(from, to)", fromIndex, 0, self->elements.count, 0);
     assertIntWithinRange(vm, "List::subList(from, to", toIndex, fromIndex, self->elements.count, 1);
-    RETURN_OBJ(listCopy(vm, self->elements, fromIndex, toIndex));
+    RETURN_OBJ(arrayCopy(vm, self->elements, fromIndex, toIndex));
 }
  
 LOX_METHOD(List, toString) {
@@ -1161,7 +1161,7 @@ LOX_METHOD(Queue, toList) {
     ASSERT_ARG_COUNT("Queue::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, self, "length"));
-    ObjArray* list = newList(vm);
+    ObjArray* list = newArray(vm);
     push(vm, OBJ_VAL(list));
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
@@ -1279,7 +1279,7 @@ LOX_METHOD(Set, toList) {
     ASSERT_ARG_COUNT("Set::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
-    ObjArray* list = newList(vm);
+    ObjArray* list = newArray(vm);
     push(vm, OBJ_VAL(list));
     for (int i = 0; i < dict->count; i++) {
         ObjEntry* entry = &dict->entries[i];
@@ -1373,7 +1373,7 @@ LOX_METHOD(Stack, toList) {
     ASSERT_ARG_COUNT("Stack::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, self, "length"));
-    ObjArray* list = newList(vm);
+    ObjArray* list = newArray(vm);
     push(vm, OBJ_VAL(list));
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {

@@ -68,6 +68,11 @@ static void blackenObject(VM* vm, Obj* object) {
 #endif
 
     switch (object->type) {
+        case OBJ_ARRAY: {
+            ObjArray* list = (ObjArray*)object;
+            markArray(vm, &list->elements);
+            break;
+        }
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             markValue(vm, bound->receiver);
@@ -121,11 +126,6 @@ static void blackenObject(VM* vm, Obj* object) {
             markTable(vm, &instance->fields);
             break;
         }
-        case OBJ_ARRAY: {
-            ObjArray* list = (ObjArray*)object;
-            markArray(vm, &list->elements);
-            break;
-        }
         case OBJ_UPVALUE:
             markValue(vm, ((ObjUpvalue*)object)->closed);
             break;
@@ -160,6 +160,12 @@ static void freeObject(VM* vm, Obj* object) {
 #endif
 
     switch (object->type) {
+        case OBJ_ARRAY: {
+            ObjArray* list = (ObjArray*)object;
+            freeValueArray(vm, &list->elements);
+            FREE(ObjArray, object);
+            break;
+        }
         case OBJ_BOUND_METHOD:
             FREE(ObjBoundMethod, object);
             break;        
@@ -201,12 +207,6 @@ static void freeObject(VM* vm, Obj* object) {
             ObjInstance* instance = (ObjInstance*)object;
             freeTable(vm, &instance->fields);
             FREE(ObjInstance, object);
-            break;
-        }
-        case OBJ_ARRAY: {
-            ObjArray* list = (ObjArray*)object;
-            freeValueArray(vm, &list->elements);
-            FREE(ObjArray, object);
             break;
         }
         case OBJ_NATIVE_FUNCTION:

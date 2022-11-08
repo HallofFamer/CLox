@@ -11,7 +11,7 @@
 #include "value.h"
 
 #define OBJ_TYPE(value)            (AS_OBJ(value)->type)
-#define OBJ_KLASS(value)           (AS_OBJ(value)->klass)  
+#define OBJ_KLASS(value)           (AS_OBJ(value)->klass)
 
 #define IS_ARRAY(value)            isObjType(value, OBJ_ARRAY)
 #define IS_BOUND_METHOD(value)     isObjType(value, OBJ_BOUND_METHOD)
@@ -175,6 +175,7 @@ typedef struct {
 } ObjBoundMethod;
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
+ObjArray* newArray(VM* vm);
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method);
 ObjClass* newClass(VM* vm, ObjString* name);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
@@ -183,7 +184,6 @@ ObjEntry* newEntry(VM* vm, Value key, Value value);
 ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
-ObjArray* newList(VM* vm);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
@@ -194,6 +194,7 @@ ObjClass* getObjClass(VM* vm, Value value);
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
+void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* name);
 void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type) {

@@ -185,8 +185,8 @@ static void concatenate(VM* vm) {
     push(vm, OBJ_VAL(result));
 }
 
-static void makeList(VM* vm, uint8_t elementCount) {
-    ObjArray* list = newList(vm);
+static void makeArray(VM* vm, uint8_t elementCount) {
+    ObjArray* list = newArray(vm);
     push(vm, OBJ_VAL(list));
     for (int i = elementCount; i > 0; i--) {
         valueArrayWrite(vm, &list->elements, peek(vm, i));
@@ -239,7 +239,7 @@ bool getEntryValue(ObjDictionary* dict, Value key, Value* value) {
     return true;
 }
 
-static bool makeDictionary(VM* vm, uint8_t entryCount) {
+static void makeDictionary(VM* vm, uint8_t entryCount) {
     ObjDictionary* dictionary = newDictionary(vm);
     push(vm, OBJ_VAL(dictionary));
     dictionary->capacity = initCapacity(entryCount);
@@ -265,7 +265,6 @@ static bool makeDictionary(VM* vm, uint8_t entryCount) {
         pop(vm);
     }
     push(vm, OBJ_VAL(dictionary));
-    return true;
 }
 
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
@@ -280,7 +279,7 @@ bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
     }
 
     if (closure->function->arity == -1) {
-        makeList(vm, argCount);
+        makeArray(vm, argCount);
         argCount = 1;
     }
 
@@ -786,17 +785,14 @@ static InterpretResult run(VM* vm) {
             case OP_METHOD:
                 defineMethod(vm, READ_STRING());
                 break;
-            case OP_LIST: {
+            case OP_ARRAY: {
                 int elementCount = READ_BYTE();
-                makeList(vm, elementCount);
+                makeArray(vm, elementCount);
                 break;
             }
             case OP_DICTIONARY: {
                 int entryCount = READ_BYTE();
-                if (!makeDictionary(vm, entryCount)) { 
-                    runtimeError(vm, "keys for dictionary literal must be strings.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                makeDictionary(vm, entryCount);
                 break;
             }
             case OP_RETURN: {

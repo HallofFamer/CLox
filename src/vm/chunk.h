@@ -43,7 +43,7 @@ typedef enum {
     OP_CLASS,
     OP_INHERIT,
     OP_METHOD,
-    OP_LIST,
+    OP_ARRAY,
     OP_DICTIONARY,
     OP_RETURN,
     OP_RETURN_NONLOCAL,

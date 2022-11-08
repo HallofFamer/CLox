@@ -28,6 +28,12 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     return object;
 }
 
+ObjArray* newArray(VM* vm) {
+    ObjArray* list = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY, vm->listClass);
+    initValueArray(&list->elements);
+    return list;
+}
+
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
     ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD, vm->methodClass);
     bound->receiver = receiver;
@@ -93,12 +99,6 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
     initTable(&instance->fields);
     return instance;
-}
-
-ObjArray* newList(VM* vm) {
-    ObjArray* list = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY, vm->listClass);
-    initValueArray(&list->elements);
-    return list;
 }
 
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function) {
@@ -174,6 +174,20 @@ void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
     pop(vm);
 }
 
+void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* name) {
+    Value value = getObjProperty(vm, object, name);
+    setObjProperty(vm, object2, name, value);
+}
+
+static void printArray(ObjArray* list) {
+    printf("[");
+    for (int i = 0; i < list->elements.count; i++) {
+        printValue(list->elements.values[i]);
+        if (i < list->elements.count - 1) printf(", ");
+    }
+    printf("]");
+}
+
 static void printDictionary(ObjDictionary* dictionary) {
     printf("[");
     int startIndex = 0;
@@ -208,17 +222,11 @@ static void printFunction(ObjFunction* function) {
     else printf("<function %s>", function->name->chars);
 }
 
-static void printList(ObjArray* list) {
-    printf("[");
-    for (int i = 0; i < list->elements.count; i++) {
-        printValue(list->elements.values[i]);
-        if (i < list->elements.count - 1) printf(", ");
-    }
-    printf("]");
-}
-
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_ARRAY:
+            printArray(AS_ARRAY(value));
+            break;
         case OBJ_BOUND_METHOD:
             printFunction(AS_BOUND_METHOD(value)->method->function);
             break;
@@ -239,9 +247,6 @@ void printObject(Value value) {
             break;
         case OBJ_INSTANCE:
             printf("<object %s>", AS_OBJ(value)->klass->name->chars);
-            break;
-        case OBJ_ARRAY: 
-            printList(AS_ARRAY(value));
             break;
         case OBJ_NATIVE_FUNCTION:
             printf("<native function %s>", AS_NATIVE_FUNCTION(value)->name->chars);
