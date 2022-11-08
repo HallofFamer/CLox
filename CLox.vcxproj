@@ -170,6 +170,7 @@
     <None Include="README.md" />
     <None Include="src\std\collection.lox" />
     <None Include="src\std\lang.lox" />
+    <None Include="test\lox\array.lox" />
     <None Include="test\lox\benchmark.lox" />
     <None Include="test\lox\closure.lox" />
     <None Include="test\lox\collection.lox" />
@@ -184,7 +185,6 @@
     <None Include="test\lox\io.lox" />
     <None Include="test\lox\lambda.lox" />
     <None Include="test\lox\lang.lox" />
-    <None Include="test\lox\list.lox" />
     <None Include="test\lox\loop.lox" />
     <None Include="test\lox\method.lox" />
     <None Include="test\lox\native.lox" />

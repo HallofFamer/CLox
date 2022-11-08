@@ -141,9 +141,6 @@
     </None>
     <None Include="README.md" />
     <None Include="clox.ini" />
-    <None Include="test\lox\list.lox">
-      <Filter>Test Files\lox</Filter>
-    </None>
     <None Include="test\lox\dictionary.lox">
       <Filter>Test Files\lox</Filter>
     </None>
@@ -175,6 +172,9 @@
       <Filter>Source Files\std</Filter>
     </None>
     <None Include="test\lox\collection.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
+    <None Include="test\lox\array.lox">
       <Filter>Test Files\lox</Filter>
     </None>
   </ItemGroup>
