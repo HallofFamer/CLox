@@ -26,7 +26,7 @@ static void collectionLengthIncrement(VM* vm, ObjInstance* collection) {
     setObjProperty(vm, collection, "length", INT_VAL(length + 1));
 }
 
-ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
+static ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
     return findEntryKey(entries, capacity, key);
 }
 
