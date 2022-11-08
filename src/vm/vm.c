@@ -186,7 +186,7 @@ static void concatenate(VM* vm) {
 }
 
 static void makeList(VM* vm, uint8_t elementCount) {
-    ObjList* list = newList(vm);
+    ObjArray* list = newList(vm);
     push(vm, OBJ_VAL(list));
     for (int i = elementCount; i > 0; i--) {
         valueArrayWrite(vm, &list->elements, peek(vm, i));
@@ -572,8 +572,8 @@ static InterpretResult run(VM* vm) {
                         ObjString* element = copyString(vm, chars, 1);
                         push(vm, OBJ_VAL(element));
                     }
-                    else if (IS_LIST(peek(vm, 0))) {
-                        ObjList* list = AS_LIST(pop(vm));
+                    else if (IS_ARRAY(peek(vm, 0))) {
+                        ObjArray* list = AS_ARRAY(pop(vm));
                         if (index < 0 || index > list->elements.count) {
                             runtimeError(vm, "List index is out of bound.");
                             return INTERPRET_RUNTIME_ERROR;
@@ -606,14 +606,14 @@ static InterpretResult run(VM* vm) {
             }
             case OP_SET_SUBSCRIPT: {
                 if (IS_INT(peek(vm, 1))) {
-                    if (!IS_LIST(peek(vm, 2))) {
+                    if (!IS_ARRAY(peek(vm, 2))) {
                         runtimeError(vm, "Only List can have integer subscripts.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
 
                     Value element = pop(vm);
                     int index = AS_INT(pop(vm));
-                    ObjList* list = AS_LIST(pop(vm));
+                    ObjArray* list = AS_ARRAY(pop(vm));
                     if (index < 0 || index > list->elements.count) {
                         runtimeError(vm, "List index is out of bound.");
                         return INTERPRET_RUNTIME_ERROR;

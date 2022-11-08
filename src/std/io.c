@@ -78,7 +78,7 @@ LOX_METHOD(BinaryReadStream, nextBytes) {
     if (!file->isOpen) raiseError(vm, "Cannot read the next byte because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
     else {
-        ObjList* bytes = newList(vm);
+        ObjArray* bytes = newList(vm);
         push(vm, OBJ_VAL(bytes));
         for (int i = 0; i < length; i++) {
             unsigned char byte;
@@ -118,7 +118,7 @@ LOX_METHOD(BinaryWriteStream, put) {
 LOX_METHOD(BinaryWriteStream, putBytes) {
     ASSERT_ARG_COUNT("BinaryWriteStream::put(bytes)", 1);
     ASSERT_ARG_TYPE("BinaryWriteStream::put(bytes)", 0, List);
-    ObjList* bytes = AS_LIST(args[0]);
+    ObjArray* bytes = AS_ARRAY(args[0]);
     if (bytes->elements.count == 0) raiseError(vm, "Cannot write empty byte array to stream.");
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");

@@ -646,7 +646,7 @@ LOX_METHOD(String, split) {
     ObjString* self = AS_STRING(receiver);
     ObjString* delimiter = AS_STRING(args[0]);
 
-    ObjList* list = newList(vm);
+    ObjArray* list = newList(vm);
     push(vm, OBJ_VAL(list));
     char* string = _strdup(self->chars);
     char* next = NULL;

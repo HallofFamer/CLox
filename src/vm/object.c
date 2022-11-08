@@ -95,8 +95,8 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     return instance;
 }
 
-ObjList* newList(VM* vm) {
-    ObjList* list = ALLOCATE_OBJ(ObjList, OBJ_LIST, vm->listClass);
+ObjArray* newList(VM* vm) {
+    ObjArray* list = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY, vm->listClass);
     initValueArray(&list->elements);
     return list;
 }
@@ -208,7 +208,7 @@ static void printFunction(ObjFunction* function) {
     else printf("<function %s>", function->name->chars);
 }
 
-static void printList(ObjList* list) {
+static void printList(ObjArray* list) {
     printf("[");
     for (int i = 0; i < list->elements.count; i++) {
         printValue(list->elements.values[i]);
@@ -240,8 +240,8 @@ void printObject(Value value) {
         case OBJ_INSTANCE:
             printf("<object %s>", AS_OBJ(value)->klass->name->chars);
             break;
-        case OBJ_LIST: 
-            printList(AS_LIST(value));
+        case OBJ_ARRAY: 
+            printList(AS_ARRAY(value));
             break;
         case OBJ_NATIVE_FUNCTION:
             printf("<native function %s>", AS_NATIVE_FUNCTION(value)->name->chars);

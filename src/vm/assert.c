@@ -77,7 +77,7 @@ void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
 }
 
 void assertArgIsList(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_LIST(args[index])) {
+    if (!IS_ARRAY(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be a list.", method, index + 1);
         exit(70);
     }

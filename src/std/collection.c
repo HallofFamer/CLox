@@ -402,8 +402,8 @@ static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
     }
 }
 
-ObjList* listCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
-    ObjList* list = newList(vm);
+ObjArray* listCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
+    ObjArray* list = newList(vm);
     push(vm, OBJ_VAL(list));
     for (int i = fromIndex; i < toIndex; i++) {
         valueArrayWrite(vm, &list->elements, elements.values[i]);
@@ -859,7 +859,7 @@ LOX_METHOD(LinkedList, toList) {
     ASSERT_ARG_COUNT("LinkedList::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
-    ObjList* list = newList(vm);
+    ObjArray* list = newList(vm);
     push(vm, OBJ_VAL(list));
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
@@ -878,44 +878,44 @@ LOX_METHOD(LinkedList, toString) {
 
 LOX_METHOD(List, add) {
     ASSERT_ARG_COUNT("List::add(element)", 1);
-    valueArrayWrite(vm, &AS_LIST(receiver)->elements, args[0]);
+    valueArrayWrite(vm, &AS_ARRAY(receiver)->elements, args[0]);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(List, addAll) {
     ASSERT_ARG_COUNT("List::add(list)", 1);
     ASSERT_ARG_TYPE("List::add(list)", 0, List);
-    valueArrayAddAll(vm, &AS_LIST(args[0])->elements, &AS_LIST(receiver)->elements);
+    valueArrayAddAll(vm, &AS_ARRAY(args[0])->elements, &AS_ARRAY(receiver)->elements);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(List, clear) {
     ASSERT_ARG_COUNT("List::clear()", 0);
-    freeValueArray(vm, &AS_LIST(receiver)->elements);
+    freeValueArray(vm, &AS_ARRAY(receiver)->elements);
     RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(List, clone) {
     ASSERT_ARG_COUNT("List::clone()", 0);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     RETURN_OBJ(listCopy(vm, self->elements, 0, self->elements.count));
 }
 
 LOX_METHOD(List, contains) {
     ASSERT_ARG_COUNT("List::contains(element)", 1);
-    RETURN_BOOL(valueArrayFirstIndex(vm, &AS_LIST(receiver)->elements, args[0]) != -1);
+    RETURN_BOOL(valueArrayFirstIndex(vm, &AS_ARRAY(receiver)->elements, args[0]) != -1);
 }
 
 LOX_METHOD(List, equals) {
     ASSERT_ARG_COUNT("List::equals(other)", 1);
-    if (!IS_LIST(args[0])) RETURN_FALSE;
-    RETURN_BOOL(valueArraysEqual(&AS_LIST(receiver)->elements, &AS_LIST(args[0])->elements));
+    if (!IS_ARRAY(args[0])) RETURN_FALSE;
+    RETURN_BOOL(valueArraysEqual(&AS_ARRAY(receiver)->elements, &AS_ARRAY(args[0])->elements));
 }
 
 LOX_METHOD(List, getAt) {
     ASSERT_ARG_COUNT("List::getAt(index)", 1);
     ASSERT_ARG_TYPE("List::getAt(index)", 0, Int);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::getAt(index)", index, 0, self->elements.count - 1, 0);
     RETURN_VAL(self->elements.values[index]);
@@ -923,7 +923,7 @@ LOX_METHOD(List, getAt) {
 
 LOX_METHOD(List, indexOf) {
     ASSERT_ARG_COUNT("List::indexOf(element)", 1);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     if (self->elements.count == 0) return -1;
     RETURN_INT(valueArrayFirstIndex(vm, &self->elements, args[0]));
 }
@@ -936,7 +936,7 @@ LOX_METHOD(List, init) {
 LOX_METHOD(List, insertAt) {
     ASSERT_ARG_COUNT("List::insertAt(index, element)", 2);
     ASSERT_ARG_TYPE("List::insertAt(index, element)", 0, Int);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::insertAt(index)", index, 0, self->elements.count, 0);
     valueArrayInsert(vm, &self->elements, index, args[1]);
@@ -945,24 +945,24 @@ LOX_METHOD(List, insertAt) {
 
 LOX_METHOD(List, isEmpty) {
     ASSERT_ARG_COUNT("List::isEmpty()", 0);
-    RETURN_BOOL(AS_LIST(receiver)->elements.count == 0);
+    RETURN_BOOL(AS_ARRAY(receiver)->elements.count == 0);
 }
 
 LOX_METHOD(List, lastIndexOf) {
     ASSERT_ARG_COUNT("List::indexOf(element)", 1);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     if (self->elements.count == 0) return -1;
     RETURN_INT(valueArrayLastIndex(vm, &self->elements, args[0]));
 }
 
 LOX_METHOD(List, length) {
     ASSERT_ARG_COUNT("List::length()", 0);
-    RETURN_INT(AS_LIST(receiver)->elements.count);
+    RETURN_INT(AS_ARRAY(receiver)->elements.count);
 }
 
 LOX_METHOD(List, next) {
     ASSERT_ARG_COUNT("List::next(index)", 1);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     if (IS_NIL(args[0])) {
         if (self->elements.count == 0) RETURN_FALSE;
         RETURN_INT(0);
@@ -977,7 +977,7 @@ LOX_METHOD(List, next) {
 LOX_METHOD(List, nextValue) {
     ASSERT_ARG_COUNT("List::nextValue(index)", 1);
     ASSERT_ARG_TYPE("List::nextValue(index)", 0, Int);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
     if (index > -1 && index < self->elements.count) RETURN_VAL(self->elements.values[index]);
     RETURN_NIL;
@@ -986,7 +986,7 @@ LOX_METHOD(List, nextValue) {
 LOX_METHOD(List, putAt) {
     ASSERT_ARG_COUNT("List::putAt(index, element)", 2);
     ASSERT_ARG_TYPE("List::putAt(index, element)", 0, Int);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::putAt(index)", index, 0, self->elements.count, 0);
     self->elements.values[index] = args[1];
@@ -996,7 +996,7 @@ LOX_METHOD(List, putAt) {
 
 LOX_METHOD(List, remove) {
     ASSERT_ARG_COUNT("List::remove(element)", 1);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     int index = valueArrayFirstIndex(vm, &self->elements, args[0]);
     if (index == -1) RETURN_FALSE;
     valueArrayDelete(vm, &self->elements, index);
@@ -1006,7 +1006,7 @@ LOX_METHOD(List, remove) {
 LOX_METHOD(List, removeAt) {
     ASSERT_ARG_COUNT("List::removeAt(index)", 1);
     ASSERT_ARG_TYPE("List::removeAt(index)", 0, Int);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
     assertIntWithinRange(vm, "List::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
     Value element = valueArrayDelete(vm, &self->elements, index);
@@ -1017,7 +1017,7 @@ LOX_METHOD(List, subList) {
     ASSERT_ARG_COUNT("List::subList(from, to)", 2);
     ASSERT_ARG_TYPE("List::subList(from, to)", 0, Int);
     ASSERT_ARG_TYPE("List::subList(from, to)", 1, Int);
-    ObjList* self = AS_LIST(receiver);
+    ObjArray* self = AS_ARRAY(receiver);
     int fromIndex = AS_INT(args[0]);
     int toIndex = AS_INT(args[1]);
 
@@ -1028,7 +1028,7 @@ LOX_METHOD(List, subList) {
  
 LOX_METHOD(List, toString) {
     ASSERT_ARG_COUNT("List::toString()", 0);
-    RETURN_OBJ(valueArrayToString(vm, &AS_LIST(receiver)->elements));
+    RETURN_OBJ(valueArrayToString(vm, &AS_ARRAY(receiver)->elements));
 }
 
 LOX_METHOD(Node, clone) {
@@ -1161,7 +1161,7 @@ LOX_METHOD(Queue, toList) {
     ASSERT_ARG_COUNT("Queue::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, self, "length"));
-    ObjList* list = newList(vm);
+    ObjArray* list = newList(vm);
     push(vm, OBJ_VAL(list));
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
@@ -1279,7 +1279,7 @@ LOX_METHOD(Set, toList) {
     ASSERT_ARG_COUNT("Set::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
-    ObjList* list = newList(vm);
+    ObjArray* list = newList(vm);
     push(vm, OBJ_VAL(list));
     for (int i = 0; i < dict->count; i++) {
         ObjEntry* entry = &dict->entries[i];
@@ -1373,7 +1373,7 @@ LOX_METHOD(Stack, toList) {
     ASSERT_ARG_COUNT("Stack::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, self, "length"));
-    ObjList* list = newList(vm);
+    ObjArray* list = newList(vm);
     push(vm, OBJ_VAL(list));
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
