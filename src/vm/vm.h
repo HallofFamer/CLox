@@ -40,7 +40,7 @@ struct VM {
     ObjClass* stringClass;
     ObjClass* functionClass;
     ObjClass* methodClass;
-    ObjClass* listClass;
+    ObjClass* arrayClass;
     ObjClass* dictionaryClass;
     ObjClass* fileClass;
 
@@ -81,8 +81,8 @@ bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);
-ObjEntry* findEntryKey(ObjEntry* entries, int capacity, Value key);
-bool getEntryValue(ObjDictionary* dict, Value key, Value* value);
+ObjEntry* findEntryByKey(ObjEntry* entries, int capacity, Value key);
+bool getValueForEntry(ObjDictionary* dict, Value key, Value* value);
 InterpretResult interpret(VM* vm, const char* source);
 void push(VM* vm, Value value);
 Value pop(VM* vm);

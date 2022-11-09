@@ -208,7 +208,7 @@ static int initCapacity(int count) {
     return capacity;
 }
 
-ObjEntry* findEntryKey(ObjEntry* entries, int capacity, Value key) {
+ObjEntry* findEntryByKey(ObjEntry* entries, int capacity, Value key) {
     uint32_t hash = hashValue(key);
     uint32_t index = hash & (capacity - 1);
     ObjEntry* tombstone = NULL;
@@ -231,9 +231,9 @@ ObjEntry* findEntryKey(ObjEntry* entries, int capacity, Value key) {
     }
 }
 
-bool getEntryValue(ObjDictionary* dict, Value key, Value* value) {
+bool getValueForEntry(ObjDictionary* dict, Value key, Value* value) {
     if (dict->count == 0) return false;
-    ObjEntry* entry = findEntryKey(dict->entries, dict->capacity, key);
+    ObjEntry* entry = findEntryByKey(dict->entries, dict->capacity, key);
     if (IS_UNDEFINED(entry->key)) return false;
     *value = entry->value;
     return true;
@@ -253,7 +253,7 @@ static void makeDictionary(VM* vm, uint8_t entryCount) {
     for (int i = 1; i <= entryCount; i++) {
         Value key = peek(vm, 2 * i);
         Value value = peek(vm, 2 * i - 1);
-        ObjEntry* entry = findEntryKey(dictionary->entries, dictionary->capacity, key);
+        ObjEntry* entry = findEntryByKey(dictionary->entries, dictionary->capacity, key);
         entry->key = key;
         entry->value = value;
     }
@@ -564,7 +564,7 @@ static InterpretResult run(VM* vm) {
                     if (IS_STRING(peek(vm, 0))) {
                         ObjString* string = AS_STRING(pop(vm));
                         if (index < 0 || index > string->length) {
-                            runtimeError(vm, "string index is out of bound.");
+                            runtimeError(vm, "String index is out of bound.");
                             return INTERPRET_RUNTIME_ERROR;
                         }
                         char chars[2] = { string->chars[index], '\0' };
@@ -572,29 +572,24 @@ static InterpretResult run(VM* vm) {
                         push(vm, OBJ_VAL(element));
                     }
                     else if (IS_ARRAY(peek(vm, 0))) {
-                        ObjArray* list = AS_ARRAY(pop(vm));
-                        if (index < 0 || index > list->elements.count) {
-                            runtimeError(vm, "List index is out of bound.");
+                        ObjArray* array = AS_ARRAY(pop(vm));
+                        if (index < 0 || index > array->elements.count) {
+                            runtimeError(vm, "Array index is out of bound.");
                             return INTERPRET_RUNTIME_ERROR;
                         }
-                        Value element = list->elements.values[index];
+                        Value element = array->elements.values[index];
                         push(vm, element);
                     }
                     else {
-                        runtimeError(vm, "Only String or List can have integer subscripts.");
+                        runtimeError(vm, "Only String or Array can have integer subscripts.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
                 }
-                else if (IS_STRING(peek(vm, 0))) {
-                    if (!IS_DICTIONARY(peek(vm, 1))) {
-                        runtimeError(vm, "Only Dictionary can have string subscripts.");
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-
+                else if (IS_DICTIONARY(peek(vm, 1))) {
                     Value key = pop(vm);
                     ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
                     Value value;
-                    if (getEntryValue(dictionary, key, &value)) push(vm, value);
+                    if (getValueForEntry(dictionary, key, &value)) push(vm, value);
                     else push(vm, NIL_VAL);
                 }
                 else {
@@ -604,36 +599,28 @@ static InterpretResult run(VM* vm) {
                 break;
             }
             case OP_SET_SUBSCRIPT: {
-                if (IS_INT(peek(vm, 1))) {
-                    if (!IS_ARRAY(peek(vm, 2))) {
-                        runtimeError(vm, "Only List can have integer subscripts.");
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-
+                if (IS_INT(peek(vm, 1)) && IS_ARRAY(peek(vm, 2))) {
                     Value element = pop(vm);
                     int index = AS_INT(pop(vm));
                     ObjArray* list = AS_ARRAY(pop(vm));
                     if (index < 0 || index > list->elements.count) {
-                        runtimeError(vm, "List index is out of bound.");
+                        runtimeError(vm, "Array index is out of bound.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     valueArrayInsert(vm, &list->elements, index, element);
                     push(vm, OBJ_VAL(list));
                 }
-                else if (IS_STRING(peek(vm, 1))) {
-                    if (!IS_DICTIONARY(peek(vm, 2))) {
-                        runtimeError(vm, "Only Dictionary can have string subscripts.");
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-
+                else if (IS_DICTIONARY(peek(vm, 2))) {
                     Value value = pop(vm);
                     Value key = pop(vm);
                     ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
-                    getEntryValue(dictionary, key, &value);
+                    ObjEntry* entry = findEntryByKey(dictionary->entries, dictionary->capacity, key);
+                    entry->key = key;
+                    entry->value = value;
                     push(vm, OBJ_VAL(dictionary));
                 }
                 else {
-                    runtimeError(vm, "Subscript must be integer or string.");
+                    runtimeError(vm, "Only Array and Dictionary can have subscripts.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;

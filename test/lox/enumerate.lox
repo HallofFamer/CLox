@@ -16,7 +16,7 @@ println("Selecting elements that are numbers: ");
 println(selected);
 
 var rejected = list.reject({|x| x.instanceOf(Number) });
-println("Rejecting elements that are numebrs: ");
+println("Rejecting elements that are numbers: ");
 println(rejected);
 println("");
 

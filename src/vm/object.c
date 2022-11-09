@@ -29,9 +29,9 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
 }
 
 ObjArray* newArray(VM* vm) {
-    ObjArray* list = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY, vm->listClass);
-    initValueArray(&list->elements);
-    return list;
+    ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY, vm->arrayClass);
+    initValueArray(&array->elements);
+    return array;
 }
 
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {

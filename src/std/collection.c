@@ -37,7 +37,7 @@ ObjArray* arrayCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
 }
 
 static ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
-    return findEntryKey(entries, capacity, key);
+    return findEntryByKey(entries, capacity, key);
 }
 
 static void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
@@ -64,7 +64,7 @@ static void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
 }
 
 static bool dictGet(ObjDictionary* dict, Value key, Value* value) {
-    return getEntryValue(dict, key, value);
+    return getValueForEntry(dict, key, value);
 }
 
 static bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
@@ -464,6 +464,161 @@ ObjString* setToString(VM* vm, ObjInstance* set) {
     }
 }
 
+LOX_METHOD(Array, add) {
+    ASSERT_ARG_COUNT("Array::add(element)", 1);
+    valueArrayWrite(vm, &AS_ARRAY(receiver)->elements, args[0]);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Array, addAll) {
+    ASSERT_ARG_COUNT("Array::add(array)", 1);
+    ASSERT_ARG_TYPE("Array::add(array)", 0, List);
+    valueArrayAddAll(vm, &AS_ARRAY(args[0])->elements, &AS_ARRAY(receiver)->elements);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Array, clear) {
+    ASSERT_ARG_COUNT("Array::clear()", 0);
+    freeValueArray(vm, &AS_ARRAY(receiver)->elements);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Array, clone) {
+    ASSERT_ARG_COUNT("Array::clone()", 0);
+    ObjArray* self = AS_ARRAY(receiver);
+    RETURN_OBJ(arrayCopy(vm, self->elements, 0, self->elements.count));
+}
+
+LOX_METHOD(Array, contains) {
+    ASSERT_ARG_COUNT("Array::contains(element)", 1);
+    RETURN_BOOL(valueArrayFirstIndex(vm, &AS_ARRAY(receiver)->elements, args[0]) != -1);
+}
+
+LOX_METHOD(Array, equals) {
+    ASSERT_ARG_COUNT("Array::equals(other)", 1);
+    if (!IS_ARRAY(args[0])) RETURN_FALSE;
+    RETURN_BOOL(valueArraysEqual(&AS_ARRAY(receiver)->elements, &AS_ARRAY(args[0])->elements));
+}
+
+LOX_METHOD(Array, getAt) {
+    ASSERT_ARG_COUNT("Array::getAt(index)", 1);
+    ASSERT_ARG_TYPE("Array::getAt(index)", 0, Int);
+    ObjArray* self = AS_ARRAY(receiver);
+    int index = AS_INT(args[0]);
+    assertIntWithinRange(vm, "Array::getAt(index)", index, 0, self->elements.count - 1, 0);
+    RETURN_VAL(self->elements.values[index]);
+}
+
+LOX_METHOD(Array, indexOf) {
+    ASSERT_ARG_COUNT("Array::indexOf(element)", 1);
+    ObjArray* self = AS_ARRAY(receiver);
+    if (self->elements.count == 0) return -1;
+    RETURN_INT(valueArrayFirstIndex(vm, &self->elements, args[0]));
+}
+
+LOX_METHOD(Array, init) {
+    ASSERT_ARG_COUNT("Array::init()", 0);
+    RETURN_OBJ(newArray(vm));
+}
+
+LOX_METHOD(Array, insertAt) {
+    ASSERT_ARG_COUNT("Array::insertAt(index, element)", 2);
+    ASSERT_ARG_TYPE("Array::insertAt(index, element)", 0, Int);
+    ObjArray* self = AS_ARRAY(receiver);
+    int index = AS_INT(args[0]);
+    assertIntWithinRange(vm, "Array::insertAt(index)", index, 0, self->elements.count, 0);
+    valueArrayInsert(vm, &self->elements, index, args[1]);
+    RETURN_VAL(args[1]);
+}
+
+LOX_METHOD(Array, isEmpty) {
+    ASSERT_ARG_COUNT("Array::isEmpty()", 0);
+    RETURN_BOOL(AS_ARRAY(receiver)->elements.count == 0);
+}
+
+LOX_METHOD(Array, lastIndexOf) {
+    ASSERT_ARG_COUNT("Array::indexOf(element)", 1);
+    ObjArray* self = AS_ARRAY(receiver);
+    if (self->elements.count == 0) return -1;
+    RETURN_INT(valueArrayLastIndex(vm, &self->elements, args[0]));
+}
+
+LOX_METHOD(Array, length) {
+    ASSERT_ARG_COUNT("Array::length()", 0);
+    RETURN_INT(AS_ARRAY(receiver)->elements.count);
+}
+
+LOX_METHOD(Array, next) {
+    ASSERT_ARG_COUNT("Array::next(index)", 1);
+    ObjArray* self = AS_ARRAY(receiver);
+    if (IS_NIL(args[0])) {
+        if (self->elements.count == 0) RETURN_FALSE;
+        RETURN_INT(0);
+    }
+
+    ASSERT_ARG_TYPE("Array::next(index)", 0, Int);
+    int index = AS_INT(args[0]);
+    if (index < 0 || index < self->elements.count - 1) RETURN_INT(index + 1);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Array, nextValue) {
+    ASSERT_ARG_COUNT("Array::nextValue(index)", 1);
+    ASSERT_ARG_TYPE("Array::nextValue(index)", 0, Int);
+    ObjArray* self = AS_ARRAY(receiver);
+    int index = AS_INT(args[0]);
+    if (index > -1 && index < self->elements.count) RETURN_VAL(self->elements.values[index]);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Array, putAt) {
+    ASSERT_ARG_COUNT("Array::putAt(index, element)", 2);
+    ASSERT_ARG_TYPE("Array::putAt(index, element)", 0, Int);
+    ObjArray* self = AS_ARRAY(receiver);
+    int index = AS_INT(args[0]);
+    assertIntWithinRange(vm, "Array::putAt(index)", index, 0, self->elements.count, 0);
+    self->elements.values[index] = args[1];
+    if (index == self->elements.count) self->elements.count++;
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Array, remove) {
+    ASSERT_ARG_COUNT("Array::remove(element)", 1);
+    ObjArray* self = AS_ARRAY(receiver);
+    int index = valueArrayFirstIndex(vm, &self->elements, args[0]);
+    if (index == -1) RETURN_FALSE;
+    valueArrayDelete(vm, &self->elements, index);
+    RETURN_TRUE;
+}
+
+LOX_METHOD(Array, removeAt) {
+    ASSERT_ARG_COUNT("Array::removeAt(index)", 1);
+    ASSERT_ARG_TYPE("Array::removeAt(index)", 0, Int);
+    ObjArray* self = AS_ARRAY(receiver);
+    int index = AS_INT(args[0]);
+    assertIntWithinRange(vm, "Array::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
+    Value element = valueArrayDelete(vm, &self->elements, index);
+    RETURN_VAL(element);
+}
+
+LOX_METHOD(Array, slice) {
+    ASSERT_ARG_COUNT("Array::slice(from, to)", 2);
+    ASSERT_ARG_TYPE("Array::slice(from, to)", 0, Int);
+    ASSERT_ARG_TYPE("Array::slice(from, to)", 1, Int);
+    ObjArray* self = AS_ARRAY(receiver);
+    int fromIndex = AS_INT(args[0]);
+    int toIndex = AS_INT(args[1]);
+
+    assertIntWithinRange(vm, "Array::slice(from, to)", fromIndex, 0, self->elements.count, 0);
+    assertIntWithinRange(vm, "Array::slice(from, to", toIndex, fromIndex, self->elements.count, 1);
+    RETURN_OBJ(arrayCopy(vm, self->elements, fromIndex, toIndex));
+}
+
+LOX_METHOD(Array, toString) {
+    ASSERT_ARG_COUNT("Array::toString()", 0);
+    RETURN_OBJ(valueArrayToString(vm, &AS_ARRAY(receiver)->elements));
+}
+
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
@@ -855,8 +1010,8 @@ LOX_METHOD(LinkedList, removeLast) {
     RETURN_VAL(linkRemoveLast(vm, self, IS_NIL(last) ? NULL : AS_NODE(last)));
 }
 
-LOX_METHOD(LinkedList, toList) {
-    ASSERT_ARG_COUNT("LinkedList::toList()", 0);
+LOX_METHOD(LinkedList, toArray) {
+    ASSERT_ARG_COUNT("LinkedList::toArray()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
     ObjArray* list = newArray(vm);
@@ -874,161 +1029,6 @@ LOX_METHOD(LinkedList, toString) {
     ASSERT_ARG_COUNT("LinkedList::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     RETURN_OBJ(linkToString(vm, self));
-}
-
-LOX_METHOD(List, add) {
-    ASSERT_ARG_COUNT("List::add(element)", 1);
-    valueArrayWrite(vm, &AS_ARRAY(receiver)->elements, args[0]);
-    RETURN_OBJ(receiver);
-}
-
-LOX_METHOD(List, addAll) {
-    ASSERT_ARG_COUNT("List::add(list)", 1);
-    ASSERT_ARG_TYPE("List::add(list)", 0, List);
-    valueArrayAddAll(vm, &AS_ARRAY(args[0])->elements, &AS_ARRAY(receiver)->elements);
-    RETURN_OBJ(receiver);
-}
-
-LOX_METHOD(List, clear) {
-    ASSERT_ARG_COUNT("List::clear()", 0);
-    freeValueArray(vm, &AS_ARRAY(receiver)->elements);
-    RETURN_OBJ(receiver);
-}
-
-LOX_METHOD(List, clone) {
-    ASSERT_ARG_COUNT("List::clone()", 0);
-    ObjArray* self = AS_ARRAY(receiver);
-    RETURN_OBJ(arrayCopy(vm, self->elements, 0, self->elements.count));
-}
-
-LOX_METHOD(List, contains) {
-    ASSERT_ARG_COUNT("List::contains(element)", 1);
-    RETURN_BOOL(valueArrayFirstIndex(vm, &AS_ARRAY(receiver)->elements, args[0]) != -1);
-}
-
-LOX_METHOD(List, equals) {
-    ASSERT_ARG_COUNT("List::equals(other)", 1);
-    if (!IS_ARRAY(args[0])) RETURN_FALSE;
-    RETURN_BOOL(valueArraysEqual(&AS_ARRAY(receiver)->elements, &AS_ARRAY(args[0])->elements));
-}
-
-LOX_METHOD(List, getAt) {
-    ASSERT_ARG_COUNT("List::getAt(index)", 1);
-    ASSERT_ARG_TYPE("List::getAt(index)", 0, Int);
-    ObjArray* self = AS_ARRAY(receiver);
-    int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "List::getAt(index)", index, 0, self->elements.count - 1, 0);
-    RETURN_VAL(self->elements.values[index]);
-}
-
-LOX_METHOD(List, indexOf) {
-    ASSERT_ARG_COUNT("List::indexOf(element)", 1);
-    ObjArray* self = AS_ARRAY(receiver);
-    if (self->elements.count == 0) return -1;
-    RETURN_INT(valueArrayFirstIndex(vm, &self->elements, args[0]));
-}
-
-LOX_METHOD(List, init) {
-    ASSERT_ARG_COUNT("List::init()", 0);
-    RETURN_OBJ(newArray(vm));
-}
-
-LOX_METHOD(List, insertAt) {
-    ASSERT_ARG_COUNT("List::insertAt(index, element)", 2);
-    ASSERT_ARG_TYPE("List::insertAt(index, element)", 0, Int);
-    ObjArray* self = AS_ARRAY(receiver);
-    int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "List::insertAt(index)", index, 0, self->elements.count, 0);
-    valueArrayInsert(vm, &self->elements, index, args[1]);
-    RETURN_VAL(args[1]);
-}
-
-LOX_METHOD(List, isEmpty) {
-    ASSERT_ARG_COUNT("List::isEmpty()", 0);
-    RETURN_BOOL(AS_ARRAY(receiver)->elements.count == 0);
-}
-
-LOX_METHOD(List, lastIndexOf) {
-    ASSERT_ARG_COUNT("List::indexOf(element)", 1);
-    ObjArray* self = AS_ARRAY(receiver);
-    if (self->elements.count == 0) return -1;
-    RETURN_INT(valueArrayLastIndex(vm, &self->elements, args[0]));
-}
-
-LOX_METHOD(List, length) {
-    ASSERT_ARG_COUNT("List::length()", 0);
-    RETURN_INT(AS_ARRAY(receiver)->elements.count);
-}
-
-LOX_METHOD(List, next) {
-    ASSERT_ARG_COUNT("List::next(index)", 1);
-    ObjArray* self = AS_ARRAY(receiver);
-    if (IS_NIL(args[0])) {
-        if (self->elements.count == 0) RETURN_FALSE;
-        RETURN_INT(0);
-    }
-
-    ASSERT_ARG_TYPE("List::next(index)", 0, Int);
-    int index = AS_INT(args[0]);
-    if (index < 0 || index < self->elements.count - 1) RETURN_INT(index + 1);
-    RETURN_NIL;
-}
-
-LOX_METHOD(List, nextValue) {
-    ASSERT_ARG_COUNT("List::nextValue(index)", 1);
-    ASSERT_ARG_TYPE("List::nextValue(index)", 0, Int);
-    ObjArray* self = AS_ARRAY(receiver);
-    int index = AS_INT(args[0]);
-    if (index > -1 && index < self->elements.count) RETURN_VAL(self->elements.values[index]);
-    RETURN_NIL;
-}
-
-LOX_METHOD(List, putAt) {
-    ASSERT_ARG_COUNT("List::putAt(index, element)", 2);
-    ASSERT_ARG_TYPE("List::putAt(index, element)", 0, Int);
-    ObjArray* self = AS_ARRAY(receiver);
-    int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "List::putAt(index)", index, 0, self->elements.count, 0);
-    self->elements.values[index] = args[1];
-    if (index == self->elements.count) self->elements.count++;
-    RETURN_OBJ(receiver);
-}
-
-LOX_METHOD(List, remove) {
-    ASSERT_ARG_COUNT("List::remove(element)", 1);
-    ObjArray* self = AS_ARRAY(receiver);
-    int index = valueArrayFirstIndex(vm, &self->elements, args[0]);
-    if (index == -1) RETURN_FALSE;
-    valueArrayDelete(vm, &self->elements, index);
-    RETURN_TRUE;
-}
-
-LOX_METHOD(List, removeAt) {
-    ASSERT_ARG_COUNT("List::removeAt(index)", 1);
-    ASSERT_ARG_TYPE("List::removeAt(index)", 0, Int);
-    ObjArray* self = AS_ARRAY(receiver);
-    int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "List::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
-    Value element = valueArrayDelete(vm, &self->elements, index);
-    RETURN_VAL(element);
-}
-
-LOX_METHOD(List, subList) {
-    ASSERT_ARG_COUNT("List::subList(from, to)", 2);
-    ASSERT_ARG_TYPE("List::subList(from, to)", 0, Int);
-    ASSERT_ARG_TYPE("List::subList(from, to)", 1, Int);
-    ObjArray* self = AS_ARRAY(receiver);
-    int fromIndex = AS_INT(args[0]);
-    int toIndex = AS_INT(args[1]);
-
-    assertIntWithinRange(vm, "List::subList(from, to)", fromIndex, 0, self->elements.count, 0);
-    assertIntWithinRange(vm, "List::subList(from, to", toIndex, fromIndex, self->elements.count, 1);
-    RETURN_OBJ(arrayCopy(vm, self->elements, fromIndex, toIndex));
-}
- 
-LOX_METHOD(List, toString) {
-    ASSERT_ARG_COUNT("List::toString()", 0);
-    RETURN_OBJ(valueArrayToString(vm, &AS_ARRAY(receiver)->elements));
 }
 
 LOX_METHOD(Node, clone) {
@@ -1275,7 +1275,7 @@ LOX_METHOD(Set, remove) {
     RETURN_VAL(value);
 }
 
-LOX_METHOD(Set, toList) {
+LOX_METHOD(Set, toArray) {
     ASSERT_ARG_COUNT("Set::toList()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
@@ -1394,28 +1394,69 @@ void registerCollectionPackage(VM* vm) {
     initNativePackage(vm, "src/std/collection.lox");
     ObjClass* collectionClass = getNativeClass(vm, "Collection");
     bindSuperclass(vm, collectionClass, vm->objectClass);
+    ObjClass* listClass = getNativeClass(vm, "List");
+    bindSuperclass(vm, listClass, collectionClass);
 
-    vm->listClass = getNativeClass(vm, "List");
-    DEF_METHOD(vm->listClass, List, add, 1);
-    DEF_METHOD(vm->listClass, List, addAll, 1);
-    DEF_METHOD(vm->listClass, List, clear, 0);
-    DEF_METHOD(vm->listClass, List, clone, 0);
-    DEF_METHOD(vm->listClass, List, contains, 1);
-    DEF_METHOD(vm->listClass, List, equals, 1);
-    DEF_METHOD(vm->listClass, List, getAt, 1);
-    DEF_METHOD(vm->listClass, List, indexOf, 1);
-    DEF_METHOD(vm->listClass, List, init, 0);
-    DEF_METHOD(vm->listClass, List, insertAt, 2);
-    DEF_METHOD(vm->listClass, List, isEmpty, 0);
-    DEF_METHOD(vm->listClass, List, lastIndexOf, 1);
-    DEF_METHOD(vm->listClass, List, length, 0);
-    DEF_METHOD(vm->listClass, List, next, 1);
-    DEF_METHOD(vm->listClass, List, nextValue, 1);
-    DEF_METHOD(vm->listClass, List, putAt, 2);
-    DEF_METHOD(vm->listClass, List, remove, 1);
-    DEF_METHOD(vm->listClass, List, removeAt, 1);
-    DEF_METHOD(vm->listClass, List, subList, 2);
-    DEF_METHOD(vm->listClass, List, toString, 0);
+    vm->arrayClass = defineNativeClass(vm, "Array");
+    bindSuperclass(vm, vm->arrayClass, listClass);
+    DEF_METHOD(vm->arrayClass, Array, add, 1);
+    DEF_METHOD(vm->arrayClass, Array, addAll, 1);
+    DEF_METHOD(vm->arrayClass, Array, clear, 0);
+    DEF_METHOD(vm->arrayClass, Array, clone, 0);
+    DEF_METHOD(vm->arrayClass, Array, contains, 1);
+    DEF_METHOD(vm->arrayClass, Array, equals, 1);
+    DEF_METHOD(vm->arrayClass, Array, getAt, 1);
+    DEF_METHOD(vm->arrayClass, Array, indexOf, 1);
+    DEF_METHOD(vm->arrayClass, Array, init, 0);
+    DEF_METHOD(vm->arrayClass, Array, insertAt, 2);
+    DEF_METHOD(vm->arrayClass, Array, isEmpty, 0);
+    DEF_METHOD(vm->arrayClass, Array, lastIndexOf, 1);
+    DEF_METHOD(vm->arrayClass, Array, length, 0);
+    DEF_METHOD(vm->arrayClass, Array, next, 1);
+    DEF_METHOD(vm->arrayClass, Array, nextValue, 1);
+    DEF_METHOD(vm->arrayClass, Array, putAt, 2);
+    DEF_METHOD(vm->arrayClass, Array, remove, 1);
+    DEF_METHOD(vm->arrayClass, Array, removeAt, 1);
+    DEF_METHOD(vm->arrayClass, Array, slice, 2);
+    DEF_METHOD(vm->arrayClass, Array, toString, 0);
+
+
+    ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
+    bindSuperclass(vm, linkedListClass, listClass);
+    DEF_METHOD(linkedListClass, LinkedList, add, 1);
+    DEF_METHOD(linkedListClass, LinkedList, addAt, 2);
+    DEF_METHOD(linkedListClass, LinkedList, addFirst, 1);
+    DEF_METHOD(linkedListClass, LinkedList, addLast, 1);
+    DEF_METHOD(linkedListClass, LinkedList, clear, 0);
+    DEF_METHOD(linkedListClass, LinkedList, clone, 0);
+    DEF_METHOD(linkedListClass, LinkedList, contains, 1);
+    DEF_METHOD(linkedListClass, LinkedList, first, 0);
+    DEF_METHOD(linkedListClass, LinkedList, getAt, 1);
+    DEF_METHOD(linkedListClass, LinkedList, indexOf, 1);
+    DEF_METHOD(linkedListClass, LinkedList, init, 0);
+    DEF_METHOD(linkedListClass, LinkedList, isEmpty, 0);
+    DEF_METHOD(linkedListClass, LinkedList, last, 0);
+    DEF_METHOD(linkedListClass, LinkedList, lastIndexOf, 0);
+    DEF_METHOD(linkedListClass, LinkedList, length, 0);
+    DEF_METHOD(linkedListClass, LinkedList, next, 1);
+    DEF_METHOD(linkedListClass, LinkedList, nextValue, 1);
+    DEF_METHOD(linkedListClass, LinkedList, node, 1);
+    DEF_METHOD(linkedListClass, LinkedList, peek, 0);
+    DEF_METHOD(linkedListClass, LinkedList, putAt, 2);
+    DEF_METHOD(linkedListClass, LinkedList, remove, 0);
+    DEF_METHOD(linkedListClass, LinkedList, removeFirst, 0);
+    DEF_METHOD(linkedListClass, LinkedList, removeLast, 0);
+    DEF_METHOD(linkedListClass, LinkedList, toArray, 0);
+    DEF_METHOD(linkedListClass, LinkedList, toString, 0);
+
+    ObjClass* nodeClass = defineNativeClass(vm, "Node");
+    bindSuperclass(vm, nodeClass, vm->objectClass);
+    DEF_METHOD(nodeClass, Node, clone, 0);
+    DEF_METHOD(nodeClass, Node, element, 0);
+    DEF_METHOD(nodeClass, Node, init, 3);
+    DEF_METHOD(nodeClass, Node, next, 0);
+    DEF_METHOD(nodeClass, Node, prev, 0);
+    DEF_METHOD(nodeClass, Node, toString, 0);
 
     vm->dictionaryClass = getNativeClass(vm, "Dictionary");
     DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
@@ -1459,45 +1500,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(setClass, Set, next, 1);
     DEF_METHOD(setClass, Set, nextValue, 1);
     DEF_METHOD(setClass, Set, remove, 1);
-    DEF_METHOD(setClass, Set, toList, 0);
+    DEF_METHOD(setClass, Set, toArray, 0);
     DEF_METHOD(setClass, Set, toString, 0);
-
-    ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
-    bindSuperclass(vm, linkedListClass, collectionClass);
-    DEF_METHOD(linkedListClass, LinkedList, add, 1);
-    DEF_METHOD(linkedListClass, LinkedList, addAt, 2);
-    DEF_METHOD(linkedListClass, LinkedList, addFirst, 1);
-    DEF_METHOD(linkedListClass, LinkedList, addLast, 1);
-    DEF_METHOD(linkedListClass, LinkedList, clear, 0);
-    DEF_METHOD(linkedListClass, LinkedList, clone, 0);
-    DEF_METHOD(linkedListClass, LinkedList, contains, 1);
-    DEF_METHOD(linkedListClass, LinkedList, first, 0);
-    DEF_METHOD(linkedListClass, LinkedList, getAt, 1);
-    DEF_METHOD(linkedListClass, LinkedList, indexOf, 1);
-    DEF_METHOD(linkedListClass, LinkedList, init, 0);
-    DEF_METHOD(linkedListClass, LinkedList, isEmpty, 0);
-    DEF_METHOD(linkedListClass, LinkedList, last, 0);
-    DEF_METHOD(linkedListClass, LinkedList, lastIndexOf, 0);
-    DEF_METHOD(linkedListClass, LinkedList, length, 0);
-    DEF_METHOD(linkedListClass, LinkedList, next, 1);
-    DEF_METHOD(linkedListClass, LinkedList, nextValue, 1);
-    DEF_METHOD(linkedListClass, LinkedList, node, 1);
-    DEF_METHOD(linkedListClass, LinkedList, peek, 0);
-    DEF_METHOD(linkedListClass, LinkedList, putAt, 2);
-    DEF_METHOD(linkedListClass, LinkedList, remove, 0);
-    DEF_METHOD(linkedListClass, LinkedList, removeFirst, 0);
-    DEF_METHOD(linkedListClass, LinkedList, removeLast, 0);
-    DEF_METHOD(linkedListClass, LinkedList, toList, 0);
-    DEF_METHOD(linkedListClass, LinkedList, toString, 0);
-
-    ObjClass* nodeClass = defineNativeClass(vm, "Node");
-    bindSuperclass(vm, nodeClass, vm->objectClass);
-    DEF_METHOD(nodeClass, Node, clone, 0);
-    DEF_METHOD(nodeClass, Node, element, 0);
-    DEF_METHOD(nodeClass, Node, init, 3);
-    DEF_METHOD(nodeClass, Node, next, 0);
-    DEF_METHOD(nodeClass, Node, prev, 0);
-    DEF_METHOD(nodeClass, Node, toString, 0);
 
     ObjClass* stackClass = defineNativeClass(vm, "Stack");
     bindSuperclass(vm, stackClass, collectionClass);

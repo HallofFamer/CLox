@@ -71,12 +71,12 @@ class Collection {
         return selected;
     }
 
-    toList(){ 
-        var list = [];
+    toArray(){ 
+        var array = [];
         for(var element : this){
-            list.add(element);
+            array.add(element);
         }
-        return list;
+        return array;
     }
 }
 
@@ -133,7 +133,9 @@ class Dictionary < Collection {
     select(closure){ 
         var selected = this.getClass()();
         for(var (key, value) : this){ 
-            if(closure(key, value)) selected[key] = value;
+            if(closure(key, value)){
+                 selected[key] = value;
+            }
         }
         return selected;
     }

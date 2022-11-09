@@ -1,7 +1,7 @@
 var array = [];
 print("Creating empty array: ");
 println(array);
-var array2 = List();
+var array2 = Array();
 print("Two empty arrays are equal: ");
 println(array.equals(array2));
 println("");
