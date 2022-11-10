@@ -77,12 +77,14 @@ typedef enum {
 void initVM(VM* vm);
 void freeVM(VM* vm);
 bool isFalsey(Value value);
+ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key);
+void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity);
+bool dictGet(ObjDictionary* dict, Value key, Value* value);
+bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);
-ObjEntry* findEntryByKey(ObjEntry* entries, int capacity, Value key);
-bool getValueForEntry(ObjDictionary* dict, Value key, Value* value);
 InterpretResult interpret(VM* vm, const char* source);
 void push(VM* vm, Value value);
 Value pop(VM* vm);

@@ -11,6 +11,16 @@
 #include "../vm/value.h"
 #include "../vm/vm.h"
 
+ObjArray* arrayCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
+    ObjArray* array = newArray(vm);
+    push(vm, OBJ_VAL(array));
+    for (int i = fromIndex; i < toIndex; i++) {
+        valueArrayWrite(vm, &array->elements, elements.values[i]);
+    }
+    pop(vm);
+    return array;
+}
+
 static bool collectionIsEmpty(VM* vm, ObjInstance* collection) {
     int length = AS_INT(getObjProperty(vm, collection, "length"));
     return (length == 0);
@@ -24,62 +34,6 @@ static void collectionLengthDecrement(VM* vm, ObjInstance* collection) {
 static void collectionLengthIncrement(VM* vm, ObjInstance* collection) {
     int length = AS_INT(getObjProperty(vm, collection, "length"));
     setObjProperty(vm, collection, "length", INT_VAL(length + 1));
-}
-
-ObjArray* arrayCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
-    ObjArray* list = newArray(vm);
-    push(vm, OBJ_VAL(list));
-    for (int i = fromIndex; i < toIndex; i++) {
-        valueArrayWrite(vm, &list->elements, elements.values[i]);
-    }
-    pop(vm);
-    return list;
-}
-
-static ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
-    return findEntryByKey(entries, capacity, key);
-}
-
-static void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
-    ObjEntry* entries = ALLOCATE(ObjEntry, capacity);
-    for (int i = 0; i < capacity; i++) {
-        entries[i].key = UNDEFINED_VAL;
-        entries[i].value = NIL_VAL;
-    }
-
-    dict->count = 0;
-    for (int i = 0; i < dict->capacity; i++) {
-        ObjEntry* entry = &dict->entries[i];
-        if (IS_UNDEFINED(entry->key)) continue;
-
-        ObjEntry* dest = dictFindEntry(entries, capacity, entry->key);
-        dest->key = entry->key;
-        dest->value = entry->value;
-        dict->count++;
-    }
-
-    FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
-    dict->entries = entries;
-    dict->capacity = capacity;
-}
-
-static bool dictGet(ObjDictionary* dict, Value key, Value* value) {
-    return getValueForEntry(dict, key, value);
-}
-
-static bool dictSet(VM* vm, ObjDictionary* dict, Value key, Value value) {
-    if (dict->count + 1 > dict->capacity * TABLE_MAX_LOAD) {
-        int capacity = GROW_CAPACITY(dict->capacity);
-        dictAdjustCapacity(vm, dict, capacity);
-    }
-
-    ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
-    bool isNewKey = IS_UNDEFINED(entry->key);
-    if (isNewKey && IS_NIL(entry->value)) dict->count++;
-
-    entry->key = key;
-    entry->value = value;
-    return isNewKey;
 }
 
 static void dictAddAll(VM* vm, ObjDictionary* from, ObjDictionary* to) {
