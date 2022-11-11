@@ -623,13 +623,13 @@ static InterpretResult run(VM* vm) {
                 if (IS_INT(peek(vm, 1)) && IS_ARRAY(peek(vm, 2))) {
                     Value element = pop(vm);
                     int index = AS_INT(pop(vm));
-                    ObjArray* list = AS_ARRAY(pop(vm));
-                    if (index < 0 || index > list->elements.count) {
+                    ObjArray* array = AS_ARRAY(pop(vm));
+                    if (index < 0 || index > array->elements.count) {
                         runtimeError(vm, "Array index is out of bound.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
-                    valueArrayInsert(vm, &list->elements, index, element);
-                    push(vm, OBJ_VAL(list));
+                    valueArrayInsert(vm, &array->elements, index, element);
+                    push(vm, OBJ_VAL(array));
                 }
                 else if (IS_DICTIONARY(peek(vm, 2))) {
                     Value value = pop(vm);
