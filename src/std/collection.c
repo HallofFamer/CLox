@@ -123,16 +123,6 @@ static int dictFindIndex(ObjDictionary* dict, Value key) {
     }
 }
 
-static int dictLength(ObjDictionary* dict) {
-    if (dict->count == 0) return 0;
-    int length = 0;
-    for (int i = 0; i < dict->capacity; i++) {
-        ObjEntry* entry = &dict->entries[i];
-        if (!IS_UNDEFINED(entry->key)) length++;
-    }
-    return length;
-}
-
 ObjString* dictToString(VM* vm, ObjDictionary* dict) {
     if (dict->count == 0) return copyString(vm, "[]", 2);
     else {
@@ -650,7 +640,7 @@ LOX_METHOD(Dictionary, keySet) {
 
 LOX_METHOD(Dictionary, length) {
     ASSERT_ARG_COUNT("Dictionary::length()", 0);
-    RETURN_INT(dictLength(AS_DICTIONARY(receiver)));
+    RETURN_INT(AS_DICTIONARY(receiver)->count);
 }
 
 LOX_METHOD(Dictionary, next) {
@@ -968,15 +958,15 @@ LOX_METHOD(LinkedList, toArray) {
     ASSERT_ARG_COUNT("LinkedList::toArray()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
-    ObjArray* list = newArray(vm);
-    push(vm, OBJ_VAL(list));
+    ObjArray* array = newArray(vm);
+    push(vm, OBJ_VAL(array));
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
-            valueArrayWrite(vm, &list->elements, node->element);
+            valueArrayWrite(vm, &array->elements, node->element);
         }
     }
     pop(vm);
-    RETURN_OBJ(list);
+    RETURN_OBJ(array);
 }
 
 LOX_METHOD(LinkedList, toString) {
@@ -1111,19 +1101,19 @@ LOX_METHOD(Queue, search) {
     RETURN_INT(linkSearchElement(vm, self, args[0]));
 }
 
-LOX_METHOD(Queue, toList) {
-    ASSERT_ARG_COUNT("Queue::toList()", 0);
+LOX_METHOD(Queue, toArray) {
+    ASSERT_ARG_COUNT("Queue::toArray()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, self, "length"));
-    ObjArray* list = newArray(vm);
-    push(vm, OBJ_VAL(list));
+    ObjArray* array = newArray(vm);
+    push(vm, OBJ_VAL(array));
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
-            valueArrayWrite(vm, &list->elements, node->element);
+            valueArrayWrite(vm, &array->elements, node->element);
         }
     }
     pop(vm);
-    RETURN_OBJ(list);
+    RETURN_OBJ(array);
 }
 
 LOX_METHOD(Queue, toString) {
@@ -1187,7 +1177,7 @@ LOX_METHOD(Set, isEmpty) {
 LOX_METHOD(Set, length) {
     ASSERT_ARG_COUNT("Set::length()", 0);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
-    RETURN_INT(dictLength(dict));
+    RETURN_INT(dict->count);
 }
 
 LOX_METHOD(Set, next) {
@@ -1230,7 +1220,7 @@ LOX_METHOD(Set, remove) {
 }
 
 LOX_METHOD(Set, toArray) {
-    ASSERT_ARG_COUNT("Set::toList()", 0);
+    ASSERT_ARG_COUNT("Set::toArray()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
     ObjArray* list = newArray(vm);
@@ -1323,19 +1313,19 @@ LOX_METHOD(Stack, search) {
     RETURN_INT(linkSearchElement(vm, self, args[0]));
 }
 
-LOX_METHOD(Stack, toList) {
-    ASSERT_ARG_COUNT("Stack::toList()", 0);
+LOX_METHOD(Stack, toArray) {
+    ASSERT_ARG_COUNT("Stack::toArray()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, self, "length"));
-    ObjArray* list = newArray(vm);
-    push(vm, OBJ_VAL(list));
+    ObjArray* array = newArray(vm);
+    push(vm, OBJ_VAL(array));
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
-            valueArrayWrite(vm, &list->elements, node->element);
+            valueArrayWrite(vm, &array->elements, node->element);
         }
     }
     pop(vm);
-    RETURN_OBJ(list);
+    RETURN_OBJ(array);
 }
 
 LOX_METHOD(Stack, toString) {
@@ -1468,7 +1458,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(stackClass, Stack, pop, 0);
     DEF_METHOD(stackClass, Stack, push, 1);
     DEF_METHOD(stackClass, Stack, search, 1);
-    DEF_METHOD(stackClass, Stack, toList, 0);
+    DEF_METHOD(stackClass, Stack, toArray, 0);
     DEF_METHOD(stackClass, Stack, toString, 0);
 
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
@@ -1481,6 +1471,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(queueClass, Queue, isEmpty, 0);
     DEF_METHOD(queueClass, Queue, length, 0);
     DEF_METHOD(queueClass, Queue, peek, 0);
-    DEF_METHOD(queueClass, Queue, toList, 0);
+    DEF_METHOD(queueClass, Queue, toArray, 0);
     DEF_METHOD(queueClass, Queue, toString, 0);
 }
