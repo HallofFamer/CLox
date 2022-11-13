@@ -20,6 +20,13 @@ void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, cha
     }
 }
 
+void assertArgIsArray(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_ARRAY(args[index])) {
+        runtimeError(vm, "method %s expects argument %d to be an array.", method, index + 1);
+        exit(70);
+    }
+}
+
 void assertArgIsBool(VM* vm, const char* method, Value* args, int index) {
     if (!IS_BOOL(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be a boolean value.", method, index + 1);
@@ -72,13 +79,6 @@ void assertArgIsFloat(VM* vm, const char* method, Value* args, int index) {
 void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
     if (!IS_INT(args[index])) {
         runtimeError(vm, "method %s expects argument %d to be an integer number.", method, index + 1);
-        exit(70);
-    }
-}
-
-void assertArgIsList(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_ARRAY(args[index])) {
-        runtimeError(vm, "method %s expects argument %d to be a list.", method, index + 1);
         exit(70);
     }
 }

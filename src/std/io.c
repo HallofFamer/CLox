@@ -117,7 +117,7 @@ LOX_METHOD(BinaryWriteStream, put) {
 
 LOX_METHOD(BinaryWriteStream, putBytes) {
     ASSERT_ARG_COUNT("BinaryWriteStream::put(bytes)", 1);
-    ASSERT_ARG_TYPE("BinaryWriteStream::put(bytes)", 0, List);
+    ASSERT_ARG_TYPE("BinaryWriteStream::put(bytes)", 0, Array);
     ObjArray* bytes = AS_ARRAY(args[0]);
     if (bytes->elements.count == 0) raiseError(vm, "Cannot write empty byte array to stream.");
 

@@ -416,7 +416,7 @@ LOX_METHOD(Array, add) {
 
 LOX_METHOD(Array, addAll) {
     ASSERT_ARG_COUNT("Array::add(array)", 1);
-    ASSERT_ARG_TYPE("Array::add(array)", 0, List);
+    ASSERT_ARG_TYPE("Array::add(array)", 0, Array);
     valueArrayAddAll(vm, &AS_ARRAY(args[0])->elements, &AS_ARRAY(receiver)->elements);
     RETURN_OBJ(receiver);
 }
