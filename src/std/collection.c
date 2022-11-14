@@ -1223,14 +1223,14 @@ LOX_METHOD(Set, toArray) {
     ASSERT_ARG_COUNT("Set::toArray()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
-    ObjArray* list = newArray(vm);
-    push(vm, OBJ_VAL(list));
+    ObjArray* array = newArray(vm);
+    push(vm, OBJ_VAL(array));
     for (int i = 0; i < dict->count; i++) {
         ObjEntry* entry = &dict->entries[i];
-        if (!IS_UNDEFINED(entry->key)) valueArrayWrite(vm, &list->elements, entry->key);
+        if (!IS_UNDEFINED(entry->key)) valueArrayWrite(vm, &array->elements, entry->key);
     }
     pop(vm);
-    RETURN_OBJ(list);
+    RETURN_OBJ(array);
 }
 
 LOX_METHOD(Set, toString) {
