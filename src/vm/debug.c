@@ -149,7 +149,7 @@ int disassembleInstruction(Chunk* chunk, int offset) {
           case OP_METHOD:
               return constantInstruction("OP_METHOD", chunk, offset);
           case OP_ARRAY: 
-              return byteInstruction("OP_LIST", chunk, offset);
+              return byteInstruction("OP_ARRAY", chunk, offset);
           case OP_DICTIONARY:
               return byteInstruction("OP_DICTIONARY", chunk, offset);
           case OP_RETURN:
