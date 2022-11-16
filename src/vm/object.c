@@ -179,11 +179,11 @@ void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* na
     setObjProperty(vm, object2, name, value);
 }
 
-static void printArray(ObjArray* list) {
+static void printArray(ObjArray* array) {
     printf("[");
-    for (int i = 0; i < list->elements.count; i++) {
-        printValue(list->elements.values[i]);
-        if (i < list->elements.count - 1) printf(", ");
+    for (int i = 0; i < array->elements.count; i++) {
+        printValue(array->elements.values[i]);
+        if (i < array->elements.count - 1) printf(", ");
     }
     printf("]");
 }
