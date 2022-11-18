@@ -171,10 +171,13 @@
     <None Include="src\std\collection.lox">
       <Filter>Source Files\std</Filter>
     </None>
+    <None Include="test\lox\array.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
     <None Include="test\lox\set.lox">
       <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="test\lox\array.lox">
+    <None Include="test\lox\linkedlist.lox">
       <Filter>Test Files\lox</Filter>
     </None>
   </ItemGroup>

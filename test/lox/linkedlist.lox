@@ -1,0 +1,14 @@
+var list = LinkedList();
+println("Testing class LinkedList...");
+println("Class for linked list object: " + list.getClassName());
+print("LinkedList is currently empty: ");
+println(list.isEmpty());
+println("");
+
+list.add(2);
+list.add(3.5);
+list.add(true);
+list.add(nil);
+list.add("Hello World");
+print("Initial elements in linked list: ");
+println(list.toString());

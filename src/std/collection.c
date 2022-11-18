@@ -204,10 +204,10 @@ static void linkAddFirst(VM* vm, ObjInstance* linkedList, Value element) {
 static void linkAddLast(VM* vm, ObjInstance* linkedList, Value element) {
     Value l = getObjProperty(vm, linkedList, "last");
     ObjNode* last = IS_NIL(l) ? NULL : AS_NODE(l);
-    ObjNode* new = newNode(vm, element, NULL, last);
+    ObjNode* new = newNode(vm, element, last, NULL);
 
     setObjProperty(vm, linkedList, "last", OBJ_VAL(new));
-    if (last == NULL) setObjProperty(vm, linkedList, "last", OBJ_VAL(new));
+    if (last == NULL) setObjProperty(vm, linkedList, "first", OBJ_VAL(new));
     else last->next = new;
     collectionLengthIncrement(vm, linkedList);
 }
@@ -330,7 +330,7 @@ static int linkSearchElement(VM* vm, ObjInstance* linkedList, Value element) {
 }
 
 static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
-    int size = AS_INT(getObjProperty(vm, linkedList, "size"));
+    int size = AS_INT(getObjProperty(vm, linkedList, "length"));
     if (size == 0) return copyString(vm, "[]", 2);
     else {
         char string[UINT8_MAX] = "";
