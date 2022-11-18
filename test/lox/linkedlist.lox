@@ -21,3 +21,6 @@ list.remove();
 println(list.toString());
 
 println("Looping through elements in linked list...");
+for(var element : list){
+    println("Element: " + element.toString());
+}

@@ -888,8 +888,8 @@ LOX_METHOD(LinkedList, next) {
 
     ASSERT_ARG_TYPE("LinkedList::next(index)", 0, Int);
     int index = AS_INT(args[0]);
-    if (index < 0 || index < length - 1) {
-        ObjNode* current = AS_NODE(getObjProperty(vm, self, "current"));
+    if (index >= 0 && index < length - 1) {
+        ObjNode* current = AS_NODE(getObjProperty(vm, self, (index == 0) ? "first" : "current"));
         setObjProperty(vm, self, "current", OBJ_VAL(current->next));
         RETURN_INT(index + 1);
     }
@@ -905,7 +905,8 @@ LOX_METHOD(LinkedList, nextValue) {
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, self, "length"));
     int index = AS_INT(args[0]);
-    if (index > -1 && index < length) RETURN_VAL(getObjProperty(vm, self, "current"));
+    if (index == 0) RETURN_VAL(getObjProperty(vm, self, "first"));
+    if (index > 0 && index < length) RETURN_VAL(getObjProperty(vm, self, "current"));
     RETURN_NIL;
 }
 
