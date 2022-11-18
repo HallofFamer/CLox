@@ -173,7 +173,7 @@
     <None Include="test\lox\array.lox" />
     <None Include="test\lox\benchmark.lox" />
     <None Include="test\lox\closure.lox" />
-    <None Include="test\lox\collection.lox" />
+    <None Include="test\lox\set.lox" />
     <None Include="test\lox\date.lox" />
     <None Include="test\lox\dictionary.lox" />
     <None Include="test\lox\enumerate.lox" />
