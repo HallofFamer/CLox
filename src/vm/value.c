@@ -184,8 +184,9 @@ char* valueToString(VM* vm, Value value) {
             return AS_CSTRING(value);
         }
         else {
-            char* chars = ALLOCATE(char, (size_t)(7 + object->klass->name->length));
-            int length = sprintf_s(chars, UINT8_MAX, "<object %s>", object->klass->name->chars);
+            size_t size = (size_t)(9 + object->klass->name->length);
+            char* chars = ALLOCATE(char, size);
+            int length = sprintf_s(chars, strlen(chars), "<object %s>", object->klass->name->chars);
             return chars;
         }
     }

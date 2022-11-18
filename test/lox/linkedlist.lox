@@ -1,7 +1,7 @@
 var list = LinkedList();
 println("Testing class LinkedList...");
 println("Class for linked list object: " + list.getClassName());
-print("LinkedList is currently empty: ");
+print("Linked list is currently empty: ");
 println(list.isEmpty());
 println("");
 
@@ -12,3 +12,12 @@ list.add(nil);
 list.add("Hello World");
 print("Initial elements in linked list: ");
 println(list.toString());
+println("Add a new element current date to linked list: ");
+list.add(dateNow());
+print("Current elements in linked list: ");
+println(list.toString());
+print("Removing last element from linked list: ");
+list.remove();
+println(list.toString());
+
+println("Looping through elements in linked list...");
