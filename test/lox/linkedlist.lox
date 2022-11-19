@@ -12,15 +12,40 @@ list.add(nil);
 list.add("Hello World");
 print("Initial elements in linked list: ");
 println(list.toString());
-println("Add a new element current date to linked list: ");
+print("Linked list contains element 3.5: ");
+println(list.contains(3.5));
+print("Element at index 3 of linked list: ");
+println(list.getAt(3));
+println("");
+
+println("Add a new element current date to the end of linked list: ");
 list.add(dateNow());
 print("Current elements in linked list: ");
 println(list.toString());
-print("Removing last element from linked list: ");
+println("Add a new element 0 to the start of linked list: ");
+list.addFirst(0);
+print("Current elements in linked list: ");
+println(list.toString());
+println("Add a new element false to the index 4: ");
+list.addAt(4, false);
+println(list.toString());
+println("");
+
+print("Removing first element from linked list: ");
 list.remove();
 println(list.toString());
+print("Removing last element from linked list: ");
+list.removeLast();
+println(list.toString());
+println("");
 
 println("Looping through elements in linked list...");
 for(var element : list){
     println("Element: " + element.toString());
 }
+println("");
+
+println("Clearing linked list: ");
+list.clear();
+print("Current elements in linked list: ");
+println(list.toString());
