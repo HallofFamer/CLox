@@ -810,19 +810,6 @@ LOX_METHOD(LinkedList, clear) {
     RETURN_NIL;
 }
 
-LOX_METHOD(LinkedList, clone) {
-    ASSERT_ARG_COUNT("LinkedList::clone()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    ObjInstance* list = newInstance(vm, self->obj.klass);
-    push(vm, OBJ_VAL(list));
-    setObjProperty(vm, list, "first", getObjProperty(vm, self, "first"));
-    setObjProperty(vm, list, "last", getObjProperty(vm, self, "last"));
-    setObjProperty(vm, list, "current", getObjProperty(vm, self, "current"));
-    setObjProperty(vm, list, "length", getObjProperty(vm, self, "length"));
-    pop(vm);
-    RETURN_OBJ(list);
-}
-
 LOX_METHOD(LinkedList, contains) {
     ASSERT_ARG_COUNT("LinkedList::contains(element)", 1);
     RETURN_BOOL(linkFindIndex(vm, AS_INSTANCE(receiver), args[0]) != -1);
@@ -1027,16 +1014,6 @@ LOX_METHOD(Queue, clear) {
     setObjProperty(vm, self, "last", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
     setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_NIL;
-}
-
-LOX_METHOD(Queue, clone) {
-    ASSERT_ARG_COUNT("Queue::clone()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    ObjInstance* queue = newInstance(vm, self->obj.klass);
-    setObjProperty(vm, queue, "first", getObjProperty(vm, self, "first"));
-    setObjProperty(vm, queue, "last", getObjProperty(vm, self, "last"));
-    setObjProperty(vm, queue, "length", getObjProperty(vm, self, "length"));
-    RETURN_OBJ(queue);
 }
 
 LOX_METHOD(Queue, dequeue) {
@@ -1248,15 +1225,6 @@ LOX_METHOD(Stack, clear) {
     RETURN_NIL;
 }
 
-LOX_METHOD(Stack, clone) {
-    ASSERT_ARG_COUNT("Stack::clone()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    ObjInstance* stack = newInstance(vm, self->obj.klass);
-    setObjProperty(vm, stack, "first", getObjProperty(vm, self, "first"));
-    setObjProperty(vm, stack, "length", getObjProperty(vm, self, "length"));
-    RETURN_OBJ(stack);
-}
-
 LOX_METHOD(Stack, init) {
     ASSERT_ARG_COUNT("Stack::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -1373,7 +1341,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, addFirst, 1);
     DEF_METHOD(linkedListClass, LinkedList, addLast, 1);
     DEF_METHOD(linkedListClass, LinkedList, clear, 0);
-    DEF_METHOD(linkedListClass, LinkedList, clone, 0);
     DEF_METHOD(linkedListClass, LinkedList, contains, 1);
     DEF_METHOD(linkedListClass, LinkedList, first, 0);
     DEF_METHOD(linkedListClass, LinkedList, getAt, 1);
@@ -1451,7 +1418,6 @@ void registerCollectionPackage(VM* vm) {
     ObjClass* stackClass = defineNativeClass(vm, "Stack");
     bindSuperclass(vm, stackClass, collectionClass);
     DEF_METHOD(stackClass, Stack, clear, 0);
-    DEF_METHOD(stackClass, Stack, clone, 0);
     DEF_METHOD(stackClass, Stack, init, 0);
     DEF_METHOD(stackClass, Stack, isEmpty, 0);
     DEF_METHOD(stackClass, Stack, length, 0);
@@ -1465,7 +1431,6 @@ void registerCollectionPackage(VM* vm) {
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
     bindSuperclass(vm, queueClass, collectionClass);
     DEF_METHOD(queueClass, Queue, clear, 0);
-    DEF_METHOD(queueClass, Queue, clone, 0);
     DEF_METHOD(queueClass, Queue, dequeue, 0);
     DEF_METHOD(queueClass, Queue, enqueue, 1);
     DEF_METHOD(queueClass, Queue, init, 0);

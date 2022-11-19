@@ -174,9 +174,9 @@ void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
     pop(vm);
 }
 
-void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* name) {
-    Value value = getObjProperty(vm, object, name);
-    setObjProperty(vm, object2, name, value);
+void copyObjProperty(VM* vm, ObjInstance* fromObject, ObjInstance* toObject, char* name) {
+    Value value = getObjProperty(vm, fromObject, name);
+    setObjProperty(vm, toObject, name, value);
 }
 
 static void printArray(ObjArray* array) {
