@@ -24,6 +24,7 @@ println(set.toString());
 print("Remove an element 3.5 from Set: ");
 set.remove(3.5);
 println(set.toString());
+
 println("Looping through elements in set...");
 for(var element : set){
     println("Element: " + element.toString());
