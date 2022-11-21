@@ -815,16 +815,22 @@ LOX_METHOD(LinkedList, contains) {
     RETURN_BOOL(linkFindIndex(vm, AS_INSTANCE(receiver), args[0]) != -1);
 }
 
-LOX_METHOD(LinkedList, first) {
-    ASSERT_ARG_COUNT("LinkedList::first()", 0);
-    ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
-    RETURN_VAL(first->element);
-}
-
 LOX_METHOD(LinkedList, getAt) {
     ASSERT_ARG_COUNT("LinkedList::getAt(index)", 1);
     ASSERT_ARG_TYPE("LinkedList::getAt(index)", 0, Int);
     RETURN_VAL(linkNode(vm, AS_INSTANCE(receiver), AS_INT(args[0]))->element);
+}
+
+LOX_METHOD(LinkedList, getFirst) {
+    ASSERT_ARG_COUNT("LinkedList::getFirst()", 0);
+    ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
+    RETURN_VAL(first->element);
+}
+
+LOX_METHOD(LinkedList, getLast) {
+    ASSERT_ARG_COUNT("LinkedList::getLast()", 0);
+    ObjNode* last = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "last"));
+    RETURN_VAL(last->element);
 }
 
 LOX_METHOD(LinkedList, indexOf) {
@@ -845,12 +851,6 @@ LOX_METHOD(LinkedList, init) {
 LOX_METHOD(LinkedList, isEmpty) {
     ASSERT_ARG_COUNT("LinkedList::isEmpty()", 0);
     RETURN_BOOL(collectionIsEmpty(vm, AS_INSTANCE(receiver)));
-}
-
-LOX_METHOD(LinkedList, last) {
-    ASSERT_ARG_COUNT("LinkedList::last()", 0);
-    ObjNode* last = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "last"));
-    RETURN_VAL(last->element);
 }
 
 LOX_METHOD(LinkedList, lastIndexOf) {
@@ -1342,12 +1342,12 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, addLast, 1);
     DEF_METHOD(linkedListClass, LinkedList, clear, 0);
     DEF_METHOD(linkedListClass, LinkedList, contains, 1);
-    DEF_METHOD(linkedListClass, LinkedList, first, 0);
     DEF_METHOD(linkedListClass, LinkedList, getAt, 1);
+    DEF_METHOD(linkedListClass, LinkedList, getFirst, 0);
+    DEF_METHOD(linkedListClass, LinkedList, getLast, 0);
     DEF_METHOD(linkedListClass, LinkedList, indexOf, 1);
     DEF_METHOD(linkedListClass, LinkedList, init, 0);
     DEF_METHOD(linkedListClass, LinkedList, isEmpty, 0);
-    DEF_METHOD(linkedListClass, LinkedList, last, 0);
     DEF_METHOD(linkedListClass, LinkedList, lastIndexOf, 0);
     DEF_METHOD(linkedListClass, LinkedList, length, 0);
     DEF_METHOD(linkedListClass, LinkedList, next, 1);

@@ -193,6 +193,7 @@
     <None Include="test\lox\receiver.lox" />
     <None Include="test\lox\regex.lox" />
     <None Include="test\lox\set.lox" />
+    <None Include="test\lox\stack.lox" />
     <None Include="test\lox\string.lox" />
     <None Include="test\lox\sum.lox" />
     <None Include="test\lox\super.lox" />

@@ -180,6 +180,9 @@
     <None Include="test\lox\linkedlist.lox">
       <Filter>Test Files\lox</Filter>
     </None>
+    <None Include="test\lox\stack.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">
