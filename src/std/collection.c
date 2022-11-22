@@ -1254,7 +1254,8 @@ LOX_METHOD(Stack, pop) {
     ASSERT_ARG_COUNT("Stack::pop()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
-    if (IS_NIL(first->element)) RETURN_NIL;
+    int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
+    if (length == 0) RETURN_NIL;
     else {
         Value element = first->element;
         setObjProperty(vm, self, "first", first->next == NULL ? NIL_VAL : OBJ_VAL(first->next));
@@ -1267,11 +1268,14 @@ LOX_METHOD(Stack, push) {
     ASSERT_ARG_COUNT("Stack::push(element)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
+    int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
     ObjNode* new = newNode(vm, args[0], NULL, NULL);
-    if (!IS_NIL(first->element)) {
+    push(vm, OBJ_VAL(new));
+    if (length > 0) {
         new->next = first;
     }
     setObjProperty(vm, self, "first", OBJ_VAL(new));
+    pop(vm);
     collectionLengthIncrement(vm, self);
     RETURN_VAL(args[0]);
 }
