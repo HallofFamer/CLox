@@ -1,0 +1,27 @@
+var stack = Queue();
+println("Testing class Queue...");
+println("Class for queue object: " + queue.getClassName());
+print("Queue is currently empty: ");
+println(queue.isEmpty());
+println("");
+
+println("Now adding elements to queue...");
+queue.enqueue(2);
+queue.enqueue(3.5);
+queue.enqueue(true);
+queue.enqueue(nil);
+queue.enqueue("Hello World");
+print("Initial elements in Queue: ");
+println(queue.toString());
+print("Queue is now empty: ");
+println(queue.isEmpty());
+print("Length of queue: ");
+println(queue.length);
+println("");
+
+println("Now iterating over queue...");
+while(!queue.isEmpty()){
+    println("Element: " + queue.dequeue().toString());
+}
+print("Queue is now Empty: ");
+println(queue.isEmpty());

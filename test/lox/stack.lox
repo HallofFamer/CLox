@@ -13,7 +13,7 @@ stack.push(nil);
 stack.push("Hello World");
 print("Initial elements in stack: ");
 println(stack.toString());
-print("Stacm is now empty: ");
+print("Stack is now empty: ");
 println(stack.isEmpty());
 print("Length of stack: ");
 println(stack.length);
