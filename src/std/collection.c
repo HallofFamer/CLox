@@ -1020,11 +1020,12 @@ LOX_METHOD(Queue, dequeue) {
     ASSERT_ARG_COUNT("Queue::dequeue()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
-    if (IS_NIL(first->element)) RETURN_NIL;
+    int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
+    if (length == 0) RETURN_NIL;
 
     ObjNode* node = first;
     setObjProperty(vm, self, "first", OBJ_VAL(first->next));
-    if (IS_NIL(first->next->element)) setObjProperty(vm, self, "last", OBJ_VAL(first->next));
+    if (first->next == NULL) setObjProperty(vm, self, "last", OBJ_VAL(first->next));
     collectionLengthDecrement(vm, self);
     RETURN_VAL(first->element);
 }
@@ -1034,8 +1035,9 @@ LOX_METHOD(Queue, enqueue) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
     ObjNode* last = AS_NODE(getObjProperty(vm, self, "last"));
+    int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
     ObjNode* new = newNode(vm, args[0], NULL, NULL);
-    if (!IS_NIL(last->element)) {
+    if (length == 0) {
         setObjProperty(vm, self, "first", OBJ_VAL(new));
         setObjProperty(vm, self, "last", OBJ_VAL(new));
     }
