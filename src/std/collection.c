@@ -323,7 +323,6 @@ static int linkSearchElement(VM* vm, ObjInstance* linkedList, Value element) {
         for (int i = 0; i < length; i++) {
             if (valuesEqual(element, first->element)) return i;
             first = first->next;
-            i++;
         }
     }
     return -1;

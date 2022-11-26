@@ -17,6 +17,8 @@ print("Stack is now empty: ");
 println(stack.isEmpty());
 print("Length of stack: ");
 println(stack.length);
+print("Index of element true: ");
+println(stack.search(3.5));
 println("");
 
 println("Now iterating over stack...");
