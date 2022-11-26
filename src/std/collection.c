@@ -1442,6 +1442,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(queueClass, Queue, isEmpty, 0);
     DEF_METHOD(queueClass, Queue, length, 0);
     DEF_METHOD(queueClass, Queue, peek, 0);
+    DEF_METHOD(queueClass, Queue, search, 1);
     DEF_METHOD(queueClass, Queue, toArray, 0);
     DEF_METHOD(queueClass, Queue, toString, 0);
 }
