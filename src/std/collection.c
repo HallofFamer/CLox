@@ -1226,6 +1226,11 @@ LOX_METHOD(Stack, clear) {
     RETURN_NIL;
 }
 
+LOX_METHOD(Stack, contains) {
+    ASSERT_ARG_COUNT("Stack::contains(element)", 1);
+    RETURN_BOOL(linkFindIndex(vm, AS_INSTANCE(receiver), args[0]) != -1);
+}
+
 LOX_METHOD(Stack, init) {
     ASSERT_ARG_COUNT("Stack::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -1423,6 +1428,7 @@ void registerCollectionPackage(VM* vm) {
     ObjClass* stackClass = defineNativeClass(vm, "Stack");
     bindSuperclass(vm, stackClass, collectionClass);
     DEF_METHOD(stackClass, Stack, clear, 0);
+    DEF_METHOD(stackClass, Stack, contains, 1);
     DEF_METHOD(stackClass, Stack, init, 0);
     DEF_METHOD(stackClass, Stack, isEmpty, 0);
     DEF_METHOD(stackClass, Stack, length, 0);
