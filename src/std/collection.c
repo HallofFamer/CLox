@@ -1015,6 +1015,11 @@ LOX_METHOD(Queue, clear) {
     RETURN_NIL;
 }
 
+LOX_METHOD(Queue, contains) {
+    ASSERT_ARG_COUNT("Queue::contains(element)", 1);
+    RETURN_BOOL(linkFindIndex(vm, AS_INSTANCE(receiver), args[0]) != -1);
+}
+
 LOX_METHOD(Queue, dequeue) {
     ASSERT_ARG_COUNT("Queue::dequeue()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -1442,6 +1447,7 @@ void registerCollectionPackage(VM* vm) {
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
     bindSuperclass(vm, queueClass, collectionClass);
     DEF_METHOD(queueClass, Queue, clear, 0);
+    DEF_METHOD(queueClass, Queue, contains, 1);
     DEF_METHOD(queueClass, Queue, dequeue, 0);
     DEF_METHOD(queueClass, Queue, enqueue, 1);
     DEF_METHOD(queueClass, Queue, init, 0);
