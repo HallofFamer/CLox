@@ -1191,7 +1191,7 @@ LOX_METHOD(Set, nextValue) {
 }
 
 LOX_METHOD(Set, remove) {
-    ASSERT_ARG_COUNT("Set::removeAt(element)", 1);
+    ASSERT_ARG_COUNT("Set::remove(element)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
     Value key = args[0];
