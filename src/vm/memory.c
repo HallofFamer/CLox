@@ -161,8 +161,8 @@ static void freeObject(VM* vm, Obj* object) {
 
     switch (object->type) {
         case OBJ_ARRAY: {
-            ObjArray* list = (ObjArray*)object;
-            freeValueArray(vm, &list->elements);
+            ObjArray* array = (ObjArray*)object;
+            freeValueArray(vm, &array->elements);
             FREE(ObjArray, object);
             break;
         }
