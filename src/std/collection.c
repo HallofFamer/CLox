@@ -480,7 +480,7 @@ LOX_METHOD(Array, isEmpty) {
 }
 
 LOX_METHOD(Array, lastIndexOf) {
-    ASSERT_ARG_COUNT("Array::indexOf(element)", 1);
+    ASSERT_ARG_COUNT("Array::lastIndexOf(element)", 1);
     ObjArray* self = AS_ARRAY(receiver);
     if (self->elements.count == 0) return -1;
     RETURN_INT(valueArrayLastIndex(vm, &self->elements, args[0]));
