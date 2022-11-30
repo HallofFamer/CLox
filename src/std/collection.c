@@ -1011,6 +1011,7 @@ LOX_METHOD(Queue, clear) {
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
     setObjProperty(vm, self, "last", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "current", NIL_VAL);
     setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_NIL;
 }
@@ -1058,6 +1059,7 @@ LOX_METHOD(Queue, init) {
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
     setObjProperty(vm, self, "last", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "current", NIL_VAL);
     setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_OBJ(receiver);
 }
@@ -1227,6 +1229,7 @@ LOX_METHOD(Stack, clear) {
     ASSERT_ARG_COUNT("Stack::clear()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", NIL_VAL);
+    setObjProperty(vm, self, "current", NIL_VAL);
     setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_NIL;
 }
@@ -1240,6 +1243,7 @@ LOX_METHOD(Stack, init) {
     ASSERT_ARG_COUNT("Stack::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "current", NIL_VAL);
     setObjProperty(vm, self, "length", INT_VAL(0));
     RETURN_OBJ(receiver);
 }
