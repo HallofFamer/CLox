@@ -87,6 +87,13 @@ class List < Collection {
             closure(index, element);
         }
     }
+
+    getAt(index) { 
+        for(var (i, element) : this){ 
+            if(i == index) return element;
+        }
+        return nil;
+    }
 }
 
 class Dictionary < Collection {
