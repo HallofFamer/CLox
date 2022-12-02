@@ -1075,6 +1075,39 @@ LOX_METHOD(Queue, length) {
     RETURN_INT(length);
 }
 
+LOX_METHOD(Queue, next) {
+    ASSERT_ARG_COUNT("Queue::next(index)", 1);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int length = AS_INT(getObjProperty(vm, self, "length"));
+    if (IS_NIL(args[0])) {
+        if (length == 0) RETURN_FALSE;
+        RETURN_INT(0);
+    }
+
+    ASSERT_ARG_TYPE("Stack::next(index)", 0, Int);
+    int index = AS_INT(args[0]);
+    if (index >= 0 && index < length - 1) {
+        ObjNode* current = AS_NODE(getObjProperty(vm, self, (index == 0) ? "first" : "current"));
+        setObjProperty(vm, self, "current", OBJ_VAL(current->next));
+        RETURN_INT(index + 1);
+    }
+    else {
+        setObjProperty(vm, self, "current", getObjProperty(vm, self, "first"));
+        RETURN_NIL;
+    }
+}
+
+LOX_METHOD(Queue, nextValue) {
+    ASSERT_ARG_COUNT("Queue::nextValue(index)", 1);
+    ASSERT_ARG_TYPE("Queue::nextValue(index)", 0, Int);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int length = AS_INT(getObjProperty(vm, self, "length"));
+    int index = AS_INT(args[0]);
+    if (index == 0) RETURN_VAL(getObjProperty(vm, self, "first"));
+    if (index > 0 && index < length) RETURN_VAL(getObjProperty(vm, self, "current"));
+    RETURN_NIL;
+}
+
 LOX_METHOD(Queue, peek) {
     ASSERT_ARG_COUNT("Queue::peek()", 0);
     ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
@@ -1492,6 +1525,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(queueClass, Queue, init, 0);
     DEF_METHOD(queueClass, Queue, isEmpty, 0);
     DEF_METHOD(queueClass, Queue, length, 0);
+    DEF_METHOD(queueClass, Queue, next, 1);
+    DEF_METHOD(queueClass, Queue, nextValue, 1);
     DEF_METHOD(queueClass, Queue, peek, 0);
     DEF_METHOD(queueClass, Queue, search, 1);
     DEF_METHOD(queueClass, Queue, toArray, 0);
