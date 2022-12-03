@@ -414,8 +414,8 @@ LOX_METHOD(Array, add) {
 }
 
 LOX_METHOD(Array, addAll) {
-    ASSERT_ARG_COUNT("Array::add(array)", 1);
-    ASSERT_ARG_TYPE("Array::add(array)", 0, Array);
+    ASSERT_ARG_COUNT("Array::addAll(array)", 1);
+    ASSERT_ARG_TYPE("Array::addAll(array)", 0, Array);
     valueArrayAddAll(vm, &AS_ARRAY(args[0])->elements, &AS_ARRAY(receiver)->elements);
     RETURN_OBJ(receiver);
 }
@@ -469,7 +469,7 @@ LOX_METHOD(Array, insertAt) {
     ASSERT_ARG_TYPE("Array::insertAt(index, element)", 0, Int);
     ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "Array::insertAt(index)", index, 0, self->elements.count, 0);
+    assertIntWithinRange(vm, "Array::insertAt(index, element)", index, 0, self->elements.count, 0);
     valueArrayInsert(vm, &self->elements, index, args[1]);
     RETURN_VAL(args[1]);
 }
@@ -519,7 +519,7 @@ LOX_METHOD(Array, putAt) {
     ASSERT_ARG_TYPE("Array::putAt(index, element)", 0, Int);
     ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "Array::putAt(index)", index, 0, self->elements.count, 0);
+    assertIntWithinRange(vm, "Array::putAt(index, element)", index, 0, self->elements.count, 0);
     self->elements.values[index] = args[1];
     if (index == self->elements.count) self->elements.count++;
     RETURN_OBJ(receiver);
