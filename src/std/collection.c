@@ -699,7 +699,7 @@ LOX_METHOD(Dictionary, toString) {
 }
 
 LOX_METHOD(Dictionary, valueSet) {
-    ASSERT_ARG_COUNT("Dictionary::ValueSet()", 0);
+    ASSERT_ARG_COUNT("Dictionary::valueSet()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjDictionary* valueDict = newDictionary(vm);
     for (int i = 0; i < self->count; i++) {
