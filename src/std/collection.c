@@ -1054,6 +1054,18 @@ LOX_METHOD(Queue, enqueue) {
     RETURN_VAL(args[0]);
 }
 
+LOX_METHOD(Queue, getFirst) {
+    ASSERT_ARG_COUNT("Queue::getFirst()", 0);
+    ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
+    RETURN_VAL(first->element);
+}
+
+LOX_METHOD(Queue, getLast) {
+    ASSERT_ARG_COUNT("Queue::getLast()", 0);
+    ObjNode* last = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "last"));
+    RETURN_VAL(last->element);
+}
+
 LOX_METHOD(Queue, init) {
     ASSERT_ARG_COUNT("Queue::init()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -1270,6 +1282,12 @@ LOX_METHOD(Stack, clear) {
 LOX_METHOD(Stack, contains) {
     ASSERT_ARG_COUNT("Stack::contains(element)", 1);
     RETURN_BOOL(linkFindIndex(vm, AS_INSTANCE(receiver), args[0]) != -1);
+}
+
+LOX_METHOD(Stack, getFirst) { 
+    ASSERT_ARG_COUNT("Stack::getFirst()", 0);
+    ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
+    RETURN_VAL(first->element);
 }
 
 LOX_METHOD(Stack, init) {
@@ -1504,6 +1522,7 @@ void registerCollectionPackage(VM* vm) {
     bindSuperclass(vm, stackClass, collectionClass);
     DEF_METHOD(stackClass, Stack, clear, 0);
     DEF_METHOD(stackClass, Stack, contains, 1);
+    DEF_METHOD(stackClass, Stack, getFirst, 0);
     DEF_METHOD(stackClass, Stack, init, 0);
     DEF_METHOD(stackClass, Stack, isEmpty, 0);
     DEF_METHOD(stackClass, Stack, length, 0);
@@ -1522,6 +1541,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(queueClass, Queue, contains, 1);
     DEF_METHOD(queueClass, Queue, dequeue, 0);
     DEF_METHOD(queueClass, Queue, enqueue, 1);
+    DEF_METHOD(queueClass, Queue, getFirst, 0);
+    DEF_METHOD(queueClass, Queue, getLast, 0);
     DEF_METHOD(queueClass, Queue, init, 0);
     DEF_METHOD(queueClass, Queue, isEmpty, 0);
     DEF_METHOD(queueClass, Queue, length, 0);
