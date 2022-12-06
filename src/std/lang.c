@@ -599,7 +599,6 @@ LOX_METHOD(String, length) {
     RETURN_INT(AS_STRING(receiver)->length);
 }
 
-
 LOX_METHOD(String, next) {
     ASSERT_ARG_COUNT("String::next(index)", 1);
     ObjString* self = AS_STRING(receiver);
