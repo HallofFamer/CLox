@@ -607,7 +607,7 @@ LOX_METHOD(String, next) {
         RETURN_INT(0);
     }
 
-    ASSERT_ARG_TYPE("Stirng::next(index)", 0, Int);
+    ASSERT_ARG_TYPE("String::next(index)", 0, Int);
     int index = AS_INT(args[0]);
     if (index < 0 || index < self->length - 1) RETURN_INT(index + 1);
     RETURN_NIL;
