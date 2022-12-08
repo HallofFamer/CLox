@@ -44,20 +44,22 @@ static bool match(Scanner* scanner, char expected) {
 }
 
 static Token makeToken(Scanner* scanner, TokenType type) {
-    Token token;
-    token.type = type;
-    token.start = scanner->start;
-    token.length = (int)(scanner->current - scanner->start);
-    token.line = scanner->line;
+    Token token = {
+        .type = type, 
+        .start = scanner->start, 
+        .length = (int)(scanner->current - scanner->start), 
+        .line = scanner->line
+    };
     return token;
 }
 
 static Token errorToken(Scanner* scanner, const char* message) {
-    Token token;
-    token.type = TOKEN_ERROR;
-    token.start = message;
-    token.length = (int)strlen(message);
-    token.line = scanner->line;
+    Token token = {
+        .type = TOKEN_ERROR, 
+        .start = message, 
+        .length = (int)strlen(message), 
+        .line = scanner->line
+    };
     return token;
 }
 
@@ -212,9 +214,10 @@ static Token string(Scanner* scanner) {
 }
 
 Token syntheticToken(const char* text) {
-    Token token;
-    token.start = text;
-    token.length = (int)strlen(text);
+    Token token = { 
+        .start = text,
+        .length = (int)strlen(text)
+    };
     return token;
 }
 
