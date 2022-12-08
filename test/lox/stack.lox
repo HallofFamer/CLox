@@ -19,6 +19,8 @@ print("Length of stack: ");
 println(stack.length);
 print("Index of element true: ");
 println(stack.search(3.5));
+print("Converting Stack to array: ");
+println(stack.toArray());
 println("");
 
 println("Now iterating over stack...");
