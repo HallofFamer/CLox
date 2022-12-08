@@ -94,6 +94,10 @@ class List < Collection {
         }
         return nil;
     }
+
+    putAt(index, element) {
+        error("Not implemented, subclass responsibility.");
+    }
 }
 
 class Dictionary < Collection {
