@@ -17,6 +17,8 @@ print("Queue is now empty: ");
 println(queue.isEmpty());
 print("Length of queue: ");
 println(queue.length);
+print("Converting Queue to array: ");
+println(queue.toArray());
 println("");
 
 println("Now iterating over queue...");
