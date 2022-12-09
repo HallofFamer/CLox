@@ -295,9 +295,9 @@ LOX_METHOD(DateTime, toDate) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* date = newInstance(vm, getNativeClass(vm, "Date"));
     push(vm, OBJ_VAL(date));
-    setObjProperty(vm, date, "year", getObjProperty(vm, self, "year"));
-    setObjProperty(vm, date, "month", getObjProperty(vm, self, "month"));
-    setObjProperty(vm, date, "day", getObjProperty(vm, self, "day"));
+    copyObjProperty(vm, self, date, "year");
+    copyObjProperty(vm, self, date, "month");
+    copyObjProperty(vm, self, date, "day");
     pop(vm);
     RETURN_OBJ(date);
 }
