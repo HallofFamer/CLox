@@ -1218,14 +1218,15 @@ LOX_METHOD(Set, next) {
 
     int index = 0;
     if (!IS_NIL(args[0])) {
-        Value key = args[0];
-        index = dictFindIndex(dict, key);
+        index = dictFindIndex(dict, args[0]);
         if (index < 0 || index >= dict->capacity) RETURN_FALSE;
         index++;
     }
 
     for (; index < dict->capacity; index++) {
-        if (!IS_UNDEFINED(dict->entries[index].key)) RETURN_VAL(dict->entries[index].key);
+        if (!IS_UNDEFINED(dict->entries[index].key)) {
+            RETURN_VAL(dict->entries[index].key);
+        }
     }
     RETURN_FALSE;
 }

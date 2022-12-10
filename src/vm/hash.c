@@ -16,7 +16,11 @@ uint32_t hashObject(Obj* object) {
         case OBJ_STRING:
             return ((ObjString*)object)->hash;
         case OBJ_CLASS:
-            return ((ObjClass*)object)->name->hash;
+            return ((ObjClass*)object)->name->hash;    
+        case OBJ_FUNCTION: { 
+            ObjFunction* function = (ObjFunction*)object;
+            return hashNumber(function->arity) ^ hashNumber(function->chunk.count);
+        }
         default: {
             uint64_t hash = (uint64_t)(&object);
             return hash64To32Bits(hash);
