@@ -645,20 +645,20 @@ LOX_METHOD(Dictionary, length) {
 LOX_METHOD(Dictionary, next) {
     ASSERT_ARG_COUNT("Dictionary::next(index)", 1);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    if (self->count == 0) RETURN_FALSE;
+    if (self->count == 0) RETURN_NIL;
 
     int index = 0;
     if (!IS_NIL(args[0])) {
         Value key = args[0];
         index = dictFindIndex(self, key);
-        if (index < 0 || index >= self->capacity) RETURN_FALSE;
+        if (index < 0 || index >= self->capacity) RETURN_NIL;
         index++;
     }
 
     for (; index < self->capacity; index++) {
         if (!IS_UNDEFINED(self->entries[index].key)) RETURN_VAL(self->entries[index].key);
     }
-    RETURN_FALSE;
+    RETURN_NIL;
 }
 
 LOX_METHOD(Dictionary, nextValue) {
@@ -677,7 +677,7 @@ LOX_METHOD(Dictionary, putAll) {
 
 LOX_METHOD(Dictionary, putAt) {
     ASSERT_ARG_COUNT("Dictionary::putAt(key, value)", 2);
-    dictSet(vm, AS_DICTIONARY(receiver), args[0], args[1]);
+    if(!IS_NIL(args[0])) dictSet(vm, AS_DICTIONARY(receiver), args[0], args[1]);
     RETURN_OBJ(receiver);
 }
 
@@ -1156,7 +1156,7 @@ LOX_METHOD(Queue, toString) {
 LOX_METHOD(Set, add) {
     ASSERT_ARG_COUNT("Set::add(element)", 1);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
-    dictSet(vm, dict, args[0], NIL_VAL);
+    if(!IS_NIL(args[0])) dictSet(vm, dict, args[0], NIL_VAL);
     RETURN_OBJ(receiver);
 }
 
@@ -1214,12 +1214,12 @@ LOX_METHOD(Set, length) {
 LOX_METHOD(Set, next) {
     ASSERT_ARG_COUNT("Set::next(index)", 1);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
-    if (dict->count == 0) RETURN_FALSE;
+    if (dict->count == 0) RETURN_NIL;
 
     int index = 0;
     if (!IS_NIL(args[0])) {
         index = dictFindIndex(dict, args[0]);
-        if (index < 0 || index >= dict->capacity) RETURN_FALSE;
+        if (index < 0 || index >= dict->capacity) RETURN_NIL;
         index++;
     }
 
@@ -1228,7 +1228,7 @@ LOX_METHOD(Set, next) {
             RETURN_VAL(dict->entries[index].key);
         }
     }
-    RETURN_FALSE;
+    RETURN_NIL;
 }
 
 LOX_METHOD(Set, nextValue) {

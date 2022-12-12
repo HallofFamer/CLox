@@ -915,7 +915,7 @@ static void forStatement(Compiler* compiler) {
     invokeMethod(compiler, 1, "next", 4);
     setLocal(compiler, indexSlot);
     emitByte(compiler, OP_POP);
-    int exitJump = emitJump(compiler, OP_JUMP_IF_FALSE);
+    int exitJump = emitJump(compiler, OP_JUMP_IF_EMPTY);
 
     getLocal(compiler, collectionSlot);
     getLocal(compiler, indexSlot);
