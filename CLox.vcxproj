@@ -154,6 +154,7 @@
     <ClCompile Include="src\vm\chunk.c" />
     <ClCompile Include="src\vm\compiler.c" />
     <ClCompile Include="src\vm\debug.c" />
+    <ClCompile Include="src\vm\dict.c" />
     <ClCompile Include="src\vm\hash.c" />
     <ClCompile Include="src\vm\memory.c" />
     <ClCompile Include="src\vm\native.c" />
@@ -213,6 +214,7 @@
     <ClInclude Include="src\vm\common.h" />
     <ClInclude Include="src\vm\compiler.h" />
     <ClInclude Include="src\vm\debug.h" />
+    <ClInclude Include="src\vm\dict.h" />
     <ClInclude Include="src\vm\hash.h" />
     <ClInclude Include="src\vm\memory.h" />
     <ClInclude Include="src\vm\native.h" />

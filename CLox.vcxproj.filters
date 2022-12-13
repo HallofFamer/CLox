@@ -89,6 +89,9 @@
     <ClCompile Include="src\std\collection.c">
       <Filter>Source Files\std</Filter>
     </ClCompile>
+    <ClCompile Include="src\vm\dict.c">
+      <Filter>Source Files\vm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="test\lox\benchmark.lox">
@@ -253,6 +256,9 @@
     </ClInclude>
     <ClInclude Include="src\std\collection.h">
       <Filter>Source Files\std</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vm\dict.h">
+      <Filter>Source Files\vm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

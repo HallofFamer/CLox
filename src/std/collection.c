@@ -3,6 +3,7 @@
 
 #include "collection.h"
 #include "../vm/assert.h"
+#include "../vm/dict.h"
 #include "../vm/hash.h"
 #include "../vm/memory.h"
 #include "../vm/native.h"
@@ -36,15 +37,6 @@ static void collectionLengthIncrement(VM* vm, ObjInstance* collection) {
     setObjProperty(vm, collection, "length", INT_VAL(length + 1));
 }
 
-static void dictAddAll(VM* vm, ObjDictionary* from, ObjDictionary* to) {
-    for (int i = 0; i < from->capacity; i++) {
-        ObjEntry* entry = &from->entries[i];
-        if (!IS_UNDEFINED(entry->key)) {
-            dictSet(vm, to, entry->key, entry->value);
-        }
-    }
-}
-
 static ObjDictionary* dictCopy(VM* vm, ObjDictionary* original) {
     ObjDictionary* copied = newDictionary(vm);
     push(vm, OBJ_VAL(copied));
@@ -67,17 +59,6 @@ static bool dictContainsValue(ObjDictionary* dict, Value value) {
         if (valuesEqual(entry->value, value)) return true;
     }
     return false;
-}
-
-static bool dictDelete(ObjDictionary* dict, Value key) {
-    if (dict->count == 0) return false;
-
-    ObjEntry* entry = dictFindEntry(dict->entries, dict->capacity, key);
-    if (IS_UNDEFINED(entry->key)) return false;
-
-    entry->key = UNDEFINED_VAL;
-    entry->value = BOOL_VAL(true);
-    return true;
 }
 
 static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {
