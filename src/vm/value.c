@@ -126,6 +126,9 @@ void printValue(Value value) {
     else if(IS_OBJ(value)) {
         printObject(value);
     }
+    else {
+        printf("undefined");
+    }
 #else
     switch (value.type) {
         case VAL_BOOL: printf(AS_BOOL(value) ? "true" : "false"); break;
@@ -133,6 +136,7 @@ void printValue(Value value) {
         case VAL_INT: printf("%d", AS_INT(value)); break;
         case VAL_FLOAT: printf("%g", AS_FLOAT(value)); break;
         case VAL_OBJ: printObject(value); break;
+        default: printf("undefined");
     }
 #endif
 }
@@ -191,6 +195,6 @@ char* valueToString(VM* vm, Value value) {
         }
     }
     else {
-        return "";
+        return "undefined";
     }
 }
