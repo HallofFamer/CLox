@@ -43,6 +43,13 @@ uint32_t hashObject(Obj* object) {
             }
             return hash;
         }
+        case OBJ_ENTRY: { 
+            ObjEntry* entry = (ObjEntry*)object;
+            int hash = 7;
+            hash = hash * 31 + hashValue(entry->key);
+            hash = hash * 31 + hashValue(entry->value);
+            return hash;
+        }
         case OBJ_INSTANCE: { 
             ObjInstance* instance = (ObjInstance*)object;
             int hash = 7;
