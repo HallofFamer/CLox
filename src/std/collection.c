@@ -436,7 +436,7 @@ LOX_METHOD(Array, getAt) {
 LOX_METHOD(Array, indexOf) {
     ASSERT_ARG_COUNT("Array::indexOf(element)", 1);
     ObjArray* self = AS_ARRAY(receiver);
-    if (self->elements.count == 0) return -1;
+    if (self->elements.count == 0) RETURN_INT(-1);
     RETURN_INT(valueArrayFirstIndex(vm, &self->elements, args[0]));
 }
 
