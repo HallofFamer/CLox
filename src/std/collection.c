@@ -571,10 +571,12 @@ LOX_METHOD(Dictionary, entrySet) {
     ASSERT_ARG_COUNT("Dictionary::entrySet()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjDictionary* entryDict = newDictionary(vm);
+    push(vm, entryDict);
     for (int i = 0; i < self->count; i++) {
         ObjEntry* entry = &self->entries[i];
         dictSet(vm, entryDict, OBJ_VAL(entry), NIL_VAL);
     }
+    pop(vm);
     ObjInstance* entrySet = newInstance(vm, getNativeClass(vm, "Set"));
     setObjProperty(vm, entrySet, "dict", OBJ_VAL(entryDict));
     RETURN_OBJ(entrySet);
