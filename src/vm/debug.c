@@ -6,7 +6,6 @@
 
 void disassembleChunk(Chunk* chunk, const char* name) {
     printf("== %s ==\n", name);
-  
     for (int offset = 0; offset < chunk->count;) {
         offset = disassembleInstruction(chunk, offset);
     }
@@ -45,6 +44,23 @@ static int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset)
     jump |= chunk->code[offset + 2];
     printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
     return offset + 3;
+}
+
+static int closureInstruction(const char* name, Chunk* chunk, int offset) {
+    offset++;
+    uint8_t constant = chunk->code[offset++];
+    printf("%-16s %4d ", name, constant);
+    printValue(chunk->constants.values[constant]);
+    printf("\n");
+
+    ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
+    for (int j = 0; j < function->upvalueCount; j++) {
+        int isLocal = chunk->code[offset++];
+        int index = chunk->code[offset++];
+        printf("%04d      |                     %s %d\n",
+            offset - 2, isLocal ? "local" : "upvalue", index);
+    }
+    return offset;
 }
 
 int disassembleInstruction(Chunk* chunk, int offset) {
@@ -126,22 +142,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return invokeInstruction("OP_INVOKE", chunk, offset);
           case OP_SUPER_INVOKE:
               return invokeInstruction("OP_SUPER_INVOKE", chunk, offset);
-          case OP_CLOSURE: {
-              offset++;
-              uint8_t constant = chunk->code[offset++];
-              printf("%-16s %4d ", "OP_CLOSURE", constant);
-              printValue(chunk->constants.values[constant]);
-              printf("\n");
-
-              ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
-              for (int j = 0; j < function->upvalueCount; j++) {
-                  int isLocal = chunk->code[offset++];
-                  int index = chunk->code[offset++];
-                  printf("%04d      |                     %s %d\n",
-                  offset - 2, isLocal ? "local" : "upvalue", index);
-              }
-              return offset;
-          }
+          case OP_CLOSURE:
+              return closureInstruction("OP_CLOSURE", chunk, offset);
           case OP_CLOSE_UPVALUE:
               return simpleInstruction("OP_CLOSE_UPVALUE", offset);
           case OP_CLASS:
