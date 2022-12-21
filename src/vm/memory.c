@@ -147,9 +147,7 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)node->next);
             break;
         }
-        case OBJ_RECORD:
-            break;
-        case OBJ_STRING:
+        default:
             break;
     }
 }
