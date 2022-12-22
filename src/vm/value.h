@@ -34,6 +34,7 @@ typedef uint64_t Value;
 #define NUMBER_VAL(num)     numToValue(num)
 #define OBJ_VAL(obj)        ((Value)(SIGN_BIT | QNAN | (uint64_t)(uintptr_t)(obj)))
 
+#define IS_EMPTY(value)     valueIsEmpty(value)
 #define IS_NIL(value)       ((value) == NIL_VAL)
 #define IS_UNDEFINED(value) ((value) == UNDEFINED_VAL)
 #define IS_BOOL(value)      (((value) | 1) == TRUE_VAL)
@@ -47,6 +48,10 @@ typedef uint64_t Value;
 #define AS_FLOAT(value)     valueToFloat(value)
 #define AS_NUMBER(value)    valueToNum(value)
 #define AS_OBJ(value)       ((Obj*)(uintptr_t)((value) & ~(SIGN_BIT | QNAN)))
+
+static inline bool valueIsEmpty(Value value) { 
+    return IS_NIL(value) || IS_UNDEFINED(value);
+}
 
 static inline bool valueIsInt(Value value) {
     return (value & (QNAN | TAG_INT)) == (QNAN | TAG_INT) && ((value | SIGN_BIT) != value);
