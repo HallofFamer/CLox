@@ -571,7 +571,7 @@ LOX_METHOD(Dictionary, entrySet) {
     ASSERT_ARG_COUNT("Dictionary::entrySet()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjDictionary* entryDict = newDictionary(vm);
-    push(vm, entryDict);
+    push(vm, OBJ_VAL(entryDict));
     for (int i = 0; i < self->count; i++) {
         ObjEntry* entry = &self->entries[i];
         dictSet(vm, entryDict, OBJ_VAL(entry), NIL_VAL);
@@ -610,7 +610,7 @@ LOX_METHOD(Dictionary, keySet) {
     ASSERT_ARG_COUNT("Dictionary::keySet()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjDictionary* keyDict = dictCopy(vm, self);
-    push(vm, keyDict);
+    push(vm, OBJ_VAL(keyDict));
     for (int i = 0; i < keyDict->count; i++) {
         ObjEntry* entry = &keyDict->entries[i];
         entry->value = NIL_VAL;
@@ -686,7 +686,7 @@ LOX_METHOD(Dictionary, valueSet) {
     ASSERT_ARG_COUNT("Dictionary::valueSet()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjDictionary* valueDict = newDictionary(vm);
-    push(vm, valueDict);
+    push(vm, OBJ_VAL(valueDict));
     for (int i = 0; i < self->count; i++) {
         ObjEntry* entry = &self->entries[i];
         dictSet(vm, valueDict, entry->value, NIL_VAL);
