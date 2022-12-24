@@ -44,7 +44,7 @@ LOX_FUNCTION(dateTimeNow) {
     time_t nowTime;
     time(&nowTime);
     struct tm now;
-    localtime_s(&now,&nowTime);
+    localtime_s(&now, &nowTime);
     ObjInstance* date = newInstance(vm, getNativeClass(vm, "DateTime"));
     push(vm, OBJ_VAL(date));
     setObjProperty(vm, date, "year", INT_VAL(1900 + now.tm_year));
