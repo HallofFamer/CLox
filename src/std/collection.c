@@ -67,7 +67,9 @@ static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {
         if (IS_UNDEFINED(entry->key)) continue;
         Value bValue;
         bool keyExists = dictGet(dict2, entry->key, &bValue);
-        if (!keyExists || entry->value != bValue) return false;
+        if (!keyExists || entry->value != bValue) {
+            return false;
+        }
     }
 
     for (int i = 0; i < dict2->capacity; i++) {
@@ -75,7 +77,9 @@ static bool dictsEqual(ObjDictionary* aDict, ObjDictionary* dict2) {
         if (IS_UNDEFINED(entry->key)) continue;
         Value aValue;
         bool keyExists = dictGet(aDict, entry->key, &aValue);
-        if (!keyExists || entry->value != aValue) return false;
+        if (!keyExists || entry->value != aValue) {
+            return false;
+        }
     }
 
     return true;
