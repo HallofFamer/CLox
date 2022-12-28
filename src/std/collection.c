@@ -349,6 +349,7 @@ ObjInstance* setCopy(VM* vm, ObjInstance* original) {
     push(vm, OBJ_VAL(dict2));
     dictAddAll(vm, dict, dict2);
     pop(vm);
+
     ObjInstance* copied = newInstance(vm, getNativeClass(vm, "Set"));
     setObjProperty(vm, copied, "dict", OBJ_VAL(dict2));
     return copied;
@@ -1034,6 +1035,7 @@ LOX_METHOD(Queue, enqueue) {
     ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
     ObjNode* last = AS_NODE(getObjProperty(vm, self, "last"));
     int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
+
     ObjNode* new = newNode(vm, args[0], NULL, NULL);
     if (length == 0) {
         setObjProperty(vm, self, "first", OBJ_VAL(new));
