@@ -1037,6 +1037,7 @@ LOX_METHOD(Queue, enqueue) {
     int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
 
     ObjNode* new = newNode(vm, args[0], NULL, NULL);
+    push(vm, OBJ_VAL(new));
     if (length == 0) {
         setObjProperty(vm, self, "first", OBJ_VAL(new));
         setObjProperty(vm, self, "last", OBJ_VAL(new));
@@ -1045,6 +1046,7 @@ LOX_METHOD(Queue, enqueue) {
         last->next = new;
         setObjProperty(vm, self, "last", OBJ_VAL(new));
     }
+    pop(vm);
     collectionLengthIncrement(vm, self);
     RETURN_VAL(args[0]);
 }
@@ -1366,7 +1368,6 @@ LOX_METHOD(Stack, push) {
     int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
     ObjNode* new = newNode(vm, args[0], NULL, NULL);
     push(vm, OBJ_VAL(new));
-
     if (length > 0) {
         new->next = first;
     }
