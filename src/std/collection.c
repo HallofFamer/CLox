@@ -167,10 +167,11 @@ static void linkAddBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNod
     else {
         ObjNode* pred = succ->prev;
         ObjNode* new = newNode(vm, element, pred, succ);
+        push(vm, OBJ_VAL(new));
         succ->prev = new;
-
         if (pred == NULL) setObjProperty(vm, linkedList, "first", OBJ_VAL(new));
         else pred->next = new;
+        pop(vm);
         collectionLengthIncrement(vm, linkedList);
     }
 }
@@ -179,7 +180,7 @@ static void linkAddFirst(VM* vm, ObjInstance* linkedList, Value element) {
     Value f = getObjProperty(vm, linkedList, "first");
     ObjNode* first = IS_NIL(f) ? NULL : AS_NODE(f);
     ObjNode* new = newNode(vm, element, NULL, first);
-
+    
     setObjProperty(vm, linkedList, "first", OBJ_VAL(new));
     if (first == NULL) setObjProperty(vm, linkedList, "last", OBJ_VAL(new));
     else first->prev = new;
