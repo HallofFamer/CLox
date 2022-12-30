@@ -715,7 +715,6 @@ static void block(Compiler* compiler) {
     while (!check(compiler->parser, TOKEN_RIGHT_BRACE) && !check(compiler->parser, TOKEN_EOF)) {
         declaration(compiler);
     }
-
     consume(compiler->parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
 }
 
