@@ -373,11 +373,11 @@ LOX_METHOD(FileWriteStream, put) {
     ASSERT_ARG_TYPE("FileWriteStream::put(char)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) raiseError(vm, "Cannot write character to stream because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
-
-    ObjString* character = AS_STRING(args[0]);
-    if (character->length != 1) raiseError(vm, "Method FileWriteStream::put(char) expects argument 1 to be a character(string of length 1)");
-    fputc(character->chars[0], file->file);
+    if (file->file != NULL) {
+        ObjString* character = AS_STRING(args[0]);
+        if (character->length != 1) raiseError(vm, "Method FileWriteStream::put(char) expects argument 1 to be a character(string of length 1)");
+        fputc(character->chars[0], file->file);
+    }
     RETURN_NIL;
 }
 
