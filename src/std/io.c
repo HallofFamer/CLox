@@ -404,10 +404,10 @@ LOX_METHOD(FileWriteStream, putString) {
     ASSERT_ARG_TYPE("FileWriteStream::putString(string)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) raiseError(vm, "Cannot write string to stream because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
-
-    ObjString* string = AS_STRING(args[0]);
-    fputs(string->chars, file->file);
+    if (file->file != NULL) {
+        ObjString* string = AS_STRING(args[0]);
+        fputs(string->chars, file->file);
+    }
     RETURN_NIL;
 }
 
