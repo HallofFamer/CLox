@@ -394,8 +394,7 @@ LOX_METHOD(FileWriteStream, putSpace) {
     ASSERT_ARG_COUNT("FileWriteStream::putSpace()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) raiseError(vm, "Cannot write empty space to stream because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
-    fputc(' ', file->file);
+    if (file->file != NULL) fputc(' ', file->file);    
     RETURN_NIL;
 }
 
