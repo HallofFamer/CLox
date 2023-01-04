@@ -385,8 +385,7 @@ LOX_METHOD(FileWriteStream, putLine) {
     ASSERT_ARG_COUNT("FileWriteStream::putLine()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) raiseError(vm, "Cannot write new line to stream because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
-    fputc('\n', file->file);
+    if (file->file != NULL) fputc('\n', file->file);
     RETURN_NIL;
 }
 
