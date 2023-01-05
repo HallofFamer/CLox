@@ -739,7 +739,7 @@ LOX_METHOD(Entry, init) {
 }
 
 LOX_METHOD(Entry, setValue) {
-    ASSERT_ARG_COUNT("Entry::setValue()", 1);
+    ASSERT_ARG_COUNT("Entry::setValue(value)", 1);
     ObjEntry* self = AS_ENTRY(receiver);
     self->value = args[0];
     RETURN_VAL(self->value);
