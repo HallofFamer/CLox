@@ -947,6 +947,7 @@ LOX_METHOD(LinkedList, toArray) {
     int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
     ObjArray* array = newArray(vm);
     push(vm, OBJ_VAL(array));
+
     if (length > 0) {
         for (ObjNode* node = AS_NODE(getObjProperty(vm, self, "first")); node != NULL; node = node->next) {
             valueArrayWrite(vm, &array->elements, node->element);
@@ -1259,6 +1260,7 @@ LOX_METHOD(Set, toArray) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
     ObjArray* array = newArray(vm);
+
     push(vm, OBJ_VAL(array));
     for (int i = 0; i < dict->count; i++) {
         ObjEntry* entry = &dict->entries[i];
