@@ -777,11 +777,6 @@ static InterpretResult run(VM* vm) {
 #undef BINARY_OP
 }
 
-void hack(VM* vm, bool b) {
-    run(vm);
-    if (b) hack(vm, false);
-}
-
 InterpretResult interpret(VM* vm, const char* source) {
     ObjFunction* function = compile(vm, source);
     if (function == NULL) return INTERPRET_COMPILE_ERROR;
