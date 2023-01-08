@@ -179,6 +179,14 @@ void copyObjProperty(VM* vm, ObjInstance* fromObject, ObjInstance* toObject, cha
     setObjProperty(vm, toObject, name, value);
 }
 
+void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
+    for (int i = 0; i < fromObject->fields.capacity; i++) {
+        Entry* entry = &fromObject->fields.entries[i];
+        if (entry->key == NULL) continue;
+        setObjProperty(vm, toObject, entry->key->chars, entry->value);
+    }
+}
+
 static void printArray(ObjArray* array) {
     printf("[");
     for (int i = 0; i < array->elements.count; i++) {
