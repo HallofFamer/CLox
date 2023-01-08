@@ -195,6 +195,7 @@ bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
 void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* name);
+void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject);
 void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type) {
