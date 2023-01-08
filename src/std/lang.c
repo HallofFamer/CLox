@@ -205,7 +205,6 @@ LOX_METHOD(Function, name) {
     if (IS_NATIVE_FUNCTION(receiver)) {
         RETURN_OBJ(AS_NATIVE_FUNCTION(receiver)->name);
     }
-
     RETURN_OBJ(AS_CLOSURE(receiver)->function->name);
 }
 
