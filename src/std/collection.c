@@ -1260,7 +1260,6 @@ LOX_METHOD(Set, toArray) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
     ObjArray* array = newArray(vm);
-
     push(vm, OBJ_VAL(array));
     for (int i = 0; i < dict->count; i++) {
         ObjEntry* entry = &dict->entries[i];
@@ -1375,12 +1374,14 @@ LOX_METHOD(Stack, push) {
     ObjNode* first = AS_NODE(getObjProperty(vm, self, "first"));
     int length = AS_INT(getObjProperty(vm, AS_INSTANCE(receiver), "length"));
     ObjNode* new = newNode(vm, args[0], NULL, NULL);
+
     push(vm, OBJ_VAL(new));
     if (length > 0) {
         new->next = first;
     }
     setObjProperty(vm, self, "first", OBJ_VAL(new));
     pop(vm);
+    
     collectionLengthIncrement(vm, self);
     RETURN_VAL(args[0]);
 }
