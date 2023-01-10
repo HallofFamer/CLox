@@ -541,7 +541,7 @@ LOX_METHOD(Array, slice) {
     int fromIndex = AS_INT(args[0]);
     int toIndex = AS_INT(args[1]);
     assertIntWithinRange(vm, "Array::slice(from, to)", fromIndex, 0, self->elements.count, 0);
-    assertIntWithinRange(vm, "Array::slice(from, to", toIndex, fromIndex, self->elements.count, 1);
+    assertIntWithinRange(vm, "Array::slice(from, to)", toIndex, fromIndex, self->elements.count, 1);
     RETURN_OBJ(arrayCopy(vm, self->elements, fromIndex, toIndex));
 }
 
