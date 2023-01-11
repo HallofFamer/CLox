@@ -17,7 +17,7 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     object->type = type;
     object->klass = klass;
     object->isMarked = false;
-  
+
     object->next = vm->objects;
     vm->objects = object;
 
@@ -110,7 +110,7 @@ ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeF
 }
 
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method) {
-    ObjNativeMethod* nativeMethod = ALLOCATE_OBJ(ObjNativeMethod, OBJ_NATIVE_METHOD, NULL);
+    ObjNativeMethod* nativeMethod = ALLOCATE_OBJ(ObjNativeMethod, OBJ_NATIVE_METHOD, vm->methodClass);
     nativeMethod->klass = klass;
     nativeMethod->name = name;
     nativeMethod->arity = arity;
