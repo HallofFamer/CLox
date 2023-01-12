@@ -72,7 +72,6 @@ char* readFile(const char* path) {
     }
 
     buffer[bytesRead] = '\0';
-
     fclose(file);
     return buffer;
 }
@@ -311,7 +310,6 @@ static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCou
 
 static bool invoke(VM* vm, ObjString* name, int argCount) {
     Value receiver = peek(vm, argCount);
-
     if (!IS_OBJ(receiver)) {
         return invokeFromClass(vm, getObjClass(vm, receiver), name, argCount);
     }
