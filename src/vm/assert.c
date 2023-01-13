@@ -106,7 +106,8 @@ void assertArgIsString(VM* vm, const char* method, Value* args, int index) {
 
 void assertIntWithinRange(VM* vm, const char* method, int value, int min, int max, int index){
     if (value < min || value > max) {
-        runtimeError(vm, "method %s expects argument %d to be an integer within range %d to %d but got %d.", method, index + 1, min, max, value);
+        runtimeError(vm, "method %s expects argument %d to be an integer within range %d to %d but got %d.", 
+            method, index + 1, min, max, value);
         exit(70);
     }
 }
@@ -137,7 +138,8 @@ void assertNumberPositive(VM* vm, const char* method, double number, int index) 
 
 void assertNumberWithinRange(VM* vm, const char* method, double value, double min, double max, int index) {
     if (value < min || value > max) {
-        runtimeError(vm, "method %s expects argument %d to be a number within range %g to %g but got %g.", method, index + 1, min, max, value);
+        runtimeError(vm, "method %s expects argument %d to be a number within range %g to %g but got %g.", 
+            method, index + 1, min, max, value);
         exit(70);
     }
 }
