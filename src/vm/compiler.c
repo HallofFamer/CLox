@@ -135,7 +135,6 @@ static void emitConstant(Compiler* compiler, Value value) {
 
 static void patchJump(Compiler* compiler, int offset) {
     int jump = currentChunk(compiler)->count - offset - 2;
-
     if (jump > UINT16_MAX) {
         error(compiler->parser, "Too much code to jump over.");
     }
