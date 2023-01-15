@@ -90,5 +90,6 @@ bool dictDelete(ObjDictionary* dict, Value key) {
 
     entry->key = UNDEFINED_VAL;
     entry->value = BOOL_VAL(true);
+    dict->count--;
     return true;
 }

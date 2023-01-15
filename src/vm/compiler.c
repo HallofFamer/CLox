@@ -660,7 +660,6 @@ ParseRule rules[] = {
     [TOKEN_BREAK]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_CASE]          = {NULL,       NULL,        PREC_NONE},
     [TOKEN_CLASS]         = {NULL,       NULL,        PREC_NONE},
-    [TOKEN_CONTINUE]      = {NULL,       NULL,        PREC_NONE},
     [TOKEN_DEFAULT]       = {NULL,       NULL,        PREC_NONE},
     [TOKEN_ELSE]          = {NULL,       NULL,        PREC_NONE},
     [TOKEN_FALSE]         = {literal,    NULL,        PREC_NONE},
@@ -849,16 +848,6 @@ static void breakStatement(Compiler* compiler) {
 
     discardLocals(compiler);
     emitJump(compiler, OP_END);
-}
-
-static void continueStatement(Compiler* compiler) {
-    if (compiler->innermostLoopStart == -1) {
-        error(compiler->parser, "Can't use 'continue' outside of a loop.");
-    }
-    consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
-
-    discardLocals(compiler);
-    emitLoop(compiler, compiler->innermostLoopStart);
 }
 
 static void expressionStatement(Compiler* compiler) {
@@ -1086,9 +1075,6 @@ static void declaration(Compiler* compiler) {
 static void statement(Compiler* compiler) {
     if (match(compiler->parser, TOKEN_BREAK)) {
         breakStatement(compiler);
-    }
-    else if (match(compiler->parser, TOKEN_CONTINUE)) {
-        continueStatement(compiler);
     }
     else if (match(compiler->parser, TOKEN_FOR)) {
         forStatement(compiler);
