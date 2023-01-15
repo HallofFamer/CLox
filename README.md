@@ -13,7 +13,7 @@ https://github.com/munificent/craftinginterpreters
 - Unary and Binary Expression/Operators
 - If and Else condition Statement
 - Switch Condition Statement
-- While Loop, Break and Continue Statement
+- While Loop, For Loop and Break Statement
 - Functions and Closures with automatic upvalue capture
 - Classes, Objects, Methods and `this` keyword
 - Single Inheritance and `super` keyword
@@ -26,7 +26,7 @@ https://github.com/munificent/craftinginterpreters
 - Customized Runtime configuration for CLox using clox.ini(since version 1.2)
 - Separated integer values and floating point values(since version 1.2)
 - Array/Dictionary Literals and square bracket notation for array/dictionary access(since version 1.3)
-- Anonymous Functions and Lambda Expressions(since version 1.3)
+- Variadic Functions, Anonymous Functions and Lambda Expressions(since version 1.3)
 - C style For Loop replaced with Kotlin style for-in Loop(since version 1.3)
 - Clox Standard Library for new packages `collection` and `io`(since version 1.3)
 
@@ -46,7 +46,7 @@ https://github.com/munificent/craftinginterpreters
 
 ### CLox v1.3.0(current version)
 - Array/Dictionary Literals and square bracket(subscript) notation for array/dictionary access.
-- Anonymous Functions(local return) and Lambda Expressions(nonlocal return).
+- Variadic Functions, Anonymous Functions(local return) and Lambda Expressions(nonlocal return).
 - Replace C style for loop by Kotlin style for-in loop for collection types.
 - Clox Standard Library improvement: New package `collection` and `io`.
 
