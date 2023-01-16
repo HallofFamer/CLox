@@ -177,7 +177,14 @@ static TokenType identifierType(Scanner* scanner) {
                 }
             }
             break;
-        case 'v': return checkKeyword(scanner, 1, 2, "ar", TOKEN_VAR);
+        case 'v': 
+            if (scanner->current - scanner->start > 2) {
+                switch (scanner->start[2]) {
+                    case 'l': return checkKeyword(scanner, 3, 0, "", TOKEN_VAL);
+                    case 'r': return checkKeyword(scanner, 3, 0, "", TOKEN_VAR);
+                }
+            }
+            break;
         case 'w': return checkKeyword(scanner, 1, 4, "hile", TOKEN_WHILE);
     }
     return TOKEN_IDENTIFIER;
