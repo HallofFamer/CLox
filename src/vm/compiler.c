@@ -831,7 +831,7 @@ static void funDeclaration(Compiler* compiler) {
     defineVariable(compiler, global);
 }
 
-static void varDeclaration(Compiler* compiler) {
+static void varDeclaration(Compiler* compiler, bool isMutable) {
     uint8_t global = parseVariable(compiler, "Expect variable name.");
 
     if (match(compiler->parser, TOKEN_EQUAL)) {
@@ -1068,8 +1068,11 @@ static void declaration(Compiler* compiler) {
         advance(compiler->parser);
         funDeclaration(compiler);
     }
+    else if (match(compiler->parser, TOKEN_VAL)) {
+        varDeclaration(compiler, false);
+    }
     else if (match(compiler->parser, TOKEN_VAR)) {
-        varDeclaration(compiler);
+        varDeclaration(compiler, true);
     }
     else {
         statement(compiler);
