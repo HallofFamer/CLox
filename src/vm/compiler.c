@@ -299,6 +299,7 @@ static int addLocal(Compiler* compiler, Token name) {
     local->name = name;
     local->depth = -1;
     local->isCaptured = false;
+    local->isMutable = true;
     return compiler->localCount - 1;
 }
 
@@ -676,6 +677,7 @@ ParseRule rules[] = {
     [TOKEN_SWITCH]        = {NULL,       NULL,        PREC_NONE},
     [TOKEN_THIS]          = {this_,      NULL,        PREC_NONE},
     [TOKEN_TRUE]          = {literal,    NULL,        PREC_NONE},
+    [TOKEN_VAL]           = {NULL,       NULL,        PREC_NONE},
     [TOKEN_VAR]           = {NULL,       NULL,        PREC_NONE},
     [TOKEN_WHILE]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_ERROR]         = {NULL,       NULL,        PREC_NONE},
