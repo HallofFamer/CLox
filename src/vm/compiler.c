@@ -180,6 +180,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     Local* local = &compiler->locals[compiler->localCount++];
     local->depth = 0;
     local->isCaptured = false;
+    local->isMutable = false;
     if (type != TYPE_FUNCTION && type != TYPE_LAMBDA) {
         local->name.start = "this";
         local->name.length = 4;
