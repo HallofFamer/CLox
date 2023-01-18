@@ -44,6 +44,7 @@ typedef struct {
 typedef struct {
     uint8_t index;
     bool isLocal;
+    bool isMutable;
 } Upvalue;
 
 typedef enum {
