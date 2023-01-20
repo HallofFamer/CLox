@@ -357,14 +357,15 @@ static uint8_t parseVariable(Compiler* compiler, const char* errorMessage) {
     return identifierConstant(compiler, &compiler->parser->previous);
 }
 
-static void markInitialized(Compiler* compiler) {
+static void markInitialized(Compiler* compiler, bool isMutable) {
     if (compiler->scopeDepth == 0) return;
     compiler->locals[compiler->localCount - 1].depth = compiler->scopeDepth;
+    compiler->locals[compiler->localCount - 1].isMutable = isMutable;
 }
 
-static void defineVariable(Compiler* compiler, uint8_t global) {
+static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     if (compiler->scopeDepth > 0) {
-        markInitialized(compiler);
+        markInitialized(compiler, isMutable);
         return;
     }
     emitBytes(compiler, OP_DEFINE_GLOBAL, global);
@@ -389,7 +390,7 @@ static void parameterList(Compiler* compiler) {
     if (match(compiler->parser, TOKEN_DOT_DOT)) {
         compiler->function->arity = -1;
         uint8_t constant = parseVariable(compiler, "Expect variadic parameter name.");
-        defineVariable(compiler, constant);
+        defineVariable(compiler, constant, false);
         return;
     }
 
@@ -399,7 +400,7 @@ static void parameterList(Compiler* compiler) {
             errorAtCurrent(compiler->parser, "Can't have more than 255 parameters.");
         }
         uint8_t constant = parseVariable(compiler, "Expect parameter name.");
-        defineVariable(compiler, constant);
+        defineVariable(compiler, constant, false);
     } while (match(compiler->parser, TOKEN_COMMA));
 }
 
@@ -786,7 +787,7 @@ static void classDeclaration(Compiler* compiler) {
 
     declareVariable(compiler);
     emitBytes(compiler, OP_CLASS, nameConstant);
-    defineVariable(compiler, nameConstant);
+    defineVariable(compiler, nameConstant, false);
 
     ClassCompiler* enclosingClass = compiler->parser->vm->currentClass;
     ClassCompiler classCompiler = { .name = compiler->parser->previous, .enclosing = enclosingClass };
@@ -808,7 +809,7 @@ static void classDeclaration(Compiler* compiler) {
 
     beginScope(compiler);
     addLocal(compiler, syntheticToken("super"));
-    defineVariable(compiler, 0);
+    defineVariable(compiler, 0, false);
     namedVariable(compiler, className, false);
     emitByte(compiler, OP_INHERIT);
 
@@ -826,9 +827,9 @@ static void classDeclaration(Compiler* compiler) {
 
 static void funDeclaration(Compiler* compiler) {
     uint8_t global = parseVariable(compiler, "Expect function name.");
-    markInitialized(compiler);
+    markInitialized(compiler, false);
     function(compiler, TYPE_FUNCTION);
-    defineVariable(compiler, global);
+    defineVariable(compiler, global, false);
 }
 
 static void varDeclaration(Compiler* compiler, bool isMutable) {
@@ -842,7 +843,7 @@ static void varDeclaration(Compiler* compiler, bool isMutable) {
     }
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
 
-    defineVariable(compiler, global);
+    defineVariable(compiler, global, isMutable);
 }
 
 static void breakStatement(Compiler* compiler) {
@@ -894,7 +895,7 @@ static void forStatement(Compiler* compiler) {
     int collectionSlot = addLocal(compiler, syntheticToken("collection "));
     emitByte(compiler, OP_NIL);
     int indexSlot = addLocal(compiler, indexToken);
-    markInitialized(compiler);
+    markInitialized(compiler, true);
     consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
 
     int loopStart = compiler->innermostLoopStart;
@@ -915,7 +916,7 @@ static void forStatement(Compiler* compiler) {
 
     beginScope(compiler);
     int valueSlot = addLocal(compiler, valueToken);
-    markInitialized(compiler);
+    markInitialized(compiler, false);
     setLocal(compiler, valueSlot);
     statement(compiler);
     endScope(compiler);
