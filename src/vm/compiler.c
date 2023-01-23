@@ -600,6 +600,7 @@ static void namedVariable(Compiler* compiler, Token name, bool canAssign) {
     }
 
     if (canAssign && match(compiler->parser, TOKEN_EQUAL)) {
+        checkMutability(compiler, arg, setOp);
         expression(compiler);
         emitBytes(compiler, setOp, (uint8_t)arg);
     }
