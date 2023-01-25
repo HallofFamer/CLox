@@ -4,14 +4,31 @@ x = 1;
 println("Setting global variable x to: " + x.toString());
 
 fun testLocal(){
-    val y1 = 5;
-    println("Creating immutable local variable y1: " + y1.toString());
-    var y2 = 10;
-    println("Creating mutable local variable y2: " + y2.toString());
-    println("Sum of two variables is: " + (y1 + y2).toString());
-    y2 = 20;
-    println("Setting local variable y2 to 20, and sum is: " + (y1 + y2).toString());
-    //println("Setting local variable y1 to 10, this should raise an error.");
-    y1 = 10;
+    val x1 = 5;
+    println("Creating immutable local variable x1: " + x1.toString());
+    var x2 = 10;
+    println("Creating mutable local variable x2: " + x2.toString());
+    println("Sum of two variables is: " + (x1 + x2).toString());
+    x2 = 20;
+    println("Setting local variable x2 to 20, and sum is: " + (x1 + x2).toString());
+    //println("Setting local variable x1 to 10, this should raise an error.");
+    x1 = 10;
 } 
 testLocal();
+
+fun testUpvalue(){ 
+    val x1 = 5;
+    println("Creating immutable captured upvalue x1: " + x1.toString());
+    var x2 = 10;
+    println("Creating mutable captured upvalue x2: " + x2.toString());
+
+    fun testUpvalueInner(){ 
+        println("Sum of two variables is: " + (x1 + x2).toString());
+        x2 = 20;
+        println("Setting local variable x2 to 20, and sum is: " + (x1 + x2).toString());
+        //println("Setting local variable x1 to 10, this should raise an error.");
+        x1 = 10;       
+    }
+    testUpvalueInner();
+}
+testUpvalue();

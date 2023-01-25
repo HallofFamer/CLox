@@ -566,12 +566,12 @@ static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
     switch (opCode) {
         case OP_SET_LOCAL: 
             if (!compiler->locals[arg].isMutable) {
-                error(compiler->parser, "Cannot assign to immutable variable.");
+                error(compiler->parser, "Cannot assign to immutable local variable.");
             }
             break;
         case OP_SET_UPVALUE: 
             if (!compiler->upvalues[arg].isMutable) { 
-                error(compiler->parser, "Cannot assign to immutable upvalue.");
+                error(compiler->parser, "Cannot assign to immutable captured upvalue.");
             }
             break;
         case OP_SET_GLOBAL:
