@@ -2,6 +2,7 @@ var x = 0;
 println("Creating global variable x: " + x.toString());
 x = 1;
 println("Setting global variable x to: " + x.toString());
+println("");
 
 fun testLocal(){
     val x1 = 5;
@@ -12,7 +13,8 @@ fun testLocal(){
     x2 = 20;
     println("Setting local variable x2 to 20, and sum is: " + (x1 + x2).toString());
     //println("Setting local variable x1 to 10, this should raise an error.");
-    x1 = 10;
+    //x1 = 10;
+    println("");
 } 
 testLocal();
 
@@ -27,8 +29,9 @@ fun testUpvalue(){
         x2 = 20;
         println("Setting local variable x2 to 20, and sum is: " + (x1 + x2).toString());
         //println("Setting local variable x1 to 10, this should raise an error.");
-        x1 = 10;       
+        //x1 = 10;       
     }
     testUpvalueInner();
+    println("");
 }
 testUpvalue();

@@ -857,7 +857,10 @@ static void funDeclaration(Compiler* compiler) {
 static void varDeclaration(Compiler* compiler, bool isMutable) {
     uint8_t global = parseVariable(compiler, "Expect variable name.");
 
-    if (match(compiler->parser, TOKEN_EQUAL)) {
+    if (!isMutable && !check(compiler->parser, TOKEN_EQUAL)) {
+        error(compiler->parser, "Immutable variable must be initialized upon declaration.");
+    }
+    else if (match(compiler->parser, TOKEN_EQUAL)) {
         expression(compiler);
     }
     else {
