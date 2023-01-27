@@ -4,7 +4,7 @@ x = 1;
 println("Setting global variable x to: " + x.toString());
 println("");
 
-fun testLocal(){
+fun testLocals(){
     val x1 = 5;
     println("Creating immutable local variable x1: " + x1.toString());
     var x2 = 10;
@@ -16,9 +16,9 @@ fun testLocal(){
     //x1 = 10;
     println("");
 } 
-testLocal();
+testLocals();
 
-fun testUpvalue(){ 
+fun testUpvalues(){ 
     val x1 = 5;
     println("Creating immutable captured upvalue x1: " + x1.toString());
     var x2 = 10;
@@ -34,4 +34,11 @@ fun testUpvalue(){
     testUpvalueInner();
     println("");
 }
-testUpvalue();
+testUpvalues();
+
+fun testParameters(a, b){ 
+    println("Parameters a = " + a.toString() + ", b = " + b.toString());
+    a = 5;
+    println("Setting parameter a to 5, this should raise an error.");
+}
+testParameters(2, 3);
