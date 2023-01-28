@@ -18,7 +18,7 @@ fun testLocals(){
 } 
 testLocals();
 
-fun testUpvalues(){ 
+fun testUpvalues(){  
     val x1 = 5;
     println("Creating immutable captured upvalue x1: " + x1.toString());
     var x2 = 10;
@@ -44,3 +44,10 @@ fun testParameters(a, var b){
     println("Setting paramter b to 10, this should work normally. Now b = " + b.toString());
 }
 testParameters(2, 3);
+
+fun testVariadic(..v){
+   println("Variadic parameter v = " + v.toString());
+   //println("Setting variadic v to 0, this should raise an error.");
+   //v = 0;
+}
+testVariadic(1, 2, 3, 4, 5);
