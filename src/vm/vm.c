@@ -132,6 +132,7 @@ void initVM(VM* vm) {
     vm->grayCapacity = 0;
     vm->grayStack = NULL;
 
+    initTable(&vm->globalValues);
     initTable(&vm->globals);
     initTable(&vm->strings);
     vm->initString = NULL;
@@ -145,6 +146,7 @@ void initVM(VM* vm) {
 }
 
 void freeVM(VM* vm) {
+    freeTable(vm, &vm->globalValues);
     freeTable(vm, &vm->globals);
     freeTable(vm, &vm->strings);
     vm->initString = NULL;

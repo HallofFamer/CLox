@@ -54,6 +54,7 @@ struct VM {
     Compiler* currentCompiler;
     ClassCompiler* currentClass;
 
+    Table globalValues;
     Table globals;
     Table strings;
     ObjString* initString;
