@@ -400,8 +400,9 @@ static void parameterList(Compiler* compiler) {
         if (compiler->function->arity > UINT8_MAX) {
             errorAtCurrent(compiler->parser, "Can't have more than 255 parameters.");
         }
+        bool isMutable = match(compiler->parser, TOKEN_VAR);
         uint8_t constant = parseVariable(compiler, "Expect parameter name.");
-        defineVariable(compiler, constant, false);
+        defineVariable(compiler, constant, isMutable);
     } while (match(compiler->parser, TOKEN_COMMA));
 }
 
