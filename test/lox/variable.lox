@@ -36,9 +36,11 @@ fun testUpvalues(){
 }
 testUpvalues();
 
-fun testParameters(a, b){ 
+fun testParameters(a, var b){ 
     println("Parameters a = " + a.toString() + ", b = " + b.toString());
-    a = 5;
+    //a = 5;
     println("Setting parameter a to 5, this should raise an error.");
+    b = 10;
+    println("Setting paramter b to 10, this should work normally. Now b = " + b.toString());
 }
 testParameters(2, 3);
