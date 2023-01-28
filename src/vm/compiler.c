@@ -369,7 +369,9 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
         markInitialized(compiler, isMutable);
         return;
     }
-    emitBytes(compiler, OP_DEFINE_GLOBAL, global);
+    else {
+        emitBytes(compiler, OP_DEFINE_GLOBAL, global);
+    }
 }
 
 static uint8_t argumentList(Compiler* compiler) {
@@ -575,9 +577,10 @@ static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
                 error(compiler->parser, "Cannot assign to immutable captured upvalue.");
             }
             break;
-        case OP_SET_GLOBAL:
-            // TODO
+        case OP_SET_GLOBAL: { 
+            //ObjString* name = AS_STRING(currentChunk(compiler)->constants.values[arg]);
             break;
+        }
         default:
             break;
     }
@@ -596,7 +599,7 @@ static void namedVariable(Compiler* compiler, Token name, bool canAssign) {
     }
     else {
         arg = identifierConstant(compiler, &name);
-        getOp = OP_GET_GLOBAL;
+        getOp = OP_GET_GLOBAL;  
         setOp = OP_SET_GLOBAL;
     }
 
