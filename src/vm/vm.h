@@ -55,7 +55,7 @@ struct VM {
     ClassCompiler* currentClass;
 
     Table globalValues;
-    Table globals;
+    Table globalVariables;
     Table strings;
     ObjString* initString;
     ObjUpvalue* openUpvalues;

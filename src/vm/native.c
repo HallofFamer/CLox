@@ -114,7 +114,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     ObjClass* nativeClass = newClass(vm, className);
     nativeClass->isNative = true;
     push(vm, OBJ_VAL(nativeClass));
-    tableSet(vm, &vm->globals, AS_STRING(vm->stack[0]), vm->stack[1]);
+    tableSet(vm, &vm->globalVariables, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
     return nativeClass;
@@ -124,7 +124,7 @@ void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction fu
     ObjString* functionName = newString(vm, name);
     push(vm, OBJ_VAL(functionName));
     push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, function)));
-    tableSet(vm, &vm->globals, AS_STRING(vm->stack[0]), vm->stack[1]);
+    tableSet(vm, &vm->globalVariables, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
 }
@@ -141,7 +141,7 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, Na
 
 ObjClass* getNativeClass(VM* vm, const char* name) {
     Value klass;
-    tableGet(&vm->globals, newString(vm, name), &klass);
+    tableGet(&vm->globalVariables, newString(vm, name), &klass);
     if (!IS_CLASS(klass)) {
         runtimeError(vm, "Native class %s is undefined.", name);
         exit(70);
@@ -151,7 +151,7 @@ ObjClass* getNativeClass(VM* vm, const char* name) {
 
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name) {
     Value function;
-    tableGet(&vm->globals, newString(vm, name), &function);
+    tableGet(&vm->globalVariables, newString(vm, name), &function);
     if (!IS_NATIVE_FUNCTION(function)) {
         runtimeError(vm, "Native function %s is undefined.", name);
         exit(70);

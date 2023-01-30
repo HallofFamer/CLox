@@ -133,7 +133,7 @@ void initVM(VM* vm) {
     vm->grayStack = NULL;
 
     initTable(&vm->globalValues);
-    initTable(&vm->globals);
+    initTable(&vm->globalVariables);
     initTable(&vm->strings);
     vm->initString = NULL;
     vm->initString = copyString(vm, "init", 4);
@@ -147,7 +147,7 @@ void initVM(VM* vm) {
 
 void freeVM(VM* vm) {
     freeTable(vm, &vm->globalValues);
-    freeTable(vm, &vm->globals);
+    freeTable(vm, &vm->globalVariables);
     freeTable(vm, &vm->strings);
     vm->initString = NULL;
     freeObjects(vm);
@@ -444,7 +444,7 @@ static InterpretResult run(VM* vm) {
             case OP_GET_GLOBAL: {
                 ObjString* name = READ_STRING();
                 Value value;
-                if (!tableGet(&vm->globals, name, &value)) {
+                if (!tableGet(&vm->globalVariables, name, &value)) {
                     runtimeError(vm, "Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -453,14 +453,14 @@ static InterpretResult run(VM* vm) {
             }
             case OP_DEFINE_GLOBAL: {
                 ObjString* name = READ_STRING();
-                tableSet(vm, &vm->globals, name, peek(vm, 0));
+                tableSet(vm, &vm->globalVariables, name, peek(vm, 0));
                 pop(vm);
                 break;
             }
             case OP_SET_GLOBAL: {
                 ObjString* name = READ_STRING();
-                if (tableSet(vm, &vm->globals, name, peek(vm, 0))) {
-                    tableDelete(&vm->globals, name);
+                if (tableSet(vm, &vm->globalVariables, name, peek(vm, 0))) {
+                    tableDelete(&vm->globalVariables, name);
                     runtimeError(vm, "Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }

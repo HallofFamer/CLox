@@ -247,7 +247,7 @@ static void markRoots(VM* vm) {
     }
 
     markTable(vm, &vm->globalValues);
-    markTable(vm, &vm->globals);
+    markTable(vm, &vm->globalVariables);
     markCompilerRoots(vm);
     markObject(vm, (Obj*)vm->initString);
 }
