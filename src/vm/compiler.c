@@ -578,7 +578,11 @@ static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
             }
             break;
         case OP_SET_GLOBAL: { 
-            //ObjString* name = AS_STRING(currentChunk(compiler)->constants.values[arg]);
+            ObjString* name = AS_STRING(currentChunk(compiler)->constants.values[arg]);
+            Value value;
+            if (tableGet(&compiler->parser->vm->globalValues, name, &value)) { 
+                error(compiler->parser, "Cannot assign to immutable global variables.");
+            }
             break;
         }
         default:
