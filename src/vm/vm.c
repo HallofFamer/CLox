@@ -441,6 +441,12 @@ static InterpretResult run(VM* vm) {
                 frame->slots[slot] = peek(vm, 0);
                 break;
             }
+            case OP_DEFINE_GLOBAL: {
+                ObjString* name = READ_STRING();
+                tableSet(vm, &vm->globalVariables, name, peek(vm, 0));
+                pop(vm);
+                break;
+            }
             case OP_GET_GLOBAL: {
                 ObjString* name = READ_STRING();
                 Value value;
@@ -449,12 +455,6 @@ static InterpretResult run(VM* vm) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 push(vm, value);
-                break;
-            }
-            case OP_DEFINE_GLOBAL: {
-                ObjString* name = READ_STRING();
-                tableSet(vm, &vm->globalVariables, name, peek(vm, 0));
-                pop(vm);
                 break;
             }
             case OP_SET_GLOBAL: {
