@@ -370,7 +370,7 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
         return;
     }
     else {
-        emitBytes(compiler, OP_DEFINE_GLOBAL, global);
+        emitBytes(compiler, OP_DEFINE_GLOBAL_VAR, global);
     }
 }
 

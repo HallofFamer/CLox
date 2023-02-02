@@ -441,7 +441,7 @@ static InterpretResult run(VM* vm) {
                 frame->slots[slot] = peek(vm, 0);
                 break;
             }
-            case OP_DEFINE_GLOBAL: {
+            case OP_DEFINE_GLOBAL_VAR: {
                 ObjString* name = READ_STRING();
                 tableSet(vm, &vm->globalVariables, name, peek(vm, 0));
                 pop(vm);
