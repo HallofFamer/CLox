@@ -370,7 +370,8 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
         return;
     }
     else {
-        emitBytes(compiler, OP_DEFINE_GLOBAL_VAR, global);
+        uint8_t opCode = isMutable ? OP_DEFINE_GLOBAL_VAR : OP_DEFINE_GLOBAL_VAL;
+        emitBytes(compiler, opCode, global);
     }
 }
 
@@ -817,7 +818,7 @@ static void classDeclaration(Compiler* compiler) {
 
     declareVariable(compiler);
     emitBytes(compiler, OP_CLASS, nameConstant);
-    defineVariable(compiler, nameConstant, false);
+    defineVariable(compiler, nameConstant, true);
 
     ClassCompiler* enclosingClass = compiler->parser->vm->currentClass;
     ClassCompiler classCompiler = { .name = compiler->parser->previous, .enclosing = enclosingClass };
@@ -859,7 +860,7 @@ static void funDeclaration(Compiler* compiler) {
     uint8_t global = parseVariable(compiler, "Expect function name.");
     markInitialized(compiler, false);
     function(compiler, TYPE_FUNCTION);
-    defineVariable(compiler, global, false);
+    defineVariable(compiler, global, true);
 }
 
 static void varDeclaration(Compiler* compiler, bool isMutable) {
