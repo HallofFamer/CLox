@@ -340,6 +340,11 @@ static bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
     return true;
 }
 
+bool loadGlobal(VM* vm, ObjString* name, Value* value) {
+    if (tableGet(&vm->globalValues, name, value)) return true;
+    return tableGet(&vm->globalVariables, name, value);
+} 
+
 static ObjUpvalue* captureUpvalue(VM* vm, Value* local) {
     ObjUpvalue* prevUpvalue = NULL;
     ObjUpvalue* upvalue = vm->openUpvalues;
@@ -456,7 +461,7 @@ static InterpretResult run(VM* vm) {
             case OP_GET_GLOBAL: {
                 ObjString* name = READ_STRING();
                 Value value;
-                if (!tableGet(&vm->globalVariables, name, &value)) {
+                if (!loadGlobal(vm, name, &value)) {
                     runtimeError(vm, "Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }

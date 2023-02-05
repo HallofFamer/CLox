@@ -235,6 +235,10 @@ static uint8_t identifierConstant(Compiler* compiler, Token* name) {
     return makeConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, name->start, name->length)));
 }
 
+static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
+    return AS_STRING(currentChunk(compiler)->constants.values[arg]);
+}
+
 static bool identifiersEqual(Token* a, Token* b) {
     if (a->length != b->length) return false;
     return memcmp(a->start, b->start, a->length) == 0;
@@ -579,7 +583,7 @@ static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
             }
             break;
         case OP_SET_GLOBAL: { 
-            ObjString* name = AS_STRING(currentChunk(compiler)->constants.values[arg]);
+            ObjString* name = identifierName(compiler, arg);
             Value value;
             if (tableGet(&compiler->parser->vm->globalValues, name, &value)) { 
                 error(compiler->parser, "Cannot assign to immutable global variables.");
