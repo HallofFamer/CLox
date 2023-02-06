@@ -374,8 +374,20 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
         return;
     }
     else {
-        uint8_t opCode = isMutable ? OP_DEFINE_GLOBAL_VAR : OP_DEFINE_GLOBAL_VAL;
-        emitBytes(compiler, opCode, global);
+        ObjString* name = identifierName(compiler, global);
+        Value value;
+        if (loadGlobal(compiler->parser->vm, name, &value)) {
+            error(compiler->parser, "Cannot redeclare global variable.");
+        }
+
+        if (isMutable) {
+            tableSet(compiler->parser->vm, &compiler->parser->vm->globalVariables, name, NIL_VAL);
+            emitBytes(compiler, OP_DEFINE_GLOBAL_VAR, global);
+        }
+        else {
+            tableSet(compiler->parser->vm, &compiler->parser->vm->globalValues, name, NIL_VAL);
+            emitBytes(compiler, OP_DEFINE_GLOBAL_VAL, global);
+        }
     }
 }
 

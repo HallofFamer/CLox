@@ -1,7 +1,11 @@
 var x = 0;
-println("Creating global variable x: " + x.toString());
+println("Creating global mutable variable x: " + x.toString());
 x = 1;
-println("Setting global variable x to: " + x.toString());
+println("Setting global mutable variable x to: " + x.toString());
+val y = true;
+println("Creating global immutable variable y: " + y.toString());
+//y = false;
+//println("Setting global immutable variable y to false, this should raise an error.");
 println("");
 
 fun testLocals(){
@@ -12,8 +16,8 @@ fun testLocals(){
     println("Sum of two variables is: " + (x1 + x2).toString());
     x2 = 20;
     println("Setting local variable x2 to 20, and sum is: " + (x1 + x2).toString());
-    //println("Setting local variable x1 to 10, this should raise an error.");
     //x1 = 10;
+    //println("Setting local variable x1 to 10, this should raise an error.");
     println("");
 } 
 testLocals();

@@ -470,6 +470,7 @@ static InterpretResult run(VM* vm) {
             }
             case OP_SET_GLOBAL: {
                 ObjString* name = READ_STRING();
+                Value value;
                 if (tableSet(vm, &vm->globalVariables, name, peek(vm, 0))) {
                     tableDelete(&vm->globalVariables, name);
                     runtimeError(vm, "Undefined variable '%s'.", name->chars);
