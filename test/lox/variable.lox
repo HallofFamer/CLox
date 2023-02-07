@@ -1,11 +1,13 @@
-var x = 0;
-println("Creating global mutable variable x: " + x.toString());
-x = 1;
-println("Setting global mutable variable x to: " + x.toString());
-val y = true;
-println("Creating global immutable variable y: " + y.toString());
-//y = false;
-//println("Setting global immutable variable y to false, this should raise an error.");
+val x = 0;
+println("Creating global immutable variable x: " + x.toString());
+// val x = 1;
+//println("Setting global immutable variable x to 1, this should raise an error.");
+var y = true;
+println("Creating global mutable variable y: " + y.toString());
+y = false;
+println("Setting global mutable variable y to " + y.toString());
+//var y = nil;
+//println("Redeclaring variable y, this should raise an error.");
 println("");
 
 fun testLocals(){
@@ -43,7 +45,7 @@ testUpvalues();
 fun testParameters(a, var b){ 
     println("Parameters a = " + a.toString() + ", b = " + b.toString());
     //a = 5;
-    println("Setting parameter a to 5, this should raise an error.");
+    //println("Setting parameter a to 5, this should raise an error.");
     b = 10;
     println("Setting paramter b to 10, this should work normally. Now b = " + b.toString());
 }
@@ -51,7 +53,7 @@ testParameters(2, 3);
 
 fun testVariadic(..v){
    println("Variadic parameter v = " + v.toString());
-   //println("Setting variadic v to 0, this should raise an error.");
    //v = 0;
+   //println("Setting variadic v to 0, this should raise an error.");
 }
 testVariadic(1, 2, 3, 4, 5);
