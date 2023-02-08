@@ -834,7 +834,7 @@ static void classDeclaration(Compiler* compiler) {
 
     declareVariable(compiler);
     emitBytes(compiler, OP_CLASS, nameConstant);
-    defineVariable(compiler, nameConstant, true);
+    defineVariable(compiler, nameConstant, false);
 
     ClassCompiler* enclosingClass = compiler->parser->vm->currentClass;
     ClassCompiler classCompiler = { .name = compiler->parser->previous, .enclosing = enclosingClass };
@@ -876,7 +876,7 @@ static void funDeclaration(Compiler* compiler) {
     uint8_t global = parseVariable(compiler, "Expect function name.");
     markInitialized(compiler, false);
     function(compiler, TYPE_FUNCTION);
-    defineVariable(compiler, global, true);
+    defineVariable(compiler, global, false);
 }
 
 static void varDeclaration(Compiler* compiler, bool isMutable) {
