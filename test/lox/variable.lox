@@ -57,3 +57,8 @@ fun testVariadic(..v){
    //println("Setting variadic v to 0, this should raise an error.");
 }
 testVariadic(1, 2, 3, 4, 5);
+
+//File = 5;
+//println("Trying to mutate a native class, this should raise an error.");
+//print = println;
+//println("Trying to mutate a native function, this should raise an error too.");
