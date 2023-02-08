@@ -62,3 +62,11 @@ testVariadic(1, 2, 3, 4, 5);
 //println("Trying to mutate a native class, this should raise an error.");
 //print = println;
 //println("Trying to mutate a native function, this should raise an error too.");
+
+class TestClass { }
+fun testFun() {}
+
+//TestClass = true;
+//println("Trying to mutate a user defined class, this should raise an error.");
+//testFun = fun(a, b){ return a + b; };
+//println("Trying to mutate a user defined function, this should raise an error too.");
