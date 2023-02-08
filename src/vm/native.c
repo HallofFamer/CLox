@@ -114,7 +114,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     ObjClass* nativeClass = newClass(vm, className);
     nativeClass->isNative = true;
     push(vm, OBJ_VAL(nativeClass));
-    tableSet(vm, &vm->globalVariables, AS_STRING(vm->stack[0]), vm->stack[1]);
+    tableSet(vm, &vm->globalValues, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
     return nativeClass;
@@ -141,7 +141,7 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, Na
 
 ObjClass* getNativeClass(VM* vm, const char* name) {
     Value klass;
-    tableGet(&vm->globalVariables, newString(vm, name), &klass);
+    tableGet(&vm->globalValues, newString(vm, name), &klass);
     if (!IS_CLASS(klass)) {
         runtimeError(vm, "Native class %s is undefined.", name);
         exit(70);
