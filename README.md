@@ -29,6 +29,9 @@ https://github.com/munificent/craftinginterpreters
 - Variadic Functions, Anonymous Functions and Lambda Expressions(since version 1.3)
 - C style For Loop replaced with Kotlin style for-in Loop(since version 1.3)
 - Clox Standard Library for new packages `collection` and `io`(since version 1.3)
+- Immutable variable declaration with `val` keyword for global and local variables(since version 1.4)
+- Function/Method parameters become immutable by default, but may be mutable with `var` keyword(since version 1.4)
+- Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten(since version 1.4)
 
 ## Roadmap
 
@@ -50,10 +53,10 @@ https://github.com/munificent/craftinginterpreters
 - Replace C style for loop by Kotlin style for-in loop for collection types.
 - Clox Standard Library improvement: New package `collection` and `io`.
 
-### CLox 1.4.0
+### CLox 1.4.0(upcoming version)
 - Immutable variable declaration with `val` keyword.
-- Function/Method parameters become immutable by default, but may be mutable if using `var` keyword.
-- Built-in classes/functions and method parameters will be immutable, users will not be able to overwrite them. 
+- Function/Method parameters become immutable by default, but may be mutable with `var` keyword.
+- Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten. 
 - Allow inheritance for all built-in classes including `Boolean`, `Int`, `String`, `Class`, etc.
 
 ### CLox 1.5.0
@@ -61,6 +64,12 @@ https://github.com/munificent/craftinginterpreters
 - Metaclasses(which enables class methods) and traits(can be implemented by classes).
 - Improved Clox standard library that makes use of metaclasses and traits. 
 - Anonymous classes/traits similar to anonymous functions/lambda.
+
+### CLox 1.6.0
+- Introduction of Namespace for CLox's module system, a namespace/module is a first class object.
+- Allow importing namespaces and aliasing of imported classes/functions.
+- Refactor the existing standard library with namespaces(`clox.std` package).
+- Clox Standard Library improvement: New package `clox.std.network` and `clox.std.security`.
 
 ## FAQ
 
