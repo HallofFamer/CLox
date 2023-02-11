@@ -80,6 +80,7 @@ typedef struct {
 
 typedef Value (*NativeFunction)(VM* vm, int argCount, Value* args);
 typedef Value (*NativeMethod)(VM* vm, Value receiver, int argCount, Value* args);
+typedef void (*FreeFunction)(void* func);
 
 typedef struct {
     Obj obj;
@@ -139,6 +140,7 @@ typedef struct {
 typedef struct {
     Obj obj;
     void* data;
+    FreeFunction* freeFunction;
 } ObjRecord;
 
 typedef struct ObjUpvalue {

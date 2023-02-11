@@ -129,6 +129,7 @@ ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next) {
 ObjRecord* newRecord(VM* vm, void* data) {
     ObjRecord* record = ALLOCATE_OBJ(ObjRecord, OBJ_RECORD, NULL);
     record->data = data;
+    record->freeFunction = NULL;
     return record;
 }
 
