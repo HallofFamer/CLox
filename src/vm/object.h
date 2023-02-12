@@ -140,7 +140,7 @@ typedef struct {
 typedef struct {
     Obj obj;
     void* data;
-    FreeFunction* freeFunction;
+    FreeFunction freeFunction;
 } ObjRecord;
 
 typedef struct ObjUpvalue {
