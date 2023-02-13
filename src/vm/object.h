@@ -28,22 +28,22 @@
 #define IS_RECORD(value)           isObjType(value, OBJ_RECORD)
 #define IS_STRING(value)           isObjType(value, OBJ_STRING)
 
-#define AS_ARRAY(value)            ((ObjArray*)AS_OBJ(value))
-#define AS_BOUND_METHOD(value)     ((ObjBoundMethod*)AS_OBJ(value))
-#define AS_CLASS(value)            ((ObjClass*)AS_OBJ(value))
-#define AS_CLOSURE(value)          ((ObjClosure*)AS_OBJ(value))
-#define AS_DICTIONARY(value)       ((ObjDictionary*)AS_OBJ(value))
-#define AS_ENTRY(value)            ((ObjEntry*)AS_OBJ(value))
-#define AS_FILE(value)             ((ObjFile*)AS_OBJ(value))
-#define AS_FUNCTION(value)         ((ObjFunction*)AS_OBJ(value))
-#define AS_INSTANCE(value)         ((ObjInstance*)AS_OBJ(value))
-#define AS_NATIVE_FUNCTION(value)  ((ObjNativeFunction*)AS_OBJ(value))
-#define AS_NATIVE_METHOD(value)    ((ObjNativeMethod*)AS_OBJ(value))
-#define AS_NODE(value)             ((ObjNode*)AS_OBJ(value))
-#define AS_RECORD(value)           ((ObjRecord*)AS_OBJ(value))
-#define AS_CRECORD(value, type)    ((type*)((ObjRecord*)AS_OBJ(value)->data))
-#define AS_STRING(value)           ((ObjString*)AS_OBJ(value))
-#define AS_CSTRING(value)          (((ObjString*)AS_OBJ(value))->chars)
+#define AS_ARRAY(value)            ((ObjArray*)asObj(value))
+#define AS_BOUND_METHOD(value)     ((ObjBoundMethod*)asObj(value))
+#define AS_CLASS(value)            ((ObjClass*)asObj(value))
+#define AS_CLOSURE(value)          ((ObjClosure*)asObj(value))
+#define AS_DICTIONARY(value)       ((ObjDictionary*)asObj(value))
+#define AS_ENTRY(value)            ((ObjEntry*)asObj(value))
+#define AS_FILE(value)             ((ObjFile*)asObj(value))
+#define AS_FUNCTION(value)         ((ObjFunction*)asObj(value))
+#define AS_INSTANCE(value)         ((ObjInstance*)asObj(value))
+#define AS_NATIVE_FUNCTION(value)  ((ObjNativeFunction*)asObj(value))
+#define AS_NATIVE_METHOD(value)    ((ObjNativeMethod*)asObj(value))
+#define AS_NODE(value)             ((ObjNode*)asObj(value))
+#define AS_RECORD(value)           ((ObjRecord*)asObj(value))
+#define AS_CRECORD(value, type)    ((type*)((ObjRecord*)asObj(value)->data))
+#define AS_STRING(value)           ((ObjString*)asObj(value))
+#define AS_CSTRING(value)          (((ObjString*)asObj(value))->chars)
 
 typedef enum {
     OBJ_ARRAY,
@@ -202,6 +202,10 @@ void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type) {
     return IS_OBJ(value) && AS_OBJ(value)->type == type;
+}
+
+static inline Obj* asObj(Value value) {
+    return AS_OBJ(value);
 }
 
 #endif // !clox_object_h
