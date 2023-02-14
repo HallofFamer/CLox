@@ -23,6 +23,7 @@
 #define IS_FUNCTION(value)         isObjType(value, OBJ_FUNCTION)
 #define IS_INSTANCE(value)         isObjType(value, OBJ_INSTANCE)
 #define IS_NATIVE_FUNCTION(value)  isObjType(value, OBJ_NATIVE_FUNCTION)
+#define IS_NATIVE_INSTANCE(value)  isObjType(value, OBJ_NATIVE_INSTANCE)
 #define IS_NATIVE_METHOD(value)    isObjType(value, OBJ_NATIVE_METHOD)
 #define IS_NODE(value)             isObjType(value, OBJ_NODE)
 #define IS_RECORD(value)           isObjType(value, OBJ_RECORD)
@@ -38,6 +39,7 @@
 #define AS_FUNCTION(value)         ((ObjFunction*)asObj(value))
 #define AS_INSTANCE(value)         ((ObjInstance*)asObj(value))
 #define AS_NATIVE_FUNCTION(value)  ((ObjNativeFunction*)asObj(value))
+#define AS_NATIVE_INSTANCE(value)  ((ObjNativeInstance*)asObj(value))
 #define AS_NATIVE_METHOD(value)    ((ObjNativeMethod*)asObj(value))
 #define AS_NODE(value)             ((ObjNode*)asObj(value))
 #define AS_RECORD(value)           ((ObjRecord*)asObj(value))
@@ -56,6 +58,7 @@ typedef enum {
     OBJ_FUNCTION,
     OBJ_INSTANCE,
     OBJ_NATIVE_FUNCTION,
+    OBJ_NATIVE_INSTANCE,
     OBJ_NATIVE_METHOD,
     OBJ_NODE,
     OBJ_RECORD,
@@ -169,6 +172,12 @@ typedef struct {
     Obj obj;
     Table fields;
 } ObjInstance;
+
+typedef struct {
+    Obj obj;
+    Table fields;
+    Value native;
+} ObjNativeInstance;
 
 typedef struct {
     Obj obj;
