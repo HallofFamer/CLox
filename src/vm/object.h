@@ -39,7 +39,7 @@
 #define AS_FUNCTION(value)         ((ObjFunction*)asObj(value))
 #define AS_INSTANCE(value)         ((ObjInstance*)asObj(value))
 #define AS_NATIVE_FUNCTION(value)  ((ObjNativeFunction*)asObj(value))
-#define AS_NATIVE_INSTANCE(value)  ((ObjNativeInstance*)asObj(value))
+#define AS_NATIVE_INSTANCE(value)  (((ObjInstance*)asObj(value))->native)
 #define AS_NATIVE_METHOD(value)    ((ObjNativeMethod*)asObj(value))
 #define AS_NODE(value)             ((ObjNode*)asObj(value))
 #define AS_RECORD(value)           ((ObjRecord*)asObj(value))
@@ -171,13 +171,9 @@ struct ObjClass {
 typedef struct {
     Obj obj;
     Table fields;
-} ObjInstance;
-
-typedef struct {
-    Obj obj;
-    Table fields;
+    bool isNative;
     Value native;
-} ObjNativeInstance;
+} ObjInstance;
 
 typedef struct {
     Obj obj;
@@ -196,6 +192,7 @@ ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
+ObjInstance* newNativeInstance(VM* vm, ObjClass* klass, Value native);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
 ObjRecord* newRecord(VM* vm, void* data);
@@ -209,12 +206,22 @@ void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* na
 void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject);
 void printObject(Value value);
 
-static inline bool isObjType(Value value, ObjType type) {
-    return IS_OBJ(value) && AS_OBJ(value)->type == type;
+static inline bool isNativeObjType(Obj* object, ObjType type) {
+    if (object->type == OBJ_NATIVE_INSTANCE) {
+        Value native = ((ObjInstance*)object)->native;
+        return IS_OBJ(native) && AS_OBJ(native)->type == type;
+    }
+    return false;
 }
 
+static inline bool isObjType(Value value, ObjType type) {
+    return IS_OBJ(value) && ((AS_OBJ(value)->type == type) ? true : isNativeObjType(AS_OBJ(value), type));
+}
+
+
 static inline Obj* asObj(Value value) {
-    return AS_OBJ(value);
+    Obj* object = AS_OBJ(value);
+    return object->type == OBJ_NATIVE_INSTANCE ? AS_OBJ(((ObjInstance*)object)->native) : object;
 }
 
 #endif // !clox_object_h
