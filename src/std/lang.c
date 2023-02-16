@@ -505,10 +505,12 @@ LOX_METHOD(Object, getClassName) {
 LOX_METHOD(Object, hasField) {
     ASSERT_ARG_COUNT("Object::hasField(field)", 1);
     ASSERT_ARG_TYPE("Object::hasField(field)", 0, String);
-    if (!IS_INSTANCE(receiver)) return false;
-    ObjInstance* instance = AS_INSTANCE(receiver);
-    Value value;
-    RETURN_BOOL(tableGet(&instance->fields, AS_STRING(args[0]), &value));
+    if (IS_INSTANCE(receiver) || IS_NATIVE_INSTANCE(receiver)) {
+        ObjInstance* instance = AS_INSTANCE(receiver);
+        Value value;
+        RETURN_BOOL(tableGet(&instance->fields, AS_STRING(args[0]), &value));
+    }
+    RETURN_FALSE;
 }
 
 LOX_METHOD(Object, hashCode) {

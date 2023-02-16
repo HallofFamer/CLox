@@ -316,7 +316,7 @@ static bool invoke(VM* vm, ObjString* name, int argCount) {
         return invokeFromClass(vm, getObjClass(vm, receiver), name, argCount);
     }
 
-    if (IS_INSTANCE(receiver)) {
+    if (IS_INSTANCE(receiver) || IS_NATIVE_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
         Value value;
         if (tableGet(&instance->fields, name, &value)) {
@@ -488,38 +488,42 @@ static InterpretResult run(VM* vm) {
                 break;
             }
             case OP_GET_PROPERTY: {
-                if (!IS_INSTANCE(peek(vm, 0))) {
+                Value receiver = peek(vm, 0);
+                if (IS_INSTANCE(receiver) || IS_NATIVE_INSTANCE(receiver)) {
+                    ObjInstance* instance = AS_INSTANCE(receiver);
+                    ObjString* name = READ_STRING();
+                    Value value;
+
+                    if (tableGet(&instance->fields, name, &value)) {
+                        pop(vm);
+                        push(vm, value);
+                        break;
+                    }
+
+                    if (!bindMethod(vm, instance->obj.klass, name)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                }
+                else{
                     runtimeError(vm, "Only instances can have properties.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
-
-                ObjInstance* instance = AS_INSTANCE(peek(vm, 0));
-                ObjString* name = READ_STRING();
-                Value value;
-
-                if (tableGet(&instance->fields, name, &value)) {
-                    pop(vm);
-                    push(vm, value);
-                    break;
-                }
-                
-                if (!bindMethod(vm, instance->obj.klass, name)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
             }
             case OP_SET_PROPERTY: {
-                if (!IS_INSTANCE(peek(vm, 1))) {
+                Value receiver = peek(vm, 1);
+                if (IS_INSTANCE(receiver) || IS_NATIVE_INSTANCE(receiver)) {
+                    ObjInstance* instance = AS_INSTANCE(receiver);
+                    tableSet(vm, &instance->fields, READ_STRING(), peek(vm, 0));
+
+                    Value value = pop(vm);
+                    pop(vm);
+                    push(vm, value);
+                }
+                else{
                     runtimeError(vm, "Only instances can have properties.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-
-                ObjInstance* instance = AS_INSTANCE(peek(vm, 1));
-                tableSet(vm, &instance->fields, READ_STRING(), peek(vm, 0));
-
-                Value value = pop(vm);
-                pop(vm);
-                push(vm, value);
                 break;
             }
             case OP_GET_SUBSCRIPT: {
