@@ -124,15 +124,18 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjInstance* instance = (ObjInstance*)object;
             markObject(vm, (Obj*)object->klass);
             markTable(vm, &instance->fields);
-            if (instance->isNative) markValue(vm, instance->native);
             break;
         }
-        case OBJ_UPVALUE:
-            markValue(vm, ((ObjUpvalue*)object)->closed);
-            break;
         case OBJ_NATIVE_FUNCTION: {
             ObjNativeFunction* nativeFunction = (ObjNativeFunction*)object;
             markObject(vm, (Obj*)nativeFunction->name);
+            break;
+        }
+        case OBJ_NATIVE_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*)object;
+            markObject(vm, (Obj*)object->klass);
+            markTable(vm, &instance->fields);
+            if (instance->isNative) markValue(vm, instance->native);
             break;
         }
         case OBJ_NATIVE_METHOD: {
@@ -148,6 +151,9 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)node->next);
             break;
         }
+        case OBJ_UPVALUE:
+            markValue(vm, ((ObjUpvalue*)object)->closed);
+            break;
         default:
             break;
     }
