@@ -265,6 +265,7 @@ void printObject(Value value) {
             printFunction(AS_FUNCTION(value));
             break;
         case OBJ_INSTANCE:
+        case OBJ_NATIVE_INSTANCE:
             printf("<object %s>", AS_OBJ(value)->klass->name->chars);
             break;
         case OBJ_NATIVE_FUNCTION:
