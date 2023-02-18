@@ -207,17 +207,14 @@ void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject);
 void printObject(Value value);
 
 static inline bool isNativeObjType(Obj* object, ObjType type) {
-    if (object->type == OBJ_NATIVE_INSTANCE) {
-        Value native = ((ObjInstance*)object)->native;
-        return IS_OBJ(native) && AS_OBJ(native)->type == type;
-    }
-    return false;
+    if (object->type != OBJ_NATIVE_INSTANCE) return false;
+    Value native = ((ObjInstance*)object)->native;
+    return IS_OBJ(native) && AS_OBJ(native)->type == type;
 }
 
 static inline bool isObjType(Value value, ObjType type) {
-    return IS_OBJ(value) && ((AS_OBJ(value)->type == type) ? true : isNativeObjType(AS_OBJ(value), type));
+    return IS_OBJ(value) && ((AS_OBJ(value)->type == type) || isNativeObjType(AS_OBJ(value), type));
 }
-
 
 static inline Obj* asObj(Value value) {
     Obj* object = AS_OBJ(value);
