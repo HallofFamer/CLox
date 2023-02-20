@@ -166,6 +166,7 @@ struct ObjClass {
     struct ObjClass* superclass;
     Table methods;
     bool isNative;
+    bool isInternal;
 };
 
 typedef struct {

@@ -86,6 +86,11 @@ LOX_METHOD(Class, instanceOf) {
     else RETURN_FALSE;
 }
 
+LOX_METHOD(Class, isNative) {
+    ASSERT_ARG_COUNT("Class::isNative()", 0);
+    RETURN_BOOL(AS_CLASS(receiver)->isNative);
+}
+
 LOX_METHOD(Class, memberOf) {
     ASSERT_ARG_COUNT("Class::memberOf(class)", 1);
     if (!IS_CLASS(args[0])) RETURN_FALSE;
@@ -716,6 +721,7 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->classClass, Class, hasMethod, 1);
     DEF_METHOD(vm->classClass, Class, init, 2);
     DEF_METHOD(vm->classClass, Class, instanceOf, 1);
+    DEF_METHOD(vm->classClass, Class, isNative, 0);
     DEF_METHOD(vm->classClass, Class, memberOf, 1);
     DEF_METHOD(vm->classClass, Class, name, 0);
     DEF_METHOD(vm->classClass, Class, superclass, 0);
