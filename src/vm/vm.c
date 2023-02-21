@@ -391,6 +391,7 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
         return;
     }
     subclass->superclass = superclass;
+    subclass->isInternal = superclass->isInternal;
     tableAddAll(vm, &superclass->methods, &subclass->methods);
 }
 
