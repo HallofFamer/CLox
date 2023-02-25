@@ -48,7 +48,6 @@ ObjClass* newClass(VM* vm, ObjString* name) {
     klass->isNative = false;
     klass->isInternal = false;
     initTable(&klass->methods);
-    initTable(&klass->internalMethods);
     return klass;
 }
 

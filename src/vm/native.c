@@ -175,6 +175,11 @@ void initNativePackage(VM* vm, const char* filePath) {
     free(source);
 }
 
+void markInternalClass(ObjClass* klass) {
+    klass->isInternal = true;
+    initTable(&klass->internalMethods);
+}
+
 void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(assert, 2);
     DEF_FUNCTION(clock, 0);

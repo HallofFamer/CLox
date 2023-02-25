@@ -30,6 +30,7 @@ ObjClass* getNativeClass(VM* vm, const char* name);
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name);
 ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name);
 void initNativePackage(VM * vm, const char* filePath);
+void markInternalClass(ObjClass* klass);
 void registerNativeFunctions(VM* vm);
 
 #endif // !clox_native_h
