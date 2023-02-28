@@ -316,7 +316,7 @@ static bool invoke(VM* vm, ObjString* name, int argCount) {
         return invokeFromClass(vm, getObjClass(vm, receiver), name, argCount);
     }
 
-    if (IS_INSTANCE(receiver) || IS_NATIVE_INSTANCE(receiver)) {
+    if (IS_INSTANCE(receiver) || IS_INTERNAL_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
         Value value;
         if (tableGet(&instance->fields, name, &value)) {
@@ -490,7 +490,7 @@ static InterpretResult run(VM* vm) {
             }
             case OP_GET_PROPERTY: {
                 Value receiver = peek(vm, 0);
-                if (IS_INSTANCE(receiver) || IS_NATIVE_INSTANCE(receiver)) {
+                if (IS_INSTANCE(receiver) || IS_INTERNAL_INSTANCE(receiver)) {
                     ObjInstance* instance = AS_INSTANCE(receiver);
                     ObjString* name = READ_STRING();
                     Value value;
@@ -513,7 +513,7 @@ static InterpretResult run(VM* vm) {
             }
             case OP_SET_PROPERTY: {
                 Value receiver = peek(vm, 1);
-                if (IS_INSTANCE(receiver) || IS_NATIVE_INSTANCE(receiver)) {
+                if (IS_INSTANCE(receiver) || IS_INTERNAL_INSTANCE(receiver)) {
                     ObjInstance* instance = AS_INSTANCE(receiver);
                     tableSet(vm, &instance->fields, READ_STRING(), peek(vm, 0));
 
