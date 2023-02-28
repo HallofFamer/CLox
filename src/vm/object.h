@@ -174,7 +174,7 @@ typedef struct {
     Obj obj;
     Table fields;
     bool isNative;
-    Value native;
+    Value internal;
 } ObjInstance;
 
 typedef struct {
@@ -210,8 +210,8 @@ void printObject(Value value);
 
 static inline bool isInternalObjType(Obj* object, ObjType type) {
     if (object->type != OBJ_INTERNAL_INSTANCE) return false;
-    Value native = ((ObjInstance*)object)->native;
-    return IS_OBJ(native) && AS_OBJ(native)->type == type;
+    Value internal = ((ObjInstance*)object)->internal;
+    return IS_OBJ(internal) && AS_OBJ(internal)->type == type;
 }
 
 static inline bool isObjType(Value value, ObjType type) {
@@ -220,7 +220,7 @@ static inline bool isObjType(Value value, ObjType type) {
 
 static inline Obj* asObj(Value value) {
     Obj* object = AS_OBJ(value);
-    return object->type == OBJ_INTERNAL_INSTANCE ? AS_OBJ(((ObjInstance*)object)->native) : object;
+    return object->type == OBJ_INTERNAL_INSTANCE ? AS_OBJ(((ObjInstance*)object)->internal) : object;
 }
 
 #endif // !clox_object_h

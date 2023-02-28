@@ -100,15 +100,15 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
     initTable(&instance->fields);
     instance->isNative = false;
-    instance->native = NIL_VAL;
+    instance->internal = NIL_VAL;
     return instance;
 }
 
-ObjInstance* newInternalInstance(VM* vm, ObjClass* klass, Value native) {
+ObjInstance* newInternalInstance(VM* vm, ObjClass* klass, Value internal) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INTERNAL_INSTANCE, klass);
     initTable(&instance->fields);
     instance->isNative = true;
-    instance->native = native;
+    instance->internal = internal;
     return instance;
 }
 
