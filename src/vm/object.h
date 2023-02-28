@@ -23,7 +23,7 @@
 #define IS_FUNCTION(value)         isObjType(value, OBJ_FUNCTION)
 #define IS_INSTANCE(value)         isObjType(value, OBJ_INSTANCE)
 #define IS_NATIVE_FUNCTION(value)  isObjType(value, OBJ_NATIVE_FUNCTION)
-#define IS_NATIVE_INSTANCE(value)  isObjType(value, OBJ_NATIVE_INSTANCE)
+#define IS_NATIVE_INSTANCE(value)  isObjType(value, OBJ_INTERNAL_INSTANCE)
 #define IS_NATIVE_METHOD(value)    isObjType(value, OBJ_NATIVE_METHOD)
 #define IS_NODE(value)             isObjType(value, OBJ_NODE)
 #define IS_RECORD(value)           isObjType(value, OBJ_RECORD)
@@ -57,8 +57,8 @@ typedef enum {
     OBJ_FILE,
     OBJ_FUNCTION,
     OBJ_INSTANCE,
+    OBJ_INTERNAL_INSTANCE,
     OBJ_NATIVE_FUNCTION,
-    OBJ_NATIVE_INSTANCE,
     OBJ_NATIVE_METHOD,
     OBJ_NODE,
     OBJ_RECORD,
@@ -209,7 +209,7 @@ void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject);
 void printObject(Value value);
 
 static inline bool isInternalObjType(Obj* object, ObjType type) {
-    if (object->type != OBJ_NATIVE_INSTANCE) return false;
+    if (object->type != OBJ_INTERNAL_INSTANCE) return false;
     Value native = ((ObjInstance*)object)->native;
     return IS_OBJ(native) && AS_OBJ(native)->type == type;
 }
@@ -220,7 +220,7 @@ static inline bool isObjType(Value value, ObjType type) {
 
 static inline Obj* asObj(Value value) {
     Obj* object = AS_OBJ(value);
-    return object->type == OBJ_NATIVE_INSTANCE ? AS_OBJ(((ObjInstance*)object)->native) : object;
+    return object->type == OBJ_INTERNAL_INSTANCE ? AS_OBJ(((ObjInstance*)object)->native) : object;
 }
 
 #endif // !clox_object_h

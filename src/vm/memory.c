@@ -127,16 +127,16 @@ static void blackenObject(VM* vm, Obj* object) {
             markTable(vm, &instance->fields);
             break;
         }
-        case OBJ_NATIVE_FUNCTION: {
-            ObjNativeFunction* nativeFunction = (ObjNativeFunction*)object;
-            markObject(vm, (Obj*)nativeFunction->name);
-            break;
-        }
-        case OBJ_NATIVE_INSTANCE: {
+        case OBJ_INTERNAL_INSTANCE: {
             ObjInstance* instance = (ObjInstance*)object;
             markObject(vm, (Obj*)object->klass);
             markTable(vm, &instance->fields);
             if (instance->isNative) markValue(vm, instance->native);
+            break;
+        }
+        case OBJ_NATIVE_FUNCTION: {
+            ObjNativeFunction* nativeFunction = (ObjNativeFunction*)object;
+            markObject(vm, (Obj*)nativeFunction->name);
             break;
         }
         case OBJ_NATIVE_METHOD: {
@@ -216,16 +216,16 @@ static void freeObject(VM* vm, Obj* object) {
             FREE(ObjInstance, object);
             break;
         }
-        case OBJ_NATIVE_FUNCTION:
-            FREE(ObjNativeFunction, object);
-            break;
-        case OBJ_NATIVE_INSTANCE: {
+        case OBJ_INTERNAL_INSTANCE: {
             ObjInstance* instance = (ObjInstance*)object;
             freeTable(vm, &instance->fields);
             if (IS_OBJ(instance->native)) freeObject(vm, AS_OBJ(instance->native));
             FREE(ObjInstance, object);
             break;
         }
+        case OBJ_NATIVE_FUNCTION:
+            FREE(ObjNativeFunction, object);
+            break;
         case OBJ_NATIVE_METHOD:
             FREE(ObjNativeMethod, object);
             break;

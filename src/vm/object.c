@@ -105,7 +105,7 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass) {
 }
 
 ObjInstance* newInternalInstance(VM* vm, ObjClass* klass, Value native) {
-    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_NATIVE_INSTANCE, klass);
+    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INTERNAL_INSTANCE, klass);
     initTable(&instance->fields);
     instance->isNative = true;
     instance->native = native;
@@ -266,7 +266,7 @@ void printObject(Value value) {
             printFunction(AS_FUNCTION(value));
             break;
         case OBJ_INSTANCE:
-        case OBJ_NATIVE_INSTANCE:
+        case OBJ_INTERNAL_INSTANCE:
             printf("<object %s>", AS_OBJ(value)->klass->name->chars);
             break;
         case OBJ_NATIVE_FUNCTION:
