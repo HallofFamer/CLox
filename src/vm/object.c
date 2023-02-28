@@ -104,20 +104,20 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     return instance;
 }
 
+ObjInstance* newInternalInstance(VM* vm, ObjClass* klass, Value native) {
+    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_NATIVE_INSTANCE, klass);
+    initTable(&instance->fields);
+    instance->isNative = true;
+    instance->native = native;
+    return instance;
+}
+
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function) {
     ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, vm->functionClass);
     nativeFunction->name = name;
     nativeFunction->arity = arity;
     nativeFunction->function = function;
     return nativeFunction;
-}
-
-ObjInstance* newNativeInstance(VM* vm, ObjClass* klass, Value native) {
-    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_NATIVE_INSTANCE, klass);
-    initTable(&instance->fields);
-    instance->isNative = true;
-    instance->native = native;
-    return instance;
 }
 
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method) {
