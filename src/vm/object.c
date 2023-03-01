@@ -99,7 +99,7 @@ ObjFunction* newFunction(VM* vm) {
 ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
     initTable(&instance->fields);
-    instance->isNative = false;
+    instance->isInternal = false;
     instance->internal = NIL_VAL;
     return instance;
 }
@@ -107,7 +107,7 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass) {
 ObjInstance* newInternalInstance(VM* vm, ObjClass* klass, Value internal) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INTERNAL_INSTANCE, klass);
     initTable(&instance->fields);
-    instance->isNative = true;
+    instance->isInternal = true;
     instance->internal = internal;
     return instance;
 }

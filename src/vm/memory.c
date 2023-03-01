@@ -131,7 +131,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjInstance* instance = (ObjInstance*)object;
             markObject(vm, (Obj*)object->klass);
             markTable(vm, &instance->fields);
-            if (instance->isNative) markValue(vm, instance->internal);
+            if (instance->isInternal) markValue(vm, instance->internal);
             break;
         }
         case OBJ_NATIVE_FUNCTION: {

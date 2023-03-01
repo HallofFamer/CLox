@@ -173,7 +173,7 @@ struct ObjClass {
 typedef struct {
     Obj obj;
     Table fields;
-    bool isNative;
+    bool isInternal;
     Value internal;
 } ObjInstance;
 
