@@ -165,8 +165,8 @@ struct ObjClass {
     ObjString* name;
     struct ObjClass* superclass;
     bool isNative;
-    bool isInternal;
     Table methods;
+    ObjType internalType;
     Table internalMethods;
 };
 
