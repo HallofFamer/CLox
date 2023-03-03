@@ -175,8 +175,8 @@ void initNativePackage(VM* vm, const char* filePath) {
     free(source);
 }
 
-void markInternalClass(ObjClass* klass) {
-    klass->isInternal = true;
+void markInternalClass(ObjClass* klass, ObjType type) {
+    klass->internalType = type;
     initTable(&klass->internalMethods);
 }
 
