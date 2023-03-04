@@ -715,7 +715,7 @@ void registerLangPackage(VM* vm){
 
     vm->classClass = defineNativeClass(vm, "Class");
     bindSuperclass(vm, vm->classClass, vm->objectClass);
-    markInternalClass(vm->classClass);
+    markInternalClass(vm->classClass, OBJ_CLASS);
     DEF_METHOD(vm->classClass, Class, clone, 0);
     DEF_METHOD(vm->classClass, Class, getClass, 0);
     DEF_METHOD(vm->classClass, Class, getClassName, 0);
@@ -732,13 +732,13 @@ void registerLangPackage(VM* vm){
     initNativePackage(vm, "src/std/lang.lox");
 
     vm->nilClass = getNativeClass(vm, "Nil");
-    markInternalClass(vm->nilClass);
+    markInternalClass(vm->nilClass, -1);
     DEF_METHOD(vm->nilClass, Nil, clone, 0);
     DEF_METHOD(vm->nilClass, Nil, init, 0);
     DEF_METHOD(vm->nilClass, Nil, toString, 0);
     
     vm->boolClass = getNativeClass(vm, "Bool");
-    markInternalClass(vm->boolClass);
+    markInternalClass(vm->boolClass, -1);
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
     DEF_METHOD(vm->boolClass, Bool, init, 0);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
@@ -771,7 +771,7 @@ void registerLangPackage(VM* vm){
 
     vm->intClass = getNativeClass(vm, "Int");
     bindSuperclass(vm, vm->intClass, vm->numberClass);
-    markInternalClass(vm->intClass);
+    markInternalClass(vm->intClass, -1);
     DEF_METHOD(vm->intClass, Int, abs, 0);
     DEF_METHOD(vm->intClass, Int, clone, 0);
     DEF_METHOD(vm->intClass, Int, factorial, 0);
@@ -787,14 +787,14 @@ void registerLangPackage(VM* vm){
 
     vm->floatClass = defineNativeClass(vm, "Float");
     bindSuperclass(vm, vm->floatClass, vm->numberClass);
-    markInternalClass(vm->floatClass);
+    markInternalClass(vm->floatClass, -1);
     DEF_METHOD(vm->floatClass, Float, clone, 0);
     DEF_METHOD(vm->floatClass, Float, init, 0);
     DEF_METHOD(vm->floatClass, Float, toString, 0);
 
     vm->stringClass = defineNativeClass(vm, "String");
     bindSuperclass(vm, vm->stringClass, vm->objectClass);
-    markInternalClass(vm->stringClass);
+    markInternalClass(vm->stringClass, OBJ_STRING);
     DEF_METHOD(vm->stringClass, String, capitalize, 0);
     DEF_METHOD(vm->stringClass, String, clone, 0);
     DEF_METHOD(vm->stringClass, String, contains, 1);
@@ -823,7 +823,7 @@ void registerLangPackage(VM* vm){
 
     vm->functionClass = defineNativeClass(vm, "Function");
     bindSuperclass(vm, vm->functionClass, vm->objectClass);
-    markInternalClass(vm->functionClass);
+    markInternalClass(vm->functionClass, OBJ_FUNCTION);
     DEF_METHOD(vm->functionClass, Function, arity, 0);
     DEF_METHOD(vm->functionClass, Function, call, -1);
     DEF_METHOD(vm->functionClass, Function, call0, 0);
@@ -840,7 +840,7 @@ void registerLangPackage(VM* vm){
 
     vm->methodClass = defineNativeClass(vm, "Method");
     bindSuperclass(vm, vm->methodClass, vm->objectClass);
-    markInternalClass(vm->methodClass);
+    markInternalClass(vm->methodClass, OBJ_BOUND_METHOD);
     DEF_METHOD(vm->methodClass, Method, arity, 0);
     DEF_METHOD(vm->methodClass, Method, clone, 0);
     DEF_METHOD(vm->methodClass, Method, init, 0);
