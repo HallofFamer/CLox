@@ -732,13 +732,13 @@ void registerLangPackage(VM* vm){
     initNativePackage(vm, "src/std/lang.lox");
 
     vm->nilClass = getNativeClass(vm, "Nil");
-    markInternalClass(vm->nilClass, -1);
+    markInternalClass(vm->nilClass, OBJ_VALUE);
     DEF_METHOD(vm->nilClass, Nil, clone, 0);
     DEF_METHOD(vm->nilClass, Nil, init, 0);
     DEF_METHOD(vm->nilClass, Nil, toString, 0);
     
     vm->boolClass = getNativeClass(vm, "Bool");
-    markInternalClass(vm->boolClass, -1);
+    markInternalClass(vm->boolClass, OBJ_VALUE);
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
     DEF_METHOD(vm->boolClass, Bool, init, 0);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
@@ -771,7 +771,7 @@ void registerLangPackage(VM* vm){
 
     vm->intClass = getNativeClass(vm, "Int");
     bindSuperclass(vm, vm->intClass, vm->numberClass);
-    markInternalClass(vm->intClass, -1);
+    markInternalClass(vm->intClass, OBJ_VALUE);
     DEF_METHOD(vm->intClass, Int, abs, 0);
     DEF_METHOD(vm->intClass, Int, clone, 0);
     DEF_METHOD(vm->intClass, Int, factorial, 0);
@@ -787,7 +787,7 @@ void registerLangPackage(VM* vm){
 
     vm->floatClass = defineNativeClass(vm, "Float");
     bindSuperclass(vm, vm->floatClass, vm->numberClass);
-    markInternalClass(vm->floatClass, -1);
+    markInternalClass(vm->floatClass, OBJ_VALUE);
     DEF_METHOD(vm->floatClass, Float, clone, 0);
     DEF_METHOD(vm->floatClass, Float, init, 0);
     DEF_METHOD(vm->floatClass, Float, toString, 0);
