@@ -63,7 +63,8 @@ typedef enum {
     OBJ_NODE,
     OBJ_RECORD,
     OBJ_STRING,
-    OBJ_UPVALUE
+    OBJ_UPVALUE,
+    OBJ_VALUE
 } ObjType;
 
 struct Obj {
