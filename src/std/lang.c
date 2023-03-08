@@ -46,6 +46,28 @@ LOX_METHOD(Bool, toString) {
     else RETURN_STRING("false", 5);
 }
 
+LOX_INTERNAL(Bool, clone) {
+    ASSERT_ARG_COUNT("Bool:clone()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    RETURN_OBJ(newInternalInstance(vm, self->obj.klass, self->internal));
+}
+
+LOX_INTERNAL(Bool, init) {
+    ASSERT_ARG_COUNT("Bool::init(value)", 1);
+    ASSERT_ARG_TYPE("Bool::init(value)", 0, Bool);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    self->isInternal = true;
+    self->internal = args[0];
+    RETURN_OBJ(self);
+}
+
+LOX_INTERNAL(Bool, toString) {
+    ASSERT_ARG_COUNT("Bool::toString()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    if(AS_BOOL(self->internal)) RETURN_STRING("true", 4);
+    else RETURN_STRING("false", 5);
+}
+
 LOX_METHOD(Class, clone) {
     ASSERT_ARG_COUNT("Class::clone()", 0);
     RETURN_OBJ(receiver);
@@ -742,6 +764,9 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
     DEF_METHOD(vm->boolClass, Bool, init, 0);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
+    DEF_INTERNAL(vm->boolClass, Bool, clone, 0);
+    DEF_INTERNAL(vm->boolClass, Bool, init, 1);
+    DEF_INTERNAL(vm->boolClass, Bool, toString, 0);
     
     vm->numberClass = getNativeClass(vm, "Number");
     DEF_METHOD(vm->numberClass, Number, abs, 0);
