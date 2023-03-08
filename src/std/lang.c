@@ -370,6 +370,20 @@ LOX_METHOD(Nil, toString) {
     RETURN_STRING("nil", 3);
 }
 
+LOX_INTERNAL(Nil, clone) {
+    ASSERT_ARG_COUNT("Nil:clone()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    RETURN_OBJ(newInternalInstance(vm, self->obj.klass, NIL_VAL));
+}
+
+LOX_INTERNAL(Nil, init) {
+    ASSERT_ARG_COUNT("Nil::init()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    self->isInternal = true;
+    self->internal = NIL_VAL;
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(Number, abs) {
     ASSERT_ARG_COUNT("Number::abs()", 0);
     RETURN_NUMBER(fabs(AS_NUMBER(receiver)));
@@ -758,7 +772,9 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->nilClass, Nil, clone, 0);
     DEF_METHOD(vm->nilClass, Nil, init, 0);
     DEF_METHOD(vm->nilClass, Nil, toString, 0);
-    
+    DEF_INTERNAL(vm->nilClass, Nil, clone, 0);
+    DEF_INTERNAL(vm->nilClass, Nil, init, 0);
+
     vm->boolClass = getNativeClass(vm, "Bool");
     markInternalClass(vm->boolClass, OBJ_VALUE);
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
