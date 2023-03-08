@@ -38,7 +38,7 @@
 #define AS_FILE(value)              ((ObjFile*)asObj(value))
 #define AS_FUNCTION(value)          ((ObjFunction*)asObj(value))
 #define AS_INSTANCE(value)          ((ObjInstance*)asObj(value))
-#define AS_INTERNAL_INSTANCE(value) (((ObjInstance*)asObj(value))->native)
+#define AS_INTERNAL_INSTANCE(value) (((ObjInstance*)asObj(value))->internal)
 #define AS_NATIVE_FUNCTION(value)   ((ObjNativeFunction*)asObj(value))
 #define AS_NATIVE_METHOD(value)     ((ObjNativeMethod*)asObj(value))
 #define AS_NODE(value)              ((ObjNode*)asObj(value))
