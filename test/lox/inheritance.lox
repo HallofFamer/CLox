@@ -1,0 +1,6 @@
+class SubNil < Nil {
+
+} 
+
+var x = SubNil();
+println("Creating an instance of subclass of Nil: " + x.toString());
