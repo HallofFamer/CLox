@@ -46,7 +46,7 @@ ObjClass* newClass(VM* vm, ObjString* name) {
     klass->name = name;
     klass->superclass = NULL;
     klass->isNative = false;
-    klass->internalType = OBJ_INSTANCE;
+    klass->internalType = -1;
     initTable(&klass->methods);
     return klass;
 }

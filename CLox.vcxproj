@@ -180,6 +180,7 @@
     <None Include="test\lox\fibonacci.lox" />
     <None Include="test\lox\file.lox" />
     <None Include="test\lox\fraction.lox" />
+    <None Include="test\lox\inheritance.lox" />
     <None Include="test\lox\initializer.lox" />
     <None Include="test\lox\invoke.lox" />
     <None Include="test\lox\io.lox" />
