@@ -393,7 +393,10 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     subclass->superclass = superclass;
     subclass->internalType = superclass->internalType;
     tableAddAll(vm, &superclass->methods, &subclass->methods);
-    if (subclass->internalType != OBJ_INSTANCE) tableAddAll(vm, &superclass->internalMethods, &subclass->methods);
+    if (subclass->internalType != OBJ_INSTANCE) {
+        tableAddAll(vm, &superclass->internalMethods, &subclass->methods);
+        initTable(&subclass->internalMethods);
+    }
 }
 
 static InterpretResult run(VM* vm) {

@@ -2,5 +2,13 @@ class SubNil < Nil {
 
 } 
 
-var x = SubNil();
-println("Creating an instance of subclass of Nil: " + x.toString());
+var x0 = SubNil();
+println("Creating an instance of subclass of Nil: " + x0.toString());
+
+class SubBool < Bool { 
+
+}
+
+var x1 = SubBool(true);
+var x2 = SubBool(false);
+println("Creating instances of subclass of Bool: " + x1.toString() + " and " + x2.toString());
