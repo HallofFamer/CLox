@@ -84,7 +84,7 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)klass->name);
             markObject(vm, (Obj*)klass->superclass);
             markTable(vm, &klass->methods);
-            if(klass->internalType >= 0) markTable(vm, &klass->internalMethods);
+            if(klass->internalType != OBJ_INSTANCE) markTable(vm, &klass->internalMethods);
             break;
         }
         case OBJ_CLOSURE: {
@@ -178,7 +178,7 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
             freeTable(vm, &klass->methods);
-            if(klass->internalType >= 0) freeTable(vm, &klass->internalMethods);
+            if(klass->internalType != OBJ_INSTANCE) freeTable(vm, &klass->internalMethods);
             FREE(ObjClass, object);
             break;
         }
