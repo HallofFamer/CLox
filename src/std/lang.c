@@ -313,6 +313,14 @@ LOX_METHOD(Int, toHexadecimal) {
     RETURN_STRING(buffer, length);
 }
 
+LOX_METHOD(Int, toOctal) {
+    ASSERT_ARG_COUNT("Int::toOctal()", 0);
+    char buffer[16];
+    int length = 16;
+    _itoa_s(AS_INT(receiver), buffer, length, 8);
+    RETURN_STRING(buffer, length);
+}
+
 LOX_METHOD(Int, toString) {
     ASSERT_ARG_COUNT("Int::toString()", 0);
     RETURN_STRING_FMT("%d", AS_INT(receiver));
@@ -824,6 +832,7 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->intClass, Int, toBinary, 0);
     DEF_METHOD(vm->intClass, Int, toFloat, 0);
     DEF_METHOD(vm->intClass, Int, toHexadecimal, 0);
+    DEF_METHOD(vm->intClass, Int, toOctal, 0);
     DEF_METHOD(vm->intClass, Int, toString, 0);
 
     vm->floatClass = defineNativeClass(vm, "Float");
