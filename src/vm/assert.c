@@ -21,35 +21,35 @@ void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, cha
 }
 
 void assertArgIsArray(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_ARRAY(args[index])) {
+    if (!IS_ARRAY(args[index]) && !isObjInstanceOf(vm, args[index], vm->arrayClass)) {
         runtimeError(vm, "method %s expects argument %d to be an array.", method, index + 1);
         exit(70);
     }
 }
 
 void assertArgIsBool(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_BOOL(args[index])) {
+    if (!IS_BOOL(args[index]) && !isObjInstanceOf(vm, args[index], vm->boolClass)) {
         runtimeError(vm, "method %s expects argument %d to be a boolean value.", method, index + 1);
         exit(70);
     }
 }
 
 void assertArgIsClass(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_CLASS(args[index])) {
+    if (!IS_CLASS(args[index]) && !isObjInstanceOf(vm, args[index], vm->classClass)) {
         runtimeError(vm, "method %s expects argument %d to be a class.", method, index + 1);
         exit(70);
     }
 }
 
 void assertArgIsClosure(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_CLOSURE(args[index])) {
+    if (!IS_CLOSURE(args[index]) && !isObjInstanceOf(vm, args[index], vm->functionClass)) {
         runtimeError(vm, "method %s expects argument %d to be a closure.", method, index + 1);
         exit(70);
     }
 }
 
 void assertArgIsDictionary(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_DICTIONARY(args[index])) {
+    if (!IS_DICTIONARY(args[index]) && !isObjInstanceOf(vm, args[index], vm->dictionaryClass)) {
         runtimeError(vm, "method %s expects argument %d to be a dictionary.", method, index + 1);
         exit(70);
     }
@@ -63,21 +63,21 @@ void assertArgIsEntry(VM* vm, const char* method, Value* args, int index) {
 }
 
 void assertArgIsFile(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_FILE(args[index])) {
+    if (!IS_FILE(args[index]) && !isObjInstanceOf(vm, args[index], vm->fileClass)) {
         runtimeError(vm, "method %s expects argument %d to be a file.", method, index + 1);
         exit(70);
     }
 }
 
 void assertArgIsFloat(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_FLOAT(args[index])) {
+    if (!IS_FLOAT(args[index]) && !isObjInstanceOf(vm, args[index], vm->floatClass)) {
         runtimeError(vm, "method %s expects argument %d to be a floating point number.", method, index + 1);
         exit(70);
     }
 }
 
 void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_INT(args[index])) {
+    if (!IS_INT(args[index]) && !isObjInstanceOf(vm, args[index], vm->intClass)) {
         runtimeError(vm, "method %s expects argument %d to be an integer number.", method, index + 1);
         exit(70);
     }
@@ -91,14 +91,14 @@ void assertArgIsNode(VM* vm, const char* method, Value* args, int index) {
 }
 
 void assertArgIsNumber(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_NUMBER(args[index])) {
+    if (!IS_NUMBER(args[index]) && !isObjInstanceOf(vm, args[index], vm->numberClass)) {
         runtimeError(vm, "method %s expects argument %d to be a number.", method, index + 1);
         exit(70);
     }
 }
 
 void assertArgIsString(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_STRING(args[index])) {
+    if (!IS_STRING(args[index]) && !isObjInstanceOf(vm, args[index], vm->stringClass)) {
         runtimeError(vm, "method %s expects argument %d to be a string.", method, index + 1);
         exit(70);
     }
