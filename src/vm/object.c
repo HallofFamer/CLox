@@ -73,7 +73,7 @@ ObjDictionary* newDictionary(VM* vm) {
 }
 
 ObjEntry* newEntry(VM* vm, Value key, Value value) {
-    ObjEntry* entry = ALLOCATE_OBJ(ObjEntry, OBJ_ENTRY, getNativeClass(vm, "Entry"));
+    ObjEntry* entry = ALLOCATE_OBJ(ObjEntry, OBJ_ENTRY, vm->entryClass);
     entry->key = key;
     entry->value = value;
     return entry;
@@ -130,7 +130,7 @@ ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int a
 }
 
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next) {
-    ObjNode* node = ALLOCATE_OBJ(ObjNode, OBJ_NODE, getNativeClass(vm, "Node"));
+    ObjNode* node = ALLOCATE_OBJ(ObjNode, OBJ_NODE, vm->nodeClass);
     node->element = element;
     node->prev = prev;
     node->next = next;

@@ -42,6 +42,8 @@ struct VM {
     ObjClass* methodClass;
     ObjClass* arrayClass;
     ObjClass* dictionaryClass;
+    ObjClass* nodeClass;
+    ObjClass* entryClass;
     ObjClass* fileClass;
 
     CallFrame frames[FRAMES_MAX];
