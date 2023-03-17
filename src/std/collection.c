@@ -1472,15 +1472,15 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, toArray, 0);
     DEF_METHOD(linkedListClass, LinkedList, toString, 0);
 
-    ObjClass* nodeClass = defineNativeClass(vm, "Node");
-    bindSuperclass(vm, nodeClass, vm->objectClass);
-    markInternalClass(nodeClass, OBJ_NODE);
-    DEF_METHOD(nodeClass, Node, clone, 0);
-    DEF_METHOD(nodeClass, Node, element, 0);
-    DEF_METHOD(nodeClass, Node, init, 3);
-    DEF_METHOD(nodeClass, Node, next, 0);
-    DEF_METHOD(nodeClass, Node, prev, 0);
-    DEF_METHOD(nodeClass, Node, toString, 0);
+    vm->nodeClass = defineNativeClass(vm, "Node");
+    bindSuperclass(vm, vm->nodeClass, vm->objectClass);
+    markInternalClass(vm->nodeClass, OBJ_NODE);
+    DEF_METHOD(vm->nodeClass, Node, clone, 0);
+    DEF_METHOD(vm->nodeClass, Node, element, 0);
+    DEF_METHOD(vm->nodeClass, Node, init, 3);
+    DEF_METHOD(vm->nodeClass, Node, next, 0);
+    DEF_METHOD(vm->nodeClass, Node, prev, 0);
+    DEF_METHOD(vm->nodeClass, Node, toString, 0);
 
     vm->dictionaryClass = getNativeClass(vm, "Dictionary");
     markInternalClass(vm->dictionaryClass, OBJ_DICTIONARY);
