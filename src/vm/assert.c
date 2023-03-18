@@ -56,7 +56,7 @@ void assertArgIsDictionary(VM* vm, const char* method, Value* args, int index) {
 }
 
 void assertArgIsEntry(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_ENTRY(args[index])) {
+    if (!IS_ENTRY(args[index]) && !isObjInstanceOf(vm, args[index], vm->entryClass)) {
         runtimeError(vm, "method %s expects argument %d to be a map entry.", method, index + 1);
         exit(70);
     }
