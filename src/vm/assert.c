@@ -84,7 +84,7 @@ void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
 }
 
 void assertArgIsNode(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_NODE(args[index])) {
+    if (!IS_NODE(args[index]) && !isObjInstanceOf(vm, args[index], vm->nodeClass)) {
         runtimeError(vm, "method %s expects argument %d to be a link node.", method, index + 1);
         exit(70);
     }
