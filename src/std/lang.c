@@ -793,6 +793,7 @@ void registerLangPackage(VM* vm){
     DEF_INTERNAL(vm->boolClass, Bool, toString, 0);
     
     vm->numberClass = getNativeClass(vm, "Number");
+    markInternalClass(vm->boolClass, OBJ_VALUE);
     DEF_METHOD(vm->numberClass, Number, abs, 0);
     DEF_METHOD(vm->numberClass, Number, acos, 0);
     DEF_METHOD(vm->numberClass, Number, asin, 0);
