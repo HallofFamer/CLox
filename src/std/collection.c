@@ -1503,15 +1503,15 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, valueSet, 0);
 
-    ObjClass* entryClass = defineNativeClass(vm, "Entry");
-    bindSuperclass(vm, entryClass, vm->objectClass);
-    markInternalClass(entryClass, OBJ_ENTRY);
-    DEF_METHOD(entryClass, Entry, clone, 0);
-    DEF_METHOD(entryClass, Entry, getKey, 0);
-    DEF_METHOD(entryClass, Entry, getValue, 0);
-    DEF_METHOD(entryClass, Entry, init, 2);
-    DEF_METHOD(entryClass, Entry, setValue, 1);
-    DEF_METHOD(entryClass, Entry, toString, 0);
+    vm->entryClass = defineNativeClass(vm, "Entry");
+    bindSuperclass(vm,vm->entryClass, vm->objectClass);
+    markInternalClass(vm->entryClass, OBJ_ENTRY);
+    DEF_METHOD(vm->entryClass, Entry, clone, 0);
+    DEF_METHOD(vm->entryClass, Entry, getKey, 0);
+    DEF_METHOD(vm->entryClass, Entry, getValue, 0);
+    DEF_METHOD(vm->entryClass, Entry, init, 2);
+    DEF_METHOD(vm->entryClass, Entry, setValue, 1);
+    DEF_METHOD(vm->entryClass, Entry, toString, 0);
 
     ObjClass* setClass = defineNativeClass(vm, "Set");
     bindSuperclass(vm, setClass, collectionClass);
