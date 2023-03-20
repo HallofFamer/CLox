@@ -526,6 +526,15 @@ LOX_METHOD(Number, toString) {
     RETURN_STRING(chars, length);
 }
 
+LOX_INTERNAL(Number, init) {
+    ASSERT_ARG_COUNT("Number::init(value)", 1);
+    ASSERT_ARG_TYPE("Number::init(value)", 0, Number);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    self->isInternal = true;
+    self->internal = args[0];
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(Object, clone) {
     ASSERT_ARG_COUNT("Object::clone()", 0);
     ObjInstance* thisObject = AS_INSTANCE(receiver);
