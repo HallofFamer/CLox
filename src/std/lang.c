@@ -535,6 +535,26 @@ LOX_INTERNAL(Number, init) {
     RETURN_OBJ(self);
 }
 
+LOX_INTERNAL(Number, clone) {
+    ASSERT_ARG_COUNT("Number::clone()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    RETURN_NUMBER(AS_NUMBER(internal));
+}
+
+LOX_INTERNAL(Number, toInt) {
+    ASSERT_ARG_COUNT("Number::toInt()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    RETURN_INT((int)AS_NUMBER(internal));
+}
+
+LOX_INTERNAL(Number, toString) {
+    ASSERT_ARG_COUNT("Number::toString()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    char chars[24];
+    int length = sprintf_s(chars, 24, "%.14g", AS_NUMBER(internal));
+    RETURN_STRING(chars, length);
+}
+
 LOX_METHOD(Object, clone) {
     ASSERT_ARG_COUNT("Object::clone()", 0);
     ObjInstance* thisObject = AS_INSTANCE(receiver);
