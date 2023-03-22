@@ -526,6 +526,42 @@ LOX_METHOD(Number, toString) {
     RETURN_STRING(chars, length);
 }
 
+LOX_INTERNAL(Number, abs) {
+    ASSERT_ARG_COUNT("Number::abs()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    RETURN_NUMBER(fabs(AS_NUMBER(internal)));
+}
+
+LOX_INTERNAL(Number, acos) {
+    ASSERT_ARG_COUNT("Number::acos()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    RETURN_NUMBER(acos(AS_NUMBER(internal)));
+}
+
+LOX_INTERNAL(Number, asin) {
+    ASSERT_ARG_COUNT("Number::asin()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    RETURN_NUMBER(asin(AS_NUMBER(internal)));
+}
+
+LOX_INTERNAL(Number, atan) {
+    ASSERT_ARG_COUNT("Number::atan()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    RETURN_NUMBER(atan(AS_NUMBER(internal)));
+}
+
+LOX_INTERNAL(Number, cbrt) {
+    ASSERT_ARG_COUNT("Number::cbrt()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    RETURN_NUMBER(cbrt(AS_NUMBER(internal)));
+}
+
+LOX_METHOD(Number, ceil) {
+    ASSERT_ARG_COUNT("Number::ceil()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    RETURN_NUMBER(ceil(AS_NUMBER(internal)));
+}
+
 LOX_INTERNAL(Number, init) {
     ASSERT_ARG_COUNT("Number::init(value)", 1);
     ASSERT_ARG_TYPE("Number::init(value)", 0, Number);
