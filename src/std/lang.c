@@ -562,6 +562,12 @@ LOX_METHOD(Number, ceil) {
     RETURN_NUMBER(ceil(AS_NUMBER(internal)));
 }
 
+LOX_INTERNAL(Number, clone) {
+    ASSERT_ARG_COUNT("Number::clone()", 0);
+    Value internal = AS_INTERNAL_INSTANCE(receiver);
+    RETURN_NUMBER(AS_NUMBER(internal));
+}
+
 LOX_INTERNAL(Number, init) {
     ASSERT_ARG_COUNT("Number::init(value)", 1);
     ASSERT_ARG_TYPE("Number::init(value)", 0, Number);
@@ -571,10 +577,71 @@ LOX_INTERNAL(Number, init) {
     RETURN_OBJ(self);
 }
 
-LOX_INTERNAL(Number, clone) {
-    ASSERT_ARG_COUNT("Number::clone()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    RETURN_NUMBER(AS_NUMBER(internal));
+LOX_INTERNAL(Number, log) {
+    ASSERT_ARG_COUNT("Number::log()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    assertNumberPositive(vm, "Number::log2()", self, -1);
+    RETURN_NUMBER(log(self));
+}
+
+LOX_INTERNAL(Number, log10) {
+    ASSERT_ARG_COUNT("Number::log10()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    assertNumberPositive(vm, "Number::log10()", self, -1);
+    RETURN_NUMBER(log10(self));
+}
+
+LOX_INTERNAL(Number, log2) {
+    ASSERT_ARG_COUNT("Number::log2()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    assertNumberPositive(vm, "Number::log2()", self, -1);
+    RETURN_NUMBER(log2(self));
+}
+
+LOX_INTERNAL(Number, max) {
+    ASSERT_ARG_COUNT("Number::max(other)", 1);
+    ASSERT_ARG_TYPE("Number::max(other)", 0, Number);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER(fmax(self, AS_NUMBER(args[0])));
+}
+
+LOX_INTERNAL(Number, min) {
+    ASSERT_ARG_COUNT("Number::min(other)", 1);
+    ASSERT_ARG_TYPE("Number::min(other)", 0, Number);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER(fmin(self, AS_NUMBER(args[0])));
+}
+
+LOX_INTERNAL(Number, pow) {
+    ASSERT_ARG_COUNT("Number::pow(exponent)", 1);
+    ASSERT_ARG_TYPE("Number::pow(exponent)", 0, Number);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER(pow(self, AS_NUMBER(args[0])));
+}
+
+LOX_INTERNAL(Number, round) {
+    ASSERT_ARG_COUNT("Number::round()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER(round(self));
+}
+
+LOX_INTERNAL(Number, sin) {
+    ASSERT_ARG_COUNT("Number::sin()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER(sin(self));
+}
+
+LOX_INTERNAL(Number, sqrt) {
+    ASSERT_ARG_COUNT("Number::sqrt()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    assertNumberPositive(vm, "Number::sqrt()", self, -1);
+    RETURN_NUMBER(sqrt(self));
+}
+
+LOX_METHOD(Number, tan) {
+    ASSERT_ARG_COUNT("Number::tan()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER(tan(self));
 }
 
 LOX_INTERNAL(Number, toInt) {
