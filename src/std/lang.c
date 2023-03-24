@@ -556,7 +556,7 @@ LOX_INTERNAL(Number, cbrt) {
     RETURN_NUMBER(cbrt(AS_NUMBER(internal)));
 }
 
-LOX_METHOD(Number, ceil) {
+LOX_INTERNAL(Number, ceil) {
     ASSERT_ARG_COUNT("Number::ceil()", 0);
     Value internal = AS_INTERNAL_INSTANCE(receiver);
     RETURN_NUMBER(ceil(AS_NUMBER(internal)));
@@ -566,6 +566,32 @@ LOX_INTERNAL(Number, clone) {
     ASSERT_ARG_COUNT("Number::clone()", 0);
     Value internal = AS_INTERNAL_INSTANCE(receiver);
     RETURN_NUMBER(AS_NUMBER(internal));
+}
+
+LOX_METHOD(Number, cos) {
+    ASSERT_ARG_COUNT("Number::cos()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER(cos(self));
+}
+
+LOX_METHOD(Number, exp) {
+    ASSERT_ARG_COUNT("Number::exp()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER(exp(self));
+}
+
+LOX_INTERNAL(Number, floor) {
+    ASSERT_ARG_COUNT("Number::floor()", 0);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER(floor(self));
+}
+
+LOX_INTERNAL(Number, hypot) {
+    ASSERT_ARG_COUNT("Number::hypot(other)", 1);
+    ASSERT_ARG_TYPE("Number::hypot(other)", 0, Number);
+    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
+    double other = AS_NUMBER(AS_INTERNAL_INSTANCE(args[0]));
+    RETURN_NUMBER(hypot(self, other));
 }
 
 LOX_INTERNAL(Number, init) {
@@ -638,7 +664,7 @@ LOX_INTERNAL(Number, sqrt) {
     RETURN_NUMBER(sqrt(self));
 }
 
-LOX_METHOD(Number, tan) {
+LOX_INTERNAL(Number, tan) {
     ASSERT_ARG_COUNT("Number::tan()", 0);
     double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
     RETURN_NUMBER(tan(self));
