@@ -568,13 +568,13 @@ LOX_INTERNAL(Number, clone) {
     RETURN_NUMBER(AS_NUMBER(internal));
 }
 
-LOX_METHOD(Number, cos) {
+LOX_INTERNAL(Number, cos) {
     ASSERT_ARG_COUNT("Number::cos()", 0);
     double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
     RETURN_NUMBER(cos(self));
 }
 
-LOX_METHOD(Number, exp) {
+LOX_INTERNAL(Number, exp) {
     ASSERT_ARG_COUNT("Number::exp()", 0);
     double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
     RETURN_NUMBER(exp(self));
