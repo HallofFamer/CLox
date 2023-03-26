@@ -977,6 +977,31 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->numberClass, Number, toInt, 0);
     DEF_METHOD(vm->numberClass, Number, toString, 0);
 
+    DEF_INTERNAL(vm->numberClass, Number, abs, 0);
+    DEF_INTERNAL(vm->numberClass, Number, acos, 0);
+    DEF_INTERNAL(vm->numberClass, Number, asin, 0);
+    DEF_INTERNAL(vm->numberClass, Number, atan, 0);
+    DEF_INTERNAL(vm->numberClass, Number, cbrt, 0);
+    DEF_INTERNAL(vm->numberClass, Number, ceil, 0);
+    DEF_INTERNAL(vm->numberClass, Number, clone, 0);
+    DEF_INTERNAL(vm->numberClass, Number, cos, 0);
+    DEF_INTERNAL(vm->numberClass, Number, exp, 1);
+    DEF_INTERNAL(vm->numberClass, Number, floor, 0);
+    DEF_INTERNAL(vm->numberClass, Number, hypot, 1);
+    DEF_INTERNAL(vm->numberClass, Number, init, 0);
+    DEF_INTERNAL(vm->numberClass, Number, log, 0);
+    DEF_INTERNAL(vm->numberClass, Number, log2, 0);
+    DEF_INTERNAL(vm->numberClass, Number, log10, 0);
+    DEF_INTERNAL(vm->numberClass, Number, max, 1);
+    DEF_INTERNAL(vm->numberClass, Number, min, 1);
+    DEF_INTERNAL(vm->numberClass, Number, pow, 1);
+    DEF_INTERNAL(vm->numberClass, Number, round, 0);
+    DEF_INTERNAL(vm->numberClass, Number, sin, 0);
+    DEF_INTERNAL(vm->numberClass, Number, sqrt, 0);
+    DEF_INTERNAL(vm->numberClass, Number, tan, 0);
+    DEF_INTERNAL(vm->numberClass, Number, toInt, 0);
+    DEF_INTERNAL(vm->numberClass, Number, toString, 0);
+
     vm->intClass = getNativeClass(vm, "Int");
     bindSuperclass(vm, vm->intClass, vm->numberClass);
     markInternalClass(vm->intClass, OBJ_VALUE);
