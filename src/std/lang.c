@@ -326,6 +326,15 @@ LOX_METHOD(Int, toString) {
     RETURN_STRING_FMT("%d", AS_INT(receiver));
 }
 
+LOX_INTERNAL(Int, init) {
+    ASSERT_ARG_COUNT("Int::init(value)", 1);
+    ASSERT_ARG_TYPE("Int::init(value)", 0, Int);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    self->isInternal = true;
+    self->internal = args[0];
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(Method, arity) {
     ASSERT_ARG_COUNT("Method::arity()", 0);
     RETURN_INT(AS_BOUND_METHOD(receiver)->method->function->arity);
