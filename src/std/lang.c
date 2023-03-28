@@ -946,6 +946,7 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
     DEF_METHOD(vm->boolClass, Bool, init, 0);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
+
     DEF_INTERNAL(vm->boolClass, Bool, clone, 0);
     DEF_INTERNAL(vm->boolClass, Bool, init, 1);
     DEF_INTERNAL(vm->boolClass, Bool, toString, 0);
