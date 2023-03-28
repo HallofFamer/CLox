@@ -326,6 +326,32 @@ LOX_METHOD(Int, toString) {
     RETURN_STRING_FMT("%d", AS_INT(receiver));
 }
 
+LOX_INTERNAL(Int, abs) {
+    ASSERT_ARG_COUNT("Int::abs()", 0);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_INT(abs(self));
+}
+
+LOX_INTERNAL(Int, clone) {
+    ASSERT_ARG_COUNT("Int::clone()", 0);
+    RETURN_INT(AS_INT(AS_INTERNAL_INSTANCE(receiver)));
+}
+
+LOX_INTERNAL(Int, factorial) {
+    ASSERT_ARG_COUNT("Int::factorial()", 0);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    assertNumberNonNegative(vm, "Int::factorial()", self, -1);
+    RETURN_INT(factorial(self));
+}
+
+LOX_INTERNAL(Int, gcd) {
+    ASSERT_ARG_COUNT("Int::gcd(other)", 1);
+    ASSERT_ARG_TYPE("Int::gcd(other)", 0, Int);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    int other = AS_INT(args[0]);
+    RETURN_INT(gcd(abs(self), abs(other)));
+}
+
 LOX_INTERNAL(Int, init) {
     ASSERT_ARG_COUNT("Int::init(value)", 1);
     ASSERT_ARG_TYPE("Int::init(value)", 0, Int);
