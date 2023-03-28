@@ -255,7 +255,7 @@ LOX_METHOD(Int, abs) {
 
 LOX_METHOD(Int, clone) {
     ASSERT_ARG_COUNT("Int::clone()", 0);
-    RETURN_INT((int)receiver);
+    RETURN_INT(AS_INT(receiver));
 }
 
 LOX_METHOD(Int, factorial) {
@@ -938,7 +938,7 @@ LOX_METHOD(String, trim) {
     RETURN_OBJ(trimString(vm, AS_STRING(receiver)));
 }
 
-void registerLangPackage(VM* vm){
+void registerLangPackage(VM* vm) {
     vm->objectClass = defineNativeClass(vm, "Object");
     DEF_METHOD(vm->objectClass, Object, clone, 0);
     DEF_METHOD(vm->objectClass, Object, equals, 1);
@@ -986,7 +986,7 @@ void registerLangPackage(VM* vm){
     DEF_INTERNAL(vm->boolClass, Bool, clone, 0);
     DEF_INTERNAL(vm->boolClass, Bool, init, 1);
     DEF_INTERNAL(vm->boolClass, Bool, toString, 0);
-    
+
     vm->numberClass = getNativeClass(vm, "Number");
     markInternalClass(vm->numberClass, OBJ_VALUE);
     DEF_METHOD(vm->numberClass, Number, abs, 0);
