@@ -938,6 +938,7 @@ void registerLangPackage(VM* vm){
     DEF_METHOD(vm->nilClass, Nil, clone, 0);
     DEF_METHOD(vm->nilClass, Nil, init, 0);
     DEF_METHOD(vm->nilClass, Nil, toString, 0);
+
     DEF_INTERNAL(vm->nilClass, Nil, clone, 0);
     DEF_INTERNAL(vm->nilClass, Nil, init, 0);
 
