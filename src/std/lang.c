@@ -348,8 +348,7 @@ LOX_INTERNAL(Int, gcd) {
     ASSERT_ARG_COUNT("Int::gcd(other)", 1);
     ASSERT_ARG_TYPE("Int::gcd(other)", 0, Int);
     int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    int other = AS_INT(args[0]);
-    RETURN_INT(gcd(abs(self), abs(other)));
+    RETURN_INT(gcd(abs(self), abs(AS_INT(args[0]))));
 }
 
 LOX_INTERNAL(Int, init) {
@@ -359,6 +358,52 @@ LOX_INTERNAL(Int, init) {
     self->isInternal = true;
     self->internal = args[0];
     RETURN_OBJ(self);
+}
+
+LOX_INTERNAL(Int, lcm) {
+    ASSERT_ARG_COUNT("Int::lcm(other)", 1);
+    ASSERT_ARG_TYPE("Int::lcm(other)", 0, Int);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_INT(lcm(abs(self), abs(AS_INT(args[0]))));
+}
+
+LOX_INTERNAL(Int, toBinary) {
+    ASSERT_ARG_COUNT("Int::toBinary()", 0);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    char buffer[32];
+    int length = 32;
+    _itoa_s(self, buffer, length, 2);
+    RETURN_STRING(buffer, length);
+}
+
+LOX_METHOD(Int, toFloat) {
+    ASSERT_ARG_COUNT("Int::toFloat()", 0);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_NUMBER((double)self);
+}
+
+LOX_METHOD(Int, toHexadecimal) {
+    ASSERT_ARG_COUNT("Int::toHexadecimal()", 0);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    char buffer[8];
+    int length = 8;
+    _itoa_s(self, buffer, length, 16);
+    RETURN_STRING(buffer, length);
+}
+
+LOX_METHOD(Int, toOctal) {
+    ASSERT_ARG_COUNT("Int::toOctal()", 0);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    char buffer[16];
+    int length = 16;
+    _itoa_s(self, buffer, length, 8);
+    RETURN_STRING(buffer, length);
+}
+
+LOX_INTERNAL(Int, toString) {
+    ASSERT_ARG_COUNT("Int::toString()", 0);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_STRING_FMT("%d", self);
 }
 
 LOX_METHOD(Method, arity) {
