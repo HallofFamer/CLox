@@ -360,6 +360,18 @@ LOX_INTERNAL(Int, init) {
     RETURN_OBJ(self);
 }
 
+LOX_INTERNAL(Int, isEven) {
+    ASSERT_ARG_COUNT("Int::isEven()", 0);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_BOOL(self % 2 == 0);
+}
+
+LOX_INTERNAL(Int, isOdd) {
+    ASSERT_ARG_COUNT("Int::isOdd()", 0);
+    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
+    RETURN_BOOL(self % 2 != 0);
+}
+
 LOX_INTERNAL(Int, lcm) {
     ASSERT_ARG_COUNT("Int::lcm(other)", 1);
     ASSERT_ARG_TYPE("Int::lcm(other)", 0, Int);
@@ -376,13 +388,13 @@ LOX_INTERNAL(Int, toBinary) {
     RETURN_STRING(buffer, length);
 }
 
-LOX_METHOD(Int, toFloat) {
+LOX_INTERNAL(Int, toFloat) {
     ASSERT_ARG_COUNT("Int::toFloat()", 0);
     int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
     RETURN_NUMBER((double)self);
 }
 
-LOX_METHOD(Int, toHexadecimal) {
+LOX_INTERNAL(Int, toHexadecimal) {
     ASSERT_ARG_COUNT("Int::toHexadecimal()", 0);
     int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
     char buffer[8];
@@ -391,7 +403,7 @@ LOX_METHOD(Int, toHexadecimal) {
     RETURN_STRING(buffer, length);
 }
 
-LOX_METHOD(Int, toOctal) {
+LOX_INTERNAL(Int, toOctal) {
     ASSERT_ARG_COUNT("Int::toOctal()", 0);
     int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
     char buffer[16];
