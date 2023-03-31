@@ -1037,7 +1037,7 @@ void registerLangPackage(VM* vm) {
     vm->boolClass = getNativeClass(vm, "Bool");
     markInternalClass(vm->boolClass, OBJ_VALUE);
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
-    DEF_METHOD(vm->boolClass, Bool, init, 0);
+    DEF_METHOD(vm->boolClass, Bool, init, 1);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
 
     DEF_INTERNAL(vm->boolClass, Bool, clone, 0);
@@ -1057,7 +1057,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, exp, 1);
     DEF_METHOD(vm->numberClass, Number, floor, 0);
     DEF_METHOD(vm->numberClass, Number, hypot, 1);
-    DEF_METHOD(vm->numberClass, Number, init, 0);
+    DEF_METHOD(vm->numberClass, Number, init, 1);
     DEF_METHOD(vm->numberClass, Number, log, 0);
     DEF_METHOD(vm->numberClass, Number, log2, 0);
     DEF_METHOD(vm->numberClass, Number, log10, 0);
@@ -1103,7 +1103,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->intClass, Int, clone, 0);
     DEF_METHOD(vm->intClass, Int, factorial, 0);
     DEF_METHOD(vm->intClass, Int, gcd, 1);
-    DEF_METHOD(vm->intClass, Int, init, 0);
+    DEF_METHOD(vm->intClass, Int, init, 1);
     DEF_METHOD(vm->intClass, Int, isEven, 0);
     DEF_METHOD(vm->intClass, Int, isOdd, 0);
     DEF_METHOD(vm->intClass, Int, lcm, 1);
@@ -1113,11 +1113,25 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->intClass, Int, toOctal, 0);
     DEF_METHOD(vm->intClass, Int, toString, 0);
 
+    DEF_INTERNAL(vm->intClass, Int, abs, 0);
+    DEF_INTERNAL(vm->intClass, Int, clone, 0);
+    DEF_INTERNAL(vm->intClass, Int, factorial, 0);
+    DEF_INTERNAL(vm->intClass, Int, gcd, 1);
+    DEF_INTERNAL(vm->intClass, Int, init, 1);
+    DEF_INTERNAL(vm->intClass, Int, isEven, 0);
+    DEF_INTERNAL(vm->intClass, Int, isOdd, 0);
+    DEF_INTERNAL(vm->intClass, Int, lcm, 1);
+    DEF_INTERNAL(vm->intClass, Int, toBinary, 0);
+    DEF_INTERNAL(vm->intClass, Int, toFloat, 0);
+    DEF_INTERNAL(vm->intClass, Int, toHexadecimal, 0);
+    DEF_INTERNAL(vm->intClass, Int, toOctal, 0);
+    DEF_INTERNAL(vm->intClass, Int, toString, 0);
+
     vm->floatClass = defineNativeClass(vm, "Float");
     bindSuperclass(vm, vm->floatClass, vm->numberClass);
     markInternalClass(vm->floatClass, OBJ_VALUE);
     DEF_METHOD(vm->floatClass, Float, clone, 0);
-    DEF_METHOD(vm->floatClass, Float, init, 0);
+    DEF_METHOD(vm->floatClass, Float, init, 1);
     DEF_METHOD(vm->floatClass, Float, toString, 0);
 
     vm->stringClass = defineNativeClass(vm, "String");
