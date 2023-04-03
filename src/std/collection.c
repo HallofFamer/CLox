@@ -1422,7 +1422,6 @@ void registerCollectionPackage(VM* vm) {
 
     vm->arrayClass = defineNativeClass(vm, "Array");
     bindSuperclass(vm, vm->arrayClass, listClass);
-    markInternalClass(vm->arrayClass, OBJ_ARRAY);
     DEF_METHOD(vm->arrayClass, Array, add, 1);
     DEF_METHOD(vm->arrayClass, Array, addAll, 1);
     DEF_METHOD(vm->arrayClass, Array, clear, 0);
@@ -1474,7 +1473,6 @@ void registerCollectionPackage(VM* vm) {
 
     vm->nodeClass = defineNativeClass(vm, "Node");
     bindSuperclass(vm, vm->nodeClass, vm->objectClass);
-    markInternalClass(vm->nodeClass, OBJ_NODE);
     DEF_METHOD(vm->nodeClass, Node, clone, 0);
     DEF_METHOD(vm->nodeClass, Node, element, 0);
     DEF_METHOD(vm->nodeClass, Node, init, 3);
@@ -1483,7 +1481,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->nodeClass, Node, toString, 0);
 
     vm->dictionaryClass = getNativeClass(vm, "Dictionary");
-    markInternalClass(vm->dictionaryClass, OBJ_DICTIONARY);
     DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, containsKey, 1);
@@ -1505,7 +1502,6 @@ void registerCollectionPackage(VM* vm) {
 
     vm->entryClass = defineNativeClass(vm, "Entry");
     bindSuperclass(vm,vm->entryClass, vm->objectClass);
-    markInternalClass(vm->entryClass, OBJ_ENTRY);
     DEF_METHOD(vm->entryClass, Entry, clone, 0);
     DEF_METHOD(vm->entryClass, Entry, getKey, 0);
     DEF_METHOD(vm->entryClass, Entry, getValue, 0);

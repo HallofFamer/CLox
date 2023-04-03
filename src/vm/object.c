@@ -46,7 +46,6 @@ ObjClass* newClass(VM* vm, ObjString* name) {
     klass->name = name;
     klass->superclass = NULL;
     klass->isNative = false;
-    klass->internalType = OBJ_INSTANCE;
     initTable(&klass->methods);
     return klass;
 }
@@ -99,16 +98,6 @@ ObjFunction* newFunction(VM* vm) {
 ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
     initTable(&instance->fields);
-    instance->isInternal = false;
-    instance->internal = NIL_VAL;
-    return instance;
-}
-
-ObjInstance* newInternalInstance(VM* vm, ObjClass* klass, Value internal) {
-    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INTERNAL_INSTANCE, klass);
-    initTable(&instance->fields);
-    instance->isInternal = true;
-    instance->internal = internal;
     return instance;
 }
 
@@ -266,7 +255,6 @@ void printObject(Value value) {
             printFunction(AS_FUNCTION(value));
             break;
         case OBJ_INSTANCE:
-        case OBJ_INTERNAL_INSTANCE:
             printf("<object %s>", AS_OBJ(value)->klass->name->chars);
             break;
         case OBJ_NATIVE_FUNCTION:

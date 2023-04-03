@@ -22,30 +22,28 @@
 #define IS_FILE(value)              isObjType(value, OBJ_FILE)
 #define IS_FUNCTION(value)          isObjType(value, OBJ_FUNCTION)
 #define IS_INSTANCE(value)          isObjType(value, OBJ_INSTANCE)
-#define IS_INTERNAL_INSTANCE(value) isObjType(value, OBJ_INTERNAL_INSTANCE)
 #define IS_NATIVE_FUNCTION(value)   isObjType(value, OBJ_NATIVE_FUNCTION)
 #define IS_NATIVE_METHOD(value)     isObjType(value, OBJ_NATIVE_METHOD)
 #define IS_NODE(value)              isObjType(value, OBJ_NODE)
 #define IS_RECORD(value)            isObjType(value, OBJ_RECORD)
 #define IS_STRING(value)            isObjType(value, OBJ_STRING)
 
-#define AS_ARRAY(value)             ((ObjArray*)asObj(value))
-#define AS_BOUND_METHOD(value)      ((ObjBoundMethod*)asObj(value))
-#define AS_CLASS(value)             ((ObjClass*)asObj(value))
-#define AS_CLOSURE(value)           ((ObjClosure*)asObj(value))
-#define AS_DICTIONARY(value)        ((ObjDictionary*)asObj(value))
-#define AS_ENTRY(value)             ((ObjEntry*)asObj(value))
-#define AS_FILE(value)              ((ObjFile*)asObj(value))
-#define AS_FUNCTION(value)          ((ObjFunction*)asObj(value))
-#define AS_INSTANCE(value)          ((ObjInstance*)asObj(value))
-#define AS_INTERNAL_INSTANCE(value) (((ObjInstance*)asObj(value))->internal)
-#define AS_NATIVE_FUNCTION(value)   ((ObjNativeFunction*)asObj(value))
-#define AS_NATIVE_METHOD(value)     ((ObjNativeMethod*)asObj(value))
-#define AS_NODE(value)              ((ObjNode*)asObj(value))
-#define AS_RECORD(value)            ((ObjRecord*)asObj(value))
-#define AS_CRECORD(value, type)     ((type*)((ObjRecord*)asObj(value)->data))
-#define AS_STRING(value)            ((ObjString*)asObj(value))
-#define AS_CSTRING(value)           (((ObjString*)asObj(value))->chars)
+#define AS_ARRAY(value)             ((ObjArray*)AS_OBJ(value))
+#define AS_BOUND_METHOD(value)      ((ObjBoundMethod*)AS_OBJ(value))
+#define AS_CLASS(value)             ((ObjClass*)AS_OBJ(value))
+#define AS_CLOSURE(value)           ((ObjClosure*)AS_OBJ(value))
+#define AS_DICTIONARY(value)        ((ObjDictionary*)AS_OBJ(value))
+#define AS_ENTRY(value)             ((ObjEntry*)AS_OBJ(value))
+#define AS_FILE(value)              ((ObjFile*)AS_OBJ(value))
+#define AS_FUNCTION(value)          ((ObjFunction*)AS_OBJ(value))
+#define AS_INSTANCE(value)          ((ObjInstance*)AS_OBJ(value))
+#define AS_NATIVE_FUNCTION(value)   ((ObjNativeFunction*)AS_OBJ(value))
+#define AS_NATIVE_METHOD(value)     ((ObjNativeMethod*)AS_OBJ(value))
+#define AS_NODE(value)              ((ObjNode*)AS_OBJ(value))
+#define AS_RECORD(value)            ((ObjRecord*)AS_OBJ(value))
+#define AS_CRECORD(value, type)     ((type*)((ObjRecord*)AS_OBJ(value)->data))
+#define AS_STRING(value)            ((ObjString*)AS_OBJ(value))
+#define AS_CSTRING(value)           (((ObjString*)AS_OBJ(value))->chars)
 
 typedef enum {
     OBJ_ARRAY,
@@ -57,7 +55,6 @@ typedef enum {
     OBJ_FILE,
     OBJ_FUNCTION,
     OBJ_INSTANCE,
-    OBJ_INTERNAL_INSTANCE,
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
     OBJ_NODE,
@@ -167,15 +164,11 @@ struct ObjClass {
     struct ObjClass* superclass;
     bool isNative;
     Table methods;
-    ObjType internalType;
-    Table internalMethods;
 };
 
 typedef struct {
     Obj obj;
     Table fields;
-    bool isInternal;
-    Value internal;
 } ObjInstance;
 
 typedef struct {
@@ -194,7 +187,6 @@ ObjEntry* newEntry(VM* vm, Value key, Value value);
 ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
-ObjInstance* newInternalInstance(VM* vm, ObjClass* klass, Value internal);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
@@ -209,19 +201,8 @@ void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* na
 void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject);
 void printObject(Value value);
 
-static inline bool isInternalObjType(Obj* object, ObjType type) {
-    if (object->type != OBJ_INTERNAL_INSTANCE) return false;
-    Value internal = ((ObjInstance*)object)->internal;
-    return IS_OBJ(internal) && AS_OBJ(internal)->type == type;
-}
-
 static inline bool isObjType(Value value, ObjType type) {
-    return IS_OBJ(value) && ((AS_OBJ(value)->type == type) || isInternalObjType(AS_OBJ(value), type));
-}
-
-static inline Obj* asObj(Value value) {
-    Obj* object = AS_OBJ(value);
-    return object->type == OBJ_INTERNAL_INSTANCE ? AS_OBJ(((ObjInstance*)object)->internal) : object;
+    return IS_OBJ(value) && (AS_OBJ(value)->type == type);
 }
 
 #endif // !clox_object_h

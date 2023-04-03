@@ -84,7 +84,6 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)klass->name);
             markObject(vm, (Obj*)klass->superclass);
             markTable(vm, &klass->methods);
-            if(klass->internalType != OBJ_INSTANCE) markTable(vm, &klass->internalMethods);
             break;
         }
         case OBJ_CLOSURE: {
@@ -125,13 +124,6 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjInstance* instance = (ObjInstance*)object;
             markObject(vm, (Obj*)object->klass);
             markTable(vm, &instance->fields);
-            break;
-        }
-        case OBJ_INTERNAL_INSTANCE: {
-            ObjInstance* instance = (ObjInstance*)object;
-            markObject(vm, (Obj*)object->klass);
-            markTable(vm, &instance->fields);
-            if (instance->isInternal) markValue(vm, instance->internal);
             break;
         }
         case OBJ_NATIVE_FUNCTION: {
@@ -178,7 +170,6 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
             freeTable(vm, &klass->methods);
-            if(klass->internalType != OBJ_INSTANCE) freeTable(vm, &klass->internalMethods);
             FREE(ObjClass, object);
             break;
         }
@@ -213,13 +204,6 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_INSTANCE: {
             ObjInstance* instance = (ObjInstance*)object;
             freeTable(vm, &instance->fields);
-            FREE(ObjInstance, object);
-            break;
-        }
-        case OBJ_INTERNAL_INSTANCE: {
-            ObjInstance* instance = (ObjInstance*)object;
-            freeTable(vm, &instance->fields);
-            if (IS_OBJ(instance->internal)) freeObject(vm, AS_OBJ(instance->internal));
             FREE(ObjInstance, object);
             break;
         }

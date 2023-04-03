@@ -175,11 +175,6 @@ void initNativePackage(VM* vm, const char* filePath) {
     free(source);
 }
 
-void markInternalClass(ObjClass* klass, ObjType type) {
-    klass->internalType = type;
-    initTable(&klass->internalMethods);
-}
-
 void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(assert, 2);
     DEF_FUNCTION(clock, 0);

@@ -493,7 +493,6 @@ LOX_METHOD(WriteStream, put) {
 void registerIOPackage(VM* vm) {
     vm->fileClass = defineNativeClass(vm, "File");
     bindSuperclass(vm, vm->fileClass, vm->objectClass);
-    markInternalClass(vm->fileClass, OBJ_FILE);
     DEF_METHOD(vm->fileClass, File, create, 0);
     DEF_METHOD(vm->fileClass, File, delete, 0);
     DEF_METHOD(vm->fileClass, File, exists, 0);

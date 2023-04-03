@@ -8,10 +8,8 @@
 
 #define LOX_FUNCTION(name) static Value name##NativeFunction(VM* vm, int argCount, Value* args)
 #define LOX_METHOD(className, name) static Value name##NativeMethodFor##className(VM* vm, Value receiver, int argCount, Value* args)
-#define LOX_INTERNAL(className, name) static Value name##InternalMethodFor##className(VM* vm, Value receiver, int argCount, Value* args)
 #define DEF_FUNCTION(name, arity) defineNativeFunction(vm, #name, arity, name##NativeFunction)
 #define DEF_METHOD(klass, className, name, arity) defineNativeMethod(vm, klass, #name, arity, name##NativeMethodFor##className)
-#define DEF_INTERNAL(klass, className, name, arity) defineNativeMethod(vm, klass, #name, arity, name##InternalMethodFor##className)
 
 #define RETURN_VAL(value) return (value)
 #define RETURN_NIL return NIL_VAL
@@ -32,7 +30,6 @@ ObjClass* getNativeClass(VM* vm, const char* name);
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name);
 ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name);
 void initNativePackage(VM * vm, const char* filePath);
-void markInternalClass(ObjClass* klass, ObjType type);
 void registerNativeFunctions(VM* vm);
 
 #endif // !clox_native_h

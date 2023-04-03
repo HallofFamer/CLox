@@ -46,28 +46,6 @@ LOX_METHOD(Bool, toString) {
     else RETURN_STRING("false", 5);
 }
 
-LOX_INTERNAL(Bool, clone) {
-    ASSERT_ARG_COUNT("Bool:clone()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    RETURN_OBJ(newInternalInstance(vm, self->obj.klass, self->internal));
-}
-
-LOX_INTERNAL(Bool, init) {
-    ASSERT_ARG_COUNT("Bool::init(value)", 1);
-    ASSERT_ARG_TYPE("Bool::init(value)", 0, Bool);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    self->isInternal = true;
-    self->internal = args[0];
-    RETURN_OBJ(self);
-}
-
-LOX_INTERNAL(Bool, toString) {
-    ASSERT_ARG_COUNT("Bool::toString()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    if(AS_BOOL(self->internal)) RETURN_STRING("true", 4);
-    else RETURN_STRING("false", 5);
-}
-
 LOX_METHOD(Class, clone) {
     ASSERT_ARG_COUNT("Class::clone()", 0);
     RETURN_OBJ(receiver);
@@ -326,98 +304,6 @@ LOX_METHOD(Int, toString) {
     RETURN_STRING_FMT("%d", AS_INT(receiver));
 }
 
-LOX_INTERNAL(Int, abs) {
-    ASSERT_ARG_COUNT("Int::abs()", 0);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_INT(abs(self));
-}
-
-LOX_INTERNAL(Int, clone) {
-    ASSERT_ARG_COUNT("Int::clone()", 0);
-    RETURN_INT(AS_INT(AS_INTERNAL_INSTANCE(receiver)));
-}
-
-LOX_INTERNAL(Int, factorial) {
-    ASSERT_ARG_COUNT("Int::factorial()", 0);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    assertNumberNonNegative(vm, "Int::factorial()", self, -1);
-    RETURN_INT(factorial(self));
-}
-
-LOX_INTERNAL(Int, gcd) {
-    ASSERT_ARG_COUNT("Int::gcd(other)", 1);
-    ASSERT_ARG_TYPE("Int::gcd(other)", 0, Int);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_INT(gcd(abs(self), abs(AS_INT(args[0]))));
-}
-
-LOX_INTERNAL(Int, init) {
-    ASSERT_ARG_COUNT("Int::init(value)", 1);
-    ASSERT_ARG_TYPE("Int::init(value)", 0, Int);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    self->isInternal = true;
-    self->internal = args[0];
-    RETURN_OBJ(self);
-}
-
-LOX_INTERNAL(Int, isEven) {
-    ASSERT_ARG_COUNT("Int::isEven()", 0);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_BOOL(self % 2 == 0);
-}
-
-LOX_INTERNAL(Int, isOdd) {
-    ASSERT_ARG_COUNT("Int::isOdd()", 0);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_BOOL(self % 2 != 0);
-}
-
-LOX_INTERNAL(Int, lcm) {
-    ASSERT_ARG_COUNT("Int::lcm(other)", 1);
-    ASSERT_ARG_TYPE("Int::lcm(other)", 0, Int);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_INT(lcm(abs(self), abs(AS_INT(args[0]))));
-}
-
-LOX_INTERNAL(Int, toBinary) {
-    ASSERT_ARG_COUNT("Int::toBinary()", 0);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    char buffer[32];
-    int length = 32;
-    _itoa_s(self, buffer, length, 2);
-    RETURN_STRING(buffer, length);
-}
-
-LOX_INTERNAL(Int, toFloat) {
-    ASSERT_ARG_COUNT("Int::toFloat()", 0);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER((double)self);
-}
-
-LOX_INTERNAL(Int, toHexadecimal) {
-    ASSERT_ARG_COUNT("Int::toHexadecimal()", 0);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    char buffer[8];
-    int length = 8;
-    _itoa_s(self, buffer, length, 16);
-    RETURN_STRING(buffer, length);
-}
-
-LOX_INTERNAL(Int, toOctal) {
-    ASSERT_ARG_COUNT("Int::toOctal()", 0);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    char buffer[16];
-    int length = 16;
-    _itoa_s(self, buffer, length, 8);
-    RETURN_STRING(buffer, length);
-}
-
-LOX_INTERNAL(Int, toString) {
-    ASSERT_ARG_COUNT("Int::toString()", 0);
-    int self = AS_INT(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_STRING_FMT("%d", self);
-}
-
 LOX_METHOD(Method, arity) {
     ASSERT_ARG_COUNT("Method::arity()", 0);
     RETURN_INT(AS_BOUND_METHOD(receiver)->method->function->arity);
@@ -468,20 +354,6 @@ LOX_METHOD(Nil, init) {
 LOX_METHOD(Nil, toString) {
     ASSERT_ARG_COUNT("Nil::toString()", 0);
     RETURN_STRING("nil", 3);
-}
-
-LOX_INTERNAL(Nil, clone) {
-    ASSERT_ARG_COUNT("Nil:clone()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    RETURN_OBJ(newInternalInstance(vm, self->obj.klass, NIL_VAL));
-}
-
-LOX_INTERNAL(Nil, init) {
-    ASSERT_ARG_COUNT("Nil::init()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    self->isInternal = true;
-    self->internal = NIL_VAL;
-    RETURN_OBJ(self);
 }
 
 LOX_METHOD(Number, abs) {
@@ -618,164 +490,6 @@ LOX_METHOD(Number, toString) {
     RETURN_STRING(chars, length);
 }
 
-LOX_INTERNAL(Number, abs) {
-    ASSERT_ARG_COUNT("Number::abs()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    RETURN_NUMBER(fabs(AS_NUMBER(internal)));
-}
-
-LOX_INTERNAL(Number, acos) {
-    ASSERT_ARG_COUNT("Number::acos()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    RETURN_NUMBER(acos(AS_NUMBER(internal)));
-}
-
-LOX_INTERNAL(Number, asin) {
-    ASSERT_ARG_COUNT("Number::asin()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    RETURN_NUMBER(asin(AS_NUMBER(internal)));
-}
-
-LOX_INTERNAL(Number, atan) {
-    ASSERT_ARG_COUNT("Number::atan()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    RETURN_NUMBER(atan(AS_NUMBER(internal)));
-}
-
-LOX_INTERNAL(Number, cbrt) {
-    ASSERT_ARG_COUNT("Number::cbrt()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    RETURN_NUMBER(cbrt(AS_NUMBER(internal)));
-}
-
-LOX_INTERNAL(Number, ceil) {
-    ASSERT_ARG_COUNT("Number::ceil()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    RETURN_NUMBER(ceil(AS_NUMBER(internal)));
-}
-
-LOX_INTERNAL(Number, clone) {
-    ASSERT_ARG_COUNT("Number::clone()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    RETURN_NUMBER(AS_NUMBER(internal));
-}
-
-LOX_INTERNAL(Number, cos) {
-    ASSERT_ARG_COUNT("Number::cos()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER(cos(self));
-}
-
-LOX_INTERNAL(Number, exp) {
-    ASSERT_ARG_COUNT("Number::exp()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER(exp(self));
-}
-
-LOX_INTERNAL(Number, floor) {
-    ASSERT_ARG_COUNT("Number::floor()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER(floor(self));
-}
-
-LOX_INTERNAL(Number, hypot) {
-    ASSERT_ARG_COUNT("Number::hypot(other)", 1);
-    ASSERT_ARG_TYPE("Number::hypot(other)", 0, Number);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    double other = AS_NUMBER(AS_INTERNAL_INSTANCE(args[0]));
-    RETURN_NUMBER(hypot(self, other));
-}
-
-LOX_INTERNAL(Number, init) {
-    ASSERT_ARG_COUNT("Number::init(value)", 1);
-    ASSERT_ARG_TYPE("Number::init(value)", 0, Number);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    self->isInternal = true;
-    self->internal = args[0];
-    RETURN_OBJ(self);
-}
-
-LOX_INTERNAL(Number, log) {
-    ASSERT_ARG_COUNT("Number::log()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    assertNumberPositive(vm, "Number::log2()", self, -1);
-    RETURN_NUMBER(log(self));
-}
-
-LOX_INTERNAL(Number, log10) {
-    ASSERT_ARG_COUNT("Number::log10()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    assertNumberPositive(vm, "Number::log10()", self, -1);
-    RETURN_NUMBER(log10(self));
-}
-
-LOX_INTERNAL(Number, log2) {
-    ASSERT_ARG_COUNT("Number::log2()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    assertNumberPositive(vm, "Number::log2()", self, -1);
-    RETURN_NUMBER(log2(self));
-}
-
-LOX_INTERNAL(Number, max) {
-    ASSERT_ARG_COUNT("Number::max(other)", 1);
-    ASSERT_ARG_TYPE("Number::max(other)", 0, Number);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER(fmax(self, AS_NUMBER(args[0])));
-}
-
-LOX_INTERNAL(Number, min) {
-    ASSERT_ARG_COUNT("Number::min(other)", 1);
-    ASSERT_ARG_TYPE("Number::min(other)", 0, Number);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER(fmin(self, AS_NUMBER(args[0])));
-}
-
-LOX_INTERNAL(Number, pow) {
-    ASSERT_ARG_COUNT("Number::pow(exponent)", 1);
-    ASSERT_ARG_TYPE("Number::pow(exponent)", 0, Number);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER(pow(self, AS_NUMBER(args[0])));
-}
-
-LOX_INTERNAL(Number, round) {
-    ASSERT_ARG_COUNT("Number::round()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER(round(self));
-}
-
-LOX_INTERNAL(Number, sin) {
-    ASSERT_ARG_COUNT("Number::sin()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER(sin(self));
-}
-
-LOX_INTERNAL(Number, sqrt) {
-    ASSERT_ARG_COUNT("Number::sqrt()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    assertNumberPositive(vm, "Number::sqrt()", self, -1);
-    RETURN_NUMBER(sqrt(self));
-}
-
-LOX_INTERNAL(Number, tan) {
-    ASSERT_ARG_COUNT("Number::tan()", 0);
-    double self = AS_NUMBER(AS_INTERNAL_INSTANCE(receiver));
-    RETURN_NUMBER(tan(self));
-}
-
-LOX_INTERNAL(Number, toInt) {
-    ASSERT_ARG_COUNT("Number::toInt()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    RETURN_INT((int)AS_NUMBER(internal));
-}
-
-LOX_INTERNAL(Number, toString) {
-    ASSERT_ARG_COUNT("Number::toString()", 0);
-    Value internal = AS_INTERNAL_INSTANCE(receiver);
-    char chars[24];
-    int length = sprintf_s(chars, 24, "%.14g", AS_NUMBER(internal));
-    RETURN_STRING(chars, length);
-}
-
 LOX_METHOD(Object, clone) {
     ASSERT_ARG_COUNT("Object::clone()", 0);
     ObjInstance* thisObject = AS_INSTANCE(receiver);
@@ -804,7 +518,7 @@ LOX_METHOD(Object, getClassName) {
 LOX_METHOD(Object, hasField) {
     ASSERT_ARG_COUNT("Object::hasField(field)", 1);
     ASSERT_ARG_TYPE("Object::hasField(field)", 0, String);
-    if (IS_INSTANCE(receiver) || IS_INTERNAL_INSTANCE(receiver)) {
+    if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
         Value value;
         RETURN_BOOL(tableGet(&instance->fields, AS_STRING(args[0]), &value));
@@ -1009,7 +723,6 @@ void registerLangPackage(VM* vm) {
 
     vm->classClass = defineNativeClass(vm, "Class");
     bindSuperclass(vm, vm->classClass, vm->objectClass);
-    markInternalClass(vm->classClass, OBJ_CLASS);
     DEF_METHOD(vm->classClass, Class, clone, 0);
     DEF_METHOD(vm->classClass, Class, getClass, 0);
     DEF_METHOD(vm->classClass, Class, getClassName, 0);
@@ -1026,26 +739,16 @@ void registerLangPackage(VM* vm) {
     initNativePackage(vm, "src/std/lang.lox");
 
     vm->nilClass = getNativeClass(vm, "Nil");
-    markInternalClass(vm->nilClass, OBJ_VALUE);
     DEF_METHOD(vm->nilClass, Nil, clone, 0);
     DEF_METHOD(vm->nilClass, Nil, init, 0);
     DEF_METHOD(vm->nilClass, Nil, toString, 0);
 
-    DEF_INTERNAL(vm->nilClass, Nil, clone, 0);
-    DEF_INTERNAL(vm->nilClass, Nil, init, 0);
-
     vm->boolClass = getNativeClass(vm, "Bool");
-    markInternalClass(vm->boolClass, OBJ_VALUE);
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
     DEF_METHOD(vm->boolClass, Bool, init, 1);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
 
-    DEF_INTERNAL(vm->boolClass, Bool, clone, 0);
-    DEF_INTERNAL(vm->boolClass, Bool, init, 1);
-    DEF_INTERNAL(vm->boolClass, Bool, toString, 0);
-
     vm->numberClass = getNativeClass(vm, "Number");
-    markInternalClass(vm->numberClass, OBJ_VALUE);
     DEF_METHOD(vm->numberClass, Number, abs, 0);
     DEF_METHOD(vm->numberClass, Number, acos, 0);
     DEF_METHOD(vm->numberClass, Number, asin, 0);
@@ -1071,34 +774,8 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, toInt, 0);
     DEF_METHOD(vm->numberClass, Number, toString, 0);
 
-    DEF_INTERNAL(vm->numberClass, Number, abs, 0);
-    DEF_INTERNAL(vm->numberClass, Number, acos, 0);
-    DEF_INTERNAL(vm->numberClass, Number, asin, 0);
-    DEF_INTERNAL(vm->numberClass, Number, atan, 0);
-    DEF_INTERNAL(vm->numberClass, Number, cbrt, 0);
-    DEF_INTERNAL(vm->numberClass, Number, ceil, 0);
-    DEF_INTERNAL(vm->numberClass, Number, clone, 0);
-    DEF_INTERNAL(vm->numberClass, Number, cos, 0);
-    DEF_INTERNAL(vm->numberClass, Number, exp, 1);
-    DEF_INTERNAL(vm->numberClass, Number, floor, 0);
-    DEF_INTERNAL(vm->numberClass, Number, hypot, 1);
-    DEF_INTERNAL(vm->numberClass, Number, init, 0);
-    DEF_INTERNAL(vm->numberClass, Number, log, 0);
-    DEF_INTERNAL(vm->numberClass, Number, log2, 0);
-    DEF_INTERNAL(vm->numberClass, Number, log10, 0);
-    DEF_INTERNAL(vm->numberClass, Number, max, 1);
-    DEF_INTERNAL(vm->numberClass, Number, min, 1);
-    DEF_INTERNAL(vm->numberClass, Number, pow, 1);
-    DEF_INTERNAL(vm->numberClass, Number, round, 0);
-    DEF_INTERNAL(vm->numberClass, Number, sin, 0);
-    DEF_INTERNAL(vm->numberClass, Number, sqrt, 0);
-    DEF_INTERNAL(vm->numberClass, Number, tan, 0);
-    DEF_INTERNAL(vm->numberClass, Number, toInt, 0);
-    DEF_INTERNAL(vm->numberClass, Number, toString, 0);
-
     vm->intClass = getNativeClass(vm, "Int");
     bindSuperclass(vm, vm->intClass, vm->numberClass);
-    markInternalClass(vm->intClass, OBJ_VALUE);
     DEF_METHOD(vm->intClass, Int, abs, 0);
     DEF_METHOD(vm->intClass, Int, clone, 0);
     DEF_METHOD(vm->intClass, Int, factorial, 0);
@@ -1113,30 +790,14 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->intClass, Int, toOctal, 0);
     DEF_METHOD(vm->intClass, Int, toString, 0);
 
-    DEF_INTERNAL(vm->intClass, Int, abs, 0);
-    DEF_INTERNAL(vm->intClass, Int, clone, 0);
-    DEF_INTERNAL(vm->intClass, Int, factorial, 0);
-    DEF_INTERNAL(vm->intClass, Int, gcd, 1);
-    DEF_INTERNAL(vm->intClass, Int, init, 1);
-    DEF_INTERNAL(vm->intClass, Int, isEven, 0);
-    DEF_INTERNAL(vm->intClass, Int, isOdd, 0);
-    DEF_INTERNAL(vm->intClass, Int, lcm, 1);
-    DEF_INTERNAL(vm->intClass, Int, toBinary, 0);
-    DEF_INTERNAL(vm->intClass, Int, toFloat, 0);
-    DEF_INTERNAL(vm->intClass, Int, toHexadecimal, 0);
-    DEF_INTERNAL(vm->intClass, Int, toOctal, 0);
-    DEF_INTERNAL(vm->intClass, Int, toString, 0);
-
     vm->floatClass = defineNativeClass(vm, "Float");
     bindSuperclass(vm, vm->floatClass, vm->numberClass);
-    markInternalClass(vm->floatClass, OBJ_VALUE);
     DEF_METHOD(vm->floatClass, Float, clone, 0);
     DEF_METHOD(vm->floatClass, Float, init, 1);
     DEF_METHOD(vm->floatClass, Float, toString, 0);
 
     vm->stringClass = defineNativeClass(vm, "String");
     bindSuperclass(vm, vm->stringClass, vm->objectClass);
-    markInternalClass(vm->stringClass, OBJ_STRING);
     DEF_METHOD(vm->stringClass, String, capitalize, 0);
     DEF_METHOD(vm->stringClass, String, clone, 0);
     DEF_METHOD(vm->stringClass, String, contains, 1);
@@ -1165,7 +826,6 @@ void registerLangPackage(VM* vm) {
 
     vm->functionClass = defineNativeClass(vm, "Function");
     bindSuperclass(vm, vm->functionClass, vm->objectClass);
-    markInternalClass(vm->functionClass, OBJ_FUNCTION);
     DEF_METHOD(vm->functionClass, Function, arity, 0);
     DEF_METHOD(vm->functionClass, Function, call, -1);
     DEF_METHOD(vm->functionClass, Function, call0, 0);
@@ -1182,7 +842,6 @@ void registerLangPackage(VM* vm) {
 
     vm->methodClass = defineNativeClass(vm, "Method");
     bindSuperclass(vm, vm->methodClass, vm->objectClass);
-    markInternalClass(vm->methodClass, OBJ_BOUND_METHOD);
     DEF_METHOD(vm->methodClass, Method, arity, 0);
     DEF_METHOD(vm->methodClass, Method, clone, 0);
     DEF_METHOD(vm->methodClass, Method, init, 0);

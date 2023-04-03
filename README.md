@@ -57,7 +57,7 @@ https://github.com/munificent/craftinginterpreters
 - Immutable variable declaration with `val` keyword.
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword.
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten. 
-- Allow inheritance for all built-in classes including `Boolean`, `Int`, `String`, `Class`, etc.
+- class `Range` in package `util`, as well as range operator(`..`) for range literals. 
 
 ### CLox 1.5.0
 - Refined object model which uses Smalltalk's metaclass system.
