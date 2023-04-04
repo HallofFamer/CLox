@@ -1443,7 +1443,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->arrayClass, Array, slice, 2);
     DEF_METHOD(vm->arrayClass, Array, toString, 0);
 
-
     ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, listClass);
     DEF_METHOD(linkedListClass, LinkedList, add, 1);

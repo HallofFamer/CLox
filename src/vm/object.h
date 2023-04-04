@@ -25,6 +25,7 @@
 #define IS_NATIVE_FUNCTION(value)   isObjType(value, OBJ_NATIVE_FUNCTION)
 #define IS_NATIVE_METHOD(value)     isObjType(value, OBJ_NATIVE_METHOD)
 #define IS_NODE(value)              isObjType(value, OBJ_NODE)
+#define IS_RANGE(value)             isObjType(value, OBJ_RANGE)    
 #define IS_RECORD(value)            isObjType(value, OBJ_RECORD)
 #define IS_STRING(value)            isObjType(value, OBJ_STRING)
 
@@ -40,6 +41,7 @@
 #define AS_NATIVE_FUNCTION(value)   ((ObjNativeFunction*)AS_OBJ(value))
 #define AS_NATIVE_METHOD(value)     ((ObjNativeMethod*)AS_OBJ(value))
 #define AS_NODE(value)              ((ObjNode*)AS_OBJ(value))
+#define AS_RANGE(value)             ((ObjRange*)AS_OBJ(value))
 #define AS_RECORD(value)            ((ObjRecord*)AS_OBJ(value))
 #define AS_CRECORD(value, type)     ((type*)((ObjRecord*)AS_OBJ(value)->data))
 #define AS_STRING(value)            ((ObjString*)AS_OBJ(value))
@@ -58,6 +60,7 @@ typedef enum {
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
     OBJ_NODE,
+    OBJ_RANGE,
     OBJ_RECORD,
     OBJ_STRING,
     OBJ_UPVALUE,
@@ -137,6 +140,12 @@ typedef struct {
     bool isOpen;
     FILE* file;
 } ObjFile;
+
+typedef struct {
+    Obj obj;
+    int from;
+    int to;
+} ObjRange;
 
 typedef struct {
     Obj obj;
