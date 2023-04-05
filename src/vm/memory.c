@@ -217,6 +217,10 @@ static void freeObject(VM* vm, Obj* object) {
             FREE(ObjNode, object);
             break;
         }
+        case OBJ_RANGE: {
+            FREE(ObjRange, object);
+            break;
+        }
         case OBJ_RECORD: {
             ObjRecord* record = (ObjRecord*)object;
             if (record->freeFunction) record->freeFunction(record->data);

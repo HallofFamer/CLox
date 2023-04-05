@@ -42,6 +42,7 @@ struct VM {
     ObjClass* methodClass;
     ObjClass* arrayClass;
     ObjClass* dictionaryClass;
+    ObjClass* rangeClass;
     ObjClass* nodeClass;
     ObjClass* entryClass;
     ObjClass* fileClass;

@@ -199,6 +199,7 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
+ObjRange* newRange(VM* vm, int from, int to);
 ObjRecord* newRecord(VM* vm, void* data);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 

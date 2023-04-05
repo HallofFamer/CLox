@@ -126,6 +126,13 @@ ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next) {
     return node;
 }
 
+ObjRange* newRange(VM* vm, int from, int to) {
+    ObjRange* range = ALLOCATE_OBJ(ObjRange, OBJ_RANGE, vm->rangeClass);
+    range->from = from;
+    range->to = to;
+    return range;
+}
+
 ObjRecord* newRecord(VM* vm, void* data) {
     ObjRecord* record = ALLOCATE_OBJ(ObjRecord, OBJ_RECORD, NULL);
     record->data = data;
@@ -262,6 +269,9 @@ void printObject(Value value) {
             break;
         case OBJ_NATIVE_METHOD:
             printf("<native method %s::%s>", AS_NATIVE_METHOD(value)->klass->name->chars, AS_NATIVE_METHOD(value)->name->chars);
+            break;
+        case OBJ_RANGE:
+            printf("%d..%d", AS_RANGE(value)->from, AS_RANGE(value)->to);
             break;
         case OBJ_RECORD:
             printf("record");
