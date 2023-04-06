@@ -1157,6 +1157,41 @@ LOX_METHOD(Queue, toString) {
     RETURN_OBJ(linkToString(vm, self));
 }
 
+LOX_METHOD(Range, clone) {
+    ASSERT_ARG_COUNT("Range::clone()", 0);
+    ObjRange* self = AS_RANGE(receiver);
+    ObjRange* range = newRange(vm, self->from, self->to);
+    RETURN_OBJ(range);
+}
+
+LOX_METHOD(Range, from) {
+    ASSERT_ARG_COUNT("Range::from()", 0);
+    ObjRange* self = AS_RANGE(receiver);
+    RETURN_INT(self->from);
+}
+
+LOX_METHOD(Range, init) {
+    ASSERT_ARG_COUNT("Range::init(from, to)", 2);
+    ASSERT_ARG_TYPE("Range::init(from, to)", 0, Int);
+    ASSERT_ARG_TYPE("Range::init(from, to)", 0, Int);
+    ObjRange* self = AS_RANGE(receiver);
+    self->from = AS_INT(args[0]);
+    self->to = AS_INT(args[1]);
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Range, to) {
+    ASSERT_ARG_COUNT("Range::to()", 0);
+    ObjRange* self = AS_RANGE(receiver);
+    RETURN_INT(self->to);
+}
+
+LOX_METHOD(Range, toString) {
+    ASSERT_ARG_COUNT("Range::toString()", 0);
+    ObjRange* self = AS_RANGE(receiver);
+    RETURN_STRING_FMT("%d..%d", self->from, self->to);
+}
+
 LOX_METHOD(Set, add) {
     ASSERT_ARG_COUNT("Set::add(element)", 1);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
@@ -1500,7 +1535,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, valueSet, 0);
 
     vm->entryClass = defineNativeClass(vm, "Entry");
-    bindSuperclass(vm,vm->entryClass, vm->objectClass);
+    bindSuperclass(vm, vm->entryClass, vm->objectClass);
     DEF_METHOD(vm->entryClass, Entry, clone, 0);
     DEF_METHOD(vm->entryClass, Entry, getKey, 0);
     DEF_METHOD(vm->entryClass, Entry, getValue, 0);
@@ -1523,6 +1558,14 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(setClass, Set, remove, 1);
     DEF_METHOD(setClass, Set, toArray, 0);
     DEF_METHOD(setClass, Set, toString, 0);
+
+    vm->rangeClass = defineNativeClass(vm, "Range");
+    bindSuperclass(vm, vm->rangeClass, listClass);
+    DEF_METHOD(vm->rangeClass, Range, clone, 0);
+    DEF_METHOD(vm->rangeClass, Range, from, 0);
+    DEF_METHOD(vm->rangeClass, Range, init, 2);
+    DEF_METHOD(vm->rangeClass, Range, to, 0);
+    DEF_METHOD(vm->rangeClass, Range, toString, 0);
 
     ObjClass* stackClass = defineNativeClass(vm, "Stack");
     bindSuperclass(vm, stackClass, collectionClass);
