@@ -1180,6 +1180,29 @@ LOX_METHOD(Range, init) {
     RETURN_OBJ(self);
 }
 
+LOX_METHOD(Range, next) {
+    ASSERT_ARG_COUNT("Range::next(index)", 1);
+    ObjRange* self = AS_RANGE(receiver);
+    if (IS_NIL(args[0])) {
+        if (self->from == self->to) RETURN_FALSE;
+        RETURN_INT(0);
+    }
+
+    ASSERT_ARG_TYPE("Range::next(index)", 0, Int);
+    int index = AS_INT(args[0]);
+    if (index < 0 || index < self->to - self->from) RETURN_INT(index + 1);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Range, nextValue) {
+    ASSERT_ARG_COUNT("Range::nextValue(index)", 1);
+    ASSERT_ARG_TYPE("Range::nextValue(index)", 0, Int);
+    ObjRange* self = AS_RANGE(receiver);
+    int index = AS_INT(args[0]);
+    if (index > -1 && index < self->to - self->from + 1) RETURN_INT(self->from + index);
+    RETURN_NIL;
+}
+
 LOX_METHOD(Range, to) {
     ASSERT_ARG_COUNT("Range::to()", 0);
     ObjRange* self = AS_RANGE(receiver);
@@ -1564,6 +1587,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->rangeClass, Range, clone, 0);
     DEF_METHOD(vm->rangeClass, Range, from, 0);
     DEF_METHOD(vm->rangeClass, Range, init, 2);
+    DEF_METHOD(vm->rangeClass, Range, next, 1);
+    DEF_METHOD(vm->rangeClass, Range, nextValue, 1);
     DEF_METHOD(vm->rangeClass, Range, to, 0);
     DEF_METHOD(vm->rangeClass, Range, toString, 0);
 
