@@ -1,3 +1,9 @@
 var range = Range(0, 4);
-println("Creating an object of range: " + range.toString());
-println("Length of range: " + range.length().toString());
+println("Creating an instance of Range class: (" + range.from().toString() + ".." +range.to().toString() + ")");
+println("Length of Range: " + range.length().toString());
+
+print("Values in Range: ( ");
+for(var n : range){ 
+    print(n.toString() + " ");
+}
+println(")");
