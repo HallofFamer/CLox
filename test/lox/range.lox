@@ -1,0 +1,3 @@
+var range = Range(0, 4);
+println("Creating an object of range: " + range.toString());
+println("Length of range: " + range.length().toString());

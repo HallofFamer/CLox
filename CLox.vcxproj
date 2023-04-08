@@ -192,6 +192,7 @@
     <None Include="test\lox\object.lox" />
     <None Include="test\lox\queue.lox" />
     <None Include="test\lox\rand.lox" />
+    <None Include="test\lox\range.lox" />
     <None Include="test\lox\receiver.lox" />
     <None Include="test\lox\regex.lox" />
     <None Include="test\lox\set.lox" />
