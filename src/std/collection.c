@@ -1180,6 +1180,12 @@ LOX_METHOD(Range, init) {
     RETURN_OBJ(self);
 }
 
+LOX_METHOD(Range, length) {
+    ASSERT_ARG_COUNT("Range::length()", 0);
+    ObjRange* self = AS_RANGE(receiver);
+    RETURN_INT(self->to - self->from + 1);
+}
+
 LOX_METHOD(Range, next) {
     ASSERT_ARG_COUNT("Range::next(index)", 1);
     ObjRange* self = AS_RANGE(receiver);
@@ -1587,6 +1593,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->rangeClass, Range, clone, 0);
     DEF_METHOD(vm->rangeClass, Range, from, 0);
     DEF_METHOD(vm->rangeClass, Range, init, 2);
+    DEF_METHOD(vm->rangeClass, Range, length, 0);
     DEF_METHOD(vm->rangeClass, Range, next, 1);
     DEF_METHOD(vm->rangeClass, Range, nextValue, 1);
     DEF_METHOD(vm->rangeClass, Range, to, 0);
