@@ -157,6 +157,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return byteInstruction("OP_ARRAY", chunk, offset);
           case OP_DICTIONARY:
               return byteInstruction("OP_DICTIONARY", chunk, offset);
+          case OP_RANGE:
+              return simpleInstruction("OP_RANGE", offset);
           case OP_RETURN:
               return simpleInstruction("OP_RETURN", offset);
           case OP_RETURN_NONLOCAL:

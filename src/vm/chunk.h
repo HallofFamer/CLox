@@ -47,6 +47,7 @@ typedef enum {
     OP_METHOD,
     OP_ARRAY,
     OP_DICTIONARY,
+    OP_RANGE,
     OP_RETURN,
     OP_RETURN_NONLOCAL,
     OP_END
