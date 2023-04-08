@@ -753,6 +753,18 @@ static InterpretResult run(VM* vm) {
                 makeDictionary(vm, entryCount);
                 break;
             }
+            case OP_RANGE: {
+                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
+                    int b = AS_INT(pop(vm));
+                    int a = AS_INT(pop(vm));
+                    push(vm, newRange(vm, a, b));
+                }
+                else {
+                    runtimeError(vm, "Operands must be two integers.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
             case OP_RETURN: {
                 Value result = pop(vm);
                 closeUpvalues(vm, frame->slots);

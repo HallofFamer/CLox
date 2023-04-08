@@ -450,6 +450,7 @@ static void binary(Compiler* compiler, bool canAssign) {
         case TOKEN_MINUS:         emitByte(compiler, OP_SUBTRACT); break;
         case TOKEN_STAR:          emitByte(compiler, OP_MULTIPLY); break;
         case TOKEN_SLASH:         emitByte(compiler, OP_DIVIDE); break;
+        case TOKEN_DOT_DOT:       emitByte(compiler, OP_RANGE); break;
         default: return;
     }
 }
@@ -703,7 +704,7 @@ ParseRule rules[] = {
     [TOKEN_LESS]          = {NULL,       binary,      PREC_COMPARISON},
     [TOKEN_LESS_EQUAL]    = {NULL,       binary,      PREC_COMPARISON},
     [TOKEN_DOT]           = {NULL,       dot,         PREC_CALL},
-    [TOKEN_DOT_DOT]       = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_DOT_DOT]       = {NULL,       binary,      PREC_CALL},
     [TOKEN_IDENTIFIER]    = {variable,   NULL,        PREC_NONE},
     [TOKEN_STRING]        = {string,     NULL,        PREC_NONE},
     [TOKEN_NUMBER]        = {number,     NULL,        PREC_NONE},
