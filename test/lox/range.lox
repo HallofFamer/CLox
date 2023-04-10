@@ -1,4 +1,4 @@
-var range = Range(0, 4);
+var range = 0..4;
 println("Creating an instance of Range class: (" + range.from().toString() + ".." +range.to().toString() + ")");
 println("Length of Range: " + range.length().toString());
 
