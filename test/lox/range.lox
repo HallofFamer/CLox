@@ -7,3 +7,6 @@ for(var n : range){
     print(n.toString() + " ");
 }
 println(")");
+
+print("Convert Range to Array: ");
+println(range.toArray());

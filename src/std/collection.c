@@ -1174,9 +1174,13 @@ LOX_METHOD(Range, init) {
     ASSERT_ARG_COUNT("Range::init(from, to)", 2);
     ASSERT_ARG_TYPE("Range::init(from, to)", 0, Int);
     ASSERT_ARG_TYPE("Range::init(from, to)", 0, Int);
+    int from = AS_INT(args[0]);
+    int to = AS_INT(args[1]);
+    if(from < to) raiseError(vm, "An instance of class Range must have length >= 0.");
+
     ObjRange* self = AS_RANGE(receiver);
-    self->from = AS_INT(args[0]);
-    self->to = AS_INT(args[1]);
+    self->from = from;
+    self->to = to;
     RETURN_OBJ(self);
 }
 
@@ -1213,6 +1217,19 @@ LOX_METHOD(Range, to) {
     ASSERT_ARG_COUNT("Range::to()", 0);
     ObjRange* self = AS_RANGE(receiver);
     RETURN_INT(self->to);
+}
+
+LOX_METHOD(Range, toArray) {
+    ASSERT_ARG_COUNT("Range::toArray()", 0);
+    ObjRange* self = AS_RANGE(receiver);
+    ObjArray* array = newArray(vm);
+    push(vm, OBJ_VAL(array));
+
+    for (int i = self->from; i <= self->to; i++) {
+        valueArrayWrite(vm, &array->elements, INT_VAL(i));
+    }
+    pop(vm);
+    RETURN_OBJ(array);
 }
 
 LOX_METHOD(Range, toString) {
@@ -1597,6 +1614,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->rangeClass, Range, next, 1);
     DEF_METHOD(vm->rangeClass, Range, nextValue, 1);
     DEF_METHOD(vm->rangeClass, Range, to, 0);
+    DEF_METHOD(vm->rangeClass, Range, toArray, 0);
     DEF_METHOD(vm->rangeClass, Range, toString, 0);
 
     ObjClass* stackClass = defineNativeClass(vm, "Stack");
