@@ -1,12 +1,16 @@
 var range = 0..4;
 println("Creating an instance of Range class: (" + range.from().toString() + ".." +range.to().toString() + ")");
-println("Length of Range: " + range.length().toString());
+print("Length of Range: ");
+println(range.length());
+print("Range contains value 2 :");
+println(range.contains(2));
+println("");
 
-print("Values in Range: ( ");
+println("Looping through Range: ");
 for(var n : range){ 
-    print(n.toString() + " ");
+    println(n);
 }
-println(")");
+println("");
 
 print("Convert Range to Array: ");
 println(range.toArray());

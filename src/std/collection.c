@@ -1164,6 +1164,14 @@ LOX_METHOD(Range, clone) {
     RETURN_OBJ(range);
 }
 
+LOX_METHOD(Range, contains) {
+    ASSERT_ARG_COUNT("Range::contains(element)", 1);
+    if (!IS_INT(args[0])) RETURN_FALSE;
+    ObjRange* self = AS_RANGE(receiver);
+    int element = AS_INT(args[0]);
+    RETURN_BOOL(element >= self->from && element <= self->to);
+}
+
 LOX_METHOD(Range, from) {
     ASSERT_ARG_COUNT("Range::from()", 0);
     ObjRange* self = AS_RANGE(receiver);
@@ -1608,6 +1616,7 @@ void registerCollectionPackage(VM* vm) {
     vm->rangeClass = defineNativeClass(vm, "Range");
     bindSuperclass(vm, vm->rangeClass, listClass);
     DEF_METHOD(vm->rangeClass, Range, clone, 0);
+    DEF_METHOD(vm->rangeClass, Range, contains, 1);
     DEF_METHOD(vm->rangeClass, Range, from, 0);
     DEF_METHOD(vm->rangeClass, Range, init, 2);
     DEF_METHOD(vm->rangeClass, Range, length, 0);
