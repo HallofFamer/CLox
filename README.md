@@ -32,6 +32,7 @@ https://github.com/munificent/craftinginterpreters
 - Immutable variable declaration with `val` keyword for global and local variables(since version 1.4)
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword(since version 1.4)
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten(since version 1.4)
+- New class `Range` in package `util`, as well as range operator(`..`) for range literals. 
 
 ## Roadmap
 
@@ -57,7 +58,7 @@ https://github.com/munificent/craftinginterpreters
 - Immutable variable declaration with `val` keyword.
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword.
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten. 
-- class `Range` in package `util`, as well as range operator(`..`) for range literals. 
+- New class `Range` in package `util`, as well as range operator(`..`) for range literals. 
 
 ### CLox 1.5.0
 - Refined object model which uses Smalltalk's metaclass system.
