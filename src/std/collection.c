@@ -1157,6 +1157,16 @@ LOX_METHOD(Queue, toString) {
     RETURN_OBJ(linkToString(vm, self));
 }
 
+LOX_METHOD(Range, add) {
+    raiseError(vm, "Cannot add an element to instance of class Range.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(Range, addAll) {
+    raiseError(vm, "Cannot add a collection to instance of class Range.");
+    RETURN_NIL;
+}
+
 LOX_METHOD(Range, clone) {
     ASSERT_ARG_COUNT("Range::clone()", 0);
     ObjRange* self = AS_RANGE(receiver);
@@ -1615,6 +1625,8 @@ void registerCollectionPackage(VM* vm) {
 
     vm->rangeClass = defineNativeClass(vm, "Range");
     bindSuperclass(vm, vm->rangeClass, listClass);
+    DEF_METHOD(vm->rangeClass, Range, add, 1);
+    DEF_METHOD(vm->rangeClass, Range, addAll, 1);
     DEF_METHOD(vm->rangeClass, Range, clone, 0);
     DEF_METHOD(vm->rangeClass, Range, contains, 1);
     DEF_METHOD(vm->rangeClass, Range, from, 0);

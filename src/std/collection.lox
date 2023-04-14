@@ -4,6 +4,10 @@ class Collection {
         error("Cannot instantiate from class Collection.");
     }
 
+    add(element) {
+        error("Not implemented, subclass responsibility.");
+    }
+
     addAll(collection){ 
         for(var element : collection){ 
             this.add(element);
