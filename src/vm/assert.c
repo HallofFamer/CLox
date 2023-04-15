@@ -97,6 +97,13 @@ void assertArgIsNumber(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
+void assertArgIsRange(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_RANGE(args[index]) && !isObjInstanceOf(vm, args[index], vm->rangeClass)) {
+        runtimeError(vm, "method %s expects argument %d to be a range.", method, index + 1);
+        exit(70);
+    }
+}
+
 void assertArgIsString(VM* vm, const char* method, Value* args, int index) {
     if (!IS_STRING(args[index]) && !isObjInstanceOf(vm, args[index], vm->stringClass)) {
         runtimeError(vm, "method %s expects argument %d to be a string.", method, index + 1);
