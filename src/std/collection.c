@@ -1188,6 +1188,15 @@ LOX_METHOD(Range, from) {
     RETURN_INT(self->from);
 }
 
+LOX_METHOD(Range, getAt) {
+    ASSERT_ARG_COUNT("Range::getAt(index)", 1);
+    ASSERT_ARG_TYPE("Range::getAt(index)", 0, Int);
+    ObjRange* self = AS_RANGE(receiver);
+    int index = AS_INT(args[0]);
+    assertIntWithinRange(vm, "Range::getAt(index)", index, self->from, self->to, 0);
+    RETURN_INT(self->from + index);
+}
+
 LOX_METHOD(Range, init) {
     ASSERT_ARG_COUNT("Range::init(from, to)", 2);
     ASSERT_ARG_TYPE("Range::init(from, to)", 0, Int);
@@ -1630,6 +1639,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->rangeClass, Range, clone, 0);
     DEF_METHOD(vm->rangeClass, Range, contains, 1);
     DEF_METHOD(vm->rangeClass, Range, from, 0);
+    DEF_METHOD(vm->rangeClass, Range, getAt, 1);
     DEF_METHOD(vm->rangeClass, Range, init, 2);
     DEF_METHOD(vm->rangeClass, Range, length, 0);
     DEF_METHOD(vm->rangeClass, Range, next, 1);
