@@ -1230,7 +1230,7 @@ LOX_METHOD(Range, next) {
 
     ASSERT_ARG_TYPE("Range::next(index)", 0, Int);
     int index = AS_INT(args[0]);
-    if (index < 0 || index < self->to - self->from) RETURN_INT(index + 1);
+    if (index < 0 || index < abs(self->to - self->from)) RETURN_INT(index + 1);
     RETURN_NIL;
 }
 
@@ -1239,7 +1239,9 @@ LOX_METHOD(Range, nextValue) {
     ASSERT_ARG_TYPE("Range::nextValue(index)", 0, Int);
     ObjRange* self = AS_RANGE(receiver);
     int index = AS_INT(args[0]);
-    if (index > -1 && index < self->to - self->from + 1) RETURN_INT(self->from + index);
+
+    int step = (self->from < self->to) ? index : -index;
+    if (index > -1 && index < abs(self->to - self->from) + 1) RETURN_INT(self->from + step);
     RETURN_NIL;
 }
 
