@@ -1179,7 +1179,8 @@ LOX_METHOD(Range, contains) {
     if (!IS_INT(args[0])) RETURN_FALSE;
     ObjRange* self = AS_RANGE(receiver);
     int element = AS_INT(args[0]);
-    RETURN_BOOL(element >= self->from && element <= self->to);
+    if (self->from < self->to) RETURN_BOOL(element >= self->from && element <= self->to);
+    else RETURN_BOOL(element >= self->to && element <= self->from);
 }
 
 LOX_METHOD(Range, from) {
@@ -1193,7 +1194,10 @@ LOX_METHOD(Range, getAt) {
     ASSERT_ARG_TYPE("Range::getAt(index)", 0, Int);
     ObjRange* self = AS_RANGE(receiver);
     int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "Range::getAt(index)", index, self->from, self->to, 0);
+
+    int min = (self->from < self->to) ? self->from : self->to;
+    int max = (self->from < self->to) ? self->to : self->from;
+    assertIntWithinRange(vm, "Range::getAt(index)", index, min, max, 0);
     RETURN_INT(self->from + index);
 }
 
@@ -1213,7 +1217,7 @@ LOX_METHOD(Range, init) {
 LOX_METHOD(Range, length) {
     ASSERT_ARG_COUNT("Range::length()", 0);
     ObjRange* self = AS_RANGE(receiver);
-    RETURN_INT(self->to - self->from + 1);
+    RETURN_INT(abs(self->to - self->from) + 1);
 }
 
 LOX_METHOD(Range, next) {
@@ -1251,9 +1255,17 @@ LOX_METHOD(Range, toArray) {
     ObjArray* array = newArray(vm);
     push(vm, OBJ_VAL(array));
 
-    for (int i = self->from; i <= self->to; i++) {
-        valueArrayWrite(vm, &array->elements, INT_VAL(i));
+    if (self->from < self->to) {
+        for (int i = self->from; i <= self->to; i++) {
+            valueArrayWrite(vm, &array->elements, INT_VAL(i));
+        }
     }
+    else { 
+        for (int i = self->to; i >= self->from; i--) {
+            valueArrayWrite(vm, &array->elements, INT_VAL(i));
+        }
+    }
+
     pop(vm);
     RETURN_OBJ(array);
 }
