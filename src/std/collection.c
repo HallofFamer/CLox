@@ -1203,7 +1203,6 @@ LOX_METHOD(Range, init) {
     ASSERT_ARG_TYPE("Range::init(from, to)", 0, Int);
     int from = AS_INT(args[0]);
     int to = AS_INT(args[1]);
-    if(from < to) raiseError(vm, "An instance of class Range must have length >= 0.");
 
     ObjRange* self = AS_RANGE(receiver);
     self->from = from;
@@ -1632,8 +1631,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(setClass, Set, toArray, 0);
     DEF_METHOD(setClass, Set, toString, 0);
 
-    vm->rangeClass = defineNativeClass(vm, "Range");
-    bindSuperclass(vm, vm->rangeClass, listClass);
+    vm->rangeClass = getNativeClass(vm, "Range");
     DEF_METHOD(vm->rangeClass, Range, add, 1);
     DEF_METHOD(vm->rangeClass, Range, addAll, 1);
     DEF_METHOD(vm->rangeClass, Range, clone, 0);

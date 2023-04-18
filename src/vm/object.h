@@ -145,7 +145,6 @@ typedef struct {
     Obj obj;
     int from;
     int to;
-    int step;
 } ObjRange;
 
 typedef struct {

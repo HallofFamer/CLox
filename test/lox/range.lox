@@ -14,5 +14,10 @@ for(var n : range){
 }
 println("");
 
+println("Looping through Range again with step 2: ");
+range.step(2, fun(n){ 
+    println(n);
+});
+
 print("Convert Range to Array: ");
 println(range.toArray());
