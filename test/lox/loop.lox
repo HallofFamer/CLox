@@ -7,11 +7,11 @@ while(i < 10){
 println("");
 
 println("Loop with Break statement using 'while': ");
-var i = 0;
+var j = 0;
 while(true){ 
-    if(i > 5) break;
-    println(i);
-    i = i + 1;
+    if(j > 5) break;
+    println(j);
+    j = j + 1;
 }
 println("");
 
