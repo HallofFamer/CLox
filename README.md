@@ -32,7 +32,7 @@ https://github.com/munificent/craftinginterpreters
 - Immutable variable declaration with `val` keyword for global and local variables(since version 1.4)
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword(since version 1.4)
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten(since version 1.4)
-- New class `Range` in package `util`, as well as range operator(`..`) for range literals. 
+- New class `Range` in package `util`, as well as range operator(`..`) for range literals(since version 1.4) 
 
 ## Roadmap
 
@@ -48,19 +48,19 @@ https://github.com/munificent/craftinginterpreters
 - Allow customized runtime configurations for CLox at startup with clox.ini
 - Split the `Number` class into `Int` and `Float` classes, which will distinguish between integers and floating numbers.
 
-### CLox v1.3.0(current version)
+### CLox v1.3.0
 - Array/Dictionary Literals and square bracket(subscript) notation for array/dictionary access.
 - Variadic Functions, Anonymous Functions(local return) and Lambda Expressions(nonlocal return).
 - Replace C style for loop by Kotlin style for-in loop for collection types.
 - Clox Standard Library improvement: New package `collection` and `io`.
 
-### CLox 1.4.0(upcoming version)
+### CLox 1.4.0(current version)
 - Immutable variable declaration with `val` keyword.
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword.
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten. 
-- New class `Range` in package `util`, as well as range operator(`..`) for range literals. 
+- New class `Range` in package `collection`, as well as range operator(`..`) for range literals. 
 
-### CLox 1.5.0
+### CLox 1.5.0(upcoming version)
 - Refined object model which uses Smalltalk's metaclass system.
 - Metaclasses(which enables class methods) and traits(can be implemented by classes).
 - Improved Clox standard library that makes use of metaclasses and traits. 
