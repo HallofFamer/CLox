@@ -42,11 +42,22 @@ ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
 }
 
 ObjClass* newClass(VM* vm, ObjString* name) {
-    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->classClass);
+    ObjClass* metaclass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->classClass);
+    push(vm, OBJ_VAL(metaclass));
+    metaclass->name = formattedString(vm, "%s class", name->chars);
+    metaclass->superclass = NULL;
+    metaclass->isNative = false;
+    initTable(&metaclass->methods);
+
+    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
+    push(vm, OBJ_VAL(klass));
     klass->name = name;
     klass->superclass = NULL;
     klass->isNative = false;
     initTable(&klass->methods);
+
+    pop(vm);
+    pop(vm);
     return klass;
 }
 

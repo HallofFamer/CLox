@@ -722,6 +722,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, toString, 0);
 
     vm->classClass = defineNativeClass(vm, "Class");
+    vm->objectClass->obj.klass = vm->classClass;
     bindSuperclass(vm, vm->classClass, vm->objectClass);
     DEF_METHOD(vm->classClass, Class, clone, 0);
     DEF_METHOD(vm->classClass, Class, getClass, 0);
