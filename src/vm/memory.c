@@ -83,6 +83,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjClass* klass = (ObjClass*)object;
             markObject(vm, (Obj*)klass->name);
             markObject(vm, (Obj*)klass->superclass);
+            markObject(vm, (Obj*)klass->obj.klass);
             markTable(vm, &klass->methods);
             break;
         }
