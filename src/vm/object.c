@@ -28,6 +28,17 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     return object;
 }
 
+ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass) {
+    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
+    push(vm, OBJ_VAL(klass));
+    klass->name = name;
+    klass->superclass = NULL;
+    klass->isNative = false;
+    initTable(&klass->methods);
+    pop(vm);
+    return klass;
+}
+
 ObjArray* newArray(VM* vm) {
     ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY, vm->arrayClass);
     initValueArray(&array->elements);
@@ -42,21 +53,10 @@ ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
 }
 
 ObjClass* newClass(VM* vm, ObjString* name) {
-    ObjClass* metaclass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->classClass);
+    ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
+    ObjClass* metaclass = createClass(vm, metaclassName, vm->classClass);
     push(vm, OBJ_VAL(metaclass));
-    metaclass->name = formattedString(vm, "%s class", name->chars);
-    metaclass->superclass = NULL;
-    metaclass->isNative = false;
-    initTable(&metaclass->methods);
-
-    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
-    push(vm, OBJ_VAL(klass));
-    klass->name = name;
-    klass->superclass = NULL;
-    klass->isNative = false;
-    initTable(&klass->methods);
-
-    pop(vm);
+    ObjClass* klass = createClass(vm, name, metaclass);
     pop(vm);
     return klass;
 }

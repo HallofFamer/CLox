@@ -30,6 +30,18 @@ static int lcm(int self, int other) {
     return (self * other) / gcd(self, other);
 }
 
+static ObjClass* defineSpecialClass(VM* vm, const char* name) {
+    ObjString* className = newString(vm, name);
+    push(vm, OBJ_VAL(className));
+    ObjClass* nativeClass = createClass(vm, className, NULL);
+    nativeClass->isNative = true;
+    push(vm, OBJ_VAL(nativeClass));
+    tableSet(vm, &vm->globalValues, AS_STRING(vm->stack[0]), vm->stack[1]);
+    pop(vm);
+    pop(vm);
+    return nativeClass;
+}
+
 LOX_METHOD(Bool, clone) {
     ASSERT_ARG_COUNT("Bool::clone()", 0);
     RETURN_BOOL(receiver);
@@ -713,7 +725,7 @@ LOX_METHOD(String, trim) {
 }
 
 void registerLangPackage(VM* vm) {
-    vm->objectClass = defineNativeClass(vm, "Object");
+    vm->objectClass = defineSpecialClass(vm, "Object");
     DEF_METHOD(vm->objectClass, Object, clone, 0);
     DEF_METHOD(vm->objectClass, Object, equals, 1);
     DEF_METHOD(vm->objectClass, Object, getClass, 0);
@@ -724,7 +736,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, memberOf, 1);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
 
-    vm->classClass = defineNativeClass(vm, "Class");
+    vm->classClass = defineSpecialClass(vm, "Class");
     bindSuperclass(vm, vm->classClass, vm->objectClass);
     DEF_METHOD(vm->classClass, Class, clone, 0);
     DEF_METHOD(vm->classClass, Class, getClass, 0);
@@ -737,8 +749,12 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->classClass, Class, name, 0);
     DEF_METHOD(vm->classClass, Class, superclass, 0);
     DEF_METHOD(vm->classClass, Class, toString, 0);
-    ObjClass* objectMetaclass = vm->objectClass->obj.klass;
+
+    ObjClass* objectMetaclass = defineSpecialClass(vm, "Object class");
+    vm->objectClass->obj.klass = objectMetaclass;
     objectMetaclass->obj.klass = vm->classClass;
+    bindSuperclass(vm, objectMetaclass, vm->classClass);
+    vm->classClass->obj.klass = vm->classClass;
 
     initNativePackage(vm, "src/std/lang.lox");
 

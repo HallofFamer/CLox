@@ -304,7 +304,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
 static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) {
-        runtimeError(vm, "Undefined property '%s'.", name->chars);
+        runtimeError(vm, "Undefined method '%s'.", name->chars);
         return false;
     }
     return callMethod(vm, method, argCount);
@@ -392,6 +392,13 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     }
     subclass->superclass = superclass;
     tableAddAll(vm, &superclass->methods, &subclass->methods);
+
+    ObjClass* subMetaclass = subclass->obj.klass;
+    ObjClass* superMetaclass = superclass->obj.klass;
+    if (subMetaclass != NULL && superMetaclass != NULL) {
+        subMetaclass->superclass = superMetaclass;
+        tableAddAll(vm, &superMetaclass->methods, &subMetaclass->methods);
+    }
 }
 
 static InterpretResult run(VM* vm) {

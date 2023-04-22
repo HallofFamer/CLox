@@ -187,6 +187,7 @@ typedef struct {
 } ObjBoundMethod;
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
+ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass);
 ObjArray* newArray(VM* vm);
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method);
 ObjClass* newClass(VM* vm, ObjString* name);
