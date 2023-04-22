@@ -53,12 +53,16 @@ LOX_METHOD(Class, clone) {
 
 LOX_METHOD(Class, getClass) {
     ASSERT_ARG_COUNT("Class::getClass()", 0);
-    RETURN_OBJ(vm->classClass);
+    ObjClass* klass = AS_CLASS(receiver);
+    if (klass == vm->classClass) RETURN_OBJ(vm->classClass);
+    else RETURN_OBJ(getObjClass(vm, receiver));
 }
 
 LOX_METHOD(Class, getClassName) {
     ASSERT_ARG_COUNT("Class::getClassName()", 0);
-    RETURN_OBJ(vm->classClass->name);
+    ObjClass* klass = AS_CLASS(receiver);
+    if (klass == vm->classClass) RETURN_OBJ(vm->classClass->name);
+    else RETURN_OBJ(getObjClass(vm, receiver)->name);
 }
 
 LOX_METHOD(Class, hasMethod) {
@@ -78,12 +82,10 @@ LOX_METHOD(Class, init) {
     RETURN_OBJ(klass);
 }
 
-LOX_METHOD(Class, instanceOf) {
-    ASSERT_ARG_COUNT("Class::instanceOf(class)", 1);
-    if (!IS_CLASS(args[0])) RETURN_FALSE;
-    ObjClass* klass = AS_CLASS(args[0]);
-    if (klass == vm->classClass) RETURN_TRUE;
-    else RETURN_FALSE;
+LOX_METHOD(Class, isMetaclass) {
+    ASSERT_ARG_COUNT("Class::isMetaclass()", 0);
+    ObjClass* self = AS_CLASS(receiver);
+    RETURN_BOOL(self->obj.klass == vm->classClass);
 }
 
 LOX_METHOD(Class, isNative) {
@@ -94,8 +96,9 @@ LOX_METHOD(Class, isNative) {
 LOX_METHOD(Class, memberOf) {
     ASSERT_ARG_COUNT("Class::memberOf(class)", 1);
     if (!IS_CLASS(args[0])) RETURN_FALSE;
+    ObjClass* metaclass = AS_CLASS(receiver)->obj.klass;
     ObjClass* klass = AS_CLASS(args[0]);
-    if (klass == vm->classClass) RETURN_TRUE;
+    if (klass == metaclass) RETURN_TRUE;
     else RETURN_FALSE;
 }
 
@@ -106,9 +109,9 @@ LOX_METHOD(Class, name) {
 
 LOX_METHOD(Class, superclass) {
     ASSERT_ARG_COUNT("Class::superclass()", 0);
-    ObjClass* klass = AS_CLASS(receiver);
-    if (klass->superclass == NULL) RETURN_NIL;
-    RETURN_OBJ(klass->superclass);
+    ObjClass* self = AS_CLASS(receiver);
+    if (self->superclass == NULL) RETURN_NIL;
+    RETURN_OBJ(self->superclass);
 }
 
 LOX_METHOD(Class, toString) {
@@ -722,20 +725,20 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, toString, 0);
 
     vm->classClass = defineNativeClass(vm, "Class");
-    vm->objectClass->obj.klass = vm->classClass;
     bindSuperclass(vm, vm->classClass, vm->objectClass);
     DEF_METHOD(vm->classClass, Class, clone, 0);
     DEF_METHOD(vm->classClass, Class, getClass, 0);
     DEF_METHOD(vm->classClass, Class, getClassName, 0);
     DEF_METHOD(vm->classClass, Class, hasMethod, 1);
     DEF_METHOD(vm->classClass, Class, init, 2);
-    DEF_METHOD(vm->classClass, Class, instanceOf, 1);
+    DEF_METHOD(vm->classClass, Class, isMetaclass, 0);
     DEF_METHOD(vm->classClass, Class, isNative, 0);
     DEF_METHOD(vm->classClass, Class, memberOf, 1);
     DEF_METHOD(vm->classClass, Class, name, 0);
     DEF_METHOD(vm->classClass, Class, superclass, 0);
     DEF_METHOD(vm->classClass, Class, toString, 0);
-    vm->objectClass->obj.klass = vm->classClass;
+    ObjClass* objectMetaclass = vm->objectClass->obj.klass;
+    objectMetaclass->obj.klass = vm->classClass;
 
     initNativePackage(vm, "src/std/lang.lox");
 

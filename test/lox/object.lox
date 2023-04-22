@@ -1,22 +1,43 @@
 class Brioche { }
+print("Class Brioche: ");
 println(Brioche);
+print("Instance of class Brioche: ");
 println(Brioche());
 
-class Pair { }
+class Pair { 
+    equals(pair){ 
+        return (this.first == pair.first) and (this.second == pair.second); 
+    }    
+}
+
 var pair = Pair();
 pair.first = 1;
 pair.second = 2;
+print("Adding the pairs: ");
 println(pair.first + pair.second);
+println("");
 
 var object = Object();
+print("Printing object: ");
 println(object);
+print("Object is equal to 'Hello World': ");
 println(object.equals("Hello World"));
+print("Object has field length: ");
 println(object.hasField("length"));
+print("Object's class: ");
 println(object.getClass());
+print("Object is instance of class Object: ");
 println(object.instanceOf(Object));
+print("Object is member of class Object: ");
 println(object.memberOf(Object));
+print("Converting object to string: ");
 println(object.toString());
+println("");
 
 var pair2 = pair.clone();
+print("Clone of pair and adding the fields: ");
 println(pair2.first + pair2.second);
+print("Compare pairs with equality operator: ");
+println(pair == pair2);
+print("Pair is equal to its clone: ");
 println(pair.equals(pair2));
