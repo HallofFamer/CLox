@@ -183,6 +183,7 @@
     <None Include="test\lox\initializer.lox" />
     <None Include="test\lox\invoke.lox" />
     <None Include="test\lox\io.lox" />
+    <None Include="test\lox\klass.lox" />
     <None Include="test\lox\lambda.lox" />
     <None Include="test\lox\lang.lox" />
     <None Include="test\lox\linkedlist.lox" />

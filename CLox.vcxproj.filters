@@ -195,6 +195,9 @@
     <None Include="test\lox\range.lox">
       <Filter>Test Files\lox</Filter>
     </None>
+    <None Include="test\lox\klass.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">
