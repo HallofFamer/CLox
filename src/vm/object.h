@@ -101,7 +101,7 @@ typedef struct {
     NativeMethod method;
 } ObjNativeMethod;
 
-typedef struct ObjNode {
+typedef struct {
     Obj obj;
     Value element;
     struct ObjNode* prev;

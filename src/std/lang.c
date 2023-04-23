@@ -30,18 +30,6 @@ static int lcm(int self, int other) {
     return (self * other) / gcd(self, other);
 }
 
-static ObjClass* defineSpecialClass(VM* vm, const char* name) {
-    ObjString* className = newString(vm, name);
-    push(vm, OBJ_VAL(className));
-    ObjClass* nativeClass = createClass(vm, className, NULL);
-    nativeClass->isNative = true;
-    push(vm, OBJ_VAL(nativeClass));
-    tableSet(vm, &vm->globalValues, AS_STRING(vm->stack[0]), vm->stack[1]);
-    pop(vm);
-    pop(vm);
-    return nativeClass;
-}
-
 LOX_METHOD(Bool, clone) {
     ASSERT_ARG_COUNT("Bool::clone()", 0);
     RETURN_BOOL(receiver);
@@ -63,20 +51,6 @@ LOX_METHOD(Class, clone) {
     RETURN_OBJ(receiver);
 }
 
-LOX_METHOD(Class, getClass) {
-    ASSERT_ARG_COUNT("Class::getClass()", 0);
-    ObjClass* klass = AS_CLASS(receiver);
-    if (klass == vm->classClass) RETURN_OBJ(vm->classClass);
-    else RETURN_OBJ(getObjClass(vm, receiver));
-}
-
-LOX_METHOD(Class, getClassName) {
-    ASSERT_ARG_COUNT("Class::getClassName()", 0);
-    ObjClass* klass = AS_CLASS(receiver);
-    if (klass == vm->classClass) RETURN_OBJ(vm->classClass->name);
-    else RETURN_OBJ(getObjClass(vm, receiver)->name);
-}
-
 LOX_METHOD(Class, hasMethod) {
     ASSERT_ARG_COUNT("Class::hasMethod(method)", 1);
     ASSERT_ARG_TYPE("Class::hasMethod(method)", 0, String);
@@ -96,8 +70,7 @@ LOX_METHOD(Class, init) {
 
 LOX_METHOD(Class, isMetaclass) {
     ASSERT_ARG_COUNT("Class::isMetaclass()", 0);
-    ObjClass* self = AS_CLASS(receiver);
-    RETURN_BOOL(self->obj.klass == vm->classClass);
+    RETURN_FALSE;
 }
 
 LOX_METHOD(Class, isNative) {
@@ -317,6 +290,54 @@ LOX_METHOD(Int, toOctal) {
 LOX_METHOD(Int, toString) {
     ASSERT_ARG_COUNT("Int::toString()", 0);
     RETURN_STRING_FMT("%d", AS_INT(receiver));
+}
+
+LOX_METHOD(Metaclass, getClass) {
+    ASSERT_ARG_COUNT("Metaclass::getClass()", 0);
+    RETURN_OBJ(vm->metaclassClass);
+}
+
+LOX_METHOD(Metaclass, getClassName) {
+    ASSERT_ARG_COUNT("Metaclass::getClassName()", 0);
+    RETURN_OBJ(vm->metaclassClass->name);
+}
+
+LOX_METHOD(Metaclass, init) {
+    raiseError(vm, "Cannot instantiate from class Metaclass.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(Metaclass, instanceOf) {
+    ASSERT_ARG_COUNT("Metaclass::instanceOf(class)", 1);
+    if (!IS_CLASS(args[0])) RETURN_FALSE;
+    ObjClass* metaclass = AS_CLASS(args[0]);
+    if (metaclass == vm->metaclassClass) RETURN_TRUE;
+    else RETURN_FALSE;
+}
+
+LOX_METHOD(Metaclass, isMetaclass) {
+    ASSERT_ARG_COUNT("Class::isMetaclass()", 0);
+    RETURN_TRUE;
+}
+
+LOX_METHOD(Metaclass, memberOf) {
+    ASSERT_ARG_COUNT("Metaclass::memberOf(class)", 1);
+    if (!IS_CLASS(args[0])) RETURN_FALSE;
+    ObjClass* metaclass = AS_CLASS(args[0]);
+    if (metaclass == vm->metaclassClass) RETURN_TRUE;
+    else RETURN_FALSE;
+}
+
+LOX_METHOD(Metaclass, namedInstance) {
+    ASSERT_ARG_COUNT("Metaclass::namedInstance()", 0);
+    ObjClass* metaclass = AS_CLASS(receiver);
+    ObjString* className = subString(vm, metaclass->name, 0, metaclass->name->length - 7);
+    RETURN_OBJ(getNativeClass(vm, className->chars));
+}
+
+LOX_METHOD(Metaclass, toString) {
+    ASSERT_ARG_COUNT("Metaclass::toString()", 0);
+    RETURN_STRING_FMT("<metaclass %s>", AS_CLASS(receiver)->name->chars);
 }
 
 LOX_METHOD(Method, arity) {
@@ -724,6 +745,23 @@ LOX_METHOD(String, trim) {
     RETURN_OBJ(trimString(vm, AS_STRING(receiver)));
 }
 
+static ObjClass* defineSpecialClass(VM* vm, const char* name) {
+    ObjString* className = newString(vm, name);
+    push(vm, OBJ_VAL(className));
+    ObjClass* nativeClass = createClass(vm, className, NULL);
+    nativeClass->isNative = true;
+    push(vm, OBJ_VAL(nativeClass));
+    tableSet(vm, &vm->globalValues, AS_STRING(vm->stack[0]), vm->stack[1]);
+    pop(vm);
+    pop(vm);
+    return nativeClass;
+}
+
+static void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
+    subclass->superclass = superclass;
+    tableAddAll(vm, &superclass->methods, &subclass->methods);
+}
+
 void registerLangPackage(VM* vm) {
     vm->objectClass = defineSpecialClass(vm, "Object");
     DEF_METHOD(vm->objectClass, Object, clone, 0);
@@ -737,10 +775,8 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, toString, 0);
 
     vm->classClass = defineSpecialClass(vm, "Class");
-    bindSuperclass(vm, vm->classClass, vm->objectClass);
+    inheritSuperclass(vm, vm->classClass, vm->objectClass);
     DEF_METHOD(vm->classClass, Class, clone, 0);
-    DEF_METHOD(vm->classClass, Class, getClass, 0);
-    DEF_METHOD(vm->classClass, Class, getClassName, 0);
     DEF_METHOD(vm->classClass, Class, hasMethod, 1);
     DEF_METHOD(vm->classClass, Class, init, 2);
     DEF_METHOD(vm->classClass, Class, isMetaclass, 0);
@@ -750,11 +786,31 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->classClass, Class, superclass, 0);
     DEF_METHOD(vm->classClass, Class, toString, 0);
 
+    vm->metaclassClass = defineSpecialClass(vm, "Metaclass");
+    inheritSuperclass(vm, vm->metaclassClass, vm->classClass);
+    DEF_METHOD(vm->metaclassClass, Metaclass, getClass, 0);
+    DEF_METHOD(vm->metaclassClass, Metaclass, getClassName, 0);
+    DEF_METHOD(vm->metaclassClass, Metaclass, init, 2);
+    DEF_METHOD(vm->metaclassClass, Metaclass, instanceOf, 1);
+    DEF_METHOD(vm->metaclassClass, Metaclass, isMetaclass, 0);
+    DEF_METHOD(vm->metaclassClass, Metaclass, memberOf, 1);
+    DEF_METHOD(vm->metaclassClass, Metaclass, namedInstance, 0);
+    DEF_METHOD(vm->metaclassClass, Metaclass, toString, 0);
+
     ObjClass* objectMetaclass = defineSpecialClass(vm, "Object class");
     vm->objectClass->obj.klass = objectMetaclass;
     objectMetaclass->obj.klass = vm->classClass;
-    bindSuperclass(vm, objectMetaclass, vm->classClass);
-    vm->classClass->obj.klass = vm->classClass;
+    inheritSuperclass(vm, objectMetaclass, vm->classClass);
+
+    ObjClass* classMetaclass = defineSpecialClass(vm, "Class class");
+    vm->classClass->obj.klass = classMetaclass;
+    classMetaclass->obj.klass = vm->metaclassClass;
+    inheritSuperclass(vm, classMetaclass, objectMetaclass);
+
+    ObjClass* metaclassMetaclass = defineSpecialClass(vm, "Metaclass class");
+    vm->metaclassClass->obj.klass = metaclassMetaclass;
+    metaclassMetaclass->obj.klass = vm->metaclassClass;
+    inheritSuperclass(vm, metaclassMetaclass, classMetaclass);
 
     initNativePackage(vm, "src/std/lang.lox");
 

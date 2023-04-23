@@ -395,10 +395,8 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
 
     ObjClass* subMetaclass = subclass->obj.klass;
     ObjClass* superMetaclass = superclass->obj.klass;
-    if (subMetaclass != NULL && superMetaclass != NULL) {
-        subMetaclass->superclass = superMetaclass;
-        tableAddAll(vm, &superMetaclass->methods, &subMetaclass->methods);
-    }
+    subMetaclass->superclass = superMetaclass;
+    tableAddAll(vm, &superMetaclass->methods, &subMetaclass->methods);
 }
 
 static InterpretResult run(VM* vm) {

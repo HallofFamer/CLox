@@ -32,6 +32,7 @@ typedef struct {
 struct VM {
     ObjClass* objectClass;
     ObjClass* classClass;
+    ObjClass* metaclassClass;
     ObjClass* nilClass;
     ObjClass* boolClass;
     ObjClass* numberClass;

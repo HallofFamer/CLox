@@ -54,7 +54,7 @@ ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
 
 ObjClass* newClass(VM* vm, ObjString* name) {
     ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
-    ObjClass* metaclass = createClass(vm, metaclassName, vm->classClass);
+    ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass);
     push(vm, OBJ_VAL(metaclass));
     ObjClass* klass = createClass(vm, name, metaclass);
     pop(vm);
