@@ -33,6 +33,7 @@ https://github.com/munificent/craftinginterpreters
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword(since version 1.4)
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten(since version 1.4)
 - New class `Range` in package `util`, as well as range operator(`..`) for range literals(since version 1.4) 
+- Refined object model which is similar to Smalltalk's metaclass system(since version 1.5)
 
 ## Roadmap
 
@@ -61,7 +62,7 @@ https://github.com/munificent/craftinginterpreters
 - New class `Range` in package `collection`, as well as range operator(`..`) for range literals. 
 
 ### CLox 1.5.0(upcoming version)
-- Refined object model which uses Smalltalk's metaclass system.
+- Refined object model which is similar to Smalltalk's metaclass system.
 - Metaclasses(which enables class methods) and traits(can be implemented by classes).
 - Improved Clox standard library that makes use of metaclasses and traits. 
 - Anonymous classes/traits similar to anonymous functions/lambda.
