@@ -745,23 +745,6 @@ LOX_METHOD(String, trim) {
     RETURN_OBJ(trimString(vm, AS_STRING(receiver)));
 }
 
-static ObjClass* defineSpecialClass(VM* vm, const char* name) {
-    ObjString* className = newString(vm, name);
-    push(vm, OBJ_VAL(className));
-    ObjClass* nativeClass = createClass(vm, className, NULL);
-    nativeClass->isNative = true;
-    push(vm, OBJ_VAL(nativeClass));
-    tableSet(vm, &vm->globalValues, AS_STRING(vm->stack[0]), vm->stack[1]);
-    pop(vm);
-    pop(vm);
-    return nativeClass;
-}
-
-static void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
-    subclass->superclass = superclass;
-    tableAddAll(vm, &superclass->methods, &subclass->methods);
-}
-
 void registerLangPackage(VM* vm) {
     vm->objectClass = defineSpecialClass(vm, "Object");
     DEF_METHOD(vm->objectClass, Object, clone, 0);

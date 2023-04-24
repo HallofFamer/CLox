@@ -385,18 +385,18 @@ static void defineMethod(VM* vm, ObjString* name) {
     pop(vm);
 }
 
-void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
-    if (superclass == NULL) {
-        runtimeError(vm, "Superclass cannot be null for class %s", subclass->name);
-        return;
-    }
+void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     subclass->superclass = superclass;
     tableAddAll(vm, &superclass->methods, &subclass->methods);
+}
 
-    ObjClass* subMetaclass = subclass->obj.klass;
-    ObjClass* superMetaclass = superclass->obj.klass;
-    subMetaclass->superclass = superMetaclass;
-    tableAddAll(vm, &superMetaclass->methods, &subMetaclass->methods);
+void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
+    if (superclass == NULL) {
+        runtimeError(vm, "Superclass cannot be NULL for class %s", subclass->name);
+        return;
+    }
+    inheritSuperclass(vm, subclass, superclass);
+    inheritSuperclass(vm, subclass->obj.klass, superclass->obj.klass);
 }
 
 static InterpretResult run(VM* vm) {

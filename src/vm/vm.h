@@ -84,6 +84,7 @@ void freeVM(VM* vm);
 bool isFalsey(Value value);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 bool loadGlobal(VM* vm, ObjString* name, Value* value);
+void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);

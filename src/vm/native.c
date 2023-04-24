@@ -140,6 +140,18 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, Na
     pop(vm);
 }
 
+ObjClass* defineSpecialClass(VM* vm, const char* name) {
+    ObjString* className = newString(vm, name);
+    push(vm, OBJ_VAL(className));
+    ObjClass* nativeClass = createClass(vm, className, NULL);
+    nativeClass->isNative = true;
+    push(vm, OBJ_VAL(nativeClass));
+    tableSet(vm, &vm->globalValues, AS_STRING(vm->stack[0]), vm->stack[1]);
+    pop(vm);
+    pop(vm);
+    return nativeClass;
+}
+
 ObjClass* getNativeClass(VM* vm, const char* name) {
     Value klass;
     tableGet(&vm->globalValues, newString(vm, name), &klass);
