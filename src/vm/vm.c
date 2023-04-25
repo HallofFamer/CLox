@@ -378,9 +378,10 @@ static void closeUpvalues(VM* vm, Value* last) {
     }
 }
 
-static void defineMethod(VM* vm, ObjString* name) {
+static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     Value method = peek(vm, 0);
     ObjClass* klass = AS_CLASS(peek(vm, 1));
+    if (isClassMethod) klass = klass->obj.klass;
     tableSet(vm, &klass->methods, name, method);
     pop(vm);
 }
@@ -745,8 +746,11 @@ static InterpretResult run(VM* vm) {
                 pop(vm);
                 break;
             }
-            case OP_METHOD:
-                defineMethod(vm, READ_STRING());
+            case OP_INSTANCE_METHOD:
+                defineMethod(vm, READ_STRING(), false);
+                break;
+            case OP_CLASS_METHOD:
+                defineMethod(vm, READ_STRING(), true);
                 break;
             case OP_ARRAY: {
                 int elementCount = READ_BYTE();

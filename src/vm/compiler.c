@@ -816,6 +816,7 @@ static void function(Compiler* enclosing, FunctionType type) {
 }
 
 static void method(Compiler* compiler) {
+    uint8_t opCode = match(compiler->parser, TOKEN_CLASS) ? OP_CLASS_METHOD : OP_INSTANCE_METHOD;
     consume(compiler->parser, TOKEN_IDENTIFIER, "Expect method name.");
     uint8_t constant = identifierConstant(compiler, &compiler->parser->previous);
 
@@ -825,7 +826,7 @@ static void method(Compiler* compiler) {
     }
 
     function(compiler, type);
-    emitBytes(compiler, OP_METHOD, constant);
+    emitBytes(compiler, opCode, constant);
 }
 
 static void classDeclaration(Compiler* compiler) {

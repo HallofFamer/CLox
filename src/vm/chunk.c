@@ -65,7 +65,8 @@ int opCodeOffset(Chunk* chunk, int ip) {
         case OP_SET_PROPERTY:
         case OP_ARRAY:
         case OP_DICTIONARY:
-        case OP_METHOD:
+        case OP_INSTANCE_METHOD:
+        case OP_CLASS_METHOD:
             return 2;
 
         case OP_INVOKE:
