@@ -14,9 +14,14 @@ println(s.getClass().getClass().getClass().getClass().getClass().name());
 println("");
 
 class Point { 
+
     init(x, y){ 
         this.x = x;
         this.y = y;
+    }
+
+    class getDefault(){ 
+        return this(0, 0);
     }
 
     distance(p){ 
@@ -34,6 +39,7 @@ val p2 = Point(4, 6);
 println("Creating point object p2: " + p2.toString());
 print("Distance between p and p2 is: ");
 println(p.distance(p2));
+print("Creating default point object: " + Point.getDefault().toString());
 println("");
 
 print("Class of point object is: ");
