@@ -28,17 +28,6 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     return object;
 }
 
-ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass) {
-    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
-    push(vm, OBJ_VAL(klass));
-    klass->name = name;
-    klass->superclass = NULL;
-    klass->isNative = false;
-    initTable(&klass->methods);
-    pop(vm);
-    return klass;
-}
-
 ObjArray* newArray(VM* vm) {
     ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY, vm->arrayClass);
     initValueArray(&array->elements);
@@ -159,6 +148,17 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
     return upvalue;
 }
 
+ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass) {
+    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
+    push(vm, OBJ_VAL(klass));
+    klass->name = name;
+    klass->superclass = NULL;
+    klass->isNative = false;
+    initTable(&klass->methods);
+    pop(vm);
+    return klass;
+}
+
 ObjClass* getObjClass(VM* vm, Value value) {
     if (IS_BOOL(value)) return vm->boolClass;
     else if (IS_NIL(value)) return vm->nilClass;
@@ -178,6 +178,20 @@ bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass) {
         superClass = superClass->superclass;
     }
     return false;
+}
+
+void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
+    subclass->superclass = superclass;
+    tableAddAll(vm, &superclass->methods, &subclass->methods);
+}
+
+void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
+    if (superclass == NULL) {
+        runtimeError(vm, "Superclass cannot be NULL for class %s", subclass->name);
+        return;
+    }
+    inheritSuperclass(vm, subclass, superclass);
+    inheritSuperclass(vm, subclass->obj.klass, superclass->obj.klass);
 }
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {

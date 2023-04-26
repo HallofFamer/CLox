@@ -101,12 +101,12 @@ typedef struct {
     NativeMethod method;
 } ObjNativeMethod;
 
-typedef struct {
+struct ObjNode {
     Obj obj;
     Value element;
     struct ObjNode* prev;
     struct ObjNode* next;
-} ObjNode;
+};
 
 struct ObjString {
     Obj obj;
@@ -187,7 +187,6 @@ typedef struct {
 } ObjBoundMethod;
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
-ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass);
 ObjArray* newArray(VM* vm);
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method);
 ObjClass* newClass(VM* vm, ObjString* name);
@@ -204,8 +203,11 @@ ObjRange* newRange(VM* vm, int from, int to);
 ObjRecord* newRecord(VM* vm, void* data);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 
+ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass);
 ObjClass* getObjClass(VM* vm, Value value);
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);
+void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
+void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
 void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* name);

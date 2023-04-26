@@ -386,20 +386,6 @@ static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     pop(vm);
 }
 
-void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
-    subclass->superclass = superclass;
-    tableAddAll(vm, &superclass->methods, &subclass->methods);
-}
-
-void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
-    if (superclass == NULL) {
-        runtimeError(vm, "Superclass cannot be NULL for class %s", subclass->name);
-        return;
-    }
-    inheritSuperclass(vm, subclass, superclass);
-    inheritSuperclass(vm, subclass->obj.klass, superclass->obj.klass);
-}
-
 static InterpretResult run(VM* vm) {
     CallFrame* frame = &vm->frames[vm->frameCount - 1];
 
