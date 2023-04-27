@@ -154,6 +154,7 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass) {
     klass->name = name;
     klass->superclass = NULL;
     klass->isNative = false;
+    initTable(&klass->fields);
     initTable(&klass->methods);
     pop(vm);
     return klass;

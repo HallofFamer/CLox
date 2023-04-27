@@ -496,8 +496,23 @@ static InterpretResult run(VM* vm) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
                 }
+                else if (IS_CLASS(receiver)) {
+                    ObjClass* klass = AS_CLASS(receiver);
+                    ObjString* name = READ_STRING();
+                    Value value;
+
+                    if (tableGet(&klass->fields, name, &value)) {
+                        pop(vm);
+                        push(vm, value);
+                        break;
+                    }
+
+                    if (!bindMethod(vm, klass->obj.klass, name)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                }
                 else{
-                    runtimeError(vm, "Only instances can have properties.");
+                    runtimeError(vm, "Only instances and classes can get properties.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -512,8 +527,16 @@ static InterpretResult run(VM* vm) {
                     pop(vm);
                     push(vm, value);
                 }
+                else if (IS_CLASS(receiver)) {
+                    ObjClass* klass = AS_CLASS(receiver);
+                    tableSet(vm, &klass->fields, READ_STRING(), peek(vm, 0));
+
+                    Value value = pop(vm);
+                    pop(vm);
+                    push(vm, value);
+                }
                 else{
-                    runtimeError(vm, "Only instances can have properties.");
+                    runtimeError(vm, "Only instances and classes can set properties.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;

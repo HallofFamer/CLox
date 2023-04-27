@@ -172,6 +172,7 @@ struct ObjClass {
     ObjString* name;
     struct ObjClass* superclass;
     bool isNative;
+    Table fields;
     Table methods;
 };
 
