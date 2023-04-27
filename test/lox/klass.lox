@@ -20,8 +20,12 @@ class Point {
         this.y = y;
     }
 
-    class getDefault(){ 
-        return this(0, 0);
+    class getHorizontal(x){ 
+        return this(x, 0);
+    }
+
+    class getVertical(y){ 
+        return this(0, y);
     }
 
     distance(p){ 
@@ -33,13 +37,17 @@ class Point {
     }
 }
 
+Point.origin = Point(0, 0);
+
 val p = Point(1, 2);
 println("Create point object p: " + p.toString());
 val p2 = Point(4, 6);
 println("Creating point object p2: " + p2.toString());
 print("Distance between p and p2 is: ");
 println(p.distance(p2));
-print("Creating default point object: " + Point.getDefault().toString());
+println("Point at origin: " + Point.origin.toString());
+println("Creating horizontal point object: " + Point.getHorizontal(2).toString());
+println("Creating horizontal point object: " + Point.getVertical(3).toString());
 println("");
 
 print("Class of point object is: ");
