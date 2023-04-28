@@ -11,7 +11,6 @@ ObjString* copyString(VM* vm, const char* chars, int length);
 ObjString* newString(VM* vm, const char* chars);
 ObjString* emptyString(VM* vm);
 ObjString* formattedString(VM* vm, const char* format, ...);
-ObjString* formattedLongString(VM* vm, const char* format, ...);
 
 int searchString(VM* vm, ObjString* haystack, ObjString* needle, uint32_t start);
 ObjString* capitalizeString(VM* vm, ObjString* string);

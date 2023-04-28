@@ -63,15 +63,6 @@ ObjString* formattedString(VM* vm, const char* format, ...) {
     return copyString(vm, chars, length);
 }
 
-ObjString* formattedLongString(VM* vm, const char* format, ...) {
-    char chars[UINT16_MAX];
-    va_list args;
-    va_start(args, format);
-    int length = vsnprintf(chars, UINT16_MAX, format, args);
-    va_end(args);
-    return copyString(vm, chars, length);
-}
-
 int searchString(VM* vm, ObjString* haystack, ObjString* needle, uint32_t start) {
     if (needle->length == 0) return start;
     if (start + needle->length > (uint32_t)haystack->length || start >= (uint32_t)haystack->length) return -1;
