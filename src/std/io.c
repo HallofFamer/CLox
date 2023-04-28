@@ -311,6 +311,31 @@ LOX_METHOD(File, toString) {
     RETURN_OBJ(AS_FILE(receiver)->name);
 }
 
+LOX_METHOD(FileClass, open) {
+    ASSERT_ARG_COUNT("File class::open(pathname, mode)", 2);
+    ASSERT_ARG_TYPE("File class::open(pathname, mode)", 0, String);
+    ASSERT_ARG_TYPE("File class::open(pathname, mode)", 1, String);
+    ObjString* mode = AS_STRING(args[1]);
+    ObjFile* file = newFile(vm, AS_STRING(args[0]));
+    push(vm, OBJ_VAL(file));
+    if (mode->chars == "r") {
+        ObjInstance* fileReadStream = newInstance(vm, getNativeClass(vm, "FileReadStream"));
+        setFileProperty(vm, fileReadStream, file, "r");
+        pop(vm);
+        RETURN_OBJ(fileReadStream);
+    }
+    else if (mode->chars == "w") {
+        ObjInstance*  fileWriteStream = newInstance(vm, getNativeClass(vm, "FileWriteStream"));
+        setFileProperty(vm, fileWriteStream, file, "w");
+        pop(vm);
+        RETURN_OBJ(fileWriteStream);
+    }
+    else {
+        raiseError(vm, "Invalid file open mode specified.");
+        RETURN_NIL;
+    }
+}
+
 LOX_METHOD(FileReadStream, init) {
     ASSERT_ARG_COUNT("FileReadStream::init(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -513,6 +538,9 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(vm->fileClass, File, setWritable, 1);
     DEF_METHOD(vm->fileClass, File, size, 0);
     DEF_METHOD(vm->fileClass, File, toString, 0);
+
+    ObjClass* fileMetaclass = vm->fileClass->obj.klass;
+    DEF_METHOD(fileMetaclass, FileClass, open, 2);
 
     ObjClass* ioStreamClass = defineNativeClass(vm, "IOStream");
     bindSuperclass(vm, ioStreamClass, vm->objectClass);
