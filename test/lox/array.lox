@@ -43,3 +43,9 @@ println(array.toString());
 print("Clearing array: ");
 array.clear();
 println(array.toString());
+println("");
+
+var array4 = Array.fromElements(1, 2, 3, 4, 5);
+println("Creating an array from class methods: " + array4.toString());
+print("New array contains element 2: ");
+println(array4.contains(2));

@@ -550,6 +550,16 @@ LOX_METHOD(Array, toString) {
     RETURN_OBJ(valueArrayToString(vm, &AS_ARRAY(receiver)->elements));
 }
 
+LOX_METHOD(ArrayClass, fromElements) {
+    ObjArray* array = newArray(vm);
+    push(vm, OBJ_VAL(array));
+    for (int i = 0; i < argCount; i++) {
+        valueArrayWrite(vm, &array->elements, args[i]);
+    }
+    pop(vm);
+    RETURN_OBJ(array);
+}
+
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
@@ -1575,6 +1585,9 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->arrayClass, Array, removeAt, 1);
     DEF_METHOD(vm->arrayClass, Array, slice, 2);
     DEF_METHOD(vm->arrayClass, Array, toString, 0);
+
+    ObjClass* arrayMetaclass = vm->arrayClass->obj.klass;
+    DEF_METHOD(arrayMetaclass, ArrayClass, fromElements, -1);
 
     ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, listClass);
