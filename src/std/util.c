@@ -52,6 +52,20 @@ static double dateObjGetTimestamp(VM* vm, ObjInstance* date) {
     return dateGetTimestamp(AS_INT(year), AS_INT(month), AS_INT(day));
 }
 
+static ObjInstance* dateObjNow(VM* vm, ObjClass* klass) {
+    time_t nowTime;
+    time(&nowTime);
+    struct tm now;
+    localtime_s(&now, &nowTime);
+    ObjInstance* date = newInstance(vm, klass);
+    push(vm, OBJ_VAL(date));
+    setObjProperty(vm, date, "year", INT_VAL(1900 + now.tm_year));
+    setObjProperty(vm, date, "month", INT_VAL(1 + now.tm_mon));
+    setObjProperty(vm, date, "day", INT_VAL(now.tm_mday));
+    pop(vm);
+    return date;
+}
+
 static double dateTimeObjGetTimestamp(VM* vm, ObjInstance* dateTime) {
     Value year = getObjProperty(vm, dateTime, "year");
     Value month = getObjProperty(vm, dateTime, "month");
@@ -87,6 +101,23 @@ static ObjInstance* dateTimeObjFromTimestamp(VM* vm, ObjClass* dateTimeClass, do
     setObjProperty(vm, dateTime, "hour", INT_VAL(time.tm_hour));
     setObjProperty(vm, dateTime, "minute", INT_VAL(time.tm_min));
     setObjProperty(vm, dateTime, "second", INT_VAL(time.tm_sec));
+    pop(vm);
+    return dateTime;
+}
+
+static ObjInstance* dateTimeObjNow(VM* vm, ObjClass* klass) {
+    time_t nowTime;
+    time(&nowTime);
+    struct tm now;
+    localtime_s(&now, &nowTime);
+    ObjInstance* dateTime = newInstance(vm, getNativeClass(vm, "DateTime"));
+    push(vm, OBJ_VAL(dateTime));
+    setObjProperty(vm, dateTime, "year", INT_VAL(1900 + now.tm_year));
+    setObjProperty(vm, dateTime, "month", INT_VAL(1 + now.tm_mon));
+    setObjProperty(vm, dateTime, "day", INT_VAL(now.tm_mday));
+    setObjProperty(vm, dateTime, "hour", INT_VAL(now.tm_hour));
+    setObjProperty(vm, dateTime, "minute", INT_VAL(now.tm_min));
+    setObjProperty(vm, dateTime, "second", INT_VAL(now.tm_sec));
     pop(vm);
     return dateTime;
 }
@@ -523,6 +554,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateClass, Date, plus, 1);
     DEF_METHOD(dateClass, Date, toDateTime, 0);
 	DEF_METHOD(dateClass, Date, toString, 0);
+    setClassProperty(vm, dateClass, "now", OBJ_VAL(dateObjNow(vm, dateClass)));
    
     ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
     bindSuperclass(vm, dateTimeClass, dateClass);
@@ -535,6 +567,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateTimeClass, DateTime, plus, 1);
     DEF_METHOD(dateTimeClass, DateTime, toDate, 0);
     DEF_METHOD(dateTimeClass, DateTime, toString, 0);
+    setClassProperty(vm, dateTimeClass, "now", OBJ_VAL(dateTimeObjNow(vm, dateTimeClass)));
     
     ObjClass* durationClass = defineNativeClass(vm, "Duration");
     bindSuperclass(vm, durationClass, vm->objectClass);

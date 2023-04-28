@@ -1,4 +1,4 @@
-var nowDate = dateNow();
+var nowDate = Date.now;
 println("Current Date is: " + nowDate.toString());
 println("Current Date's timestamp is: " + nowDate.getTimestamp().toString());
 println("");
@@ -10,8 +10,8 @@ println("Birthday is before current Date: " + birthday.before(nowDate).toString(
 println("Converting birthday to DateTime: " + birthday.toDateTime().toString());
 println("");
 
-var nowDateTime = dateTimeNow();
-println("Current DateTime is: " +  nowDateTime.toString());
+var nowDateTime = DateTime.now;
+println("Current DateTime is: " + nowDateTime.toString());
 println("Current DateTime's timestamp is: " + nowDateTime.getTimestamp().toString());
 println("Birthday is after current DateTime: " + birthday.toDateTime().after(nowDateTime).toString());
 println("Difference in sec(s) between current DateTime and birthday: " + nowDateTime.diff(birthday.toDateTime()).toString());

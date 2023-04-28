@@ -24,39 +24,6 @@ LOX_FUNCTION(clock) {
     RETURN_NUMBER((double)clock() / CLOCKS_PER_SEC);
 }
 
-LOX_FUNCTION(dateNow) {
-    ASSERT_ARG_COUNT("dateNow()", 0);
-    time_t nowTime;
-    time(&nowTime);
-    struct tm now;
-    localtime_s(&now, &nowTime);
-    ObjInstance* date = newInstance(vm, getNativeClass(vm, "Date"));
-    push(vm, OBJ_VAL(date));
-    setObjProperty(vm, date, "year", INT_VAL(1900 + now.tm_year));
-    setObjProperty(vm, date, "month", INT_VAL(1 + now.tm_mon));
-    setObjProperty(vm, date, "day", INT_VAL(now.tm_mday));
-    pop(vm);
-    RETURN_OBJ(date);
-}
-
-LOX_FUNCTION(dateTimeNow) {
-    ASSERT_ARG_COUNT("dateTimeNow()", 0);
-    time_t nowTime;
-    time(&nowTime);
-    struct tm now;
-    localtime_s(&now, &nowTime);
-    ObjInstance* date = newInstance(vm, getNativeClass(vm, "DateTime"));
-    push(vm, OBJ_VAL(date));
-    setObjProperty(vm, date, "year", INT_VAL(1900 + now.tm_year));
-    setObjProperty(vm, date, "month", INT_VAL(1 + now.tm_mon));
-    setObjProperty(vm, date, "day", INT_VAL(now.tm_mday));
-    setObjProperty(vm, date, "hour", INT_VAL(now.tm_hour));
-    setObjProperty(vm, date, "minute", INT_VAL(now.tm_min));
-    setObjProperty(vm, date, "second", INT_VAL(now.tm_sec));
-    pop(vm);
-    RETURN_OBJ(date);
-}
-
 LOX_FUNCTION(error){
     ASSERT_ARG_COUNT("error(message)", 1);
     ASSERT_ARG_TYPE("error(message)", 0, String);
@@ -191,8 +158,6 @@ void initNativePackage(VM* vm, const char* filePath) {
 void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(assert, 2);
     DEF_FUNCTION(clock, 0);
-    DEF_FUNCTION(dateNow, 0);
-    DEF_FUNCTION(dateTimeNow, 0);
     DEF_FUNCTION(error, 1);
     DEF_FUNCTION(gc, 0);
     DEF_FUNCTION(print, 1);

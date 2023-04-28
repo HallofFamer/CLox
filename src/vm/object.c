@@ -221,6 +221,19 @@ void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
     }
 }
 
+Value getClassProperty(VM* vm, ObjClass* klass, char* name) {
+    Value value;
+    tableGet(&klass->fields, newString(vm, name), &value);
+    return value;
+}
+
+void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value) {
+    ObjString* key = newString(vm, name);
+    push(vm, OBJ_VAL(key));
+    tableSet(vm, &klass->fields, key, ((void*)value == NULL) ? NIL_VAL : value);
+    pop(vm);
+}
+
 static void printArray(ObjArray* array) {
     printf("[");
     for (int i = 0; i < array->elements.count; i++) {
