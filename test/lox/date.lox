@@ -27,7 +27,7 @@ println("Creating Duration: " + duration.toString());
 println("Total number of seconds in Duration: " + duration.getTotalSeconds().toString());
 println("");
 
-var duration2 = Duration(1, 0, 0, 0);
+var duration2 = Duration.ofDays(1);
 println("Creating Duration 2: " + duration2.toString());
 println("Adding two durations: " + duration.plus(duration2).toString());
 println("Subtracting two durations: " + duration.minus(duration2).toString());

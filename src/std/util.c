@@ -368,6 +368,62 @@ LOX_METHOD(Duration, toString) {
     RETURN_STRING_FMT("%d days, %02d hours, %02d minutes, %02d seconds", AS_INT(days), AS_INT(hours), AS_INT(minutes), AS_INT(seconds));
 }
 
+LOX_METHOD(DurationClass, ofDays) {
+    ASSERT_ARG_COUNT("Duration class::ofDays(days)", 1);
+    ASSERT_ARG_TYPE("Duration class::ofDays(days)", 0, Int);
+    assertNumberNonNegative(vm, "Duration class::ofDays(days)", AS_NUMBER(args[0]), 0);
+
+    ObjClass* self = AS_CLASS(receiver);
+    ObjInstance* instance = newInstance(vm, self);
+    push(vm, OBJ_VAL(instance));
+    int duration[4] = { AS_INT(args[0]), 0, 0, 0 };
+    durationObjInit(vm, duration, instance);
+    pop(vm);
+    RETURN_OBJ(instance);
+}
+
+LOX_METHOD(DurationClass, ofHours) {
+    ASSERT_ARG_COUNT("Duration class::ofHours(hours)", 1);
+    ASSERT_ARG_TYPE("Duration class::ofHours(hours)", 0, Int);
+    assertNumberNonNegative(vm, "Duration class::ofHours(hours)", AS_NUMBER(args[0]), 0);
+
+    ObjClass* self = AS_CLASS(receiver);
+    ObjInstance* instance = newInstance(vm, self);
+    push(vm, OBJ_VAL(instance));
+    int duration[4] = { 0, AS_INT(args[0]), 0, 0 };
+    durationObjInit(vm, duration, instance);
+    pop(vm);
+    RETURN_OBJ(instance);
+}
+
+LOX_METHOD(DurationClass, ofMinutes) {
+    ASSERT_ARG_COUNT("Duration class::ofMinutes(minutes)", 1);
+    ASSERT_ARG_TYPE("Duration class::ofMinutes(minutes)", 0, Int);
+    assertNumberNonNegative(vm, "Duration class::ofMinutes(minutes)", AS_NUMBER(args[0]), 0);
+
+    ObjClass* self = AS_CLASS(receiver);
+    ObjInstance* instance = newInstance(vm, self);
+    push(vm, OBJ_VAL(instance));
+    int duration[4] = { 0, 0, AS_INT(args[0]), 0 };
+    durationObjInit(vm, duration, instance);
+    pop(vm);
+    RETURN_OBJ(instance);
+}
+
+LOX_METHOD(DurationClass, ofSeconds) {
+    ASSERT_ARG_COUNT("Duration class::ofSeconds(seconds)", 1);
+    ASSERT_ARG_TYPE("Duration class::ofSeconds(seconds)", 0, Int);
+    assertNumberNonNegative(vm, "Duration class::ofSeconds(seconds)", AS_NUMBER(args[0]), 0);
+
+    ObjClass* self = AS_CLASS(receiver);
+    ObjInstance* instance = newInstance(vm, self);
+    push(vm, OBJ_VAL(instance));
+    int duration[4] = { 0, 0, 0, AS_INT(args[0]) };
+    durationObjInit(vm, duration, instance);
+    pop(vm);
+    RETURN_OBJ(instance);
+}
+
 LOX_METHOD(Random, getSeed) {
     ASSERT_ARG_COUNT("Random::getSeed()", 0);
     Value seed = getObjProperty(vm, AS_INSTANCE(receiver), "seed");
@@ -487,6 +543,12 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(durationClass, Duration, minus, 1);
     DEF_METHOD(durationClass, Duration, plus, 1);
     DEF_METHOD(durationClass, Duration, toString, 0);
+
+    ObjClass* durationMetaclass = durationClass->obj.klass;
+    DEF_METHOD(durationMetaclass, DurationClass, ofDays, 1);
+    DEF_METHOD(durationMetaclass, DurationClass, ofHours, 1);
+    DEF_METHOD(durationMetaclass, DurationClass, ofMinutes, 1);
+    DEF_METHOD(durationMetaclass, DurationClass, ofSeconds, 1);
 
     ObjClass* randomClass = defineNativeClass(vm, "Random");
     bindSuperclass(vm, randomClass, vm->objectClass);
