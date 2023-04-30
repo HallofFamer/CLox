@@ -253,6 +253,28 @@ LOX_METHOD(Date, toString) {
     RETURN_STRING_FMT("%d-%02d-%02d", AS_INT(year), AS_INT(month), AS_INT(day));
 }
 
+LOX_METHOD(DateClass, parse) {
+    ASSERT_ARG_COUNT("Date class::parse(date)", 1);
+    ASSERT_ARG_TYPE("Date class::parse(date)", 0, String);
+    ObjClass* self = AS_CLASS(receiver);
+    ObjString* date = AS_STRING(args[0]);
+
+    int year, month, day;
+    if (sscanf_s(date->chars, "%d-%d-%d", &year, &month, &day) == 3) {
+        ObjInstance* instance = newInstance(vm, self);
+        push(vm, OBJ_VAL(instance));
+        setObjProperty(vm, instance, "year", INT_VAL(year));
+        setObjProperty(vm, instance, "month", INT_VAL(month));
+        setObjProperty(vm, instance, "day", INT_VAL(day));
+        pop(vm);
+        RETURN_OBJ(instance);
+    }
+    else {
+        raiseError(vm, "Failed to parse date, please make sure the date has format MM/DD/YYYY.");
+        RETURN_NIL;
+    }
+}
+
 LOX_METHOD(DateTime, after) {
     ASSERT_ARG_COUNT("DateTime::after(dateTime)", 1);
     ASSERT_ARG_INSTANCE_OF("DateTime::after(dateTime)", 0, DateTime);
@@ -341,6 +363,31 @@ LOX_METHOD(DateTime, toString) {
     Value minute = getObjProperty(vm, self, "minute");
     Value second = getObjProperty(vm, self, "second");
     RETURN_STRING_FMT("%d-%02d-%02d %02d:%02d:%02d", AS_INT(year), AS_INT(month), AS_INT(day), AS_INT(hour), AS_INT(minute), AS_INT(second));
+}
+
+LOX_METHOD(DateTimeClass, parse) {
+    ASSERT_ARG_COUNT("DateTime class::parse(date)", 1);
+    ASSERT_ARG_TYPE("DateTime class::parse(date)", 0, String);
+    ObjClass* self = AS_CLASS(receiver);
+    ObjString* date = AS_STRING(args[0]);
+
+    int year, month, day, hour, minute, second;
+    if (sscanf_s(date->chars, "%d-%d-%d %d:%d:%d", &year, &month, &day, &hour, &minute, &second) == 6) {
+        ObjInstance* instance = newInstance(vm, self);
+        push(vm, OBJ_VAL(instance));
+        setObjProperty(vm, instance, "year", INT_VAL(year));
+        setObjProperty(vm, instance, "month", INT_VAL(month));
+        setObjProperty(vm, instance, "day", INT_VAL(day));
+        setObjProperty(vm, instance, "hour", INT_VAL(hour));
+        setObjProperty(vm, instance, "minute", INT_VAL(minute));
+        setObjProperty(vm, instance, "second", INT_VAL(second));
+        pop(vm);
+        RETURN_OBJ(instance);
+    }
+    else {
+        raiseError(vm, "Failed to parse date, please make sure the date has format MM/DD/YYYY.");
+        RETURN_NIL;
+    }
 }
 
 LOX_METHOD(Duration, getTotalSeconds) {
@@ -554,7 +601,10 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateClass, Date, plus, 1);
     DEF_METHOD(dateClass, Date, toDateTime, 0);
 	DEF_METHOD(dateClass, Date, toString, 0);
+
+    ObjClass* dateMetaclass = dateClass->obj.klass;
     setClassProperty(vm, dateClass, "now", OBJ_VAL(dateObjNow(vm, dateClass)));
+    DEF_METHOD(dateMetaclass, DateClass, parse, 1);
    
     ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
     bindSuperclass(vm, dateTimeClass, dateClass);
@@ -567,7 +617,10 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateTimeClass, DateTime, plus, 1);
     DEF_METHOD(dateTimeClass, DateTime, toDate, 0);
     DEF_METHOD(dateTimeClass, DateTime, toString, 0);
+
+    ObjClass* dateTimeMetaClass = dateTimeClass->obj.klass;
     setClassProperty(vm, dateTimeClass, "now", OBJ_VAL(dateTimeObjNow(vm, dateTimeClass)));
+    DEF_METHOD(dateTimeMetaClass, DateTimeClass, parse, 1);
     
     ObjClass* durationClass = defineNativeClass(vm, "Duration");
     bindSuperclass(vm, durationClass, vm->objectClass);

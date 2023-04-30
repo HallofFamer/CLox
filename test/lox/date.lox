@@ -3,7 +3,7 @@ println("Current Date is: " + nowDate.toString());
 println("Current Date's timestamp is: " + nowDate.getTimestamp().toString());
 println("");
 
-var birthday = Date(1989, 5, 21);
+var birthday = Date.parse("1989-05-21");
 println("Birthday is: " + birthday.toString());
 println("Birthday's timestamp is: " + birthday.getTimestamp().toString());
 println("Birthday is before current Date: " + birthday.before(nowDate).toString());
