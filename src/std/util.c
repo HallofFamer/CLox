@@ -253,14 +253,20 @@ LOX_METHOD(Date, toString) {
     RETURN_STRING_FMT("%d-%02d-%02d", AS_INT(year), AS_INT(month), AS_INT(day));
 }
 
+LOX_METHOD(DateClass, fromTimestamp) {
+    ASSERT_ARG_COUNT("Date class::fromTimestamp(timestamp)", 1);
+    ASSERT_ARG_TYPE("Date class::fromTimestamp(timestamp)", 0, Number);
+    RETURN_OBJ(dateObjFromTimestamp(vm, AS_CLASS(receiver), AS_NUMBER(args[0])));
+}
+
 LOX_METHOD(DateClass, parse) {
-    ASSERT_ARG_COUNT("Date class::parse(date)", 1);
-    ASSERT_ARG_TYPE("Date class::parse(date)", 0, String);
+    ASSERT_ARG_COUNT("Date class::parse(dateString)", 1);
+    ASSERT_ARG_TYPE("Date class::parse(dateString)", 0, String);
     ObjClass* self = AS_CLASS(receiver);
-    ObjString* date = AS_STRING(args[0]);
+    ObjString* dateString = AS_STRING(args[0]);
 
     int year, month, day;
-    if (sscanf_s(date->chars, "%d-%d-%d", &year, &month, &day) == 3) {
+    if (sscanf_s(dateString->chars, "%d-%d-%d", &year, &month, &day) == 3) {
         ObjInstance* instance = newInstance(vm, self);
         push(vm, OBJ_VAL(instance));
         setObjProperty(vm, instance, "year", INT_VAL(year));
@@ -270,7 +276,7 @@ LOX_METHOD(DateClass, parse) {
         RETURN_OBJ(instance);
     }
     else {
-        raiseError(vm, "Failed to parse date, please make sure the date has format MM/DD/YYYY.");
+        raiseError(vm, "Failed to parse Date from input string, please make sure the date has format MM/DD/YYYY.");
         RETURN_NIL;
     }
 }
@@ -365,14 +371,20 @@ LOX_METHOD(DateTime, toString) {
     RETURN_STRING_FMT("%d-%02d-%02d %02d:%02d:%02d", AS_INT(year), AS_INT(month), AS_INT(day), AS_INT(hour), AS_INT(minute), AS_INT(second));
 }
 
+LOX_METHOD(DateTimeClass, fromTimestamp) {
+    ASSERT_ARG_COUNT("DateTime class::fromTimestamp(timestamp)", 1);
+    ASSERT_ARG_TYPE("DateTime class::fromTimestamp(timestamp)", 0, Number);
+    RETURN_OBJ(dateTimeObjFromTimestamp(vm, AS_CLASS(receiver), AS_NUMBER(args[0])));
+}
+
 LOX_METHOD(DateTimeClass, parse) {
-    ASSERT_ARG_COUNT("DateTime class::parse(date)", 1);
-    ASSERT_ARG_TYPE("DateTime class::parse(date)", 0, String);
+    ASSERT_ARG_COUNT("DateTime class::parse(dateString)", 1);
+    ASSERT_ARG_TYPE("DateTime class::parse(dateString)", 0, String);
     ObjClass* self = AS_CLASS(receiver);
-    ObjString* date = AS_STRING(args[0]);
+    ObjString* dateTimeString = AS_STRING(args[0]);
 
     int year, month, day, hour, minute, second;
-    if (sscanf_s(date->chars, "%d-%d-%d %d:%d:%d", &year, &month, &day, &hour, &minute, &second) == 6) {
+    if (sscanf_s(dateTimeString->chars, "%d-%d-%d %d:%d:%d", &year, &month, &day, &hour, &minute, &second) == 6) {
         ObjInstance* instance = newInstance(vm, self);
         push(vm, OBJ_VAL(instance));
         setObjProperty(vm, instance, "year", INT_VAL(year));
@@ -385,7 +397,7 @@ LOX_METHOD(DateTimeClass, parse) {
         RETURN_OBJ(instance);
     }
     else {
-        raiseError(vm, "Failed to parse date, please make sure the date has format MM/DD/YYYY.");
+        raiseError(vm, "Failed to parse DateTime from input string, please make sure the date has format MM/DD/YYYY.");
         RETURN_NIL;
     }
 }
@@ -604,6 +616,7 @@ void registerUtilPackage(VM* vm) {
 
     ObjClass* dateMetaclass = dateClass->obj.klass;
     setClassProperty(vm, dateClass, "now", OBJ_VAL(dateObjNow(vm, dateClass)));
+    DEF_METHOD(dateMetaclass, DateClass, fromTimestamp, 1);
     DEF_METHOD(dateMetaclass, DateClass, parse, 1);
    
     ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
@@ -620,6 +633,7 @@ void registerUtilPackage(VM* vm) {
 
     ObjClass* dateTimeMetaClass = dateTimeClass->obj.klass;
     setClassProperty(vm, dateTimeClass, "now", OBJ_VAL(dateTimeObjNow(vm, dateTimeClass)));
+    DEF_METHOD(dateTimeMetaClass, DateTimeClass, fromTimestamp, 1);
     DEF_METHOD(dateTimeMetaClass, DateTimeClass, parse, 1);
     
     ObjClass* durationClass = defineNativeClass(vm, "Duration");

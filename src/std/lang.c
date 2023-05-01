@@ -1,6 +1,9 @@
+#include <ctype.h>
+#include <float.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "lang.h"
 #include "../vm/assert.h"
@@ -117,6 +120,21 @@ LOX_METHOD(Float, init) {
 LOX_METHOD(Float, toString) {
     ASSERT_ARG_COUNT("Float::toString()", 0);
     RETURN_STRING_FMT("%g", AS_FLOAT(receiver));
+}
+
+LOX_METHOD(FloatClass, parse) {
+    ASSERT_ARG_COUNT("Float class::parse(intString)", 1);
+    ASSERT_ARG_TYPE("Float class::parse(intString)", 0, String);
+    ObjString* floatString = AS_STRING(args[0]);
+    if (strcmp(floatString->chars, "0") == 0 || strcmp(floatString->chars, "0.0") == 0) RETURN_NUMBER(0.0);
+
+    char* endPoint = NULL;
+    double floatValue = strtod(floatString->chars, &endPoint);
+    if (floatValue == 0.0) {
+        raiseError(vm, "Failed to parse float from input string.");
+        RETURN_NIL;
+    }
+    RETURN_NUMBER(floatValue);
 }
 
 LOX_METHOD(Function, arity) {
@@ -292,6 +310,21 @@ LOX_METHOD(Int, toString) {
     RETURN_STRING_FMT("%d", AS_INT(receiver));
 }
 
+LOX_METHOD(IntClass, parse) {
+    ASSERT_ARG_COUNT("Int class::parse(intString)", 1);
+    ASSERT_ARG_TYPE("Int class::parse(intString)", 0, String);
+    ObjString* intString = AS_STRING(args[0]);
+    if (strcmp(intString->chars, "0") == 0) RETURN_INT(0);
+
+    char* endPoint = NULL;
+    int intValue = (int)strtol(intString->chars, &endPoint, 10);
+    if (intValue == 0) {
+        raiseError(vm, "Failed to parse int from input string.");
+        RETURN_NIL;
+    }
+    RETURN_INT(intValue);
+}
+
 LOX_METHOD(Metaclass, getClass) {
     ASSERT_ARG_COUNT("Metaclass::getClass()", 0);
     RETURN_OBJ(vm->metaclassClass);
@@ -453,6 +486,12 @@ LOX_METHOD(Number, init) {
     RETURN_NIL;
 }
 
+LOX_METHOD(Number, isInfinity) {
+    ASSERT_ARG_COUNT("Number::isInfinity()", 0);
+    double self = AS_NUMBER(receiver);
+    RETURN_BOOL(self == INFINITY);
+}
+
 LOX_METHOD(Number, log) {
     ASSERT_ARG_COUNT("Number::log()", 0);
     double self = AS_NUMBER(receiver);
@@ -524,6 +563,12 @@ LOX_METHOD(Number, toString) {
     char chars[24];
     int length = sprintf_s(chars, 24, "%.14g", AS_NUMBER(receiver));
     RETURN_STRING(chars, length);
+}
+
+LOX_METHOD(NumberClass, parse) {
+    ASSERT_ARG_COUNT("Number class::parse(numberString)", 1);
+    raiseError(vm, "Not implemented, subclass responsibility.");
+    RETURN_NIL;
 }
 
 LOX_METHOD(Object, clone) {
@@ -820,6 +865,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, floor, 0);
     DEF_METHOD(vm->numberClass, Number, hypot, 1);
     DEF_METHOD(vm->numberClass, Number, init, 1);
+    DEF_METHOD(vm->numberClass, Number, isInfinity, 0);
     DEF_METHOD(vm->numberClass, Number, log, 0);
     DEF_METHOD(vm->numberClass, Number, log2, 0);
     DEF_METHOD(vm->numberClass, Number, log10, 0);
@@ -832,6 +878,11 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, tan, 0);
     DEF_METHOD(vm->numberClass, Number, toInt, 0);
     DEF_METHOD(vm->numberClass, Number, toString, 0);
+
+    ObjClass* numberMetaclass = vm->numberClass->obj.klass;
+    setClassProperty(vm, vm->numberClass, "infinity", NUMBER_VAL(INFINITY));
+    setClassProperty(vm, vm->numberClass, "pi", NUMBER_VAL(3.14159265358979323846264338327950288));
+    DEF_METHOD(numberMetaclass, NumberClass, parse, 1);
 
     vm->intClass = getNativeClass(vm, "Int");
     bindSuperclass(vm, vm->intClass, vm->numberClass);
@@ -849,11 +900,21 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->intClass, Int, toOctal, 0);
     DEF_METHOD(vm->intClass, Int, toString, 0);
 
+    ObjClass* intMetaclass = vm->intClass->obj.klass;
+    setClassProperty(vm, vm->intClass, "max", INT_VAL(INT32_MAX));
+    setClassProperty(vm, vm->intClass, "min", INT_VAL(INT32_MIN));
+    DEF_METHOD(intMetaclass, IntClass, parse, 1);
+
     vm->floatClass = defineNativeClass(vm, "Float");
     bindSuperclass(vm, vm->floatClass, vm->numberClass);
     DEF_METHOD(vm->floatClass, Float, clone, 0);
     DEF_METHOD(vm->floatClass, Float, init, 1);
     DEF_METHOD(vm->floatClass, Float, toString, 0);
+
+    ObjClass* floatMetaclass = vm->floatClass->obj.klass;
+    setClassProperty(vm, vm->floatClass, "max", NUMBER_VAL(DBL_MAX));
+    setClassProperty(vm, vm->floatClass, "min", NUMBER_VAL(DBL_MIN));
+    DEF_METHOD(floatMetaclass, FloatClass, parse, 1);
 
     vm->stringClass = defineNativeClass(vm, "String");
     bindSuperclass(vm, vm->stringClass, vm->objectClass);
