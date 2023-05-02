@@ -73,7 +73,7 @@ LOX_METHOD(Class, init) {
 
 LOX_METHOD(Class, isMetaclass) {
     ASSERT_ARG_COUNT("Class::isMetaclass()", 0);
-    RETURN_FALSE;
+    RETURN_BOOL(AS_CLASS(receiver)->behavior == BEHAVIOR_METACLASS);
 }
 
 LOX_METHOD(Class, isNative) {
@@ -349,7 +349,7 @@ LOX_METHOD(Metaclass, instanceOf) {
 }
 
 LOX_METHOD(Metaclass, isMetaclass) {
-    ASSERT_ARG_COUNT("Class::isMetaclass()", 0);
+    ASSERT_ARG_COUNT("Metaclass::isMetaclass()", 0);
     RETURN_TRUE;
 }
 
@@ -791,7 +791,7 @@ LOX_METHOD(String, trim) {
 }
 
 void registerLangPackage(VM* vm) {
-    vm->objectClass = defineSpecialClass(vm, "Object");
+    vm->objectClass = defineSpecialClass(vm, "Object", BEHAVIOR_CLASS);
     DEF_METHOD(vm->objectClass, Object, clone, 0);
     DEF_METHOD(vm->objectClass, Object, equals, 1);
     DEF_METHOD(vm->objectClass, Object, getClass, 0);
@@ -802,7 +802,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, memberOf, 1);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
 
-    vm->classClass = defineSpecialClass(vm, "Class");
+    vm->classClass = defineSpecialClass(vm, "Class", BEHAVIOR_CLASS);
     inheritSuperclass(vm, vm->classClass, vm->objectClass);
     DEF_METHOD(vm->classClass, Class, clone, 0);
     DEF_METHOD(vm->classClass, Class, hasMethod, 1);
@@ -814,7 +814,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->classClass, Class, superclass, 0);
     DEF_METHOD(vm->classClass, Class, toString, 0);
 
-    vm->metaclassClass = defineSpecialClass(vm, "Metaclass");
+    vm->metaclassClass = defineSpecialClass(vm, "Metaclass", BEHAVIOR_METACLASS);
     inheritSuperclass(vm, vm->metaclassClass, vm->classClass);
     DEF_METHOD(vm->metaclassClass, Metaclass, getClass, 0);
     DEF_METHOD(vm->metaclassClass, Metaclass, getClassName, 0);
@@ -825,17 +825,17 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->metaclassClass, Metaclass, namedInstance, 0);
     DEF_METHOD(vm->metaclassClass, Metaclass, toString, 0);
 
-    ObjClass* objectMetaclass = defineSpecialClass(vm, "Object class");
+    ObjClass* objectMetaclass = defineSpecialClass(vm, "Object class", BEHAVIOR_METACLASS);
     vm->objectClass->obj.klass = objectMetaclass;
     objectMetaclass->obj.klass = vm->classClass;
     inheritSuperclass(vm, objectMetaclass, vm->classClass);
 
-    ObjClass* classMetaclass = defineSpecialClass(vm, "Class class");
+    ObjClass* classMetaclass = defineSpecialClass(vm, "Class class", BEHAVIOR_METACLASS);
     vm->classClass->obj.klass = classMetaclass;
     classMetaclass->obj.klass = vm->metaclassClass;
     inheritSuperclass(vm, classMetaclass, objectMetaclass);
 
-    ObjClass* metaclassMetaclass = defineSpecialClass(vm, "Metaclass class");
+    ObjClass* metaclassMetaclass = defineSpecialClass(vm, "Metaclass class", BEHAVIOR_METACLASS);
     vm->metaclassClass->obj.klass = metaclassMetaclass;
     metaclassMetaclass->obj.klass = vm->metaclassClass;
     inheritSuperclass(vm, metaclassMetaclass, classMetaclass);

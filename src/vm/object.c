@@ -43,9 +43,9 @@ ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
 
 ObjClass* newClass(VM* vm, ObjString* name) {
     ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
-    ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass);
+    ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass, BEHAVIOR_METACLASS);
     push(vm, OBJ_VAL(metaclass));
-    ObjClass* klass = createClass(vm, name, metaclass);
+    ObjClass* klass = createClass(vm, name, metaclass, BEHAVIOR_CLASS);
     pop(vm);
     return klass;
 }
@@ -148,11 +148,13 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
     return upvalue;
 }
 
-ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass) {
+ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
     push(vm, OBJ_VAL(klass));
     klass->name = name;
+    klass->behavior = behavior;
     klass->superclass = NULL;
+    initValueArray(&klass->traits);
     klass->isNative = false;
     initTable(&klass->fields);
     initTable(&klass->methods);
@@ -243,6 +245,19 @@ static void printArray(ObjArray* array) {
     printf("]");
 }
 
+static void printClass(ObjClass* klass) {
+    switch (klass->behavior) {
+        case BEHAVIOR_METACLASS:
+            printf("<metaclass %s>", klass->name->chars);
+            break;
+        case BEHAVIOR_TRAIT:
+            printf("<trait %s>", klass->name->chars);
+            break;
+        default:
+            printf("<class %s>", klass->name->chars);
+    }
+}
+
 static void printDictionary(ObjDictionary* dictionary) {
     printf("[");
     int startIndex = 0;
@@ -286,7 +301,7 @@ void printObject(Value value) {
             printFunction(AS_BOUND_METHOD(value)->method->function);
             break;
         case OBJ_CLASS:
-            printf("<class %s>", AS_CLASS(value)->name->chars);
+            printClass(AS_CLASS(value));
             break;
         case OBJ_CLOSURE:
             printFunction(AS_CLOSURE(value)->function);

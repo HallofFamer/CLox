@@ -107,10 +107,10 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, Na
     pop(vm);
 }
 
-ObjClass* defineSpecialClass(VM* vm, const char* name) {
+ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behavior) {
     ObjString* className = newString(vm, name);
     push(vm, OBJ_VAL(className));
-    ObjClass* nativeClass = createClass(vm, className, NULL);
+    ObjClass* nativeClass = createClass(vm, className, NULL, behavior);
     nativeClass->isNative = true;
     push(vm, OBJ_VAL(nativeClass));
     tableSet(vm, &vm->globalValues, AS_STRING(vm->stack[0]), vm->stack[1]);

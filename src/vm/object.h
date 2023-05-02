@@ -67,6 +67,12 @@ typedef enum {
     OBJ_VALUE
 } ObjType;
 
+typedef enum {
+    BEHAVIOR_CLASS,
+    BEHAVIOR_METACLASS,
+    BEHAVIOR_TRAIT
+} BehaviorType;
+
 struct Obj {
     ObjType type;
     ObjClass* klass;
@@ -170,7 +176,9 @@ typedef struct {
 struct ObjClass {
     Obj obj;
     ObjString* name;
+    BehaviorType behavior;
     struct ObjClass* superclass;
+    ValueArray traits;
     bool isNative;
     Table fields;
     Table methods;
@@ -204,7 +212,7 @@ ObjRange* newRange(VM* vm, int from, int to);
 ObjRecord* newRecord(VM* vm, void* data);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 
-ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass);
+ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior);
 ObjClass* getObjClass(VM* vm, Value value);
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);
 void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
