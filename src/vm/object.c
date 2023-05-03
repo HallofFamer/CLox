@@ -174,11 +174,28 @@ ObjClass* getObjClass(VM* vm, Value value) {
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass) {
     ObjClass* currentClass = getObjClass(vm, value);
     if (currentClass == klass) return true;
+    if (isClassExtendingSuperclass(currentClass->superclass, klass)) return true;
+    return isClassImplementingTrait(currentClass, klass);
+}
 
-    ObjClass* superClass = currentClass->superclass;
-    while (superClass != NULL) {
-        if (superClass == klass) return true;
-        superClass = superClass->superclass;
+bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass) {
+    if (klass == superclass) return true;
+    if (klass->behavior == BEHAVIOR_TRAIT) return false;
+
+    ObjClass* currentClass = klass->superclass;
+    while (currentClass != NULL) {
+        if (currentClass == superclass) return true;
+        currentClass = currentClass->superclass;
+    }
+    return false;
+}
+
+bool isClassImplementingTrait(ObjClass* klass, ObjClass* trait) {
+    if (klass->behavior == BEHAVIOR_METACLASS) return false;
+    ValueArray* traits = &klass->traits;
+
+    for (int i = 0; i < traits->count; i++) {
+        if (AS_CLASS(traits->values[i]) == trait) return true;
     }
     return false;
 }

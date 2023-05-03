@@ -66,3 +66,7 @@ print("Superclass of Metaclass is: ");
 println(Metaclass.superclass().name());
 print("Superclass of Metaclass class is: ");
 println(Metaclass.getClass().superclass().name());
+print("Superclass of Behavior is: ");
+println(Metaclass.superclass().superclass().name());
+print("Superclass of Behavior class is: ");
+println(Metaclass.getClass().superclass().superclass().name());

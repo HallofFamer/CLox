@@ -33,6 +33,54 @@ static int lcm(int self, int other) {
     return (self * other) / gcd(self, other);
 }
 
+LOX_METHOD(Behavior, clone) {
+    ASSERT_ARG_COUNT("Behavior::clone()", 0);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Behavior, hasMethod) {
+    ASSERT_ARG_COUNT("Behavior::hasMethod(method)", 1);
+    ASSERT_ARG_TYPE("Behavior::hasMethod(method)", 0, String);
+    ObjClass* self = AS_CLASS(receiver);
+    Value value;
+    RETURN_BOOL(tableGet(&self->methods, AS_STRING(args[0]), &value));
+}
+
+LOX_METHOD(Behavior, init) {
+    raiseError(vm, "Cannot instantiate from class Behavior.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(Behavior, isBehavior) {
+    ASSERT_ARG_COUNT("Behavior::isBehavior()", 0);
+    RETURN_TRUE;
+}
+
+LOX_METHOD(Behavior, isClass) {
+    ASSERT_ARG_COUNT("Behavior::isClass()", 0);
+    RETURN_BOOL(AS_CLASS(receiver)->behavior == BEHAVIOR_CLASS || AS_CLASS(receiver)->behavior == BEHAVIOR_METACLASS);
+}
+
+LOX_METHOD(Behavior, isMetaclass) {
+    ASSERT_ARG_COUNT("Behavior::isMetaclass()", 0);
+    RETURN_BOOL(AS_CLASS(receiver)->behavior == BEHAVIOR_METACLASS);
+}
+
+LOX_METHOD(Behavior, isNative) {
+    ASSERT_ARG_COUNT("Behavior::isNative()", 0);
+    RETURN_BOOL(AS_CLASS(receiver)->isNative);
+}
+
+LOX_METHOD(Behavior, isTrait) {
+    ASSERT_ARG_COUNT("Behavior::isTrait()", 0);
+    RETURN_BOOL(AS_CLASS(receiver)->behavior == BEHAVIOR_TRAIT);
+}
+
+LOX_METHOD(Behavior, name) {
+    ASSERT_ARG_COUNT("Behavior::name()", 0);
+    RETURN_OBJ(AS_CLASS(receiver)->name);
+}
+
 LOX_METHOD(Bool, clone) {
     ASSERT_ARG_COUNT("Bool::clone()", 0);
     RETURN_BOOL(receiver);
@@ -49,19 +97,6 @@ LOX_METHOD(Bool, toString) {
     else RETURN_STRING("false", 5);
 }
 
-LOX_METHOD(Class, clone) {
-    ASSERT_ARG_COUNT("Class::clone()", 0);
-    RETURN_OBJ(receiver);
-}
-
-LOX_METHOD(Class, hasMethod) {
-    ASSERT_ARG_COUNT("Class::hasMethod(method)", 1);
-    ASSERT_ARG_TYPE("Class::hasMethod(method)", 0, String);
-    ObjClass* self = AS_CLASS(receiver);
-    Value value;
-    RETURN_BOOL(tableGet(&self->methods, AS_STRING(args[0]), &value));
-}
-
 LOX_METHOD(Class, init) {
     ASSERT_ARG_COUNT("Class::init(name, superclass)", 2);
     ASSERT_ARG_TYPE("Class::init(name, superclass)", 0, String);
@@ -71,28 +106,21 @@ LOX_METHOD(Class, init) {
     RETURN_OBJ(klass);
 }
 
-LOX_METHOD(Class, isMetaclass) {
-    ASSERT_ARG_COUNT("Class::isMetaclass()", 0);
-    RETURN_BOOL(AS_CLASS(receiver)->behavior == BEHAVIOR_METACLASS);
+LOX_METHOD(Class, instanceOf) {
+    ASSERT_ARG_COUNT("Class::instanceOf(class)", 1);
+    if (!IS_CLASS(args[0])) RETURN_FALSE;
+    RETURN_BOOL(isClassExtendingSuperclass(AS_CLASS(receiver)->obj.klass, AS_CLASS(args[0])));
 }
 
-LOX_METHOD(Class, isNative) {
-    ASSERT_ARG_COUNT("Class::isNative()", 0);
-    RETURN_BOOL(AS_CLASS(receiver)->isNative);
+LOX_METHOD(Class, isClass) {
+    ASSERT_ARG_COUNT("Class::isClass()", 0);
+    RETURN_TRUE;
 }
 
 LOX_METHOD(Class, memberOf) {
     ASSERT_ARG_COUNT("Class::memberOf(class)", 1);
     if (!IS_CLASS(args[0])) RETURN_FALSE;
-    ObjClass* metaclass = AS_CLASS(receiver)->obj.klass;
-    ObjClass* klass = AS_CLASS(args[0]);
-    if (klass == metaclass) RETURN_TRUE;
-    else RETURN_FALSE;
-}
-
-LOX_METHOD(Class, name) {
-    ASSERT_ARG_COUNT("Class::name()", 0);
-    RETURN_OBJ(AS_CLASS(receiver)->name);
+    RETURN_BOOL(AS_CLASS(receiver)->obj.klass == AS_CLASS(args[0]));
 }
 
 LOX_METHOD(Class, superclass) {
@@ -335,11 +363,6 @@ LOX_METHOD(Metaclass, getClassName) {
     RETURN_OBJ(vm->metaclassClass->name);
 }
 
-LOX_METHOD(Metaclass, init) {
-    raiseError(vm, "Cannot instantiate from class Metaclass.");
-    RETURN_NIL;
-}
-
 LOX_METHOD(Metaclass, instanceOf) {
     ASSERT_ARG_COUNT("Metaclass::instanceOf(class)", 1);
     if (!IS_CLASS(args[0])) RETURN_FALSE;
@@ -366,6 +389,11 @@ LOX_METHOD(Metaclass, namedInstance) {
     ObjClass* metaclass = AS_CLASS(receiver);
     ObjString* className = subString(vm, metaclass->name, 0, metaclass->name->length - 7);
     RETURN_OBJ(getNativeClass(vm, className->chars));
+}
+
+LOX_METHOD(Metaclass, superclass) {
+    ASSERT_ARG_COUNT("Metaclass::superclass()", 0);
+    RETURN_OBJ(AS_CLASS(receiver)->superclass);
 }
 
 LOX_METHOD(Metaclass, toString) {
@@ -802,27 +830,35 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, memberOf, 1);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
 
+    ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
+    inheritSuperclass(vm, behaviorClass, vm->objectClass);
+    DEF_METHOD(behaviorClass, Behavior, clone, 0);
+    DEF_METHOD(behaviorClass, Behavior, hasMethod, 1);
+    DEF_METHOD(behaviorClass, Behavior, init, 2);
+    DEF_METHOD(behaviorClass, Behavior, isBehavior, 0);
+    DEF_METHOD(behaviorClass, Behavior, isClass, 0);
+    DEF_METHOD(behaviorClass, Behavior, isMetaclass, 0);
+    DEF_METHOD(behaviorClass, Behavior, isNative, 0);
+    DEF_METHOD(behaviorClass, Behavior, name, 0);
+
     vm->classClass = defineSpecialClass(vm, "Class", BEHAVIOR_CLASS);
-    inheritSuperclass(vm, vm->classClass, vm->objectClass);
-    DEF_METHOD(vm->classClass, Class, clone, 0);
-    DEF_METHOD(vm->classClass, Class, hasMethod, 1);
+    inheritSuperclass(vm, vm->classClass, behaviorClass);
     DEF_METHOD(vm->classClass, Class, init, 2);
-    DEF_METHOD(vm->classClass, Class, isMetaclass, 0);
-    DEF_METHOD(vm->classClass, Class, isNative, 0);
+    DEF_METHOD(vm->classClass, Class, instanceOf, 1);
+    DEF_METHOD(vm->classClass, Class, isClass, 0);
     DEF_METHOD(vm->classClass, Class, memberOf, 1);
-    DEF_METHOD(vm->classClass, Class, name, 0);
     DEF_METHOD(vm->classClass, Class, superclass, 0);
     DEF_METHOD(vm->classClass, Class, toString, 0);
 
     vm->metaclassClass = defineSpecialClass(vm, "Metaclass", BEHAVIOR_METACLASS);
-    inheritSuperclass(vm, vm->metaclassClass, vm->classClass);
+    inheritSuperclass(vm, vm->metaclassClass, behaviorClass);
     DEF_METHOD(vm->metaclassClass, Metaclass, getClass, 0);
     DEF_METHOD(vm->metaclassClass, Metaclass, getClassName, 0);
-    DEF_METHOD(vm->metaclassClass, Metaclass, init, 2);
     DEF_METHOD(vm->metaclassClass, Metaclass, instanceOf, 1);
     DEF_METHOD(vm->metaclassClass, Metaclass, isMetaclass, 0);
     DEF_METHOD(vm->metaclassClass, Metaclass, memberOf, 1);
     DEF_METHOD(vm->metaclassClass, Metaclass, namedInstance, 0);
+    DEF_METHOD(vm->metaclassClass, Metaclass, superclass, 0);
     DEF_METHOD(vm->metaclassClass, Metaclass, toString, 0);
 
     ObjClass* objectMetaclass = defineSpecialClass(vm, "Object class", BEHAVIOR_METACLASS);
@@ -830,15 +866,20 @@ void registerLangPackage(VM* vm) {
     objectMetaclass->obj.klass = vm->classClass;
     inheritSuperclass(vm, objectMetaclass, vm->classClass);
 
+    ObjClass* behaviorMetaclass = defineSpecialClass(vm, "Behavior class", BEHAVIOR_METACLASS);
+    behaviorClass->obj.klass = behaviorMetaclass;
+    behaviorMetaclass->obj.klass = vm->metaclassClass;
+    inheritSuperclass(vm, behaviorMetaclass, objectMetaclass);
+
     ObjClass* classMetaclass = defineSpecialClass(vm, "Class class", BEHAVIOR_METACLASS);
     vm->classClass->obj.klass = classMetaclass;
     classMetaclass->obj.klass = vm->metaclassClass;
-    inheritSuperclass(vm, classMetaclass, objectMetaclass);
+    inheritSuperclass(vm, classMetaclass, behaviorMetaclass);
 
     ObjClass* metaclassMetaclass = defineSpecialClass(vm, "Metaclass class", BEHAVIOR_METACLASS);
     vm->metaclassClass->obj.klass = metaclassMetaclass;
     metaclassMetaclass->obj.klass = vm->metaclassClass;
-    inheritSuperclass(vm, metaclassMetaclass, classMetaclass);
+    inheritSuperclass(vm, metaclassMetaclass, behaviorMetaclass);
 
     initNativePackage(vm, "src/std/lang.lox");
 

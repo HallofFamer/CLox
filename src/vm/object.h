@@ -215,6 +215,8 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior);
 ObjClass* getObjClass(VM* vm, Value value);
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);
+bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass);
+bool isClassImplementingTrait(ObjClass* trait, ObjClass* klass);
 void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
