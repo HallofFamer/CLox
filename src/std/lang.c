@@ -81,6 +81,16 @@ LOX_METHOD(Behavior, name) {
     RETURN_OBJ(AS_CLASS(receiver)->name);
 }
 
+LOX_METHOD(Behavior, traits) {
+    ASSERT_ARG_COUNT("Behavior::traits()", 0);
+    ObjClass* self = AS_CLASS(receiver);
+    ObjArray* traits = newArray(vm);
+    push(vm, OBJ_VAL(traits));
+    valueArrayAddAll(vm, &self->traits, &traits->elements);
+    pop(vm);
+    RETURN_OBJ(traits);
+}
+
 LOX_METHOD(Bool, clone) {
     ASSERT_ARG_COUNT("Bool::clone()", 0);
     RETURN_BOOL(receiver);
@@ -366,9 +376,7 @@ LOX_METHOD(Metaclass, getClassName) {
 LOX_METHOD(Metaclass, instanceOf) {
     ASSERT_ARG_COUNT("Metaclass::instanceOf(class)", 1);
     if (!IS_CLASS(args[0])) RETURN_FALSE;
-    ObjClass* metaclass = AS_CLASS(args[0]);
-    if (metaclass == vm->metaclassClass) RETURN_TRUE;
-    else RETURN_FALSE;
+    RETURN_BOOL(isClassExtendingSuperclass(vm->metaclassClass, AS_CLASS(args[0])));
 }
 
 LOX_METHOD(Metaclass, isMetaclass) {
@@ -379,9 +387,7 @@ LOX_METHOD(Metaclass, isMetaclass) {
 LOX_METHOD(Metaclass, memberOf) {
     ASSERT_ARG_COUNT("Metaclass::memberOf(class)", 1);
     if (!IS_CLASS(args[0])) RETURN_FALSE;
-    ObjClass* metaclass = AS_CLASS(args[0]);
-    if (metaclass == vm->metaclassClass) RETURN_TRUE;
-    else RETURN_FALSE;
+    RETURN_BOOL(AS_CLASS(args[0]) == vm->metaclassClass);
 }
 
 LOX_METHOD(Metaclass, namedInstance) {
@@ -818,6 +824,52 @@ LOX_METHOD(String, trim) {
     RETURN_OBJ(trimString(vm, AS_STRING(receiver)));
 }
 
+LOX_METHOD(Trait, getClass) {
+    ASSERT_ARG_COUNT("Trait::getClass()", 0);
+    RETURN_OBJ(vm->traitClass);
+}
+
+LOX_METHOD(Trait, getClassName) {
+    ASSERT_ARG_COUNT("Trait::getClassName()", 0);
+    RETURN_OBJ(vm->traitClass->name);
+}
+
+LOX_METHOD(Trait, init) {
+    ASSERT_ARG_COUNT("Trait::init(name, traits)", 2);
+    ASSERT_ARG_TYPE("Trait::init(name, traits)", 0, String);
+    ASSERT_ARG_TYPE("Trait::init(name, traits)", 1, Array);
+    ObjClass* trait = createTrait(vm, AS_STRING(args[0]));
+    implementTraits(vm, trait, &AS_ARRAY(args[1])->elements);
+    RETURN_OBJ(trait);
+}
+
+LOX_METHOD(Trait, instanceOf) {
+    ASSERT_ARG_COUNT("Trait::instanceOf(trait)", 1);
+    if (!IS_CLASS(args[0])) RETURN_FALSE;
+    RETURN_BOOL(isClassExtendingSuperclass(vm->traitClass, AS_CLASS(args[0])));
+}
+
+LOX_METHOD(Trait, isTrait) {
+    ASSERT_ARG_COUNT("Trait::isTrait()", 0);
+    RETURN_TRUE;
+}
+
+LOX_METHOD(Trait, memberOf) {
+    ASSERT_ARG_COUNT("Trait::memberOf(class)", 1);
+    if (!IS_CLASS(args[0])) RETURN_FALSE;
+    RETURN_BOOL(AS_CLASS(args[0]) == vm->traitClass);
+}
+
+LOX_METHOD(Trait, superclass) {
+    ASSERT_ARG_COUNT("Trait::superclass()", 0);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Trait, toString) {
+    ASSERT_ARG_COUNT("Trait::toString()", 0);
+    RETURN_STRING_FMT("<trait %s>", AS_CLASS(receiver)->name->chars);
+}
+
 void registerLangPackage(VM* vm) {
     vm->objectClass = defineSpecialClass(vm, "Object", BEHAVIOR_CLASS);
     DEF_METHOD(vm->objectClass, Object, clone, 0);
@@ -840,6 +892,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(behaviorClass, Behavior, isMetaclass, 0);
     DEF_METHOD(behaviorClass, Behavior, isNative, 0);
     DEF_METHOD(behaviorClass, Behavior, name, 0);
+    DEF_METHOD(behaviorClass, Behavior, traits, 0);
 
     vm->classClass = defineSpecialClass(vm, "Class", BEHAVIOR_CLASS);
     inheritSuperclass(vm, vm->classClass, behaviorClass);
@@ -1010,4 +1063,15 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->methodClass, Method, receiver, 0);
     DEF_METHOD(vm->methodClass, Method, toString, 0);
     DEF_METHOD(vm->methodClass, Method, upvalueCount, 0);
+
+    vm->traitClass = defineNativeClass(vm, "Trait");
+    bindSuperclass(vm, vm->traitClass, behaviorClass);
+    DEF_METHOD(vm->traitClass, Trait, getClass, 0);
+    DEF_METHOD(vm->traitClass, Trait, getClassName, 0);
+    DEF_METHOD(vm->traitClass, Trait, init, 2);
+    DEF_METHOD(vm->traitClass, Trait, instanceOf, 1);
+    DEF_METHOD(vm->traitClass, Trait, isTrait, 0);
+    DEF_METHOD(vm->traitClass, Trait, memberOf, 1);
+    DEF_METHOD(vm->traitClass, Trait, superclass, 0);
+    DEF_METHOD(vm->traitClass, Trait, toString, 0);
 }

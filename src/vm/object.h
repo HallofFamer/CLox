@@ -213,12 +213,14 @@ ObjRecord* newRecord(VM* vm, void* data);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior);
+ObjClass* createTrait(VM* vm, ObjString* name);
 ObjClass* getObjClass(VM* vm, Value value);
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);
 bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass);
 bool isClassImplementingTrait(ObjClass* trait, ObjClass* klass);
 void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
+void implementTraits(VM* vm, ObjClass* klass, ValueArray* traits);
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
 void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* name);

@@ -162,6 +162,20 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
     return klass;
 }
 
+ObjClass* createTrait(VM* vm, ObjString* name) {
+    ObjClass* trait = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->traitClass);
+    push(vm, OBJ_VAL(trait));
+    trait->name = name;
+    trait->behavior = BEHAVIOR_TRAIT;
+    trait->superclass = NULL;
+    initValueArray(&trait->traits);
+    trait->isNative = false;
+    initTable(&trait->fields);
+    initTable(&trait->methods);
+    pop(vm);
+    return trait;
+}
+
 ObjClass* getObjClass(VM* vm, Value value) {
     if (IS_BOOL(value)) return vm->boolClass;
     else if (IS_NIL(value)) return vm->nilClass;
@@ -212,6 +226,14 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     }
     inheritSuperclass(vm, subclass, superclass);
     inheritSuperclass(vm, subclass->obj.klass, superclass->obj.klass);
+}
+
+void implementTraits(VM* vm, ObjClass* klass, ValueArray* traits) {
+    if (traits->count == 0) return;
+    for (int i = 0; i < traits->count; i++) {
+        ObjClass* trait = AS_CLASS(traits->values[i]);
+        tableAddAll(vm, &trait->methods, &klass->methods);
+    }
 }
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
