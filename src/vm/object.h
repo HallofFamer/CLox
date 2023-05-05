@@ -22,6 +22,7 @@
 #define IS_FILE(value)              isObjType(value, OBJ_FILE)
 #define IS_FUNCTION(value)          isObjType(value, OBJ_FUNCTION)
 #define IS_INSTANCE(value)          isObjType(value, OBJ_INSTANCE)
+#define IS_METHOD(value)            isObjType(value, OBJ_METHOD)
 #define IS_NATIVE_FUNCTION(value)   isObjType(value, OBJ_NATIVE_FUNCTION)
 #define IS_NATIVE_METHOD(value)     isObjType(value, OBJ_NATIVE_METHOD)
 #define IS_NODE(value)              isObjType(value, OBJ_NODE)
@@ -38,6 +39,7 @@
 #define AS_FILE(value)              ((ObjFile*)AS_OBJ(value))
 #define AS_FUNCTION(value)          ((ObjFunction*)AS_OBJ(value))
 #define AS_INSTANCE(value)          ((ObjInstance*)AS_OBJ(value))
+#define AS_METHOD(value)            ((ObjMethod*)AS_OBJ(value))
 #define AS_NATIVE_FUNCTION(value)   ((ObjNativeFunction*)AS_OBJ(value))
 #define AS_NATIVE_METHOD(value)     ((ObjNativeMethod*)AS_OBJ(value))
 #define AS_NODE(value)              ((ObjNode*)AS_OBJ(value))
@@ -57,6 +59,7 @@ typedef enum {
     OBJ_FILE,
     OBJ_FUNCTION,
     OBJ_INSTANCE,
+    OBJ_METHOD,
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
     OBJ_NODE,
@@ -173,6 +176,12 @@ typedef struct {
     int upvalueCount;
 } ObjClosure;
 
+typedef struct {
+    Obj obj;
+    ObjClass* behavior;
+    ObjClosure* closure;
+} ObjMethod;
+
 struct ObjClass {
     Obj obj;
     ObjString* name;
@@ -205,6 +214,7 @@ ObjEntry* newEntry(VM* vm, Value key, Value value);
 ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
+ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);

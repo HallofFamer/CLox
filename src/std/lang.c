@@ -107,6 +107,68 @@ LOX_METHOD(Bool, toString) {
     else RETURN_STRING("false", 5);
 }
 
+LOX_METHOD(BoundMethod, arity) {
+    ASSERT_ARG_COUNT("BoundMethod::arity()", 0);
+    RETURN_INT(AS_BOUND_METHOD(receiver)->method->function->arity);
+}
+
+LOX_METHOD(BoundMethod, clone) {
+    ASSERT_ARG_COUNT("BoundMethod::clone()", 0);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(BoundMethod, init) {
+    ASSERT_ARG_COUNT("BoundMethod::init(object, method)", 2);
+    if (IS_METHOD(args[1])) {
+        ObjMethod* method = AS_METHOD(args[1]);
+        if (!isObjInstanceOf(vm, args[0], method->behavior)) {
+            raiseError(vm, "Cannot bound method to object.");
+            RETURN_NIL;
+        }
+        RETURN_OBJ(newBoundMethod(vm, args[0], method->closure));
+    }
+    else if (IS_STRING(args[1])) {
+        ObjClass* klass = getObjClass(vm, args[0]);
+        Value value;
+        if (!tableGet(&klass->methods, AS_STRING(args[1]), &value)) {
+            raiseError(vm, "Cannot bound method to object.");
+            RETURN_NIL;
+        }
+        RETURN_OBJ(newBoundMethod(vm, args[0], AS_CLOSURE(value)));
+    }
+    else {
+        raiseError(vm, "method BoundMethod::init(object, method) expects argument 2 to be a method or string.");
+        RETURN_NIL;
+    }
+}
+
+LOX_METHOD(BoundMethod, isVariadic) {
+    ASSERT_ARG_COUNT("BoundMethod::isVariadic()", 0);
+    RETURN_BOOL(AS_BOUND_METHOD(receiver)->method->function->arity == -1);
+}
+
+LOX_METHOD(BoundMethod, name) {
+    ASSERT_ARG_COUNT("BoundMethod::name()", 0);
+    ObjBoundMethod* boundMethod = AS_BOUND_METHOD(receiver);
+    RETURN_STRING_FMT("%s::%s", getObjClass(vm, boundMethod->receiver)->name->chars, boundMethod->method->function->name->chars);
+}
+
+LOX_METHOD(BoundMethod, receiver) {
+    ASSERT_ARG_COUNT("BoundMethod::receiver()", 0);
+    RETURN_VAL(AS_BOUND_METHOD(receiver)->receiver);
+}
+
+LOX_METHOD(BoundMethod, toString) {
+    ASSERT_ARG_COUNT("BoundMethod::toString()", 0);
+    ObjBoundMethod* boundMethod = AS_BOUND_METHOD(receiver);
+    RETURN_STRING_FMT("<bound method %s::%s>", getObjClass(vm, boundMethod->receiver)->name->chars, boundMethod->method->function->name->chars);
+}
+
+LOX_METHOD(BoundMethod, upvalueCount) {
+    ASSERT_ARG_COUNT("BoundMethod::upvalueCount()", 0);
+    RETURN_INT(AS_BOUND_METHOD(receiver)->method->upvalueCount);
+}
+
 LOX_METHOD(Class, init) {
     ASSERT_ARG_COUNT("Class::init(name, superclass)", 2);
     ASSERT_ARG_TYPE("Class::init(name, superclass)", 0, String);
@@ -409,7 +471,18 @@ LOX_METHOD(Metaclass, toString) {
 
 LOX_METHOD(Method, arity) {
     ASSERT_ARG_COUNT("Method::arity()", 0);
-    RETURN_INT(AS_BOUND_METHOD(receiver)->method->function->arity);
+    if (IS_NATIVE_METHOD(receiver)) {
+        RETURN_INT(AS_NATIVE_METHOD(receiver)->arity);
+    }
+    RETURN_INT(AS_METHOD(receiver)->closure->function->arity);
+}
+
+LOX_METHOD(Method, behavior) {
+    ASSERT_ARG_COUNT("Method::behavior()", 0);
+    if (IS_NATIVE_METHOD(receiver)) {
+        RETURN_OBJ(AS_NATIVE_METHOD(receiver)->klass);
+    }
+    RETURN_OBJ(AS_METHOD(receiver)->behavior);
 }
 
 LOX_METHOD(Method, clone) {
@@ -422,21 +495,34 @@ LOX_METHOD(Method, init) {
     RETURN_NIL;
 }
 
-LOX_METHOD(Method, name) {
-    ASSERT_ARG_COUNT("Method::name()", 0);
-    ObjBoundMethod* bound = AS_BOUND_METHOD(receiver);
-    RETURN_STRING_FMT("%s::%s", getObjClass(vm, bound->receiver)->name->chars, bound->method->function->name->chars);
+LOX_METHOD(Method, isNative) {
+    ASSERT_ARG_COUNT("method::isNative()", 0);
+    RETURN_BOOL(IS_NATIVE_METHOD(receiver));
 }
 
-LOX_METHOD(Method, receiver) {
-    ASSERT_ARG_COUNT("Method::receiver()", 0);
-    RETURN_VAL(AS_BOUND_METHOD(receiver)->receiver);
+LOX_METHOD(Method, isVariadic) {
+    ASSERT_ARG_COUNT("Method::isVariadic()", 0);
+    RETURN_BOOL(AS_METHOD(receiver)->closure->function->arity == -1);
+}
+
+LOX_METHOD(Method, name) {
+    ASSERT_ARG_COUNT("Method::name()", 0);
+    if (IS_NATIVE_METHOD(receiver)) {
+        ObjNativeMethod* nativeMethod = AS_NATIVE_METHOD(receiver);
+        RETURN_STRING_FMT("%s::%s", nativeMethod->klass->name->chars, nativeMethod->name->chars);
+    }
+    ObjMethod* method = AS_METHOD(receiver);
+    RETURN_STRING_FMT("%s::%s", method->behavior->name->chars, method->closure->function->name->chars);
 }
 
 LOX_METHOD(Method, toString) {
     ASSERT_ARG_COUNT("Method::toString()", 0);
-    ObjBoundMethod* bound = AS_BOUND_METHOD(receiver);
-    RETURN_STRING_FMT("<method %s::%s>", getObjClass(vm, bound->receiver)->name->chars, bound->method->function->name->chars);
+    if (IS_NATIVE_METHOD(receiver)) {
+        ObjNativeMethod* nativeMethod = AS_NATIVE_METHOD(receiver);
+        RETURN_STRING_FMT("<method: %s::%s>", nativeMethod->klass->name->chars, nativeMethod->name->chars);
+    }
+    ObjMethod* method = AS_METHOD(receiver);
+    RETURN_STRING_FMT("<method %s::%s>", method->behavior->name->chars, method->closure->function->name->chars);
 }
 
 LOX_METHOD(Method, upvalueCount) {
@@ -1057,12 +1143,24 @@ void registerLangPackage(VM* vm) {
     vm->methodClass = defineNativeClass(vm, "Method");
     bindSuperclass(vm, vm->methodClass, vm->objectClass);
     DEF_METHOD(vm->methodClass, Method, arity, 0);
+    DEF_METHOD(vm->methodClass, Method, behavior, 0);
     DEF_METHOD(vm->methodClass, Method, clone, 0);
     DEF_METHOD(vm->methodClass, Method, init, 0);
+    DEF_METHOD(vm->methodClass, Method, isNative, 0);
+    DEF_METHOD(vm->methodClass, Method, isVariadic, 0);
     DEF_METHOD(vm->methodClass, Method, name, 0);
-    DEF_METHOD(vm->methodClass, Method, receiver, 0);
     DEF_METHOD(vm->methodClass, Method, toString, 0);
     DEF_METHOD(vm->methodClass, Method, upvalueCount, 0);
+
+    vm->boundMethodClass = defineNativeClass(vm, "BoundMethod");
+    bindSuperclass(vm, vm->boundMethodClass, vm->objectClass);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, arity, 0);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, clone, 0);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, init, 2);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, name, 0);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, receiver, 0);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, toString, 0);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, upvalueCount, 0);
 
     vm->traitClass = defineNativeClass(vm, "Trait");
     bindSuperclass(vm, vm->traitClass, behaviorClass);

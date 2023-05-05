@@ -35,7 +35,7 @@ ObjArray* newArray(VM* vm) {
 }
 
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
-    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD, vm->methodClass);
+    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD, vm->boundMethodClass);
     bound->receiver = receiver;
     bound->method = method;
     return bound;
@@ -99,6 +99,13 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
     initTable(&instance->fields);
     return instance;
+}
+
+ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure) {
+    ObjMethod* method = ALLOCATE_OBJ(ObjMethod, OBJ_METHOD, vm->methodClass);
+    method->behavior = behavior;
+    method->closure = closure;
+    return method;
 }
 
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function) {
@@ -356,6 +363,9 @@ void printObject(Value value) {
             break;
         case OBJ_INSTANCE:
             printf("<object %s>", AS_OBJ(value)->klass->name->chars);
+            break;
+        case OBJ_METHOD:
+            printf("<method %s::%s>", AS_METHOD(value)->behavior->name->chars, AS_METHOD(value)->closure->function->name->chars);
             break;
         case OBJ_NATIVE_FUNCTION:
             printf("<native function %s>", AS_NATIVE_FUNCTION(value)->name->chars);
