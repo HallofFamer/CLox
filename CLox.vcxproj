@@ -173,6 +173,7 @@
     <None Include="src\std\lang.lox" />
     <None Include="test\lox\array.lox" />
     <None Include="test\lox\benchmark.lox" />
+    <None Include="test\lox\boundmethod.lox" />
     <None Include="test\lox\closure.lox" />
     <None Include="test\lox\date.lox" />
     <None Include="test\lox\dictionary.lox" />

@@ -7,6 +7,7 @@
 
 #include "lang.h"
 #include "../vm/assert.h"
+#include "../vm/dict.h"
 #include "../vm/hash.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
@@ -36,6 +37,22 @@ static int lcm(int self, int other) {
 LOX_METHOD(Behavior, clone) {
     ASSERT_ARG_COUNT("Behavior::clone()", 0);
     RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Behavior, getMethod) {
+    ASSERT_ARG_COUNT("Behavior::getMethod(method)", 1);
+    ASSERT_ARG_TYPE("Behavior::getMethod(method)", 0, String);
+    ObjClass* self = AS_CLASS(receiver);
+    Value value;
+    if (tableGet(&self->methods, AS_STRING(args[0]), &value)) {
+        if (IS_NATIVE_METHOD(value)) RETURN_OBJ(AS_NATIVE_METHOD(value));
+        else if(IS_CLOSURE(value)) RETURN_OBJ(newMethod(vm, self, AS_CLOSURE(value)));
+        else {
+            raiseError(vm, "Invalid method object found.");
+            RETURN_NIL;
+        }
+    }
+    else RETURN_NIL;
 }
 
 LOX_METHOD(Behavior, hasMethod) {
@@ -74,6 +91,29 @@ LOX_METHOD(Behavior, isNative) {
 LOX_METHOD(Behavior, isTrait) {
     ASSERT_ARG_COUNT("Behavior::isTrait()", 0);
     RETURN_BOOL(AS_CLASS(receiver)->behavior == BEHAVIOR_TRAIT);
+}
+
+LOX_METHOD(Behavior, methods) {
+    ASSERT_ARG_COUNT("Behavior::methods()", 0);
+    ObjClass* self = AS_CLASS(receiver);
+    ObjDictionary* dict = newDictionary(vm);
+    push(vm, OBJ_VAL(dict));
+
+    for (int i = 0; i < self->methods.capacity; i++) {
+        Entry* entry = &self->methods.entries[i];
+        if (entry != NULL) {
+            if(IS_NATIVE_METHOD(entry->value)) dictSet(vm, dict, OBJ_VAL(entry->key), entry->value);
+            else if (IS_CLOSURE(entry->value)) {
+                ObjMethod* method = newMethod(vm, self, AS_CLOSURE(entry->value));
+                push(vm, OBJ_VAL(method));
+                dictSet(vm, dict, OBJ_VAL(entry->key), OBJ_VAL(method));
+                pop(vm);
+            }
+        }
+    }
+
+    pop(vm);
+    RETURN_OBJ(dict);
 }
 
 LOX_METHOD(Behavior, name) {
@@ -167,6 +207,28 @@ LOX_METHOD(BoundMethod, toString) {
 LOX_METHOD(BoundMethod, upvalueCount) {
     ASSERT_ARG_COUNT("BoundMethod::upvalueCount()", 0);
     RETURN_INT(AS_BOUND_METHOD(receiver)->method->upvalueCount);
+}
+
+LOX_METHOD(Class, getField) {
+    ASSERT_ARG_COUNT("Class::getField(field)", 1);
+    ASSERT_ARG_TYPE("Class::getField(field)", 0, String);
+    if (IS_CLASS(receiver)) {
+        ObjClass* klass = AS_CLASS(receiver);
+        Value value;
+        if (tableGet(&klass->fields, AS_STRING(args[0]), &value)) RETURN_VAL(value);
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(Class, hasField) {
+    ASSERT_ARG_COUNT("Class::hasField(field)", 1);
+    ASSERT_ARG_TYPE("Class::hasField(field)", 0, String);
+    if (IS_CLASS(receiver)) {
+        ObjClass* klass = AS_CLASS(receiver);
+        Value value;
+        RETURN_BOOL(tableGet(&klass->fields, AS_STRING(args[0]), &value));
+    }
+    RETURN_FALSE;
 }
 
 LOX_METHOD(Class, init) {
@@ -485,6 +547,15 @@ LOX_METHOD(Method, behavior) {
     RETURN_OBJ(AS_METHOD(receiver)->behavior);
 }
 
+LOX_METHOD(Method, bind) {
+    ASSERT_ARG_COUNT("Method::bind(receiver)", 1);
+    if (IS_NATIVE_METHOD(receiver)) {
+        raiseError(vm, "Cannot bind receiver to native method.");
+        RETURN_NIL;
+    }
+    RETURN_OBJ(newBoundMethod(vm, args[1], AS_METHOD(receiver)->closure));
+}
+
 LOX_METHOD(Method, clone) {
     ASSERT_ARG_COUNT("Method::clone()", 0);
     RETURN_OBJ(receiver);
@@ -523,11 +594,6 @@ LOX_METHOD(Method, toString) {
     }
     ObjMethod* method = AS_METHOD(receiver);
     RETURN_STRING_FMT("<method %s::%s>", method->behavior->name->chars, method->closure->function->name->chars);
-}
-
-LOX_METHOD(Method, upvalueCount) {
-    ASSERT_ARG_COUNT("Method::upvalueCount()", 0);
-    RETURN_INT(AS_BOUND_METHOD(receiver)->method->upvalueCount);
 }
 
 LOX_METHOD(Nil, clone) {
@@ -714,6 +780,17 @@ LOX_METHOD(Object, getClass) {
 LOX_METHOD(Object, getClassName) {
     ASSERT_ARG_COUNT("Object::getClassName()", 0);
     RETURN_OBJ(getObjClass(vm, receiver)->name);
+}
+
+LOX_METHOD(Object, getField) {
+    ASSERT_ARG_COUNT("Object::getField(field)", 1);
+    ASSERT_ARG_TYPE("Object::getField(field)", 0, String);
+    if (IS_INSTANCE(receiver)) {
+        ObjInstance* instance = AS_INSTANCE(receiver);
+        Value value;
+        if (tableGet(&instance->fields, AS_STRING(args[0]), &value)) RETURN_VAL(value);
+    }
+    RETURN_NIL;
 }
 
 LOX_METHOD(Object, hasField) {
@@ -956,12 +1033,32 @@ LOX_METHOD(Trait, toString) {
     RETURN_STRING_FMT("<trait %s>", AS_CLASS(receiver)->name->chars);
 }
 
+static void bindStringClass(VM* vm) {
+    for (int i = 0; i < vm->strings.capacity; i++) {
+        Entry* entry = &vm->strings.entries[i];
+        if (entry->key == NULL) continue;
+        entry->key->obj.klass = vm->stringClass;
+    }
+}
+
+static void bindMethodClass(VM* vm, ObjClass* klass) {
+    for (int i = 0; i < klass->methods.capacity; i++) {
+        Entry* entry = &klass->methods.entries[i];
+        if (entry->key == NULL) continue;
+        if (IS_NATIVE_METHOD(entry->value)) {
+            ObjNativeMethod* method = AS_NATIVE_METHOD(entry->value);
+            method->obj.klass = vm->methodClass;
+        }
+    }
+}
+
 void registerLangPackage(VM* vm) {
     vm->objectClass = defineSpecialClass(vm, "Object", BEHAVIOR_CLASS);
     DEF_METHOD(vm->objectClass, Object, clone, 0);
     DEF_METHOD(vm->objectClass, Object, equals, 1);
     DEF_METHOD(vm->objectClass, Object, getClass, 0);
     DEF_METHOD(vm->objectClass, Object, getClassName, 0);
+    DEF_METHOD(vm->objectClass, Object, getField, 1);
     DEF_METHOD(vm->objectClass, Object, hasField, 1);
     DEF_METHOD(vm->objectClass, Object, hashCode, 0);
     DEF_METHOD(vm->objectClass, Object, instanceOf, 1);
@@ -971,17 +1068,21 @@ void registerLangPackage(VM* vm) {
     ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
     inheritSuperclass(vm, behaviorClass, vm->objectClass);
     DEF_METHOD(behaviorClass, Behavior, clone, 0);
+    DEF_METHOD(behaviorClass, Behavior, getMethod, 1);
     DEF_METHOD(behaviorClass, Behavior, hasMethod, 1);
     DEF_METHOD(behaviorClass, Behavior, init, 2);
     DEF_METHOD(behaviorClass, Behavior, isBehavior, 0);
     DEF_METHOD(behaviorClass, Behavior, isClass, 0);
     DEF_METHOD(behaviorClass, Behavior, isMetaclass, 0);
     DEF_METHOD(behaviorClass, Behavior, isNative, 0);
+    DEF_METHOD(behaviorClass, Behavior, methods, 0);
     DEF_METHOD(behaviorClass, Behavior, name, 0);
     DEF_METHOD(behaviorClass, Behavior, traits, 0);
 
     vm->classClass = defineSpecialClass(vm, "Class", BEHAVIOR_CLASS);
     inheritSuperclass(vm, vm->classClass, behaviorClass);
+    DEF_METHOD(vm->classClass, Class, getField, 1);
+    DEF_METHOD(vm->classClass, Class, hasField, 1);
     DEF_METHOD(vm->classClass, Class, init, 2);
     DEF_METHOD(vm->classClass, Class, instanceOf, 1);
     DEF_METHOD(vm->classClass, Class, isClass, 0);
@@ -1019,6 +1120,27 @@ void registerLangPackage(VM* vm) {
     vm->metaclassClass->obj.klass = metaclassMetaclass;
     metaclassMetaclass->obj.klass = vm->metaclassClass;
     inheritSuperclass(vm, metaclassMetaclass, behaviorMetaclass);
+
+    vm->methodClass = defineNativeClass(vm, "Method");
+    bindSuperclass(vm, vm->methodClass, vm->objectClass);
+    DEF_METHOD(vm->methodClass, Method, arity, 0);
+    DEF_METHOD(vm->methodClass, Method, behavior, 0);
+    DEF_METHOD(vm->methodClass, Method, bind, 1);
+    DEF_METHOD(vm->methodClass, Method, clone, 0);
+    DEF_METHOD(vm->methodClass, Method, init, 0);
+    DEF_METHOD(vm->methodClass, Method, isNative, 0);
+    DEF_METHOD(vm->methodClass, Method, isVariadic, 0);
+    DEF_METHOD(vm->methodClass, Method, name, 0);
+    DEF_METHOD(vm->methodClass, Method, toString, 0);
+
+    bindMethodClass(vm, vm->objectClass);
+    bindMethodClass(vm, objectMetaclass);
+    bindMethodClass(vm, behaviorClass);
+    bindMethodClass(vm, behaviorMetaclass);
+    bindMethodClass(vm, vm->classClass);
+    bindMethodClass(vm, classMetaclass);
+    bindMethodClass(vm, vm->metaclassClass);
+    bindMethodClass(vm, metaclassMetaclass);
 
     initNativePackage(vm, "src/std/lang.lox");
 
@@ -1118,11 +1240,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->stringClass, String, toString, 0);
     DEF_METHOD(vm->stringClass, String, toUppercase, 0);
     DEF_METHOD(vm->stringClass, String, trim, 0);
-    for (int i = 0; i < vm->strings.capacity; i++) {
-        Entry* entry = &vm->strings.entries[i];
-        if (entry->key == NULL) continue;
-        entry->key->obj.klass = vm->stringClass;
-    }
+    bindStringClass(vm);
 
     vm->functionClass = defineNativeClass(vm, "Function");
     bindSuperclass(vm, vm->functionClass, vm->objectClass);
@@ -1139,18 +1257,6 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->functionClass, Function, name, 0);
     DEF_METHOD(vm->functionClass, Function, toString, 0);
     DEF_METHOD(vm->functionClass, Function, upvalueCount, 0);
-
-    vm->methodClass = defineNativeClass(vm, "Method");
-    bindSuperclass(vm, vm->methodClass, vm->objectClass);
-    DEF_METHOD(vm->methodClass, Method, arity, 0);
-    DEF_METHOD(vm->methodClass, Method, behavior, 0);
-    DEF_METHOD(vm->methodClass, Method, clone, 0);
-    DEF_METHOD(vm->methodClass, Method, init, 0);
-    DEF_METHOD(vm->methodClass, Method, isNative, 0);
-    DEF_METHOD(vm->methodClass, Method, isVariadic, 0);
-    DEF_METHOD(vm->methodClass, Method, name, 0);
-    DEF_METHOD(vm->methodClass, Method, toString, 0);
-    DEF_METHOD(vm->methodClass, Method, upvalueCount, 0);
 
     vm->boundMethodClass = defineNativeClass(vm, "BoundMethod");
     bindSuperclass(vm, vm->boundMethodClass, vm->objectClass);

@@ -344,7 +344,7 @@ void printObject(Value value) {
             printArray(AS_ARRAY(value));
             break;
         case OBJ_BOUND_METHOD:
-            printFunction(AS_BOUND_METHOD(value)->method->function);
+            printf("<bound method %s::%s>", AS_OBJ(AS_BOUND_METHOD(value)->receiver)->klass->name->chars, AS_BOUND_METHOD(value)->method->function->name->chars);
             break;
         case OBJ_CLASS:
             printClass(AS_CLASS(value));

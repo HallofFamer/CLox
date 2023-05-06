@@ -1,0 +1,18 @@
+class Scone { 
+    topping(first, second){ 
+        println("Scone with " + first + " and " + second);
+    }
+}
+
+var scone = Scone();
+var topping = scone.topping;
+println("Invoking bound method: ");
+topping("berries", "cream");
+print("class of bound method 'topping': ");
+println(topping.getClassName());
+print("'topping' method's arity: ");
+println(topping.arity());
+print("'topping' method's name: ");
+println(topping.name());
+print("'topping' method's receiver: ");
+println(topping.receiver());

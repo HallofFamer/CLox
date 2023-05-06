@@ -182,6 +182,12 @@ typedef struct {
     ObjClosure* closure;
 } ObjMethod;
 
+typedef struct {
+    Obj obj;
+    Value receiver;
+    ObjClosure* method;
+} ObjBoundMethod;
+
 struct ObjClass {
     Obj obj;
     ObjString* name;
@@ -197,12 +203,6 @@ typedef struct {
     Obj obj;
     Table fields;
 } ObjInstance;
-
-typedef struct {
-    Obj obj;
-    Value receiver;
-    ObjClosure* method;
-} ObjBoundMethod;
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
 ObjArray* newArray(VM* vm);
