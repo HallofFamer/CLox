@@ -235,12 +235,38 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     inheritSuperclass(vm, subclass->obj.klass, superclass->obj.klass);
 }
 
+void flattenTraits(VM* vm, ValueArray* traits) {
+    if (traits->count == 1 && AS_CLASS(traits->values[0])->traits.count == 0) return;
+    Table traitTable;
+    initTable(&traitTable);
+
+    for (int i = 0; i < traits->count; i++) {
+        ObjClass* trait = AS_CLASS(traits->values[i]);
+        tableSet(vm, &traitTable, trait->name, traits->values[i]);
+
+        for (int j = 0; j < trait->traits.count; j++) {
+            ObjClass* superTrait = AS_CLASS(trait->traits.values[j]);
+            tableSet(vm, &traitTable, superTrait->name, trait->traits.values[j]);
+        }
+    }
+
+    freeValueArray(vm, traits);
+    for (int i = 0; i < traitTable.capacity; i++) {
+        Entry* entry = &traitTable.entries[i];
+        if (entry->key == NULL) continue;
+        valueArrayWrite(vm, traits, entry->value);
+    }
+    freeTable(vm, &traitTable);
+}
+
 void implementTraits(VM* vm, ObjClass* klass, ValueArray* traits) {
     if (traits->count == 0) return;
     for (int i = 0; i < traits->count; i++) {
         ObjClass* trait = AS_CLASS(traits->values[i]);
         tableAddAll(vm, &trait->methods, &klass->methods);
     }
+    //flattenTraits(vm, traits);
+    klass->traits = *traits;
 }
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
