@@ -170,10 +170,11 @@ static TokenType identifierType(Scanner* scanner) {
             }
             break;
         case 't':
-            if (scanner->current - scanner->start > 1) {
-                switch (scanner->start[1]) {
-                    case 'h': return checkKeyword(scanner, 2, 2, "is", TOKEN_THIS);
-                    case 'r': return checkKeyword(scanner, 2, 2, "ue", TOKEN_TRUE);
+            if(scanner->current - scanner->start > 2) {
+                switch (scanner->start[2]) {
+                    case 'a': return checkKeyword(scanner, 3, 2, "it", TOKEN_TRAIT);
+                    case 'i': return checkKeyword(scanner, 3, 1, "s", TOKEN_THIS);
+                    case 'u': return checkKeyword(scanner, 3, 1, "e", TOKEN_TRUE);
                 }
             }
             break;
