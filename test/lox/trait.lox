@@ -21,6 +21,10 @@ print("TVehicle is trait: ");
 println(TVehicle.isTrait());
 print("TVehicle is class: ");
 println(TVehicle.isClass());
+print("TVehicle has method 'drive': ");
+println(TVehicle.hasMethod("drive"));
+print("TVehicle has method 'carry': ");
+println(TVehicle.hasMethod("carry"));
 print("Class of TVehicle: ");
 println(TVehicle.getClass());
 print("Class of Trait: ");
@@ -30,3 +34,29 @@ println(TVehicle.getClass().getClass().getClass());
 print("Superclass of Trait: ");
 println(TVehicle.getClass().superclass());
 println("");
+
+trait TTruck < TVehicle { 
+    carry(dLoad) { 
+        if(this.isMoving()) this.stop();
+        this.load = this.load + dLoad;
+    }
+}
+
+println("Trait: " + TTruck.toString());
+print("TTruck has method 'drive': ");
+println(TTruck.hasMethod("drive"));
+print("TTruck has method 'carry': ");
+println(TTruck.hasMethod("carry"));
+
+class Vehicle < TVehicle { 
+    init(color, speed) { 
+        this.color = color;
+        this.speed = speed;
+    }
+
+    toString(){ 
+        val message = this.color + " " + this.getClassName();
+        if(this.isMoving()) return message + " is moving at " + this.speed.toString() + " mph";
+        else return message + " is stationary";
+    }
+}

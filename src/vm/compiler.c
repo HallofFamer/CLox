@@ -888,8 +888,7 @@ static void classDeclaration(Compiler* compiler) {
     addLocal(compiler, syntheticToken("super"));
     defineVariable(compiler, 0, false);
     namedVariable(compiler, className, false);
-    emitByte(compiler, OP_INHERIT);
-    //emitBytes(compiler, OP_INHERIT, behaviorCount);
+    emitBytes(compiler, OP_INHERIT, behaviorCount);
 
     namedVariable(compiler, className, false);
     methods(compiler);
@@ -923,7 +922,7 @@ static void traitDeclaration(Compiler* compiler) {
     addLocal(compiler, syntheticToken("super"));
     defineVariable(compiler, 0, false);
     namedVariable(compiler, traitName, false);
-    //emitBytes(compiler, OP_INHERIT, behaviorCount);
+    emitBytes(compiler, OP_INHERIT, behaviorCount);
 
     namedVariable(compiler, traitName, false);
     methods(compiler);

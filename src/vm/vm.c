@@ -221,6 +221,26 @@ static void makeDictionary(VM* vm, uint8_t entryCount) {
     push(vm, OBJ_VAL(dictionary));
 }
 
+static ObjArray* makeTraitArray(VM* vm, uint8_t behaviorCount) {
+    ObjArray* traits = newArray(vm);
+    push(vm, OBJ_VAL(traits));
+    for (int i = 1; i <= behaviorCount; i++) {
+        Value trait = peek(vm, i + 1);
+        if (!IS_CLASS(trait) || AS_CLASS(trait)->behavior != BEHAVIOR_TRAIT) {
+            return NULL;
+        }
+        valueArrayWrite(vm, &traits->elements, trait);
+    }
+    pop(vm);
+
+    while (behaviorCount > 0) {
+        behaviorCount--;
+        pop(vm);
+    }
+    push(vm, OBJ_VAL(traits));
+    return traits;
+}
+
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
     if (closure->function->arity > 0 && argCount != closure->function->arity) {
         runtimeError(vm, "Expected %d arguments but got %d.", closure->function->arity, argCount);
@@ -754,14 +774,25 @@ static InterpretResult run(VM* vm) {
                 push(vm, OBJ_VAL(createTrait(vm, READ_STRING())));
                 break;
             case OP_INHERIT: {
-                Value superclass = peek(vm, 1);
-                if (!IS_CLASS(superclass)) {
-                    runtimeError(vm, "Superclass must be a class.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                ObjClass* klass = AS_CLASS(peek(vm, 0));
+                int behaviorCount = READ_BYTE();
+                if (klass->behavior == BEHAVIOR_CLASS) {
+                    Value superclass = peek(vm, 1);
+                    if (!IS_CLASS(superclass)) {
+                        runtimeError(vm, "Superclass must be a class.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
 
-                ObjClass* subclass = AS_CLASS(peek(vm, 0));
-                bindSuperclass(vm, subclass, AS_CLASS(superclass));
+                    bindSuperclass(vm, klass, AS_CLASS(superclass));
+                }
+                else if (klass->behavior == BEHAVIOR_TRAIT) {
+                    ObjArray* traits = makeTraitArray(vm, behaviorCount);
+                    if (traits == NULL) {
+                        runtimeError(vm, "Traits can only inherit other traits.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    implementTraits(vm, klass, traits);
+                }
                 pop(vm);
                 break;
             }

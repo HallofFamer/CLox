@@ -123,12 +123,7 @@ LOX_METHOD(Behavior, name) {
 
 LOX_METHOD(Behavior, traits) {
     ASSERT_ARG_COUNT("Behavior::traits()", 0);
-    ObjClass* self = AS_CLASS(receiver);
-    ObjArray* traits = newArray(vm);
-    push(vm, OBJ_VAL(traits));
-    valueArrayAddAll(vm, &self->traits, &traits->elements);
-    pop(vm);
-    RETURN_OBJ(traits);
+    RETURN_OBJ(AS_CLASS(receiver)->traits);
 }
 
 LOX_METHOD(Bool, clone) {
@@ -1002,7 +997,7 @@ LOX_METHOD(Trait, init) {
     ASSERT_ARG_TYPE("Trait::init(name, traits)", 0, String);
     ASSERT_ARG_TYPE("Trait::init(name, traits)", 1, Array);
     ObjClass* trait = createTrait(vm, AS_STRING(args[0]));
-    implementTraits(vm, trait, &AS_ARRAY(args[1])->elements);
+    implementTraits(vm, trait, AS_ARRAY(args[1]));
     RETURN_OBJ(trait);
 }
 
