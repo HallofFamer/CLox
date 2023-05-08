@@ -381,7 +381,14 @@ static void closeUpvalues(VM* vm, Value* last) {
 static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     Value method = peek(vm, 0);
     ObjClass* klass = AS_CLASS(peek(vm, 1));
-    if (isClassMethod) klass = klass->obj.klass;
+
+    if (isClassMethod) {
+        if (klass->behavior != BEHAVIOR_CLASS) {
+            runtimeError(vm, "Class method '%s' can only be defined in class body.", name->chars);
+        }
+        klass = klass->obj.klass;
+    }
+
     tableSet(vm, &klass->methods, name, method);
     pop(vm);
 }
@@ -742,6 +749,9 @@ static InterpretResult run(VM* vm) {
                 break;
             case OP_CLASS:
                 push(vm, OBJ_VAL(newClass(vm, READ_STRING())));
+                break;
+            case OP_TRAIT:
+                push(vm, OBJ_VAL(createTrait(vm, READ_STRING())));
                 break;
             case OP_INHERIT: {
                 Value superclass = peek(vm, 1);

@@ -73,6 +73,7 @@ struct Compiler {
 struct ClassCompiler {
     struct ClassCompiler* enclosing;
     Token name;
+    BehaviorType type;
 };
 
 static Chunk* currentChunk(Compiler* compiler) {
@@ -725,6 +726,7 @@ ParseRule rules[] = {
     [TOKEN_SUPER]         = {super_,     NULL,        PREC_NONE},
     [TOKEN_SWITCH]        = {NULL,       NULL,        PREC_NONE},
     [TOKEN_THIS]          = {this_,      NULL,        PREC_NONE},
+    [TOKEN_TRAIT]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_TRUE]          = {literal,    NULL,        PREC_NONE},
     [TOKEN_VAL]           = {NULL,       NULL,        PREC_NONE},
     [TOKEN_VAR]           = {NULL,       NULL,        PREC_NONE},
@@ -829,6 +831,30 @@ static void method(Compiler* compiler) {
     emitBytes(compiler, opCode, constant);
 }
 
+static void methods(Compiler* compiler) {
+    consume(compiler->parser, TOKEN_LEFT_BRACE, "Expect '{' before class/trait body.");
+    while (!check(compiler->parser, TOKEN_RIGHT_BRACE) && !check(compiler->parser, TOKEN_EOF)) {
+        method(compiler);
+    }
+    consume(compiler->parser, TOKEN_RIGHT_BRACE, "Expect '}' after class/trait body.");
+}
+
+static uint8_t behaviors(Compiler* compiler, Token* name) {
+    uint8_t behaviorCount = 0;
+
+    do {
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect class/trait name.");
+        variable(compiler, false);
+
+        if (identifiersEqual(name, &compiler->parser->previous)) {
+            error(compiler->parser, "A class/trait cannot inherit from itself.");
+        }
+        behaviorCount++;
+    } while (check(compiler->parser, TOKEN_COMMA));
+
+    return behaviorCount;
+}
+
 static void classDeclaration(Compiler* compiler) {
     consume(compiler->parser, TOKEN_IDENTIFIER, "Expect class name.");
     Token className = compiler->parser->previous;
@@ -839,10 +865,12 @@ static void classDeclaration(Compiler* compiler) {
     defineVariable(compiler, nameConstant, false);
 
     ClassCompiler* enclosingClass = compiler->parser->vm->currentClass;
-    ClassCompiler classCompiler = { .name = compiler->parser->previous, .enclosing = enclosingClass };
+    ClassCompiler classCompiler = { .name = compiler->parser->previous, .enclosing = enclosingClass, .type = BEHAVIOR_CLASS };
     compiler->parser->vm->currentClass = &classCompiler;
 
+    uint8_t behaviorCount = 1;
     if (match(compiler->parser, TOKEN_LESS)) {
+        //behaviorCount = behaviors(compiler, &className);
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect super class name.");
         variable(compiler, false);
         if (identifiersEqual(&className, &compiler->parser->previous)) {
@@ -861,14 +889,10 @@ static void classDeclaration(Compiler* compiler) {
     defineVariable(compiler, 0, false);
     namedVariable(compiler, className, false);
     emitByte(compiler, OP_INHERIT);
+    //emitBytes(compiler, OP_INHERIT, behaviorCount);
 
     namedVariable(compiler, className, false);
-    consume(compiler->parser, TOKEN_LEFT_BRACE, "Expect '{' before class body.");
-    while (!check(compiler->parser, TOKEN_RIGHT_BRACE) && !check(compiler->parser, TOKEN_EOF)) {
-        method(compiler);
-    }
-
-    consume(compiler->parser, TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+    methods(compiler);
     emitByte(compiler, OP_POP);
     endScope(compiler);
     compiler->parser->vm->currentClass = enclosingClass;
@@ -879,6 +903,33 @@ static void funDeclaration(Compiler* compiler) {
     markInitialized(compiler, false);
     function(compiler, TYPE_FUNCTION);
     defineVariable(compiler, global, false);
+}
+
+static void traitDeclaration(Compiler* compiler) {
+    consume(compiler->parser, TOKEN_IDENTIFIER, "Expect trait name.");
+    Token traitName = compiler->parser->previous;
+    uint8_t nameConstant = identifierConstant(compiler, &compiler->parser->previous);
+
+    declareVariable(compiler);
+    emitBytes(compiler, OP_TRAIT, nameConstant);
+    defineVariable(compiler, nameConstant, false);
+
+    ClassCompiler* enclosingClass = compiler->parser->vm->currentClass;
+    ClassCompiler classCompiler = { .name = compiler->parser->previous, .enclosing = enclosingClass, .type = BEHAVIOR_TRAIT };
+    compiler->parser->vm->currentClass = &classCompiler;
+
+    uint8_t behaviorCount = match(compiler->parser, TOKEN_LESS) ? behaviors(compiler, &traitName) : 0;
+    beginScope(compiler);
+    addLocal(compiler, syntheticToken("super"));
+    defineVariable(compiler, 0, false);
+    namedVariable(compiler, traitName, false);
+    emitBytes(compiler, OP_INHERIT, behaviorCount);
+
+    namedVariable(compiler, traitName, false);
+    methods(compiler);
+    emitByte(compiler, OP_POP);
+    endScope(compiler);
+    compiler->parser->vm->currentClass = enclosingClass;
 }
 
 static void varDeclaration(Compiler* compiler, bool isMutable) {
@@ -1120,6 +1171,9 @@ static void declaration(Compiler* compiler) {
     else if (check(compiler->parser, TOKEN_FUN) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
         advance(compiler->parser);
         funDeclaration(compiler);
+    }
+    else if (check(compiler->parser, TOKEN_TRAIT)) {
+        traitDeclaration(compiler);
     }
     else if (match(compiler->parser, TOKEN_VAL)) {
         varDeclaration(compiler, false);
