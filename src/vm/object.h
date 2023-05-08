@@ -93,8 +93,8 @@ typedef struct {
 
 typedef Value (*NativeFunction)(VM* vm, int argCount, Value* args);
 typedef Value (*NativeMethod)(VM* vm, Value receiver, int argCount, Value* args);
-typedef void (*MarkFunction)(void* func);
-typedef void (*FreeFunction)(void* func);
+typedef void (*MarkFunction)(void* data);
+typedef void (*FreeFunction)(void* data);
 
 typedef struct {
     Obj obj;
@@ -195,7 +195,7 @@ struct ObjClass {
     ObjString* name;
     BehaviorType behavior;
     struct ObjClass* superclass;
-    ValueArray traits;
+    ObjArray* traits;
     bool isNative;
     Table fields;
     Table methods;
@@ -232,7 +232,7 @@ bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass);
 bool isClassImplementingTrait(ObjClass* trait, ObjClass* klass);
 void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
-void implementTraits(VM* vm, ObjClass* klass, ValueArray* traits);
+void implementTraits(VM* vm, ObjClass* klass, ObjArray* traits);
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
 void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* name);

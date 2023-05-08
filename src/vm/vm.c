@@ -777,13 +777,13 @@ static InterpretResult run(VM* vm) {
                 ObjClass* klass = AS_CLASS(peek(vm, 0));
                 int behaviorCount = READ_BYTE();
                 if (klass->behavior == BEHAVIOR_CLASS) {
-                    Value superclass = peek(vm, 1);
-                    if (!IS_CLASS(superclass)) {
-                        runtimeError(vm, "Superclass must be a class.");
+                    Value behavior = peek(vm, 1);
+                    if (!IS_CLASS(behavior)) {
+                        runtimeError(vm, "Class can only inherit from class or traits.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
-
-                    bindSuperclass(vm, klass, AS_CLASS(superclass));
+                    ObjClass* superclass = AS_CLASS(behavior);
+                    bindSuperclass(vm, klass, superclass->behavior == BEHAVIOR_CLASS ? superclass : vm->objectClass);
                 }
                 else if (klass->behavior == BEHAVIOR_TRAIT) {
                     ObjArray* traits = makeTraitArray(vm, behaviorCount);

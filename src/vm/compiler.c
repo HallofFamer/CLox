@@ -870,7 +870,6 @@ static void classDeclaration(Compiler* compiler) {
 
     uint8_t behaviorCount = 1;
     if (match(compiler->parser, TOKEN_LESS)) {
-        //behaviorCount = behaviors(compiler, &className);
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect super class name.");
         variable(compiler, false);
         if (identifiersEqual(&className, &compiler->parser->previous)) {
@@ -884,6 +883,7 @@ static void classDeclaration(Compiler* compiler) {
         }
     }
 
+    //uint8_t behaviorCount = match(compiler->parser, TOKEN_LESS) ? behaviors(compiler, &className) : 0;
     beginScope(compiler);
     addLocal(compiler, syntheticToken("super"));
     defineVariable(compiler, 0, false);

@@ -83,7 +83,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjClass* klass = (ObjClass*)object;
             markObject(vm, (Obj*)klass->name);
             markObject(vm, (Obj*)klass->superclass);
-            markArray(vm, &klass->traits);
+            if(klass->traits != NULL) markObject(vm, (Obj*)klass->traits);
             markObject(vm, (Obj*)klass->obj.klass);
             markTable(vm, &klass->fields);
             markTable(vm, &klass->methods);
@@ -152,6 +152,11 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)node->next);
             break;
         }
+        case OBJ_RECORD: {
+            ObjRecord* record = (ObjRecord*)object;
+            if (record->markFunction) record->markFunction(record->data);
+            break;
+        }
         case OBJ_UPVALUE:
             markValue(vm, ((ObjUpvalue*)object)->closed);
             break;
@@ -177,7 +182,6 @@ static void freeObject(VM* vm, Obj* object) {
             break;        
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
-            freeValueArray(vm, &klass->traits);
             freeTable(vm, &klass->fields);
             freeTable(vm, &klass->methods);
             FREE(ObjClass, object);

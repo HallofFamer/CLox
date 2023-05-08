@@ -47,6 +47,7 @@ print("TTruck has method 'drive': ");
 println(TTruck.hasMethod("drive"));
 print("TTruck has method 'carry': ");
 println(TTruck.hasMethod("carry"));
+println("");
 
 class Vehicle < TVehicle { 
     init(color, speed) { 
@@ -60,3 +61,6 @@ class Vehicle < TVehicle {
         else return message + " is stationary";
     }
 }
+
+val vehicle = Vehicle("blue", 30);
+println(vehicle.toString());
