@@ -1,0 +1,32 @@
+trait TVehicle { 
+    isMoving(){ 
+        return this.speed > 0;
+    }
+
+    drive(speed){ 
+        this.speed = speed;
+    }
+
+    accelerate(dSpeed){ 
+        this.speed = this.speed + dSpeed;
+    } 
+
+    stop(){ 
+        this.speed = 0;
+    }
+}
+
+println("Trait: " + TVehicle.toString());
+print("TVehicle is trait: ");
+println(TVehicle.isTrait());
+print("TVehicle is class: ");
+println(TVehicle.isClass());
+print("Class of TVehicle: ");
+println(TVehicle.getClass());
+print("Class of Trait: ");
+println(TVehicle.getClass().getClass());
+print("Class of Trait class: ");
+println(TVehicle.getClass().getClass().getClass());
+print("Superclass of Trait: ");
+println(TVehicle.getClass().superclass());
+println("");

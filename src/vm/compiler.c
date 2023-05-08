@@ -923,7 +923,7 @@ static void traitDeclaration(Compiler* compiler) {
     addLocal(compiler, syntheticToken("super"));
     defineVariable(compiler, 0, false);
     namedVariable(compiler, traitName, false);
-    emitBytes(compiler, OP_INHERIT, behaviorCount);
+    //emitBytes(compiler, OP_INHERIT, behaviorCount);
 
     namedVariable(compiler, traitName, false);
     methods(compiler);
@@ -1172,7 +1172,7 @@ static void declaration(Compiler* compiler) {
         advance(compiler->parser);
         funDeclaration(compiler);
     }
-    else if (check(compiler->parser, TOKEN_TRAIT)) {
+    else if (match(compiler->parser, TOKEN_TRAIT)) {
         traitDeclaration(compiler);
     }
     else if (match(compiler->parser, TOKEN_VAL)) {

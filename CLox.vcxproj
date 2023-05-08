@@ -203,6 +203,7 @@
     <None Include="test\lox\sum.lox" />
     <None Include="test\lox\super.lox" />
     <None Include="test\lox\switch.lox" />
+    <None Include="test\lox\trait.lox" />
     <None Include="test\lox\variable.lox" />
   </ItemGroup>
   <ItemGroup>
