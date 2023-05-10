@@ -213,7 +213,7 @@ bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass) {
 }
 
 bool isClassImplementingTrait(ObjClass* klass, ObjClass* trait) {
-    if (klass->behavior == BEHAVIOR_METACLASS) return false;
+    if (klass->behavior == BEHAVIOR_METACLASS || klass->traits == NULL) return false;
     ValueArray* traits = &klass->traits->elements;
 
     for (int i = 0; i < traits->count; i++) {
@@ -236,14 +236,18 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     inheritSuperclass(vm, subclass->obj.klass, superclass->obj.klass);
 }
 
-void flattenTraits(VM* vm, ValueArray* traits) {
-    if (traits->count == 1 && AS_CLASS(traits->values[0])->traits->elements.count == 0) return;
+void flattenTraits(VM* vm, ObjArray* traits) {
+    if (traits->elements.count == 1) {
+        ObjClass* first = AS_CLASS(traits->elements.values[0]);
+        if (first->traits == NULL || first->traits->elements.count == 0) return;
+    }
     Table traitTable;
     initTable(&traitTable);
 
-    for (int i = 0; i < traits->count; i++) {
-        ObjClass* trait = AS_CLASS(traits->values[i]);
-        tableSet(vm, &traitTable, trait->name, traits->values[i]);
+    for (int i = 0; i < traits->elements.count; i++) {
+        ObjClass* trait = AS_CLASS(traits->elements.values[i]);
+        tableSet(vm, &traitTable, trait->name, traits->elements.values[i]);
+        if (trait->traits == NULL) continue;
 
         for (int j = 0; j < trait->traits->elements.count; j++) {
             ObjClass* superTrait = AS_CLASS(trait->traits->elements.values[j]);
@@ -251,11 +255,11 @@ void flattenTraits(VM* vm, ValueArray* traits) {
         }
     }
 
-    freeValueArray(vm, traits);
+    freeValueArray(vm, &traits->elements);
     for (int i = 0; i < traitTable.capacity; i++) {
         Entry* entry = &traitTable.entries[i];
         if (entry->key == NULL) continue;
-        valueArrayWrite(vm, traits, entry->value);
+        valueArrayWrite(vm, &traits->elements, entry->value);
     }
     freeTable(vm, &traitTable);
 }
@@ -266,7 +270,7 @@ void implementTraits(VM* vm, ObjClass* klass, ObjArray* traits) {
         ObjClass* trait = AS_CLASS(traits->elements.values[i]);
         tableAddAll(vm, &trait->methods, &klass->methods);
     }
-    //flattenTraits(vm, &traits->elements);
+    flattenTraits(vm, traits);
     klass->traits = traits;
 }
 

@@ -45,6 +45,7 @@ typedef enum {
     OP_CLASS,
     OP_TRAIT,
     OP_INHERIT,
+    OP_IMPLEMENT,
     OP_INSTANCE_METHOD,
     OP_CLASS_METHOD,
     OP_ARRAY,

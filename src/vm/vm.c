@@ -775,24 +775,30 @@ static InterpretResult run(VM* vm) {
                 break;
             case OP_INHERIT: {
                 ObjClass* klass = AS_CLASS(peek(vm, 0));
-                int behaviorCount = READ_BYTE();
                 if (klass->behavior == BEHAVIOR_CLASS) {
-                    Value behavior = peek(vm, 1);
-                    if (!IS_CLASS(behavior)) {
-                        runtimeError(vm, "Class can only inherit from class or traits.");
+                    Value superclass = peek(vm, 1);
+                    if (!IS_CLASS(superclass) || AS_CLASS(superclass)->behavior != BEHAVIOR_CLASS) {
+                        runtimeError(vm, "Superclass must be a class.");
                         return INTERPRET_RUNTIME_ERROR;
                     }
-                    ObjClass* superclass = AS_CLASS(behavior);
-                    bindSuperclass(vm, klass, superclass->behavior == BEHAVIOR_CLASS ? superclass : vm->objectClass);
+                    bindSuperclass(vm, klass, AS_CLASS(superclass));
                 }
-                else if (klass->behavior == BEHAVIOR_TRAIT) {
-                    ObjArray* traits = makeTraitArray(vm, behaviorCount);
-                    if (traits == NULL) {
-                        runtimeError(vm, "Traits can only inherit other traits.");
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    implementTraits(vm, klass, traits);
+                else {
+                    runtimeError(vm, "Only class can inherit from another class.");
+                    return INTERPRET_RUNTIME_ERROR;
                 }
+                pop(vm);
+                break;
+            }
+            case OP_IMPLEMENT: {
+                ObjClass* klass = AS_CLASS(peek(vm, 0));
+                int behaviorCount = READ_BYTE();
+                ObjArray* traits = makeTraitArray(vm, behaviorCount);
+                if (traits == NULL) {
+                    runtimeError(vm, "Traits can only inherit other traits.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                implementTraits(vm, klass, traits);
                 pop(vm);
                 break;
             }

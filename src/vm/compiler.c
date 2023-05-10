@@ -731,6 +731,7 @@ ParseRule rules[] = {
     [TOKEN_VAL]           = {NULL,       NULL,        PREC_NONE},
     [TOKEN_VAR]           = {NULL,       NULL,        PREC_NONE},
     [TOKEN_WHILE]         = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_WITH]          = {NULL,       NULL,        PREC_NONE},
     [TOKEN_ERROR]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_EOF]           = {NULL,       NULL,        PREC_NONE},
 };
@@ -839,7 +840,7 @@ static void methods(Compiler* compiler) {
     consume(compiler->parser, TOKEN_RIGHT_BRACE, "Expect '}' after class/trait body.");
 }
 
-static uint8_t behaviors(Compiler* compiler, Token* name) {
+static uint8_t traits(Compiler* compiler, Token* name) {
     uint8_t behaviorCount = 0;
 
     do {
@@ -850,7 +851,7 @@ static uint8_t behaviors(Compiler* compiler, Token* name) {
             error(compiler->parser, "A class/trait cannot inherit from itself.");
         }
         behaviorCount++;
-    } while (check(compiler->parser, TOKEN_COMMA));
+    } while (match(compiler->parser, TOKEN_COMMA));
 
     return behaviorCount;
 }
@@ -868,7 +869,6 @@ static void classDeclaration(Compiler* compiler) {
     ClassCompiler classCompiler = { .name = compiler->parser->previous, .enclosing = enclosingClass, .type = BEHAVIOR_CLASS };
     compiler->parser->vm->currentClass = &classCompiler;
 
-    uint8_t behaviorCount = 1;
     if (match(compiler->parser, TOKEN_LESS)) {
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect super class name.");
         variable(compiler, false);
@@ -883,12 +883,18 @@ static void classDeclaration(Compiler* compiler) {
         }
     }
 
-    //uint8_t behaviorCount = match(compiler->parser, TOKEN_LESS) ? behaviors(compiler, &className) : 0;
     beginScope(compiler);
     addLocal(compiler, syntheticToken("super"));
     defineVariable(compiler, 0, false);
     namedVariable(compiler, className, false);
-    emitBytes(compiler, OP_INHERIT, behaviorCount);
+    emitByte(compiler, OP_INHERIT);
+
+    uint8_t traitCount = match(compiler->parser, TOKEN_WITH) ? traits(compiler, &className) : 0;
+    if (traitCount > 0) {
+        namedVariable(compiler, className, false);
+        emitBytes(compiler, OP_IMPLEMENT, traitCount);
+        emitByte(compiler, OP_POP);
+    }
 
     namedVariable(compiler, className, false);
     methods(compiler);
@@ -917,12 +923,12 @@ static void traitDeclaration(Compiler* compiler) {
     ClassCompiler classCompiler = { .name = compiler->parser->previous, .enclosing = enclosingClass, .type = BEHAVIOR_TRAIT };
     compiler->parser->vm->currentClass = &classCompiler;
 
-    uint8_t behaviorCount = match(compiler->parser, TOKEN_LESS) ? behaviors(compiler, &traitName) : 0;
+    uint8_t traitCount = match(compiler->parser, TOKEN_WITH) ? traits(compiler, &traitName) : 0;
     beginScope(compiler);
     addLocal(compiler, syntheticToken("super"));
     defineVariable(compiler, 0, false);
     namedVariable(compiler, traitName, false);
-    emitBytes(compiler, OP_INHERIT, behaviorCount);
+    emitBytes(compiler, OP_IMPLEMENT, traitCount);
 
     namedVariable(compiler, traitName, false);
     methods(compiler);

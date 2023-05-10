@@ -186,7 +186,14 @@ static TokenType identifierType(Scanner* scanner) {
                 }
             }
             break;
-        case 'w': return checkKeyword(scanner, 1, 4, "hile", TOKEN_WHILE);
+        case 'w':
+            if (scanner->current - scanner->start > 1) {
+                switch (scanner->start[1]) {
+                case 'h': return checkKeyword(scanner, 2, 3, "ile", TOKEN_WHILE);
+                case 'i': return checkKeyword(scanner, 2, 2, "th", TOKEN_WITH);
+                }
+            }
+            break;
     }
     return TOKEN_IDENTIFIER;
 }
