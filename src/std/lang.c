@@ -123,7 +123,9 @@ LOX_METHOD(Behavior, name) {
 
 LOX_METHOD(Behavior, traits) {
     ASSERT_ARG_COUNT("Behavior::traits()", 0);
-    RETURN_OBJ(AS_CLASS(receiver)->traits);
+    ObjClass* self = AS_CLASS(receiver);
+    if (self->traits == NULL) RETURN_NIL;
+    else RETURN_OBJ(self->traits);
 }
 
 LOX_METHOD(Bool, clone) {
@@ -1137,6 +1139,17 @@ void registerLangPackage(VM* vm) {
     bindMethodClass(vm, vm->metaclassClass);
     bindMethodClass(vm, metaclassMetaclass);
 
+    vm->traitClass = defineNativeClass(vm, "Trait");
+    bindSuperclass(vm, vm->traitClass, behaviorClass);
+    DEF_METHOD(vm->traitClass, Trait, getClass, 0);
+    DEF_METHOD(vm->traitClass, Trait, getClassName, 0);
+    DEF_METHOD(vm->traitClass, Trait, init, 2);
+    DEF_METHOD(vm->traitClass, Trait, instanceOf, 1);
+    DEF_METHOD(vm->traitClass, Trait, isTrait, 0);
+    DEF_METHOD(vm->traitClass, Trait, memberOf, 1);
+    DEF_METHOD(vm->traitClass, Trait, superclass, 0);
+    DEF_METHOD(vm->traitClass, Trait, toString, 0);
+
     initNativePackage(vm, "src/std/lang.lox");
 
     vm->nilClass = getNativeClass(vm, "Nil");
@@ -1262,15 +1275,4 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->boundMethodClass, BoundMethod, receiver, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, toString, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, upvalueCount, 0);
-
-    vm->traitClass = defineNativeClass(vm, "Trait");
-    bindSuperclass(vm, vm->traitClass, behaviorClass);
-    DEF_METHOD(vm->traitClass, Trait, getClass, 0);
-    DEF_METHOD(vm->traitClass, Trait, getClassName, 0);
-    DEF_METHOD(vm->traitClass, Trait, init, 2);
-    DEF_METHOD(vm->traitClass, Trait, instanceOf, 1);
-    DEF_METHOD(vm->traitClass, Trait, isTrait, 0);
-    DEF_METHOD(vm->traitClass, Trait, memberOf, 1);
-    DEF_METHOD(vm->traitClass, Trait, superclass, 0);
-    DEF_METHOD(vm->traitClass, Trait, toString, 0);
 }

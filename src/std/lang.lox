@@ -6,7 +6,18 @@ class Bool {
 
 }
 
-class Number { 
+trait TComparable { 
+    compareTo(other){ 
+        error("Not implemented, subclass responsibility.");
+    }
+    
+    equals(value) { 
+        if(this == value) return true;
+        return this.compareTo(other) == 0;
+    }
+}
+
+class Number with TComparable { 
     step(to, by, closure){ 
         var from = this;
         if(by == 0) error("Step size cannot be 0");

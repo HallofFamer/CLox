@@ -107,6 +107,18 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, Na
     pop(vm);
 }
 
+ObjClass* defineNativeTrait(VM* vm, const char* name) {
+    ObjString* traitName = newString(vm, name);
+    push(vm, OBJ_VAL(traitName));
+    ObjClass* nativeTrait = createTrait(vm, traitName);
+    nativeTrait->isNative = true;
+    push(vm, OBJ_VAL(nativeTrait));
+    tableSet(vm, &vm->globalValues, AS_STRING(vm->stack[0]), vm->stack[1]);
+    pop(vm);
+    pop(vm);
+    return nativeTrait;
+}
+
 ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behavior) {
     ObjString* className = newString(vm, name);
     push(vm, OBJ_VAL(className));

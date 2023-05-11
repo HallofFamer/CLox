@@ -266,12 +266,43 @@ void flattenTraits(VM* vm, ObjArray* traits) {
 
 void implementTraits(VM* vm, ObjClass* klass, ObjArray* traits) {
     if (traits->elements.count == 0) return;
+    push(vm, OBJ_VAL(traits));
     for (int i = 0; i < traits->elements.count; i++) {
         ObjClass* trait = AS_CLASS(traits->elements.values[i]);
         tableAddAll(vm, &trait->methods, &klass->methods);
     }
     flattenTraits(vm, traits);
     klass->traits = traits;
+    pop(vm);
+}
+
+void bindTrait(VM* vm, ObjClass* klass, ObjClass* trait) {
+    ObjArray* traits = newArray(vm);
+    push(vm, OBJ_VAL(traits));
+    valueArrayWrite(vm, &traits->elements, OBJ_VAL(trait));
+    if (trait->traits != NULL) {
+        for (int i = 0; i < trait->traits->elements.count; i++) {
+            valueArrayWrite(vm, &traits->elements, trait->traits->elements.values[i]);
+        }
+    }
+    tableAddAll(vm, &trait->methods, &klass->methods);
+    klass->traits = traits;
+    pop(vm);
+}
+
+void bindTraits(VM* vm, int numTraits, ObjClass* klass, ...) {
+    va_list args;
+    va_start(args, klass);
+    ObjArray* traits = newArray(vm);
+    push(vm, OBJ_VAL(traits));
+    for (int i = 0; i < numTraits; i++) {
+        Value trait = va_arg(args, Value);
+        valueArrayWrite(vm, &traits->elements, trait);
+        tableAddAll(vm, &AS_CLASS(trait)->methods, &klass->methods);
+    }
+    flattenTraits(vm, traits);
+    klass->traits = traits;
+    pop(vm);
 }
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
