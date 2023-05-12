@@ -115,3 +115,13 @@ print("Truck is instance of class Vehicle: ");
 println(truck.instanceOf(Vehicle));
 print("Truck is instance of trait TVehicle: ");
 println(truck.instanceOf(TVehicle));
+println("");
+
+print("Number implements trait TComparable: ");
+println(Number.traits().contains(TComparable));
+print("Int is instance of trait TComparable: ");
+println(2.instanceOf(TComparable));
+print("Float is instance of trait TComparable: ");
+println(3.5.instanceOf(TComparable));
+print("Bool is instance of trait TComparable: ");
+println(true.instanceOf(TComparable));

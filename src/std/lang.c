@@ -124,8 +124,11 @@ LOX_METHOD(Behavior, name) {
 LOX_METHOD(Behavior, traits) {
     ASSERT_ARG_COUNT("Behavior::traits()", 0);
     ObjClass* self = AS_CLASS(receiver);
-    if (self->traits == NULL) RETURN_NIL;
-    else RETURN_OBJ(self->traits);
+    ObjArray* traits = newArray(vm);
+    for (int i = 0; i < self->traits.count; i++) {
+        valueArrayWrite(vm, &traits->elements, self->traits.values[i]);
+    }
+    RETURN_OBJ(traits);
 }
 
 LOX_METHOD(Bool, clone) {
@@ -229,11 +232,13 @@ LOX_METHOD(Class, hasField) {
 }
 
 LOX_METHOD(Class, init) {
-    ASSERT_ARG_COUNT("Class::init(name, superclass)", 2);
-    ASSERT_ARG_TYPE("Class::init(name, superclass)", 0, String);
-    ASSERT_ARG_TYPE("Class::init(name, superclass)", 1, Class);
+    ASSERT_ARG_COUNT("Class::init(name, superclass, traits)", 3);
+    ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 0, String);
+    ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 1, Class);
+    ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 2, Array);
     ObjClass* klass = newClass(vm, AS_STRING(args[0]));
     bindSuperclass(vm, klass, AS_CLASS(args[1]));
+    implementTraits(vm, klass, &AS_ARRAY(args[2])->elements);
     RETURN_OBJ(klass);
 }
 
@@ -999,7 +1004,7 @@ LOX_METHOD(Trait, init) {
     ASSERT_ARG_TYPE("Trait::init(name, traits)", 0, String);
     ASSERT_ARG_TYPE("Trait::init(name, traits)", 1, Array);
     ObjClass* trait = createTrait(vm, AS_STRING(args[0]));
-    implementTraits(vm, trait, AS_ARRAY(args[1]));
+    implementTraits(vm, trait, &AS_ARRAY(args[1])->elements);
     RETURN_OBJ(trait);
 }
 
@@ -1080,7 +1085,7 @@ void registerLangPackage(VM* vm) {
     inheritSuperclass(vm, vm->classClass, behaviorClass);
     DEF_METHOD(vm->classClass, Class, getField, 1);
     DEF_METHOD(vm->classClass, Class, hasField, 1);
-    DEF_METHOD(vm->classClass, Class, init, 2);
+    DEF_METHOD(vm->classClass, Class, init, 3);
     DEF_METHOD(vm->classClass, Class, instanceOf, 1);
     DEF_METHOD(vm->classClass, Class, isClass, 0);
     DEF_METHOD(vm->classClass, Class, memberOf, 1);

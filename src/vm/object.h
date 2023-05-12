@@ -195,7 +195,7 @@ struct ObjClass {
     ObjString* name;
     BehaviorType behavior;
     struct ObjClass* superclass;
-    ObjArray* traits;
+    ValueArray traits;
     bool isNative;
     Table fields;
     Table methods;
@@ -232,7 +232,7 @@ bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass);
 bool isClassImplementingTrait(ObjClass* trait, ObjClass* klass);
 void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
-void implementTraits(VM* vm, ObjClass* klass, ObjArray* traits);
+void implementTraits(VM* vm, ObjClass* klass, ValueArray* traits);
 void bindTrait(VM* vm, ObjClass* klass, ObjClass* trait);
 void bindTraits(VM* vm, int numTraits, ObjClass* klass, ...);
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);

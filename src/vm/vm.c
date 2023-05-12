@@ -795,10 +795,10 @@ static InterpretResult run(VM* vm) {
                 int behaviorCount = READ_BYTE();
                 ObjArray* traits = makeTraitArray(vm, behaviorCount);
                 if (traits == NULL) {
-                    runtimeError(vm, "Traits can only inherit other traits.");
+                    runtimeError(vm, "Only traits can be implemented by class or another trait.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                implementTraits(vm, klass, traits);
+                implementTraits(vm, klass, &traits->elements);
                 pop(vm);
                 break;
             }

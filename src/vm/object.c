@@ -162,8 +162,8 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
     klass->name = name;
     klass->behavior = behavior;
     klass->superclass = NULL;
-    klass->traits = NULL;
     klass->isNative = false;
+    initValueArray(&klass->traits);
     initTable(&klass->fields);
     initTable(&klass->methods);
     pop(vm);
@@ -176,8 +176,8 @@ ObjClass* createTrait(VM* vm, ObjString* name) {
     trait->name = name;
     trait->behavior = BEHAVIOR_TRAIT;
     trait->superclass = NULL;
-    trait->traits = NULL;
     trait->isNative = false;
+    initValueArray(&trait->traits);
     initTable(&trait->fields);
     initTable(&trait->methods);
     pop(vm);
@@ -213,8 +213,8 @@ bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass) {
 }
 
 bool isClassImplementingTrait(ObjClass* klass, ObjClass* trait) {
-    if (klass->behavior == BEHAVIOR_METACLASS || klass->traits == NULL) return false;
-    ValueArray* traits = &klass->traits->elements;
+    if (klass->behavior == BEHAVIOR_METACLASS || klass->traits.count == 0) return false;
+    ValueArray* traits = &klass->traits;
 
     for (int i = 0; i < traits->count; i++) {
         if (AS_CLASS(traits->values[i]) == trait) return true;
@@ -224,6 +224,11 @@ bool isClassImplementingTrait(ObjClass* klass, ObjClass* trait) {
 
 void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     subclass->superclass = superclass;
+    if (superclass->behavior == BEHAVIOR_CLASS) {
+        for (int i = 0; i < superclass->traits.count; i++) {
+            valueArrayWrite(vm, &subclass->traits, superclass->traits.values[i]);
+        }
+    }
     tableAddAll(vm, &superclass->methods, &subclass->methods);
 }
 
@@ -236,73 +241,66 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     inheritSuperclass(vm, subclass->obj.klass, superclass->obj.klass);
 }
 
-void flattenTraits(VM* vm, ObjArray* traits) {
-    if (traits->elements.count == 1) {
-        ObjClass* first = AS_CLASS(traits->elements.values[0]);
-        if (first->traits == NULL || first->traits->elements.count == 0) return;
+static void copyTraitsToTable(VM* vm, ValueArray* traitArray, Table* traitTable) {
+    for (int i = 0; i < traitArray->count; i++) {
+        ObjClass* trait = AS_CLASS(traitArray->values[i]);
+        tableSet(vm, traitTable, trait->name, traitArray->values[i]);
+        if (trait->traits.count == 0) continue;
+
+        for (int j = 0; j < trait->traits.count; j++) {
+            ObjClass* superTrait = AS_CLASS(trait->traits.values[j]);
+            tableSet(vm, traitTable, superTrait->name, trait->traits.values[j]);
+        }
     }
+}
+
+static void copyTraitsFromTable(VM* vm, ObjClass* klass, Table* table) {
+    for (int i = 0; i < table->capacity; i++) {
+        Entry* entry = &table->entries[i];
+        if (entry->key == NULL) continue;
+        valueArrayWrite(vm, &klass->traits, entry->value);
+    }
+}
+
+static void flattenTraits(VM* vm, ObjClass* klass, ValueArray* traits) {
     Table traitTable;
     initTable(&traitTable);
 
-    for (int i = 0; i < traits->elements.count; i++) {
-        ObjClass* trait = AS_CLASS(traits->elements.values[i]);
-        tableSet(vm, &traitTable, trait->name, traits->elements.values[i]);
-        if (trait->traits == NULL) continue;
-
-        for (int j = 0; j < trait->traits->elements.count; j++) {
-            ObjClass* superTrait = AS_CLASS(trait->traits->elements.values[j]);
-            tableSet(vm, &traitTable, superTrait->name, trait->traits->elements.values[j]);
-        }
+    copyTraitsToTable(vm, traits, &traitTable);
+    if (klass->superclass != NULL && klass->superclass->traits.count > 0) {
+        copyTraitsToTable(vm, &klass->superclass->traits, &traitTable);
     }
 
-    freeValueArray(vm, &traits->elements);
-    for (int i = 0; i < traitTable.capacity; i++) {
-        Entry* entry = &traitTable.entries[i];
-        if (entry->key == NULL) continue;
-        valueArrayWrite(vm, &traits->elements, entry->value);
-    }
+    freeValueArray(vm, traits);
+    copyTraitsFromTable(vm, klass, &traitTable);
     freeTable(vm, &traitTable);
 }
 
-void implementTraits(VM* vm, ObjClass* klass, ObjArray* traits) {
-    if (traits->elements.count == 0) return;
-    push(vm, OBJ_VAL(traits));
-    for (int i = 0; i < traits->elements.count; i++) {
-        ObjClass* trait = AS_CLASS(traits->elements.values[i]);
+void implementTraits(VM* vm, ObjClass* klass, ValueArray* traits) {
+    if (traits->count == 0) return;
+    for (int i = 0; i < traits->count; i++) {
+        ObjClass* trait = AS_CLASS(traits->values[i]);
         tableAddAll(vm, &trait->methods, &klass->methods);
     }
-    flattenTraits(vm, traits);
-    klass->traits = traits;
-    pop(vm);
+    flattenTraits(vm, klass, traits);
 }
 
 void bindTrait(VM* vm, ObjClass* klass, ObjClass* trait) {
-    ObjArray* traits = newArray(vm);
-    push(vm, OBJ_VAL(traits));
-    valueArrayWrite(vm, &traits->elements, OBJ_VAL(trait));
-    if (trait->traits != NULL) {
-        for (int i = 0; i < trait->traits->elements.count; i++) {
-            valueArrayWrite(vm, &traits->elements, trait->traits->elements.values[i]);
-        }
-    }
     tableAddAll(vm, &trait->methods, &klass->methods);
-    klass->traits = traits;
-    pop(vm);
+    valueArrayWrite(vm, &klass->traits, OBJ_VAL(trait));
+    for (int i = 0; i < trait->traits.count; i++) {
+        valueArrayWrite(vm, &klass->traits, trait->traits.values[i]);
+    }
 }
 
 void bindTraits(VM* vm, int numTraits, ObjClass* klass, ...) {
     va_list args;
     va_start(args, klass);
-    ObjArray* traits = newArray(vm);
-    push(vm, OBJ_VAL(traits));
     for (int i = 0; i < numTraits; i++) {
         Value trait = va_arg(args, Value);
-        valueArrayWrite(vm, &traits->elements, trait);
-        tableAddAll(vm, &AS_CLASS(trait)->methods, &klass->methods);
+        bindTrait(vm, klass, AS_CLASS(trait));
     }
-    flattenTraits(vm, traits);
-    klass->traits = traits;
-    pop(vm);
+    flattenTraits(vm, klass, &klass->traits);
 }
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
