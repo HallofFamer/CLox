@@ -92,6 +92,9 @@
     <ClCompile Include="src\vm\dict.c">
       <Filter>Source Files\vm</Filter>
     </ClCompile>
+    <ClCompile Include="src\inc\uuid4.c">
+      <Filter>Source Files\inc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="test\lox\benchmark.lox">
@@ -274,6 +277,9 @@
     </ClInclude>
     <ClInclude Include="src\vm\dict.h">
       <Filter>Source Files\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\uuid4.h">
+      <Filter>Source Files\inc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

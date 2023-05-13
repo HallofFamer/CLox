@@ -34,6 +34,8 @@ https://github.com/munificent/craftinginterpreters
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten(since version 1.4)
 - New class `Range` in package `util`, as well as range operator(`..`) for range literals(since version 1.4) 
 - Refined object model which is similar to Smalltalk's metaclass system(since version 1.5)
+- Metaclasses(which enables class methods) and traits(since version 1.5)
+- Improved Clox standard library that makes use of metaclasses and traits(since version 1.5) 
 
 ## Roadmap
 
@@ -63,7 +65,7 @@ https://github.com/munificent/craftinginterpreters
 
 ### CLox 1.5.0(upcoming version)
 - Refined object model which is similar to Smalltalk's metaclass system.
-- Metaclasses(which enables class methods) and traits(can be implemented by classes).
+- Metaclasses(which enables class methods) and traits.
 - Improved Clox standard library that makes use of metaclasses and traits. 
 - Anonymous classes/traits similar to anonymous functions/lambda.
 
@@ -71,7 +73,13 @@ https://github.com/munificent/craftinginterpreters
 - Introduction of Namespace for CLox's module system, a namespace/module is a first class object.
 - Allow importing namespaces and aliasing of imported classes/functions.
 - Refactor the existing standard library with namespaces(`clox.std` package).
-- Clox Standard Library improvement: New package `clox.std.network` and `clox.std.security`.
+- Improved CLox standard library with New package `clox.std.network` and `clox.std.security`.
+
+### CLox 1.7.0
+- Throw statement and exception handling with try/catch/finally statement.
+- Improved CLox standard library that adds class Exception and various exception subclasses.
+- Null safe operator (?.) which short-circuit if nil is found in a long expression.
+- VM optimization for instance variable representations, and inline caching.
 
 ## FAQ
 
