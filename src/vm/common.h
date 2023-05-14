@@ -14,6 +14,8 @@
 //#define DEBUG_LOG_GC
 
 #define UINT8_COUNT (UINT8_MAX + 1)
+#define UINT4_MAX 15
+#define UINT4_COUNT (UINT4_MAX + 1)
 #define MAX_CASES 256
 
 typedef struct VM VM;

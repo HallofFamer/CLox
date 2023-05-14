@@ -133,6 +133,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjMethod* method = (ObjMethod*)object;
             markObject(vm, (Obj*)method->behavior);
             markObject(vm, (Obj*)method->closure);
+            break;
         }
         case OBJ_NATIVE_FUNCTION: {
             ObjNativeFunction* nativeFunction = (ObjNativeFunction*)object;

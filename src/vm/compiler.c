@@ -844,13 +844,13 @@ static uint8_t traits(Compiler* compiler, Token* name) {
     uint8_t behaviorCount = 0;
 
     do {
+        behaviorCount++;
+        if (compiler->function->arity > UINT4_MAX) {
+            errorAtCurrent(compiler->parser, "Can't have more than 15 parameters.");
+        }
+
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect class/trait name.");
         variable(compiler, false);
-
-        if (identifiersEqual(name, &compiler->parser->previous)) {
-            error(compiler->parser, "A class/trait cannot inherit from itself.");
-        }
-        behaviorCount++;
     } while (match(compiler->parser, TOKEN_COMMA));
 
     return behaviorCount;

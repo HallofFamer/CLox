@@ -721,7 +721,7 @@ static InterpretResult run(VM* vm) {
                 break;
             }
             case OP_CALL: {
-                int argCount = READ_BYTE();
+                uint8_t argCount = READ_BYTE();
                 if (!callValue(vm, peek(vm, argCount), argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -730,7 +730,7 @@ static InterpretResult run(VM* vm) {
             }
             case OP_INVOKE: {
                 ObjString* method = READ_STRING();
-                int argCount = READ_BYTE();
+                uint8_t argCount = READ_BYTE();
                 if (!invoke(vm, method, argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -739,7 +739,7 @@ static InterpretResult run(VM* vm) {
             }
             case OP_SUPER_INVOKE: {
                 ObjString* method = READ_STRING();
-                int argCount = READ_BYTE();
+                uint8_t argCount = READ_BYTE();
                 ObjClass* superclass = AS_CLASS(pop(vm));
                 if (!invokeFromClass(vm, superclass, method, argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
@@ -792,7 +792,7 @@ static InterpretResult run(VM* vm) {
             }
             case OP_IMPLEMENT: {
                 ObjClass* klass = AS_CLASS(peek(vm, 0));
-                int behaviorCount = READ_BYTE();
+                uint8_t behaviorCount = READ_BYTE();
                 ObjArray* traits = makeTraitArray(vm, behaviorCount);
                 if (traits == NULL) {
                     runtimeError(vm, "Only traits can be implemented by class or another trait.");
@@ -809,12 +809,12 @@ static InterpretResult run(VM* vm) {
                 defineMethod(vm, READ_STRING(), true);
                 break;
             case OP_ARRAY: {
-                int elementCount = READ_BYTE();
+                uint8_t elementCount = READ_BYTE();
                 makeArray(vm, elementCount);
                 break;
             }
             case OP_DICTIONARY: {
-                int entryCount = READ_BYTE();
+                uint8_t entryCount = READ_BYTE();
                 makeDictionary(vm, entryCount);
                 break;
             }
@@ -846,7 +846,7 @@ static InterpretResult run(VM* vm) {
             }
             case OP_RETURN_NONLOCAL: {
                 Value result = pop(vm);
-                int depth = READ_BYTE();
+                uint8_t depth = READ_BYTE();
                 closeUpvalues(vm, frame->slots);
                 vm->frameCount -= depth + 1;
                 if (vm->frameCount == 0) {
