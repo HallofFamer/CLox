@@ -7,6 +7,7 @@
 #include "util.h"
 #include "../inc/pcg.h"
 #include "../inc/regex.h"
+#include "../inc/uuid4.h"
 #include "../vm/assert.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
@@ -601,6 +602,48 @@ LOX_METHOD(Regex, toString) {
     RETURN_OBJ(pattern);
 }
 
+LOX_METHOD(UUID, init) {
+    ASSERT_ARG_COUNT("UUID::init()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    char buffer[UUID4_LEN];
+    uuid4_init();
+    uuid4_generate(buffer);
+    setObjProperty(vm, self, "buffer", newString(vm, buffer));
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(UUID, toString) {
+    ASSERT_ARG_COUNT("UUID::toString()", 0);
+    Value buffer = getObjProperty(vm, AS_INSTANCE(receiver), "buffer");
+    RETURN_OBJ(buffer);
+}
+
+LOX_METHOD(UUIDClass, generate) {
+    ASSERT_ARG_COUNT("UUID class::generate()", 0);
+    ObjInstance* instance = newInstance(vm, AS_CLASS(receiver));
+    char buffer[UUID4_LEN];
+    uuid4_init();
+    uuid4_generate(buffer);
+    setObjProperty(vm, instance, "buffer", newString(vm, buffer));
+    RETURN_OBJ(instance);
+}
+
+LOX_METHOD(UUIDClass, isUUID) {
+    ASSERT_ARG_COUNT("UUID class::isUUID(uuid)", 1);
+    ASSERT_ARG_TYPE("UUID class::isUUID(uuid)", 0, String);
+    int length;
+    int index = re_match("[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}", AS_CSTRING(args[0]), &length);
+    RETURN_BOOL(index != -1);
+}
+
+LOX_METHOD(UUIDClass, parse) {
+    ASSERT_ARG_COUNT("UUID class::parse(uuid)", 1);
+    ASSERT_ARG_TYPE("UUID class::parse(uuid)", 0, String);
+    int length;
+    int index = re_match("[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}", AS_CSTRING(args[0]), &length);
+    RETURN_BOOL(index == -1 ? NIL_VAL : AS_STRING(args[0]));
+}
+
 void registerUtilPackage(VM* vm) {
     ObjClass* dateClass = defineNativeClass(vm, "Date");
     bindSuperclass(vm, dateClass, vm->objectClass);
@@ -666,4 +709,15 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(regexClass, Regex, match, 1);
     DEF_METHOD(regexClass, Regex, replace, 2);
     DEF_METHOD(regexClass, Regex, toString, 0);
+
+    ObjClass* uuidClass = defineNativeClass(vm, "UUID");
+    bindSuperclass(vm, uuidClass, vm->objectClass);
+    DEF_METHOD(uuidClass, UUID, init, 0);
+    DEF_METHOD(uuidClass, UUID, toString, 0);
+
+    ObjClass* uuidMetaclass = uuidClass->obj.klass;
+    setClassProperty(vm, uuidClass, "length", INT_VAL(UUID4_LEN));
+    DEF_METHOD(uuidMetaclass, UUIDClass, generate, 0);
+    DEF_METHOD(uuidMetaclass, UUIDClass, isUUID, 1);
+    DEF_METHOD(uuidMetaclass, UUIDClass, parse, 1);
 }
