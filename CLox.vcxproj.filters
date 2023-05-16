@@ -207,6 +207,9 @@
     <None Include="test\lox\trait.lox">
       <Filter>Test Files\lox</Filter>
     </None>
+    <None Include="test\lox\uuid.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">

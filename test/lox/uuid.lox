@@ -1,0 +1,6 @@
+val uuid = UUID();
+print("Creating new UUID object: ");
+println(uuid.toString());
+
+print("Generating UUID: ");
+println(UUID.generate());

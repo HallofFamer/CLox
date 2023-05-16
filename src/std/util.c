@@ -608,7 +608,7 @@ LOX_METHOD(UUID, init) {
     char buffer[UUID4_LEN];
     uuid4_init();
     uuid4_generate(buffer);
-    setObjProperty(vm, self, "buffer", newString(vm, buffer));
+    setObjProperty(vm, self, "buffer", OBJ_VAL(newString(vm, buffer)));
     RETURN_OBJ(self);
 }
 
@@ -620,12 +620,10 @@ LOX_METHOD(UUID, toString) {
 
 LOX_METHOD(UUIDClass, generate) {
     ASSERT_ARG_COUNT("UUID class::generate()", 0);
-    ObjInstance* instance = newInstance(vm, AS_CLASS(receiver));
     char buffer[UUID4_LEN];
     uuid4_init();
     uuid4_generate(buffer);
-    setObjProperty(vm, instance, "buffer", newString(vm, buffer));
-    RETURN_OBJ(instance);
+    RETURN_OBJ(newString(vm, buffer));
 }
 
 LOX_METHOD(UUIDClass, isUUID) {
@@ -641,7 +639,11 @@ LOX_METHOD(UUIDClass, parse) {
     ASSERT_ARG_TYPE("UUID class::parse(uuid)", 0, String);
     int length;
     int index = re_match("[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}", AS_CSTRING(args[0]), &length);
-    RETURN_BOOL(index == -1 ? NIL_VAL : AS_STRING(args[0]));
+    if (index == -1) {
+        raiseError(vm, "Invalid UUID format specified.");
+        RETURN_NIL;
+    }
+    RETURN_VAL(args[0]);
 }
 
 void registerUtilPackage(VM* vm) {
@@ -717,6 +719,7 @@ void registerUtilPackage(VM* vm) {
 
     ObjClass* uuidMetaclass = uuidClass->obj.klass;
     setClassProperty(vm, uuidClass, "length", INT_VAL(UUID4_LEN));
+    setClassProperty(vm, uuidClass, "version", INT_VAL(4));
     DEF_METHOD(uuidMetaclass, UUIDClass, generate, 0);
     DEF_METHOD(uuidMetaclass, UUIDClass, isUUID, 1);
     DEF_METHOD(uuidMetaclass, UUIDClass, parse, 1);
