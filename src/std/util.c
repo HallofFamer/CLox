@@ -170,6 +170,36 @@ static double durationTotalSeconds(VM* vm, ObjInstance* duration) {
     return 86400.0 * AS_INT(days) + 3600.0 * AS_INT(hours) + 60.0 * AS_INT(minutes) + AS_INT(seconds);
 }
 
+static bool uuidCheckChar(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+}
+
+static bool uuidCheckSubString(ObjString* uuid, int start, int end) {
+    for (int i = start; i < end; i++) {
+        if (!uuidCheckChar(uuid->chars[i])) return false;
+    }
+    return true;
+}
+
+static bool uuidCheckString(ObjString* uuid) {
+    if (uuid->length != UUID4_LEN - 1) return false;
+    if(!uuidCheckSubString(uuid, 0, 8)) return false;
+    
+    if (uuid->chars[8] != '-') return false;
+    if(!uuidCheckSubString(uuid, 9, 13)) return false;
+
+    if (uuid->chars[13] != '-' || uuid->chars[14] != '4') return false;
+    if(!uuidCheckSubString(uuid, 15, 18)) return false;
+
+    if (uuid->chars[18] != '-') return false;
+    if (uuid->chars[19] != '8' && uuid->chars[19] != '9' && uuid->chars[19] != 'a' && uuid->chars[19] != 'b') return false;
+    if(!uuidCheckSubString(uuid, 20, 23)) return false;
+
+    if (uuid->chars[23] != '-') return false;
+    if (!uuidCheckSubString(uuid, 24, 36)) return false;
+    return true;
+}
+
 LOX_METHOD(Date, after) {
     ASSERT_ARG_COUNT("Date::after(date)", 1);
     ASSERT_ARG_INSTANCE_OF("Date::after(date)", 0, Date);
@@ -629,21 +659,19 @@ LOX_METHOD(UUIDClass, generate) {
 LOX_METHOD(UUIDClass, isUUID) {
     ASSERT_ARG_COUNT("UUID class::isUUID(uuid)", 1);
     ASSERT_ARG_TYPE("UUID class::isUUID(uuid)", 0, String);
-    int length;
-    int index = re_match("[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}", AS_CSTRING(args[0]), &length);
-    RETURN_BOOL(index != -1);
+    RETURN_BOOL(uuidCheckString(AS_STRING(args[0])));
 }
 
 LOX_METHOD(UUIDClass, parse) {
     ASSERT_ARG_COUNT("UUID class::parse(uuid)", 1);
     ASSERT_ARG_TYPE("UUID class::parse(uuid)", 0, String);
-    int length;
-    int index = re_match("[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}", AS_CSTRING(args[0]), &length);
-    if (index == -1) {
-        raiseError(vm, "Invalid UUID format specified.");
-        RETURN_NIL;
+    ObjString* uuid = AS_STRING(args[0]);
+    if (!uuidCheckString(uuid)) RETURN_NIL;
+    else {
+        ObjInstance* instance = newInstance(vm, AS_CLASS(receiver));
+        setObjProperty(vm, instance, "buffer", OBJ_VAL(uuid));
+        RETURN_OBJ(instance);
     }
-    RETURN_VAL(args[0]);
 }
 
 void registerUtilPackage(VM* vm) {
