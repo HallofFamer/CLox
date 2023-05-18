@@ -1170,14 +1170,16 @@ static void whileStatement(Compiler* compiler) {
 }
 
 static void declaration(Compiler* compiler) {
-    if (match(compiler->parser, TOKEN_CLASS)) {
+    if (check(compiler->parser, TOKEN_CLASS) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
+        advance(compiler->parser);
         classDeclaration(compiler);
     }
     else if (check(compiler->parser, TOKEN_FUN) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
         advance(compiler->parser);
         funDeclaration(compiler);
     }
-    else if (match(compiler->parser, TOKEN_TRAIT)) {
+    else if (check(compiler->parser, TOKEN_TRAIT) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
+        advance(compiler->parser);
         traitDeclaration(compiler);
     }
     else if (match(compiler->parser, TOKEN_VAL)) {

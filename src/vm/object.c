@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "hash.h"
 #include "memory.h"
@@ -156,6 +157,14 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
     return upvalue;
 }
 
+static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass* superclass) {
+    char hexTimestamp[16];
+    int length = 16;
+    _ultoa_s((unsigned long)time(NULL), hexTimestamp, length, 16);
+    if (behaviorType == BEHAVIOR_TRAIT) return formattedString(vm, "Trait@%s", hexTimestamp);
+    else return formattedString(vm, "%s@%s", superclass->name->chars, hexTimestamp);
+}
+
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
     push(vm, OBJ_VAL(klass));
@@ -173,7 +182,7 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
 ObjClass* createTrait(VM* vm, ObjString* name) {
     ObjClass* trait = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->traitClass);
     push(vm, OBJ_VAL(trait));
-    trait->name = name;
+    trait->name = name != NULL ? name : createBehaviorName(vm, BEHAVIOR_TRAIT, NULL);
     trait->behavior = BEHAVIOR_TRAIT;
     trait->superclass = NULL;
     trait->isNative = false;
@@ -238,7 +247,11 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
         return;
     }
     inheritSuperclass(vm, subclass, superclass);
-    inheritSuperclass(vm, subclass->obj.klass, superclass->obj.klass);
+    if (subclass->name == NULL) {
+        subclass->name = createBehaviorName(vm, BEHAVIOR_CLASS, superclass);
+        subclass->obj.klass = superclass->obj.klass;
+    }
+    else inheritSuperclass(vm, subclass->obj.klass, superclass->obj.klass);
 }
 
 static void copyTraitsToTable(VM* vm, ValueArray* traitArray, Table* traitTable) {
