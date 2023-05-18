@@ -841,10 +841,10 @@ static void methods(Compiler* compiler) {
 }
 
 static uint8_t traits(Compiler* compiler, Token* name) {
-    uint8_t behaviorCount = 0;
+    uint8_t traitCount = 0;
 
     do {
-        behaviorCount++;
+        traitCount++;
         if (compiler->function->arity > UINT4_MAX) {
             errorAtCurrent(compiler->parser, "Can't have more than 15 parameters.");
         }
@@ -853,7 +853,7 @@ static uint8_t traits(Compiler* compiler, Token* name) {
         variable(compiler, false);
     } while (match(compiler->parser, TOKEN_COMMA));
 
-    return behaviorCount;
+    return traitCount;
 }
 
 static void classDeclaration(Compiler* compiler) {
