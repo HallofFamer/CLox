@@ -151,6 +151,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return constantInstruction("OP_CLASS", chunk, offset);
           case OP_TRAIT:
               return constantInstruction("OP_TRAIT", chunk, offset);
+          case OP_ANONYMOUS:
+              return constantInstruction("OP_ANONYMOUS", chunk, offset);
           case OP_INHERIT:
               return simpleInstruction("OP_INHERIT", offset);
           case OP_IMPLEMENT:

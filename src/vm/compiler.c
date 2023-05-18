@@ -227,6 +227,7 @@ static void endScope(Compiler* compiler) {
 static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
 static void block(Compiler* compiler);
+static void behavior(Compiler* compiler, BehaviorType type, Token name);
 static void function(Compiler* enclosing, FunctionType type);
 static void declaration(Compiler* compiler);
 static ParseRule* getRule(TokenType type);
@@ -640,6 +641,14 @@ static void variable(Compiler* compiler, bool canAssign) {
     namedVariable(compiler, compiler->parser->previous, canAssign);
 }
 
+static void klass(Compiler* compiler, bool canAssign) {
+    behavior(compiler, BEHAVIOR_CLASS, syntheticToken("@"));
+}
+
+static void trait(Compiler* compiler, bool canAssign) {
+    behavior(compiler, BEHAVIOR_TRAIT, syntheticToken("@"));
+}
+
 static void super_(Compiler* compiler, bool canAssign) {
     if (compiler->parser->vm->currentClass == NULL) {
         error(compiler->parser, "Cannot use 'super' outside of a class.");
@@ -713,7 +722,7 @@ ParseRule rules[] = {
     [TOKEN_AND]           = {NULL,       and_,        PREC_AND},
     [TOKEN_BREAK]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_CASE]          = {NULL,       NULL,        PREC_NONE},
-    [TOKEN_CLASS]         = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_CLASS]         = {klass,      NULL,        PREC_NONE},
     [TOKEN_DEFAULT]       = {NULL,       NULL,        PREC_NONE},
     [TOKEN_ELSE]          = {NULL,       NULL,        PREC_NONE},
     [TOKEN_FALSE]         = {literal,    NULL,        PREC_NONE},
@@ -726,7 +735,7 @@ ParseRule rules[] = {
     [TOKEN_SUPER]         = {super_,     NULL,        PREC_NONE},
     [TOKEN_SWITCH]        = {NULL,       NULL,        PREC_NONE},
     [TOKEN_THIS]          = {this_,      NULL,        PREC_NONE},
-    [TOKEN_TRAIT]         = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_TRAIT]         = {trait,      NULL,        PREC_NONE},
     [TOKEN_TRUE]          = {literal,    NULL,        PREC_NONE},
     [TOKEN_VAL]           = {NULL,       NULL,        PREC_NONE},
     [TOKEN_VAR]           = {NULL,       NULL,        PREC_NONE},
@@ -854,6 +863,16 @@ static uint8_t traits(Compiler* compiler, Token* name) {
     } while (match(compiler->parser, TOKEN_COMMA));
 
     return traitCount;
+}
+
+static void behavior(Compiler* compiler, BehaviorType type, Token name) {
+    //printf("creating anonymous type %d", type);
+    bool isAnonymous = (name.start = '@' && name.length == 1);
+    if (isAnonymous) {
+        emitBytes(compiler, OP_ANONYMOUS, type);
+        printf("Creating anonymous type: %s\n", type == BEHAVIOR_TRAIT ? "trait" : "class");
+    }
+    //if (isAnonymous) emitBytes(compiler, type == BEHAVIOR_TRAIT ? OP_TRAIT : OP_CLASS, -1);
 }
 
 static void classDeclaration(Compiler* compiler) {

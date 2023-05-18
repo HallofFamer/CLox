@@ -62,6 +62,7 @@ int opCodeOffset(Chunk* chunk, int ip) {
         case OP_CONSTANT:
         case OP_CLASS:
         case OP_TRAIT:
+        case OP_ANONYMOUS:
         case OP_GET_PROPERTY:
         case OP_SET_PROPERTY:
         case OP_ARRAY:
