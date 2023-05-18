@@ -4,3 +4,9 @@ println(uuid.toString());
 
 print("Generating UUID: ");
 println(UUID.generate());
+print("Generated string is UUID: ");
+println(UUID.isUUID(uuid.toString()));
+print("Parse string 'e8e12366-19b9-4d41-81a5-d6b504992782': ");
+println(UUID.parse("e8e12366-19b9-4d41-81a5-d6b504992782"));
+print("Parse string 'Hello World': ");
+println(UUID.parse("Hello World"));
