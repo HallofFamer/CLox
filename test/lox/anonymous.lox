@@ -1,0 +1,9 @@
+val listenerClass = class { 
+    listen(){ 
+        println("Listening to event.");
+    }
+};
+
+var listener = listenerClass();
+println(listenerClass);
+println(listener.listen();
