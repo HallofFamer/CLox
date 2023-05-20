@@ -6,4 +6,4 @@ val listenerClass = class {
 
 var listener = listenerClass();
 println(listenerClass);
-println(listener.listen();
+println(listener.listen());

@@ -773,6 +773,12 @@ static InterpretResult run(VM* vm) {
             case OP_TRAIT:
                 push(vm, OBJ_VAL(createTrait(vm, READ_STRING())));
                 break;
+            case OP_ANONYMOUS: {
+                uint8_t behaviorType = READ_BYTE();
+                printf("Behavior type: %d\n", behaviorType);
+                push(vm, behaviorType == BEHAVIOR_TRAIT ? createTrait(vm, NULL) : createClass(vm, NULL, NULL, behaviorType));
+                break;
+            }
             case OP_INHERIT: {
                 ObjClass* klass = AS_CLASS(peek(vm, 0));
                 if (klass->behavior == BEHAVIOR_CLASS) {
