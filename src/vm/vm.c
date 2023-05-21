@@ -776,7 +776,14 @@ static InterpretResult run(VM* vm) {
             case OP_ANONYMOUS: {
                 uint8_t behaviorType = READ_BYTE();
                 printf("Behavior type: %d\n", behaviorType);
-                push(vm, behaviorType == BEHAVIOR_TRAIT ? createTrait(vm, NULL) : createClass(vm, NULL, NULL, behaviorType));
+                if (behaviorType == BEHAVIOR_TRAIT) {
+                    push(vm, OBJ_VAL(createTrait(vm, NULL)));
+                }
+                else {
+                    printValue(OBJ_VAL(vm->objectClass->obj.klass));
+                    printf("\n");
+                    push(vm, OBJ_VAL(createClass(vm, NULL, vm->objectClass->obj.klass, behaviorType)));
+                }
                 break;
             }
             case OP_INHERIT: {
@@ -793,7 +800,7 @@ static InterpretResult run(VM* vm) {
                     runtimeError(vm, "Only class can inherit from another class.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                pop(vm);
+                pop(vm);               
                 break;
             }
             case OP_IMPLEMENT: {

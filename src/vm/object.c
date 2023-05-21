@@ -168,7 +168,7 @@ static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
     push(vm, OBJ_VAL(klass));
-    klass->name = name;
+    klass->name = name != NULL ? name : newString(vm, "");
     klass->behavior = behavior;
     klass->superclass = NULL;
     klass->isNative = false;
@@ -247,7 +247,7 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
         return;
     }
     inheritSuperclass(vm, subclass, superclass);
-    if (subclass->name == NULL) {
+    if (subclass->name->length == 0) {
         subclass->name = createBehaviorName(vm, BEHAVIOR_CLASS, superclass);
         subclass->obj.klass = superclass->obj.klass;
     }
