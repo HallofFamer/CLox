@@ -224,7 +224,7 @@ static void makeDictionary(VM* vm, uint8_t entryCount) {
 static ObjArray* makeTraitArray(VM* vm, uint8_t behaviorCount) {
     ObjArray* traits = newArray(vm);
     push(vm, OBJ_VAL(traits));
-    for (int i = 1; i <= behaviorCount; i++) {
+    for (int i = 0; i < behaviorCount; i++) {
         Value trait = peek(vm, i + 1);
         if (!IS_CLASS(trait) || AS_CLASS(trait)->behavior != BEHAVIOR_TRAIT) {
             return NULL;
@@ -477,6 +477,11 @@ static InterpretResult run(VM* vm) {
                 pop(vm);
                 break;
             }
+            case OP_DEFINE_BEHAVIOR: {
+                ObjString* name = READ_STRING();
+                tableSet(vm, &vm->globalValues, name, peek(vm, 0));
+                break;
+            }
             case OP_GET_GLOBAL: {
                 ObjString* name = READ_STRING();
                 Value value;
@@ -635,8 +640,8 @@ static InterpretResult run(VM* vm) {
             }
             case OP_GET_SUPER: {
                 ObjString* name = READ_STRING();
-                ObjClass* superclass = AS_CLASS(pop(vm));
-                if (!bindMethod(vm, superclass, name)) {
+                ObjClass* klass = AS_CLASS(pop(vm));
+                if (!bindMethod(vm, klass->superclass, name)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -740,8 +745,8 @@ static InterpretResult run(VM* vm) {
             case OP_SUPER_INVOKE: {
                 ObjString* method = READ_STRING();
                 uint8_t argCount = READ_BYTE();
-                ObjClass* superclass = AS_CLASS(pop(vm));
-                if (!invokeFromClass(vm, superclass, method, argCount)) {
+                ObjClass* klass = AS_CLASS(pop(vm));
+                if (!invokeFromClass(vm, klass->superclass, method, argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 frame = &vm->frames[vm->frameCount - 1];
@@ -775,21 +780,18 @@ static InterpretResult run(VM* vm) {
                 break;
             case OP_ANONYMOUS: {
                 uint8_t behaviorType = READ_BYTE();
-                printf("Behavior type: %d\n", behaviorType);
                 if (behaviorType == BEHAVIOR_TRAIT) {
                     push(vm, OBJ_VAL(createTrait(vm, NULL)));
                 }
                 else {
-                    printValue(OBJ_VAL(vm->objectClass->obj.klass));
-                    printf("\n");
                     push(vm, OBJ_VAL(createClass(vm, NULL, vm->objectClass->obj.klass, behaviorType)));
                 }
                 break;
             }
             case OP_INHERIT: {
-                ObjClass* klass = AS_CLASS(peek(vm, 0));
+                ObjClass* klass = AS_CLASS(peek(vm, 1));
                 if (klass->behavior == BEHAVIOR_CLASS) {
-                    Value superclass = peek(vm, 1);
+                    Value superclass = peek(vm, 0);
                     if (!IS_CLASS(superclass) || AS_CLASS(superclass)->behavior != BEHAVIOR_CLASS) {
                         runtimeError(vm, "Superclass must be a class.");
                         return INTERPRET_RUNTIME_ERROR;
@@ -800,17 +802,17 @@ static InterpretResult run(VM* vm) {
                     runtimeError(vm, "Only class can inherit from another class.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                pop(vm);               
+                pop(vm);
                 break;
             }
             case OP_IMPLEMENT: {
-                ObjClass* klass = AS_CLASS(peek(vm, 0));
                 uint8_t behaviorCount = READ_BYTE();
                 ObjArray* traits = makeTraitArray(vm, behaviorCount);
                 if (traits == NULL) {
                     runtimeError(vm, "Only traits can be implemented by class or another trait.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
+                ObjClass* klass = AS_CLASS(peek(vm, behaviorCount));
                 implementTraits(vm, klass, &traits->elements);
                 pop(vm);
                 break;

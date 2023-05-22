@@ -1,9 +1,23 @@
+class A { 
+    m(){ 
+        println("printing from method A::m()");
+    }
+
+    n(){ 
+        println("printing from method A::n()");
+    }
+}
+
 val listenerClass = class { 
     listen(){ 
         println("Listening to event.");
     }
 };
 
+println("Creating anonymous class: ");
+println(listenerClass);
+println("Creating an instance of anonymous class: ");
 var listener = listenerClass();
 println(listenerClass);
-println(listener.listen());
+println("Calling method listen on object listener: ");
+listener.listen();

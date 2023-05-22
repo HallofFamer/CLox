@@ -393,6 +393,22 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     }
 }
 
+static void defineBehavior(Compiler* compiler, uint8_t behavior) {
+    if (compiler->scopeDepth > 0) {
+        markInitialized(compiler, false);
+        return;
+    }
+    else {
+        ObjString* name = identifierName(compiler, behavior);
+        Value value;
+        if (loadGlobal(compiler->parser->vm, name, &value)) {
+            error(compiler->parser, "Cannot redeclare class/trait.");
+        }
+        tableSet(compiler->parser->vm, &compiler->parser->vm->globalValues, name, NIL_VAL);
+        emitBytes(compiler, OP_DEFINE_BEHAVIOR, behavior);
+    }
+}
+
 static uint8_t argumentList(Compiler* compiler) {
     uint8_t argCount = 0;
     if (!check(compiler->parser, TOKEN_RIGHT_PAREN)) {
@@ -869,7 +885,7 @@ static void behavior(Compiler* compiler, BehaviorType type, Token name) {
     bool isAnonymous = (name.type != TOKEN_IDENTIFIER && name.length == 1);
     if (isAnonymous) {
         emitBytes(compiler, OP_ANONYMOUS, type);
-        printf("Creating anonymous type: %s\n", type == BEHAVIOR_TRAIT ? "trait" : "class");
+        emitByte(compiler, OP_DUP);
     }
 
     ClassCompiler* enclosingClass = compiler->parser->vm->currentClass;
@@ -890,32 +906,17 @@ static void behavior(Compiler* compiler, BehaviorType type, Token name) {
                 error(compiler->parser, "Cannot redeclare root class Object.");
             }
         }
-
-        beginScope(compiler);
-        addLocal(compiler, syntheticToken("super"));
-        defineVariable(compiler, 0, false);
-        namedVariable(compiler, name, false);
-        emitByte(compiler, OP_INHERIT);
-
-        uint8_t traitCount = match(compiler->parser, TOKEN_WITH) ? traits(compiler, &name) : 0;
-        if (traitCount > 0) {
-            namedVariable(compiler, name, false);
-            emitBytes(compiler, OP_IMPLEMENT, traitCount);
-            emitByte(compiler, OP_POP);
-        }
-    }
-    else {
-        uint8_t traitCount = match(compiler->parser, TOKEN_WITH) ? traits(compiler, &name) : 0;
-        beginScope(compiler);
-        addLocal(compiler, syntheticToken("super"));
-        defineVariable(compiler, 0, false);
-        namedVariable(compiler, name, false);
-        emitBytes(compiler, OP_IMPLEMENT, traitCount);
     }
 
-    namedVariable(compiler, name, false);
+    beginScope(compiler);
+    addLocal(compiler, syntheticToken("super"));
+    defineVariable(compiler, 0, false);
+
+    if(type == BEHAVIOR_CLASS) emitByte(compiler, OP_INHERIT);            
+    uint8_t traitCount = match(compiler->parser, TOKEN_WITH) ? traits(compiler, &name) : 0;
+    if (traitCount > 0) emitBytes(compiler, OP_IMPLEMENT, traitCount);
+
     methods(compiler);
-    if(!isAnonymous) emitByte(compiler, OP_POP);
     endScope(compiler);
     compiler->parser->vm->currentClass = enclosingClass;
 }
@@ -927,7 +928,7 @@ static void classDeclaration(Compiler* compiler) {
 
     declareVariable(compiler);
     emitBytes(compiler, OP_CLASS, nameConstant);
-    defineVariable(compiler, nameConstant, false);
+    defineBehavior(compiler, nameConstant);
 
     behavior(compiler, BEHAVIOR_CLASS, className);
 }
@@ -946,7 +947,7 @@ static void traitDeclaration(Compiler* compiler) {
 
     declareVariable(compiler);
     emitBytes(compiler, OP_TRAIT, nameConstant);
-    defineVariable(compiler, nameConstant, false);
+    defineBehavior(compiler, nameConstant);
 
     behavior(compiler, BEHAVIOR_TRAIT, traitName);
 }
