@@ -393,22 +393,6 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     }
 }
 
-static void defineBehavior(Compiler* compiler, uint8_t behavior) {
-    if (compiler->scopeDepth > 0) {
-        markInitialized(compiler, false);
-        return;
-    }
-    else {
-        ObjString* name = identifierName(compiler, behavior);
-        Value value;
-        if (loadGlobal(compiler->parser->vm, name, &value)) {
-            error(compiler->parser, "Cannot redeclare class/trait.");
-        }
-        tableSet(compiler->parser->vm, &compiler->parser->vm->globalValues, name, NIL_VAL);
-        emitBytes(compiler, OP_DEFINE_BEHAVIOR, behavior);
-    }
-}
-
 static uint8_t argumentList(Compiler* compiler) {
     uint8_t argCount = 0;
     if (!check(compiler->parser, TOKEN_RIGHT_PAREN)) {
@@ -928,8 +912,6 @@ static void classDeclaration(Compiler* compiler) {
 
     declareVariable(compiler);
     emitBytes(compiler, OP_CLASS, nameConstant);
-    defineBehavior(compiler, nameConstant);
-
     behavior(compiler, BEHAVIOR_CLASS, className);
 }
 
@@ -947,8 +929,6 @@ static void traitDeclaration(Compiler* compiler) {
 
     declareVariable(compiler);
     emitBytes(compiler, OP_TRAIT, nameConstant);
-    defineBehavior(compiler, nameConstant);
-
     behavior(compiler, BEHAVIOR_TRAIT, traitName);
 }
 

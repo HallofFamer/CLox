@@ -772,12 +772,18 @@ static InterpretResult run(VM* vm) {
                 closeUpvalues(vm, vm->stackTop - 1);
                 pop(vm);
                 break;
-            case OP_CLASS:
-                push(vm, OBJ_VAL(newClass(vm, READ_STRING())));
+            case OP_CLASS: { 
+                ObjString* className = READ_STRING();
+                push(vm, OBJ_VAL(newClass(vm, className)));
+                tableSet(vm, &vm->globalValues, className, peek(vm, 0));
                 break;
-            case OP_TRAIT:
-                push(vm, OBJ_VAL(createTrait(vm, READ_STRING())));
+            }
+            case OP_TRAIT: { 
+                ObjString* traitName = READ_STRING();
+                push(vm, OBJ_VAL(createTrait(vm, traitName)));
+                tableSet(vm, &vm->globalValues, traitName, peek(vm, 0));
                 break;
+            }
             case OP_ANONYMOUS: {
                 uint8_t behaviorType = READ_BYTE();
                 if (behaviorType == BEHAVIOR_TRAIT) {
