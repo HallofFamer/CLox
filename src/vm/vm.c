@@ -477,11 +477,6 @@ static InterpretResult run(VM* vm) {
                 pop(vm);
                 break;
             }
-            case OP_DEFINE_BEHAVIOR: {
-                ObjString* name = READ_STRING();
-                tableSet(vm, &vm->globalValues, name, peek(vm, 0));
-                break;
-            }
             case OP_GET_GLOBAL: {
                 ObjString* name = READ_STRING();
                 Value value;

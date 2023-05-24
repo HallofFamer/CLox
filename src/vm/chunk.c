@@ -48,7 +48,6 @@ int opCodeOffset(Chunk* chunk, int ip) {
 
         case OP_DEFINE_GLOBAL_VAL:
         case OP_DEFINE_GLOBAL_VAR:
-        case OP_DEFINE_BEHAVIOR:
         case OP_GET_GLOBAL:
         case OP_SET_GLOBAL:
         case OP_GET_LOCAL:
