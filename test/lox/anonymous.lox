@@ -1,16 +1,28 @@
-class A { 
-    m(){ 
-        println("printing from method A::m()");
+class Listener { 
+    listen(port){
+        println("Listening to port: " + port.toString());
     }
 
-    n(){ 
-        println("printing from method A::n()");
+    toString(){ 
+        return "Listener class: " + this.getClassName();
     }
 }
 
-val listenerClass = class { 
-    listen(){ 
-        println("Listening to event.");
+trait TListener { 
+    isValidPort(port){ 
+        return (port >= 0 and port <= 65536);
+    }
+}
+
+val listenerClass = class < Listener with TListener { 
+    listen(port){
+        if(this.isValidPort(port)){ 
+            super.listen(port);
+            println(this.toString());  
+        }
+        else{ 
+            println("Invalid port number specified: " + port.toString());
+        }
     }
 };
 
@@ -20,4 +32,6 @@ println("Creating an instance of anonymous class: ");
 var listener = listenerClass();
 println(listenerClass);
 println("Calling method listen on object listener: ");
-listener.listen();
+listener.listen(8080);
+println("Calling method listen with an invalid port: ");
+listener.listen(-1);
