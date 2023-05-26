@@ -73,6 +73,7 @@ struct Compiler {
 struct ClassCompiler {
     struct ClassCompiler* enclosing;
     Token name;
+    Token superclass;
     BehaviorType type;
 };
 
@@ -653,21 +654,22 @@ static void super_(Compiler* compiler, bool canAssign) {
     if (compiler->parser->vm->currentClass == NULL) {
         error(compiler->parser, "Cannot use 'super' outside of a class.");
     }
-
-    consume(compiler->parser, TOKEN_DOT, "Expect '.' after 'super'.");
-    consume(compiler->parser, TOKEN_IDENTIFIER, "Expect superclass method name.");
-    uint8_t name = identifierConstant(compiler, &compiler->parser->previous);
-
-    namedVariable(compiler, syntheticToken("this"), false);
-    if (match(compiler->parser, TOKEN_LEFT_PAREN)) {
-        uint8_t argCount = argumentList(compiler);
-        namedVariable(compiler, syntheticToken("super"), false);
-        emitBytes(compiler, OP_SUPER_INVOKE, name);
-        emitByte(compiler, argCount);
-    }
     else {
-        namedVariable(compiler, syntheticToken("super"), false);
-        emitBytes(compiler, OP_GET_SUPER, name);
+        consume(compiler->parser, TOKEN_DOT, "Expect '.' after 'super'.");
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect superclass method name.");
+        uint8_t name = identifierConstant(compiler, &compiler->parser->previous);
+
+        namedVariable(compiler, syntheticToken("this"), false);
+        if (match(compiler->parser, TOKEN_LEFT_PAREN)) {
+            uint8_t argCount = argumentList(compiler);
+            namedVariable(compiler, compiler->parser->vm->currentClass->superclass, false);
+            emitBytes(compiler, OP_SUPER_INVOKE, name);
+            emitByte(compiler, argCount);
+        }
+        else {
+            namedVariable(compiler, compiler->parser->vm->currentClass->superclass, false);
+            emitBytes(compiler, OP_GET_SUPER, name);
+        }
     }
 }
 
@@ -873,12 +875,13 @@ static void behavior(Compiler* compiler, BehaviorType type, Token name) {
     }
 
     ClassCompiler* enclosingClass = compiler->parser->vm->currentClass;
-    ClassCompiler classCompiler = { .name = compiler->parser->previous, .enclosing = enclosingClass, .type = type };
+    ClassCompiler classCompiler = { .name = name, .enclosing = enclosingClass, .type = type, .superclass = compiler->parser->rootClass };
     compiler->parser->vm->currentClass = &classCompiler;
 
     if (type == BEHAVIOR_CLASS) {
         if (match(compiler->parser, TOKEN_LESS)) {
             consume(compiler->parser, TOKEN_IDENTIFIER, "Expect super class name.");
+            classCompiler.superclass = compiler->parser->previous;
             variable(compiler, false);
             if (identifiersEqual(&name, &compiler->parser->previous)) {
                 error(compiler->parser, "A class cannot inherit from itself.");

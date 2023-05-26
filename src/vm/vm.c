@@ -635,8 +635,8 @@ static InterpretResult run(VM* vm) {
             }
             case OP_GET_SUPER: {
                 ObjString* name = READ_STRING();
-                Value object = pop(vm);
-                ObjClass* klass = IS_CLASS(object) ? AS_CLASS(object) : getObjClass(vm, object);
+                ObjClass* klass = AS_CLASS(pop(vm));
+
                 if (!bindMethod(vm, klass->superclass, name)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -741,10 +741,9 @@ static InterpretResult run(VM* vm) {
             case OP_SUPER_INVOKE: {
                 ObjString* method = READ_STRING();
                 uint8_t argCount = READ_BYTE();
-                Value object = pop(vm);
-                ObjClass* klass = IS_CLASS(object) ? AS_CLASS(object) : getObjClass(vm, object);
+                ObjClass* klass = AS_CLASS(pop(vm));
 
-                if (!invokeFromClass(vm, klass->superclass, method, argCount)) {
+                if (!invokeFromClass(vm, klass, method, argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 frame = &vm->frames[vm->frameCount - 1];
