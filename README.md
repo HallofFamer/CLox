@@ -35,7 +35,8 @@ https://github.com/munificent/craftinginterpreters
 - New class `Range` in package `util`, as well as range operator(`..`) for range literals(since version 1.4) 
 - Refined object model which is similar to Smalltalk's metaclass system(since version 1.5)
 - Metaclasses(which enables class methods) and traits(since version 1.5)
-- Improved Clox standard library that makes use of metaclasses and traits(since version 1.5) 
+- Improved Clox standard library that makes use of metaclasses and traits(since version 1.5)
+- Anonymous classes/traits similar to anonymous functions/lambda(since version 1.5)
 
 ## Roadmap
 
