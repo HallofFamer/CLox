@@ -5,6 +5,7 @@
 #include "common.h"
 #include "object.h"
 #include "value.h"
+#include "vm.h"
 
 #define LOX_FUNCTION(name) static Value name##NativeFunction(VM* vm, int argCount, Value* args)
 #define LOX_METHOD(className, name) static Value name##NativeMethodFor##className(VM* vm, Value receiver, int argCount, Value* args)
@@ -30,7 +31,7 @@ ObjClass* defineSpecialClass(VM * vm, const char* name, BehaviorType behavior);
 ObjClass* getNativeClass(VM* vm, const char* name);
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name);
 ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name);
-void loadSourceFile(VM * vm, const char* filePath);
+InterpretResult loadSourceFile(VM * vm, const char* filePath);
 void registerNativeFunctions(VM* vm);
 
 #endif // !clox_native_h

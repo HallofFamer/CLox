@@ -6,9 +6,7 @@
 #include "assert.h"
 #include "memory.h"
 #include "native.h"
-#include "object.h"
 #include "string.h"
-#include "vm.h"
 
 LOX_FUNCTION(assert) {
     ASSERT_ARG_COUNT("assert(expression, message)", 2);
@@ -73,6 +71,17 @@ LOX_FUNCTION(read) {
     ObjString* input = newString(vm, line);
     free(line);
     RETURN_OBJ(input);
+}
+
+LOX_FUNCTION(require) {
+    ASSERT_ARG_COUNT("require(filePath)", 1);
+    ASSERT_ARG_TYPE("require(filePath)", 0, String);
+    char* filePath = AS_CSTRING(args[0]);
+
+    InterpretResult result = loadSourceFile(vm, filePath);
+    if (result == INTERPRET_COMPILE_ERROR) exit(65);
+    if (result == INTERPRET_RUNTIME_ERROR) exit(70);
+    RETURN_NIL;
 }
 
 ObjClass* defineNativeClass(VM* vm, const char* name) {
@@ -161,10 +170,11 @@ ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
     return AS_NATIVE_METHOD(method);
 }
 
-void loadSourceFile(VM* vm, const char* filePath) {
+InterpretResult loadSourceFile(VM* vm, const char* filePath) {
     char* source = readFile(filePath);
-    interpret(vm, source);
+    InterpretResult result = interpret(vm, source);
     free(source);
+    return result;
 }
 
 void registerNativeFunctions(VM* vm){
@@ -175,4 +185,5 @@ void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(print, 1);
     DEF_FUNCTION(println, 1);
     DEF_FUNCTION(read, 0);
+    DEF_FUNCTION(require, 1);
 }
