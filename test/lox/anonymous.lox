@@ -8,13 +8,13 @@ class Listener {
     }
 }
 
-trait TListener { 
+val listenerTrait = trait { 
     isValidPort(port){ 
         return (port >= 0 and port <= 65536);
     }
-}
+};
 
-val listenerClass = class < Listener with TListener { 
+val listenerClass = class < Listener with listenerTrait { 
     listen(port){
         if(this.isValidPort(port)){ 
             super.listen(port);
@@ -26,8 +26,14 @@ val listenerClass = class < Listener with TListener {
     }
 };
 
+println("Creating anonymous trait: ");
+println(listenerTrait);
 println("Creating anonymous class: ");
 println(listenerClass);
+println("Superclass of anonymous class: ");
+println(listenerClass.superclass());
+println("");
+
 println("Creating an instance of anonymous class: ");
 var listener = listenerClass();
 println(listenerClass);
