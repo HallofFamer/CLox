@@ -1155,7 +1155,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->traitClass, Trait, superclass, 0);
     DEF_METHOD(vm->traitClass, Trait, toString, 0);
 
-    initNativePackage(vm, "src/std/lang.lox");
+    loadSourceFile(vm, "src/std/lang.lox");
 
     vm->nilClass = getNativeClass(vm, "Nil");
     DEF_METHOD(vm->nilClass, Nil, clone, 0);

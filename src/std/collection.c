@@ -1557,7 +1557,7 @@ LOX_METHOD(Stack, toString) {
 }
 
 void registerCollectionPackage(VM* vm) {
-    initNativePackage(vm, "src/std/collection.lox");
+    loadSourceFile(vm, "src/std/collection.lox");
     ObjClass* collectionClass = getNativeClass(vm, "Collection");
     bindSuperclass(vm, collectionClass, vm->objectClass);
     ObjClass* listClass = getNativeClass(vm, "List");

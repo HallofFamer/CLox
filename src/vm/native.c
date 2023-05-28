@@ -161,7 +161,7 @@ ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
     return AS_NATIVE_METHOD(method);
 }
 
-void initNativePackage(VM* vm, const char* filePath) {
+void loadSourceFile(VM* vm, const char* filePath) {
     char* source = readFile(filePath);
     interpret(vm, source);
     free(source);
