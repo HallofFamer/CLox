@@ -648,8 +648,12 @@ static InterpretResult run(VM* vm) {
                 push(vm, BOOL_VAL(valuesEqual(a, b)));
                 break;
             }
-            case OP_GREATER: BINARY_OP(BOOL_VAL, >); break;
-            case OP_LESS: BINARY_OP(BOOL_VAL, <); break;
+            case OP_GREATER: 
+                BINARY_OP(BOOL_VAL, >); 
+                break;
+            case OP_LESS: 
+                BINARY_OP(BOOL_VAL, <); 
+                break;
             case OP_ADD: {
                 if (IS_STRING(peek(vm, 0)) && IS_STRING(peek(vm, 1))) {
                      concatenate(vm);
@@ -688,7 +692,9 @@ static InterpretResult run(VM* vm) {
                 else BINARY_OP(NUMBER_VAL, *); 
                 break;
             }
-            case OP_DIVIDE:   BINARY_OP(NUMBER_VAL, /); break;
+            case OP_DIVIDE: 
+                BINARY_OP(NUMBER_VAL, /); 
+                break;
             case OP_NOT:
                 push(vm, BOOL_VAL(isFalsey(pop(vm))));
                 break;
