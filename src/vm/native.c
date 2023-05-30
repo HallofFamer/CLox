@@ -73,17 +73,6 @@ LOX_FUNCTION(read) {
     RETURN_OBJ(input);
 }
 
-LOX_FUNCTION(require) {
-    ASSERT_ARG_COUNT("require(filePath)", 1);
-    ASSERT_ARG_TYPE("require(filePath)", 0, String);
-    char* filePath = AS_CSTRING(args[0]);
-
-    InterpretResult result = loadSourceFile(vm, filePath);
-    if (result == INTERPRET_COMPILE_ERROR) exit(65);
-    if (result == INTERPRET_RUNTIME_ERROR) exit(70);
-    RETURN_NIL;
-}
-
 ObjClass* defineNativeClass(VM* vm, const char* name) {
     ObjString* className = newString(vm, name);
     push(vm, OBJ_VAL(className));
@@ -170,11 +159,10 @@ ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
     return AS_NATIVE_METHOD(method);
 }
 
-InterpretResult loadSourceFile(VM* vm, const char* filePath) {
+void loadSourceFile(VM* vm, const char* filePath) {
     char* source = readFile(filePath);
-    InterpretResult result = interpret(vm, source);
+    interpret(vm, source);
     free(source);
-    return result;
 }
 
 void registerNativeFunctions(VM* vm){
@@ -185,5 +173,4 @@ void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(print, 1);
     DEF_FUNCTION(println, 1);
     DEF_FUNCTION(read, 0);
-    DEF_FUNCTION(require, 1);
 }

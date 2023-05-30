@@ -160,7 +160,13 @@ static TokenType identifierType(Scanner* scanner) {
         case 'i': return checkKeyword(scanner, 1, 1, "f", TOKEN_IF);
         case 'n': return checkKeyword(scanner, 1, 2, "il", TOKEN_NIL);
         case 'o': return checkKeyword(scanner, 1, 1, "r", TOKEN_OR);
-        case 'r': return checkKeyword(scanner, 1, 5, "eturn", TOKEN_RETURN);
+        case 'r': 
+            if (scanner->current - scanner->start > 2) {
+                switch (scanner->start[2]) {
+                    case 'q': return checkKeyword(scanner, 3, 4, "uire", TOKEN_REQUIRE);
+                    case 't': return checkKeyword(scanner, 3, 3, "urn", TOKEN_RETURN);
+                }
+            }
         case 's':
             if (scanner->current - scanner->start > 1) {
                 switch (scanner->start[1]) {

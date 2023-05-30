@@ -854,6 +854,22 @@ static InterpretResult run(VM* vm) {
                 }
                 break;
             }
+            case OP_REQUIRE: {
+                ObjString* filePath = READ_STRING();
+                char* source = readFile(filePath->chars);
+                ObjFunction* function = compile(vm, source);
+                free(source);
+                
+                if (function == NULL) return INTERPRET_COMPILE_ERROR;
+                push(vm, OBJ_VAL(function));
+                ObjClosure* closure = newClosure(vm, function);
+                pop(vm);
+
+                push(vm, OBJ_VAL(closure));
+                callClosure(vm, closure, 0);
+                frame = &vm->frames[vm->frameCount - 1];
+                break;
+            }
             case OP_RETURN: {
                 Value result = pop(vm);
                 closeUpvalues(vm, frame->slots);

@@ -733,6 +733,7 @@ ParseRule rules[] = {
     [TOKEN_IF]            = {NULL,       NULL,        PREC_NONE},
     [TOKEN_NIL]           = {literal,    NULL,        PREC_NONE},
     [TOKEN_OR]            = {NULL,       or_,         PREC_OR},
+    [TOKEN_REQUIRE]       = {NULL,       NULL,        PREC_NONE},
     [TOKEN_RETURN]        = {NULL,       NULL,        PREC_NONE},
     [TOKEN_SUPER]         = {super_,     NULL,        PREC_NONE},
     [TOKEN_SWITCH]        = {NULL,       NULL,        PREC_NONE},
@@ -1056,6 +1057,20 @@ static void ifStatement(Compiler* compiler) {
     patchJump(compiler, elseJump);
 }
 
+static void requireStatement(Compiler* compiler) {
+    if (compiler->type != TYPE_SCRIPT) {
+        error(compiler->parser, "Can only require source files from top-level code.");
+    }
+    else if (!match(compiler->parser, TOKEN_STRING)) {
+        error(compiler->parser, "Expect file path after 'require' keyword.");
+    }
+
+    uint8_t sourceConstant = makeConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, compiler->parser->previous.start + 1, compiler->parser->previous.length - 2)));
+    emitBytes(compiler, OP_REQUIRE, sourceConstant);
+    emitByte(compiler, OP_POP);
+    consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after 'require' statement.");
+}
+
 static void returnStatement(Compiler* compiler) {
     if (compiler->type == TYPE_SCRIPT) {
         error(compiler->parser, "Can't return from top-level code.");
@@ -1201,6 +1216,9 @@ static void statement(Compiler* compiler) {
     }
     else if (match(compiler->parser, TOKEN_IF)) {
         ifStatement(compiler);
+    }
+    else if (match(compiler->parser, TOKEN_REQUIRE)) {
+        requireStatement(compiler);
     }
     else if (match(compiler->parser, TOKEN_RETURN)) {
         returnStatement(compiler);
