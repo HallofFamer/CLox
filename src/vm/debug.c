@@ -168,7 +168,7 @@ int disassembleInstruction(Chunk* chunk, int offset) {
           case OP_RANGE:
               return simpleInstruction("OP_RANGE", offset);
           case OP_REQUIRE:
-              return constantInstruction("OP_REQUIRE", chunk, offset);
+              return simpleInstruction("OP_REQUIRE", offset);
           case OP_RETURN:
               return simpleInstruction("OP_RETURN", offset);
           case OP_RETURN_NONLOCAL:

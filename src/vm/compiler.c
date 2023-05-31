@@ -1061,14 +1061,10 @@ static void requireStatement(Compiler* compiler) {
     if (compiler->type != TYPE_SCRIPT) {
         error(compiler->parser, "Can only require source files from top-level code.");
     }
-    else if (!match(compiler->parser, TOKEN_STRING)) {
-        error(compiler->parser, "Expect file path after 'require' keyword.");
-    }
 
-    uint8_t sourceConstant = makeConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, compiler->parser->previous.start + 1, compiler->parser->previous.length - 2)));
-    emitBytes(compiler, OP_REQUIRE, sourceConstant);
-    emitByte(compiler, OP_POP);
-    consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after 'require' statement.");
+    expression(compiler);
+    consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after required file path.");
+    emitByte(compiler, OP_REQUIRE);
 }
 
 static void returnStatement(Compiler* compiler) {

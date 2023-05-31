@@ -855,16 +855,20 @@ static InterpretResult run(VM* vm) {
                 break;
             }
             case OP_REQUIRE: {
-                ObjString* filePath = READ_STRING();
-                char* source = readFile(filePath->chars);
+                Value filePath = pop(vm);
+                if (!IS_STRING(filePath)) {
+                    runtimeError(vm, "Required file path must be a string.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                char* source = readFile(AS_CSTRING(filePath));
                 ObjFunction* function = compile(vm, source);
-                free(source);
-                
+                free(source);                
                 if (function == NULL) return INTERPRET_COMPILE_ERROR;
                 push(vm, OBJ_VAL(function));
+
                 ObjClosure* closure = newClosure(vm, function);
                 pop(vm);
-
                 push(vm, OBJ_VAL(closure));
                 callClosure(vm, closure, 0);
                 frame = &vm->frames[vm->frameCount - 1];
