@@ -213,6 +213,9 @@
     <None Include="test\lox\anonymous.lox">
       <Filter>Test Files\lox</Filter>
     </None>
+    <None Include="test\lox\require.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">

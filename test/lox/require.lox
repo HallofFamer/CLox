@@ -1,0 +1,8 @@
+val filePath = "test/lox/fraction.lox";
+require filePath;
+
+var frac = Fraction(3, 6);
+var frac2 = frac.reduce();
+println(frac.toString());
+println(frac2.toString());
+println(frac == frac2);

@@ -20,10 +20,3 @@ class Fraction {
         return this.numerator.toString() + "/" + this.denominator.toString();
     }
 }
-
-println("Created class Fraction...");
-var frac = Fraction(3, 6);
-var frac2 = frac.reduce();
-println(frac.toString());
-println(frac2.toString());
-println(frac == frac2);
