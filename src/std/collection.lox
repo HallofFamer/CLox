@@ -1,4 +1,15 @@
-class Collection {
+trait TEnumerable { 
+
+    next(index) { 
+        error("Not implemented, subclass responsibility.");
+    }
+
+    nextValue(index) { 
+        error("Not implemented, subclass responsibility.");
+    }
+}
+
+class Collection with TEnumerable {
     
     init(){
         error("Cannot instantiate from class Collection.");
@@ -49,14 +60,6 @@ class Collection {
             i = i + 1;
         }
         return i;
-    }
-
-    next(index) { 
-        error("Not implemented, subclass responsibility.");
-    }
-
-    nextValue(index) { 
-        error("Not implemented, subclass responsibility.");
     }
 
     reject(closure) {

@@ -19,7 +19,7 @@ println(list.getAt(3));
 println("");
 
 println("Add a new element current date to the end of linked list: ");
-list.add(dateNow());
+list.add(Date.now);
 print("Current elements in linked list: ");
 println(list.toString());
 println("Add a new element 0 to the start of linked list: ");
