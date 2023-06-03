@@ -648,6 +648,16 @@ LOX_METHOD(Number, clone) {
     RETURN_NUMBER((double)receiver);
 }
 
+LOX_METHOD(Number, compareTo) {
+    ASSERT_ARG_COUNT("Number::compareTo(other)", 1);
+    ASSERT_ARG_TYPE("Number::compareTo(other)", 0, Number);
+    double self = AS_NUMBER(receiver);
+    double other = AS_NUMBER(args[0]);
+    if (self > other) RETURN_INT(1);
+    else if (self < other) RETURN_INT(-1);
+    else RETURN_INT(0);
+}
+
 LOX_METHOD(Number, cos) {
     ASSERT_ARG_COUNT("Number::cos()", 0);
     RETURN_NUMBER(cos(AS_NUMBER(receiver)));
@@ -1175,6 +1185,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, cbrt, 0);
     DEF_METHOD(vm->numberClass, Number, ceil, 0);
     DEF_METHOD(vm->numberClass, Number, clone, 0);
+    DEF_METHOD(vm->numberClass, Number, compareTo, 1);
     DEF_METHOD(vm->numberClass, Number, cos, 0);
     DEF_METHOD(vm->numberClass, Number, exp, 1);
     DEF_METHOD(vm->numberClass, Number, floor, 0);

@@ -216,6 +216,16 @@ LOX_METHOD(Date, before) {
     RETURN_BOOL(timestamp < timestamp2);
 }
 
+LOX_METHOD(Date, compareTo) {
+    ASSERT_ARG_COUNT("Date::compareTo(date)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::compareTo(date)", 0, Date);
+    double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
+    double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+    if (timestamp > timestamp2) RETURN_INT(1);
+    else if (timestamp < timestamp2) RETURN_INT(-1);
+    else RETURN_INT(0);
+}
+
 LOX_METHOD(Date, diff) {
     ASSERT_ARG_COUNT("Date::diff(date)", 1);
     ASSERT_ARG_INSTANCE_OF("Date::diff(date)", 0, Date);
@@ -328,6 +338,16 @@ LOX_METHOD(DateTime, before) {
     RETURN_BOOL(timestamp < timestamp2);
 }
 
+LOX_METHOD(DateTime, compareTo) {
+    ASSERT_ARG_COUNT("DateTime::compareTo(dateTime)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::compareTo(dateTime)", 0, Date);
+    double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
+    double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+    if (timestamp > timestamp2) RETURN_INT(1);
+    else if (timestamp < timestamp2) RETURN_INT(-1);
+    else RETURN_INT(0);
+}
+
 LOX_METHOD(DateTime, diff) {
     ASSERT_ARG_COUNT("DateTime::diff(dateTime)", 1);
     ASSERT_ARG_INSTANCE_OF("DateTime::diff(dateTime)", 0, DateTime);
@@ -431,6 +451,16 @@ LOX_METHOD(DateTimeClass, parse) {
         raiseError(vm, "Failed to parse DateTime from input string, please make sure the date has format MM/DD/YYYY.");
         RETURN_NIL;
     }
+}
+
+LOX_METHOD(Duration, compareTo) {
+    ASSERT_ARG_COUNT("Duration::compareTo(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Duration::compareTo(duration)", 0, Duration);
+    double totalSeconds = durationTotalSeconds(vm, AS_INSTANCE(receiver));
+    double totalSeconds2 = durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    if (totalSeconds > totalSeconds2) RETURN_INT(1);
+    else if (totalSeconds < totalSeconds2) RETURN_INT(-1);
+    else RETURN_INT(0);
 }
 
 LOX_METHOD(Duration, getTotalSeconds) {
@@ -675,10 +705,13 @@ LOX_METHOD(UUIDClass, parse) {
 }
 
 void registerUtilPackage(VM* vm) {
+    ObjClass* comparableTrait = getNativeClass(vm, "TComparable");
     ObjClass* dateClass = defineNativeClass(vm, "Date");
     bindSuperclass(vm, dateClass, vm->objectClass);
+    bindTrait(vm, dateClass, comparableTrait);
     DEF_METHOD(dateClass, Date, after, 1);
     DEF_METHOD(dateClass, Date, before, 1);
+    DEF_METHOD(dateClass, Date, compareTo, 1);
     DEF_METHOD(dateClass, Date, diff, 1);
     DEF_METHOD(dateClass, Date, getTimestamp, 0);
     DEF_METHOD(dateClass, Date, init, 3);
@@ -694,8 +727,10 @@ void registerUtilPackage(VM* vm) {
    
     ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
     bindSuperclass(vm, dateTimeClass, dateClass);
+    bindTrait(vm, dateTimeClass, comparableTrait);
     DEF_METHOD(dateTimeClass, DateTime, after, 1);
     DEF_METHOD(dateTimeClass, DateTime, before, 1);
+    DEF_METHOD(dateTimeClass, DateTime, compareTo, 1);
     DEF_METHOD(dateTimeClass, DateTime, diff, 1);
     DEF_METHOD(dateTimeClass, DateTime, getTimestamp, 0);
     DEF_METHOD(dateTimeClass, DateTime, init, 6);
@@ -711,6 +746,8 @@ void registerUtilPackage(VM* vm) {
     
     ObjClass* durationClass = defineNativeClass(vm, "Duration");
     bindSuperclass(vm, durationClass, vm->objectClass);
+    bindTrait(vm, durationClass, comparableTrait);
+    DEF_METHOD(durationClass, Duration, compareTo, 1);
     DEF_METHOD(durationClass, Duration, getTotalSeconds, 0);
     DEF_METHOD(durationClass, Duration, init, 4);
     DEF_METHOD(durationClass, Duration, minus, 1);
