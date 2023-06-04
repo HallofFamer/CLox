@@ -497,6 +497,11 @@ LOX_METHOD(ReadStream, skip) {
     RETURN_BOOL(fseek(file->file, (long)AS_INT(args[0]), SEEK_CUR));
 }
 
+LOX_METHOD(TClosable, close) {
+    ASSERT_ARG_COUNT("IOStream::close()", 0);
+    raiseError(vm, "Not implemented, subclass responsibility.");
+}
+
 LOX_METHOD(WriteStream, flush) {
     ASSERT_ARG_COUNT("WriteStream::flush()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
@@ -541,9 +546,13 @@ void registerIOPackage(VM* vm) {
 
     ObjClass* fileMetaclass = vm->fileClass->obj.klass;
     DEF_METHOD(fileMetaclass, FileClass, open, 2);
+    
+    ObjClass* closableTrait = defineNativeTrait(vm, "TClosable");
+    DEF_METHOD(closableTrait, TClosable, close, 0);
 
     ObjClass* ioStreamClass = defineNativeClass(vm, "IOStream");
     bindSuperclass(vm, ioStreamClass, vm->objectClass);
+    bindTrait(vm, ioStreamClass, closableTrait);
     DEF_METHOD(ioStreamClass, IOStream, close, 0);
     DEF_METHOD(ioStreamClass, IOStream, file, 0);
     DEF_METHOD(ioStreamClass, IOStream, getPosition, 0);
