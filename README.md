@@ -34,8 +34,8 @@ https://github.com/munificent/craftinginterpreters
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten(since version 1.4)
 - New class `Range` in package `util`, as well as range operator(`..`) for range literals(since version 1.4) 
 - Refined object model which is similar to Smalltalk's metaclass system(since version 1.5)
-- Metaclasses(which enables class methods) and traits(since version 1.5)
-- Improved Clox standard library that makes use of metaclasses and traits(since version 1.5)
+- Class methods in class declaration, and `trait` keyword for trait declaration(since version 1.5)
+- Allow loading lox source files in lox script and another lox source file with `require` keyword(since version 1.5)
 - Anonymous classes/traits similar to anonymous functions/lambda(since version 1.5)
 
 ## Roadmap
@@ -58,29 +58,35 @@ https://github.com/munificent/craftinginterpreters
 - Replace C style for loop by Kotlin style for-in loop for collection types.
 - Clox Standard Library improvement: New package `collection` and `io`.
 
-### CLox 1.4.0(current version)
+### CLox 1.4.0
 - Immutable variable declaration with `val` keyword.
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword.
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten. 
 - New class `Range` in package `collection`, as well as range operator(`..`) for range literals. 
 
-### CLox 1.5.0(upcoming version)
+### CLox 1.5.0(current version)
 - Refined object model which is similar to Smalltalk's metaclass system.
-- Metaclasses(which enables class methods) and traits.
-- Improved Clox standard library that makes use of metaclasses and traits. 
+- Class methods in class declaration, and `trait` keyword for trait declaration.
+- Allow loading lox source files in lox script and another lox source file with `require` keyword. 
 - Anonymous classes/traits similar to anonymous functions/lambda.
 
-### CLox 1.6.0
-- Introduction of Namespace for CLox's module system, a namespace/module is a first class object.
-- Allow importing namespaces and aliasing of imported classes/functions.
+### CLox 1.6.0(upcoming version)
+- Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
 - Refactor the existing standard library with namespaces(`clox.std` package).
+- Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible.
 - Improved CLox standard library with New package `clox.std.network` and `clox.std.security`.
 
 ### CLox 1.7.0
-- Throw statement and exception handling with try/catch/finally statement.
-- Improved CLox standard library that adds class Exception and various exception subclasses.
+- Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
+- Improved CLox standard library with addition of class `Exception` and various exception subclasses.
 - Null safe operator (?.) which short-circuit if nil is found in a long expression.
 - VM optimization for instance variable representations, and inline caching.
+
+### CLox 1.8.0
+- Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
+- Improved string concatenation, addition of string interpolation and UTF-8 strings.
+- Method interception when an undefined method call is invoked on an object/class, similar to Smalltalk's doesNotUnderstand: message.
+- Object ID and generic object table which enable inheritance for special build-in classes such as `String` and `Array`.
 
 ## FAQ
 

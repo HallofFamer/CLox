@@ -10,7 +10,7 @@ set.add(2);
 set.add(3.5);
 set.add(true);
 set.add(false);
-set.add(dateNow());
+set.add(Date.now);
 print("Initial elements in set: ");
 println(set.toString());
 println("Add a new element current 'Hello World' to set: ");
