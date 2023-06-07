@@ -60,6 +60,7 @@ typedef enum {
     OBJ_FUNCTION,
     OBJ_INSTANCE,
     OBJ_METHOD,
+    OBJ_NAMESPACE,
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
     OBJ_NODE,
@@ -150,6 +151,13 @@ typedef struct {
     bool isOpen;
     FILE* file;
 } ObjFile;
+
+typedef struct {
+    Obj obj;
+    ObjString* name;
+    ObjString* path;
+    Table values;
+} ObjNamespace;
 
 typedef struct {
     Obj obj;
