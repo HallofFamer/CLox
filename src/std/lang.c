@@ -598,6 +598,22 @@ LOX_METHOD(Method, toString) {
     RETURN_STRING_FMT("<method %s::%s>", method->behavior->name->chars, method->closure->function->name->chars);
 }
 
+LOX_METHOD(Namespace, clone) {
+    ASSERT_ARG_COUNT("Namespace::clone()", 0);
+    RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Namespace, init) {
+    raiseError(vm, "Cannot instantiate from class Namespace.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(Namespace, toString) {
+    ASSERT_ARG_COUNT("Namespace::toString()", 0);
+    ObjNamespace* self = AS_NAMESPACE(receiver);
+    RETURN_STRING_FMT("<namespace %s.%s>", self->path->chars, self->name->chars);
+}
+
 LOX_METHOD(Nil, clone) {
     ASSERT_ARG_COUNT("Nil::clone()", 0);
     RETURN_NIL;
@@ -1153,6 +1169,12 @@ void registerLangPackage(VM* vm) {
     bindMethodClass(vm, classMetaclass);
     bindMethodClass(vm, vm->metaclassClass);
     bindMethodClass(vm, metaclassMetaclass);
+
+    vm->namespaceClass = defineNativeClass(vm, "Namespace");
+    bindSuperclass(vm, vm->namespaceClass, vm->objectClass);
+    DEF_METHOD(vm->namespaceClass, Namespace, clone, 0);
+    DEF_METHOD(vm->namespaceClass, Namespace, init, 0);
+    DEF_METHOD(vm->namespaceClass, Namespace, toString, 0);
 
     vm->traitClass = defineNativeClass(vm, "Trait");
     bindSuperclass(vm, vm->traitClass, behaviorClass);
