@@ -109,6 +109,14 @@ ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure) {
     return method;
 }
 
+ObjNamespace* newNamespace(VM* vm, ObjString* name, ObjString* path) {
+    ObjNamespace* namespace = ALLOCATE_OBJ(ObjNamespace, OBJ_NAMESPACE, vm->namespaceClass);
+    namespace->name = name;
+    namespace->path = path;
+    initTable(&namespace->values);
+    return namespace;
+}
+
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function) {
     ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, vm->functionClass);
     nativeFunction->name = name;
