@@ -448,6 +448,9 @@ void printObject(Value value) {
         case OBJ_METHOD:
             printf("<method %s::%s>", AS_METHOD(value)->behavior->name->chars, AS_METHOD(value)->closure->function->name->chars);
             break;
+        case OBJ_NAMESPACE:
+            printf("<namespace %s.%s>", AS_NAMESPACE(value)->path->chars, AS_NAMESPACE(value)->name->chars);
+            break;
         case OBJ_NATIVE_FUNCTION:
             printf("<native function %s>", AS_NATIVE_FUNCTION(value)->name->chars);
             break;
