@@ -135,6 +135,13 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)method->closure);
             break;
         }
+        case OBJ_NAMESPACE: {
+            ObjNamespace* namespace = (ObjNamespace*)object;
+            markObject(vm, (Obj*)namespace->name);
+            markObject(vm, (Obj*)namespace->path);
+            markTable(vm, &namespace->values);
+            break;
+        }
         case OBJ_NATIVE_FUNCTION: {
             ObjNativeFunction* nativeFunction = (ObjNativeFunction*)object;
             markObject(vm, (Obj*)nativeFunction->name);
@@ -225,6 +232,12 @@ static void freeObject(VM* vm, Obj* object) {
         }
         case OBJ_METHOD: {
             FREE(ObjMethod, object);
+            break;
+        }
+        case OBJ_NAMESPACE: { 
+            ObjNamespace* namespace = (ObjNamespace*)object;
+            freeTable(vm, &namespace->values);
+            FREE(ObjNamespace, object);
             break;
         }
         case OBJ_NATIVE_FUNCTION:
