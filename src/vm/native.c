@@ -122,7 +122,7 @@ ObjNamespace* defineNativeNamespace(VM* vm, const char* path, const char* name) 
     push(vm, OBJ_VAL(parentPath));
     ObjString* shortName = newString(vm, name);
     push(vm, OBJ_VAL(shortName));
-    ObjNamespace* namespace = newNamespace(vm, name, path);
+    ObjNamespace* namespace = newNamespace(vm, shortName, parentPath);
     pop(vm);
     pop(vm);
     return namespace;
