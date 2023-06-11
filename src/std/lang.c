@@ -1188,6 +1188,8 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->traitClass, Trait, toString, 0);
 
     loadSourceFile(vm, "src/std/lang.lox");
+    ObjNamespace* langNamespace = defineNativeNamespace(vm, "clox.std", "lang");
+    vm->defaultNamespace = langNamespace;
 
     vm->nilClass = getNativeClass(vm, "Nil");
     DEF_METHOD(vm->nilClass, Nil, clone, 0);

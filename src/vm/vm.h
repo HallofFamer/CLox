@@ -51,6 +51,9 @@ struct VM {
     ObjClass* entryClass;
     ObjClass* fileClass;
 
+    ObjNamespace* defaultNamespace;
+    ObjNamespace* currentNamespace;
+
     CallFrame frames[FRAMES_MAX];
     int frameCount;
  
