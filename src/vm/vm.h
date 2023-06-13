@@ -87,13 +87,14 @@ typedef enum {
 
 void initVM(VM* vm);
 void freeVM(VM* vm);
+void push(VM* vm, Value value);
+Value pop(VM* vm);
 bool isFalsey(Value value);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 bool loadGlobal(VM* vm, ObjString* name, Value* value);
 void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);
+InterpretResult run(VM* vm);
 InterpretResult interpret(VM* vm, const char* source);
-void push(VM* vm, Value value);
-Value pop(VM* vm);
 
 #endif // !clox_vm_h

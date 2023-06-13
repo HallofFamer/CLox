@@ -413,7 +413,7 @@ static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     pop(vm);
 }
 
-static InterpretResult run(VM* vm) {
+InterpretResult run(VM* vm) {
     CallFrame* frame = &vm->frames[vm->frameCount - 1];
 
 #define READ_BYTE() (*frame->ip++)
