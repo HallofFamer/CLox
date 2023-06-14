@@ -426,6 +426,21 @@ LOX_METHOD(Array, contains) {
     RETURN_BOOL(valueArrayFirstIndex(vm, &AS_ARRAY(receiver)->elements, args[0]) != -1);
 }
 
+LOX_METHOD(Array, each) {
+    ASSERT_ARG_COUNT("Array::each(closure)", 1);
+    ASSERT_ARG_TYPE("Array::each(closure)", 0, Closure);
+    ObjArray* self = AS_ARRAY(receiver);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+
+    for (int i = 0; i < self->elements.count; i++) {
+        push(vm, self->elements.values[i]);
+        callClosure(vm, closure, 1);
+        run(vm);
+        //pop(vm);
+    }
+    RETURN_NIL;
+}
+
 LOX_METHOD(Array, equals) {
     ASSERT_ARG_COUNT("Array::equals(other)", 1);
     if (!IS_ARRAY(args[0])) RETURN_FALSE;
@@ -1570,6 +1585,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->arrayClass, Array, clear, 0);
     DEF_METHOD(vm->arrayClass, Array, clone, 0);
     DEF_METHOD(vm->arrayClass, Array, contains, 1);
+    DEF_METHOD(vm->arrayClass, Array, each, 1);
     DEF_METHOD(vm->arrayClass, Array, equals, 1);
     DEF_METHOD(vm->arrayClass, Array, getAt, 1);
     DEF_METHOD(vm->arrayClass, Array, indexOf, 1);

@@ -1,20 +1,7 @@
-println("Testing reentrancy...");
-var x = 0;
-print("Variable x is originally: ");
-println(x);
-val f0 = fun(){
-   x = x + 1;
-};
-f0.call0();
-print("Variable x is now: ");
-println(x);
+val a = [1, 2, 3, 4, 5];
+println("Multiply each element by 2: ");
 
-var y = 1;
-print("Variable y is originally: ");
-println(y);
-val f1 = fun(a) { 
-    y = y + a;
-};
-f1.call(1);
-print("Variable y is now: ");
-println(y);
+a.each(fun(e){ 
+    print("Element: ");
+    println(e * 2);
+});
