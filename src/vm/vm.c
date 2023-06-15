@@ -21,6 +21,7 @@
 static void resetStack(VM* vm) {
     vm->stackTop = vm->stack;
     vm->frameCount = 0;
+    vm->apiStackDepth = 0;
     vm->openUpvalues = NULL;
 }
 
@@ -885,6 +886,7 @@ InterpretResult run(VM* vm) {
 
                 vm->stackTop = frame->slots;
                 push(vm, result);
+                if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
             }

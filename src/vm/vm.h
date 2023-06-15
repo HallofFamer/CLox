@@ -59,6 +59,7 @@ struct VM {
  
     Value stack[STACK_MAX];
     Value* stackTop;
+    int apiStackDepth;
 
     Configuration config;
     Compiler* currentCompiler;
