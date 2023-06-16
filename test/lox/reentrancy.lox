@@ -1,7 +1,49 @@
-val a = [1, 2, 3, 4, 5];
-println("Multiply each element by 2: ");
+println("Testing reentrancy for methods on Int class...");
+println("");
+val n = 5;
+println("Loop and print number from 0 to 4");
+n.timesRepeat({|i| println("Current integer: " + i.toString()) });
+println("");
 
+val n2 = 10;
+println("Loop from number " + n.toString() + " up to " + n2.toString());
+n.upTo(n2, {|i| println("Current integer: " + i.toString()) });
+println("");
+
+val n3 = 0;
+println("Loop from number " + n.toString() + " down to " + n3.toString());
+n.downTo(n3, {|i| println("Current integer: " + i.toString()) });
+println("");
+
+println("Reentrancy test passed for Int class.");
+println("");
+
+
+println("Testing reentrancy for methods on Number class...");
+println("");
+val d = 1.5;
+val d2 = 3.6;
+val step = 0.3;
+println("Loop from " + d.toString() + " to " + d2.toString() + " with step size " + step.toString());
+
+d.step(d2, step, {|i| println("Current number: " + i.toString()) });
+println("");
+
+println("Reentrancy test passed for Number class.");
+println("");
+
+println("Testing reentrancy for methods on Array class...");
+println("");
+val a = [1, 2, 3, 4, 5];
+val m = 2;
+println("Multiply each element by " + m.toString());
+
+val mul = 2;
 a.each(fun(e){ 
     print("Element: ");
-    println(e * 2);
+    println(e * mul);
 });
+println("");
+
+println("Reentrancy test passed for Array class.");
+println("");

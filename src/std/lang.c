@@ -406,6 +406,25 @@ LOX_METHOD(Int, clone) {
     RETURN_INT(AS_INT(receiver));
 }
 
+LOX_METHOD(Int, downTo) {
+    ASSERT_ARG_COUNT("Int::downTo(to, closure)", 2);
+    ASSERT_ARG_TYPE("Int::downTo(to, closure)", 0, Int);
+    ASSERT_ARG_TYPE("Int::downTo(to, closure)", 1, Closure);
+    int self = AS_INT(receiver);
+    int to = AS_INT(args[0]);
+    ObjClosure* closure = AS_CLOSURE(args[1]);
+
+    vm->apiStackDepth++;
+    for (int i = self; i >= to; i--) {
+        push(vm, INT_VAL(i));
+        callClosure(vm, closure, 1);
+        run(vm);
+    }
+
+    vm->apiStackDepth--;
+    RETURN_NIL;
+}
+
 LOX_METHOD(Int, factorial) {
     ASSERT_ARG_COUNT("Int::factorial()", 0);
     int self = AS_INT(receiver);
@@ -440,6 +459,23 @@ LOX_METHOD(Int, lcm) {
     RETURN_INT(lcm(abs(AS_INT(receiver)), abs(AS_INT(args[0]))));
 }
 
+LOX_METHOD(Int, timesRepeat) {
+    ASSERT_ARG_COUNT("Int::timesRepeat(closure)", 1);
+    ASSERT_ARG_TYPE("Int::timesRepeat(closure)", 0, Closure);
+    int self = AS_INT(receiver);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+
+    vm->apiStackDepth++;
+    for (int i = 0; i < self; i++) {
+        push(vm, INT_VAL(i));
+        callClosure(vm, closure, 1);
+        run(vm);
+    }
+
+    vm->apiStackDepth--;
+    RETURN_NIL;
+}
+
 LOX_METHOD(Int, toBinary) {
     ASSERT_ARG_COUNT("Int::toBinary()", 0);
     char buffer[32];
@@ -472,6 +508,25 @@ LOX_METHOD(Int, toOctal) {
 LOX_METHOD(Int, toString) {
     ASSERT_ARG_COUNT("Int::toString()", 0);
     RETURN_STRING_FMT("%d", AS_INT(receiver));
+}
+
+LOX_METHOD(Int, upTo) {
+    ASSERT_ARG_COUNT("Int::upTo(to, closure)", 2);
+    ASSERT_ARG_TYPE("Int::upTo(to, closure)", 0, Int);
+    ASSERT_ARG_TYPE("Int::upTo(to, closure)", 1, Closure);
+    int self = AS_INT(receiver);
+    int to = AS_INT(args[0]);
+    ObjClosure* closure = AS_CLOSURE(args[1]);
+
+    vm->apiStackDepth++;
+    for (int i = self; i <= to; i++) {
+        push(vm, INT_VAL(i));
+        callClosure(vm, closure, 1);
+        run(vm);
+    }
+
+    vm->apiStackDepth--;
+    RETURN_NIL;
 }
 
 LOX_METHOD(IntClass, parse) {
@@ -760,6 +815,38 @@ LOX_METHOD(Number, sqrt) {
     double self = AS_NUMBER(receiver);
     assertNumberPositive(vm, "Number::sqrt()", self, -1);
     RETURN_NUMBER(sqrt(self));
+}
+
+LOX_METHOD(Number, step) {
+    ASSERT_ARG_COUNT("Number::step(to, by, closure)", 3);
+    ASSERT_ARG_TYPE("Number::step(to, by, closure)", 0, Number);
+    ASSERT_ARG_TYPE("Number::step(to, by, closure)", 1, Number);
+    ASSERT_ARG_TYPE("Number::step(to, by, closure)", 2, Closure);
+    double self = AS_NUMBER(receiver);
+    double to = AS_NUMBER(args[0]);
+    double by = AS_NUMBER(args[1]);
+    ObjClosure* closure = AS_CLOSURE(args[2]);
+
+    if (by == 0) raiseError(vm, "Step size cannot be 0");
+    else {
+        vm->apiStackDepth++;
+        if (by > 0) {
+            for (double num = self; num <= to; num += by) {
+                push(vm, NUMBER_VAL(num));
+                callClosure(vm, closure, 1);
+                run(vm);
+            }
+        }
+        else {
+            for (double num = self; num >= to; num += by) {
+                push(vm, NUMBER_VAL(num));
+                callClosure(vm, closure, 1);
+                run(vm);
+            }
+        }
+        vm->apiStackDepth--;
+    }
+    RETURN_NIL;
 }
 
 LOX_METHOD(Number, tan) {
@@ -1201,7 +1288,11 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->boolClass, Bool, init, 1);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
 
-    vm->numberClass = getNativeClass(vm, "Number");
+    ObjClass* comparableTrait = getNativeClass(vm, "TComparable");
+
+    vm->numberClass = defineNativeClass(vm, "Number");
+    bindSuperclass(vm, vm->numberClass, vm->objectClass);
+    bindTrait(vm, vm->numberClass, comparableTrait);
     DEF_METHOD(vm->numberClass, Number, abs, 0);
     DEF_METHOD(vm->numberClass, Number, acos, 0);
     DEF_METHOD(vm->numberClass, Number, asin, 0);
@@ -1225,6 +1316,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, round, 0);
     DEF_METHOD(vm->numberClass, Number, sin, 0);
     DEF_METHOD(vm->numberClass, Number, sqrt, 0);
+    DEF_METHOD(vm->numberClass, Number, step, 3);
     DEF_METHOD(vm->numberClass, Number, tan, 0);
     DEF_METHOD(vm->numberClass, Number, toInt, 0);
     DEF_METHOD(vm->numberClass, Number, toString, 0);
@@ -1234,21 +1326,24 @@ void registerLangPackage(VM* vm) {
     setClassProperty(vm, vm->numberClass, "pi", NUMBER_VAL(3.14159265358979323846264338327950288));
     DEF_METHOD(numberMetaclass, NumberClass, parse, 1);
 
-    vm->intClass = getNativeClass(vm, "Int");
+    vm->intClass = defineNativeClass(vm, "Int");
     bindSuperclass(vm, vm->intClass, vm->numberClass);
     DEF_METHOD(vm->intClass, Int, abs, 0);
     DEF_METHOD(vm->intClass, Int, clone, 0);
+    DEF_METHOD(vm->intClass, Int, downTo, 2);
     DEF_METHOD(vm->intClass, Int, factorial, 0);
     DEF_METHOD(vm->intClass, Int, gcd, 1);
     DEF_METHOD(vm->intClass, Int, init, 1);
     DEF_METHOD(vm->intClass, Int, isEven, 0);
     DEF_METHOD(vm->intClass, Int, isOdd, 0);
     DEF_METHOD(vm->intClass, Int, lcm, 1);
+    DEF_METHOD(vm->intClass, Int, timesRepeat, 1);
     DEF_METHOD(vm->intClass, Int, toBinary, 0);
     DEF_METHOD(vm->intClass, Int, toFloat, 0);
     DEF_METHOD(vm->intClass, Int, toHexadecimal, 0);
     DEF_METHOD(vm->intClass, Int, toOctal, 0);
     DEF_METHOD(vm->intClass, Int, toString, 0);
+    DEF_METHOD(vm->intClass, Int, upTo, 2);
 
     ObjClass* intMetaclass = vm->intClass->obj.klass;
     setClassProperty(vm, vm->intClass, "max", INT_VAL(INT32_MAX));
