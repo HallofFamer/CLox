@@ -279,7 +279,7 @@ static bool callNativeMethod(VM* vm, NativeMethod method, int argCount) {
     return true;
 }
 
-static bool callMethod(VM* vm, Value method, int argCount) {
+bool callMethod(VM* vm, Value method, int argCount) {
     if (IS_NATIVE_METHOD(method)) {
         return callNativeMethod(vm, AS_NATIVE_METHOD(method)->method, argCount);
     }
