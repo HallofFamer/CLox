@@ -431,13 +431,15 @@ LOX_METHOD(Array, each) {
     ASSERT_ARG_TYPE("Array::each(closure)", 0, Closure);
     ObjArray* self = AS_ARRAY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
+    vm->apiStackDepth++;
 
     for (int i = 0; i < self->elements.count; i++) {
         push(vm, self->elements.values[i]);
         callClosure(vm, closure, 1);
         run(vm);
-        //pop(vm);
     }
+
+    vm->apiStackDepth--;
     RETURN_NIL;
 }
 

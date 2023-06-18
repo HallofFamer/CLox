@@ -1102,6 +1102,30 @@ LOX_METHOD(String, trim) {
     RETURN_OBJ(trimString(vm, AS_STRING(receiver)));
 }
 
+LOX_METHOD(TComparable, compareTo) {
+    ASSERT_ARG_COUNT("TComparable::compareTo(other)", 1);
+    raiseError(vm, "Not implemented, subclass responsibility.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(TComparable, equals) {
+    ASSERT_ARG_COUNT("TComparable::equals(other)", 1);
+    if (valuesEqual(receiver, args[0])) RETURN_TRUE;
+    else {
+        Value method = getObjMethod(vm, receiver, "compareTo");
+        callMethod(vm, method, 1);
+        if (IS_CLOSURE(method)) {
+            vm->apiStackDepth++;
+            run(vm);
+            vm->apiStackDepth--;
+        }
+        Value result = pop(vm);
+        push(vm, receiver);
+        push(vm, args[0]);
+        RETURN_BOOL(result == 0);
+    }
+}
+
 LOX_METHOD(Trait, getClass) {
     ASSERT_ARG_COUNT("Trait::getClass()", 0);
     RETURN_OBJ(vm->traitClass);
@@ -1274,21 +1298,24 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->traitClass, Trait, superclass, 0);
     DEF_METHOD(vm->traitClass, Trait, toString, 0);
 
-    loadSourceFile(vm, "src/std/lang.lox");
     ObjNamespace* langNamespace = defineNativeNamespace(vm, "clox.std", "lang");
     vm->defaultNamespace = langNamespace;
 
-    vm->nilClass = getNativeClass(vm, "Nil");
+    vm->nilClass = defineNativeClass(vm, "Nil");
+    bindSuperclass(vm, vm->nilClass, vm->objectClass);
     DEF_METHOD(vm->nilClass, Nil, clone, 0);
     DEF_METHOD(vm->nilClass, Nil, init, 0);
     DEF_METHOD(vm->nilClass, Nil, toString, 0);
 
-    vm->boolClass = getNativeClass(vm, "Bool");
+    vm->boolClass = defineNativeClass(vm, "Bool");
+    bindSuperclass(vm, vm->boolClass, vm->objectClass);
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
     DEF_METHOD(vm->boolClass, Bool, init, 1);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
 
-    ObjClass* comparableTrait = getNativeClass(vm, "TComparable");
+    ObjClass* comparableTrait = defineNativeTrait(vm, "TComparable");
+    DEF_METHOD(comparableTrait, TComparable, compareTo, 1);
+    DEF_METHOD(comparableTrait, TComparable, equals, 1);
 
     vm->numberClass = defineNativeClass(vm, "Number");
     bindSuperclass(vm, vm->numberClass, vm->objectClass);
