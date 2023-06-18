@@ -372,6 +372,18 @@ Value getObjMethod(VM* vm, Value object, char* name) {
     return method;
 }
 
+Value invokeObjMethod(VM* vm, Value object, char* name, int argCount) {
+    Value method = getObjMethod(vm, object, name);
+    callMethod(vm, method, argCount);
+    if (IS_CLOSURE(method)) {
+        vm->apiStackDepth++;
+        run(vm);
+        vm->apiStackDepth--;
+    }
+    Value result = pop(vm);
+    return result;
+}
+
 static void printArray(ObjArray* array) {
     printf("[");
     for (int i = 0; i < array->elements.count; i++) {

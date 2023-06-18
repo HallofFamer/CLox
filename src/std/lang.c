@@ -1112,14 +1112,7 @@ LOX_METHOD(TComparable, equals) {
     ASSERT_ARG_COUNT("TComparable::equals(other)", 1);
     if (valuesEqual(receiver, args[0])) RETURN_TRUE;
     else {
-        Value method = getObjMethod(vm, receiver, "compareTo");
-        callMethod(vm, method, 1);
-        if (IS_CLOSURE(method)) {
-            vm->apiStackDepth++;
-            run(vm);
-            vm->apiStackDepth--;
-        }
-        Value result = pop(vm);
+        Value result = invokeObjMethod(vm, receiver, "compareTo", 1);
         push(vm, receiver);
         push(vm, args[0]);
         RETURN_BOOL(result == 0);
