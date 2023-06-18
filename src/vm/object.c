@@ -363,6 +363,15 @@ void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value) {
     pop(vm);
 }
 
+Value getObjMethod(VM* vm, Value object, char* name) {
+    ObjClass* klass = getObjClass(vm, object);
+    Value method;
+    if (!tableGet(&klass->methods, newString(vm, name), &method)) {
+        runtimeError(vm, "Method %s::%s does not exist.", klass->name->chars, name);
+    }
+    return method;
+}
+
 static void printArray(ObjArray* array) {
     printf("[");
     for (int i = 0; i < array->elements.count; i++) {
