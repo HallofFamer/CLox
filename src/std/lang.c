@@ -1112,9 +1112,7 @@ LOX_METHOD(TComparable, equals) {
     ASSERT_ARG_COUNT("TComparable::equals(other)", 1);
     if (valuesEqual(receiver, args[0])) RETURN_TRUE;
     else {
-        Value result = invokeObjMethod(vm, receiver, "compareTo", 1);
-        push(vm, receiver);
-        push(vm, args[0]);
+        Value result = invokeObjMethod(vm, receiver, "compareTo", args[0]);
         RETURN_BOOL(result == 0);
     }
 }

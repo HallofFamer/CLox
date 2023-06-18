@@ -372,8 +372,17 @@ Value getObjMethod(VM* vm, Value object, char* name) {
     return method;
 }
 
-Value invokeObjMethod(VM* vm, Value object, char* name, int argCount) {
+Value invokeObjMethod(VM* vm, Value object, char* name, ...) {
     Value method = getObjMethod(vm, object, name);
+    push(vm, method);
+    int argCount = IS_NATIVE_METHOD(method) ? AS_NATIVE_METHOD(method)->arity : AS_CLOSURE(method)->function->arity;
+    va_list args;
+    va_start(args, name);
+    for (int i = 0; i < argCount; i++) {
+        push(vm, va_arg(args, Value));
+    }
+    va_end(args);
+
     callMethod(vm, method, argCount);
     if (IS_CLOSURE(method)) {
         vm->apiStackDepth++;
