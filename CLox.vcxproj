@@ -171,7 +171,6 @@
     <None Include="clox.ini" />
     <None Include="README.md" />
     <None Include="src\std\collection.lox" />
-    <None Include="src\std\lang.lox" />
     <None Include="test\lox\anonymous.lox" />
     <None Include="test\lox\array.lox" />
     <None Include="test\lox\benchmark.lox" />
