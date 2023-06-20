@@ -158,25 +158,3 @@ class Dictionary < Collection {
         return selected;
     }
 }
-
-class Range < List { 
-    step(by, closure){ 
-        var from = this.from();
-        var to = this.to();
-        if(by == 0) error("Step size cannot be 0");
-        else{ 
-            if(by > 0){ 
-                while(from <= to){
-                    closure(from);
-                    from = from + by;
-                }
-            }
-            else{
-                while(from >= to){ 
-                    closure(from);
-                    from = from - by;
-                }
-            }
-        }       
-    }
-}

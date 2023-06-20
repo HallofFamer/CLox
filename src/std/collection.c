@@ -1284,6 +1284,38 @@ LOX_METHOD(Range, nextValue) {
     RETURN_NIL;
 }
 
+LOX_METHOD(Range, step) {
+    ASSERT_ARG_COUNT("Range::step(by, closure)", 2);
+    ASSERT_ARG_TYPE("Range::step(by, closure)", 0, Number);
+    ASSERT_ARG_TYPE("Range::step(by, closure)", 1, Closure);
+    ObjRange* self = AS_RANGE(receiver);
+    double from = self->from;
+    double to = self->to;
+    double by = AS_NUMBER(args[1]);
+    ObjClosure* closure = AS_CLOSURE(args[2]);
+
+    if (by == 0) raiseError(vm, "Step size cannot be 0");
+    else {
+        vm->apiStackDepth++;
+        if (by > 0) {
+            for (double num = from; num <= to; num += by) {
+                push(vm, NUMBER_VAL(num));
+                callClosure(vm, closure, 1);
+                run(vm);
+            }
+        }
+        else {
+            for (double num = from; num >= to; num += by) {
+                push(vm, NUMBER_VAL(num));
+                callClosure(vm, closure, 1);
+                run(vm);
+            }
+        }
+        vm->apiStackDepth--;
+    }
+    RETURN_NIL;
+}
+
 LOX_METHOD(Range, to) {
     ASSERT_ARG_COUNT("Range::to()", 0);
     ObjRange* self = AS_RANGE(receiver);
@@ -1688,7 +1720,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(setClass, Set, toArray, 0);
     DEF_METHOD(setClass, Set, toString, 0);
 
-    vm->rangeClass = getNativeClass(vm, "Range");
+    vm->rangeClass = defineNativeClass(vm, "Range");
+    bindSuperclass(vm, vm->rangeClass, listClass);
     DEF_METHOD(vm->rangeClass, Range, add, 1);
     DEF_METHOD(vm->rangeClass, Range, addAll, 1);
     DEF_METHOD(vm->rangeClass, Range, clone, 0);
@@ -1701,6 +1734,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->rangeClass, Range, min, 0);
     DEF_METHOD(vm->rangeClass, Range, next, 1);
     DEF_METHOD(vm->rangeClass, Range, nextValue, 1);
+    DEF_METHOD(vm->rangeClass, Range, step, 2);
     DEF_METHOD(vm->rangeClass, Range, to, 0);
     DEF_METHOD(vm->rangeClass, Range, toArray, 0);
     DEF_METHOD(vm->rangeClass, Range, toString, 0);
