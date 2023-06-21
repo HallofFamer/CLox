@@ -286,6 +286,28 @@ bool callMethod(VM* vm, Value method, int argCount) {
     else return callClosure(vm, AS_CLOSURE(method), argCount);
 }
 
+Value callReentrant(VM* vm, Value callee, ...) {
+    int argCount = IS_NATIVE_METHOD(callee) ? AS_NATIVE_METHOD(callee)->arity : AS_CLOSURE(callee)->function->arity;
+    va_list args;
+    va_start(args, callee);
+    for (int i = 0; i < argCount; i++) {
+        push(vm, va_arg(args, Value));
+    }
+    va_end(args);
+
+    if (IS_CLOSURE(callee)) {
+        vm->apiStackDepth++;
+        callClosure(vm, AS_CLOSURE(callee), argCount);
+        run(vm);
+        vm->apiStackDepth--;
+        return peek(vm, 0);
+    }
+    else {
+        callNativeMethod(vm, AS_NATIVE_METHOD(callee)->method, argCount);
+        return pop(vm);
+    }
+}
+
 static bool callValue(VM* vm, Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {

@@ -414,14 +414,9 @@ LOX_METHOD(Int, downTo) {
     int to = AS_INT(args[0]);
     ObjClosure* closure = AS_CLOSURE(args[1]);
 
-    vm->apiStackDepth++;
     for (int i = self; i >= to; i--) {
-        push(vm, INT_VAL(i));
-        callClosure(vm, closure, 1);
-        run(vm);
+        callReentrant(vm, OBJ_VAL(closure), INT_VAL(i));
     }
-
-    vm->apiStackDepth--;
     RETURN_NIL;
 }
 
@@ -465,14 +460,9 @@ LOX_METHOD(Int, timesRepeat) {
     int self = AS_INT(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
 
-    vm->apiStackDepth++;
     for (int i = 0; i < self; i++) {
-        push(vm, INT_VAL(i));
-        callClosure(vm, closure, 1);
-        run(vm);
+        callReentrant(vm, OBJ_VAL(closure), INT_VAL(i));
     }
-
-    vm->apiStackDepth--;
     RETURN_NIL;
 }
 
@@ -518,14 +508,9 @@ LOX_METHOD(Int, upTo) {
     int to = AS_INT(args[0]);
     ObjClosure* closure = AS_CLOSURE(args[1]);
 
-    vm->apiStackDepth++;
     for (int i = self; i <= to; i++) {
-        push(vm, INT_VAL(i));
-        callClosure(vm, closure, 1);
-        run(vm);
+        callReentrant(vm, OBJ_VAL(closure), INT_VAL(i));
     }
-
-    vm->apiStackDepth--;
     RETURN_NIL;
 }
 
@@ -829,22 +814,16 @@ LOX_METHOD(Number, step) {
 
     if (by == 0) raiseError(vm, "Step size cannot be 0");
     else {
-        vm->apiStackDepth++;
         if (by > 0) {
             for (double num = self; num <= to; num += by) {
-                push(vm, NUMBER_VAL(num));
-                callClosure(vm, closure, 1);
-                run(vm);
+                callReentrant(vm, OBJ_VAL(closure), NUMBER_VAL(num));
             }
         }
         else {
             for (double num = self; num >= to; num += by) {
-                push(vm, NUMBER_VAL(num));
-                callClosure(vm, closure, 1);
-                run(vm);
+                callReentrant(vm, OBJ_VAL(closure), NUMBER_VAL(num));
             }
         }
-        vm->apiStackDepth--;
     }
     RETURN_NIL;
 }
