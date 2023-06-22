@@ -45,5 +45,17 @@ a.each(fun(e){
 });
 println("");
 
+print("Collect elements into a new array with sqaured values: ");
+println(a.collect(fun(e) { return e * e; }));
+
+print("Detect first even number: ");
+println(a.detect(fun(e) { return e.isEven(); }));
+
+print("Select odd numbers from array: ");
+println(a.select(fun(e) { return e.isOdd(); }));
+
+print("Reject odd numbers from array: ");
+println(a.reject(fun(e) { return e.isOdd(); }));
+
 println("Reentrancy test passed for Array class.");
 println("");

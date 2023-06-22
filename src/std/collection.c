@@ -421,9 +421,38 @@ LOX_METHOD(Array, clone) {
     RETURN_OBJ(arrayCopy(vm, self->elements, 0, self->elements.count));
 }
 
+LOX_METHOD(Array, collect) {
+    ASSERT_ARG_COUNT("Array::collect(closure)", 1);
+    ASSERT_ARG_TYPE("Array::collect(closure)", 0, Closure);
+    ObjArray* self = AS_ARRAY(receiver);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+
+    ObjArray* collected = newArray(vm);
+    push(vm, OBJ_VAL(collected));
+    for (int i = 0; i < self->elements.count; i++) {
+        Value result = callReentrant(vm, OBJ_VAL(closure), self->elements.values[i]);
+        valueArrayWrite(vm, &collected->elements, result);
+    }
+    pop(vm);
+    RETURN_OBJ(collected);
+}
+
 LOX_METHOD(Array, contains) {
     ASSERT_ARG_COUNT("Array::contains(element)", 1);
     RETURN_BOOL(valueArrayFirstIndex(vm, &AS_ARRAY(receiver)->elements, args[0]) != -1);
+}
+
+LOX_METHOD(Array, detect) {
+    ASSERT_ARG_COUNT("Array::detect(closure)", 1);
+    ASSERT_ARG_TYPE("Array::detect(closure)", 0, Closure);
+    ObjArray* self = AS_ARRAY(receiver);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+
+    for (int i = 0; i < self->elements.count; i++) {
+        Value result = callReentrant(vm, OBJ_VAL(closure), self->elements.values[i]);
+        if (!isFalsey(result)) RETURN_VAL(self->elements.values[i]);
+    }
+    RETURN_NIL;
 }
 
 LOX_METHOD(Array, each) {
@@ -431,15 +460,10 @@ LOX_METHOD(Array, each) {
     ASSERT_ARG_TYPE("Array::each(closure)", 0, Closure);
     ObjArray* self = AS_ARRAY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
-    vm->apiStackDepth++;
 
     for (int i = 0; i < self->elements.count; i++) {
-        push(vm, self->elements.values[i]);
-        callClosure(vm, closure, 1);
-        run(vm);
+        callReentrant(vm, OBJ_VAL(closure), self->elements.values[i]);
     }
-
-    vm->apiStackDepth--;
     RETURN_NIL;
 }
 
@@ -531,6 +555,22 @@ LOX_METHOD(Array, putAt) {
     RETURN_OBJ(receiver);
 }
 
+LOX_METHOD(Array, reject) {
+    ASSERT_ARG_COUNT("Array::reject(closure)", 1);
+    ASSERT_ARG_TYPE("Array::reject(closure)", 0, Closure);
+    ObjArray* self = AS_ARRAY(receiver);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+
+    ObjArray* rejected = newArray(vm);
+    push(vm, OBJ_VAL(rejected));
+    for (int i = 0; i < self->elements.count; i++) {
+        Value result = callReentrant(vm, OBJ_VAL(closure), self->elements.values[i]);
+        if (isFalsey(result)) valueArrayWrite(vm, &rejected->elements, self->elements.values[i]);
+    }
+    pop(vm);
+    RETURN_OBJ(rejected);
+}
+
 LOX_METHOD(Array, remove) {
     ASSERT_ARG_COUNT("Array::remove(element)", 1);
     ObjArray* self = AS_ARRAY(receiver);
@@ -548,6 +588,22 @@ LOX_METHOD(Array, removeAt) {
     assertIntWithinRange(vm, "Array::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
     Value element = valueArrayDelete(vm, &self->elements, index);
     RETURN_VAL(element);
+}
+
+LOX_METHOD(Array, select) {
+    ASSERT_ARG_COUNT("Array::select(closure)", 1);
+    ASSERT_ARG_TYPE("Array::select(closure)", 0, Closure);
+    ObjArray* self = AS_ARRAY(receiver);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+
+    ObjArray* selected = newArray(vm);
+    push(vm, OBJ_VAL(selected));
+    for (int i = 0; i < self->elements.count; i++) {
+        Value result = callReentrant(vm, OBJ_VAL(closure), self->elements.values[i]);
+        if (!isFalsey(result)) valueArrayWrite(vm, &selected->elements, self->elements.values[i]);
+    }
+    pop(vm);
+    RETURN_OBJ(selected);
 }
 
 LOX_METHOD(Array, slice) {
@@ -1296,22 +1352,16 @@ LOX_METHOD(Range, step) {
 
     if (by == 0) raiseError(vm, "Step size cannot be 0");
     else {
-        vm->apiStackDepth++;
         if (by > 0) {
             for (double num = from; num <= to; num += by) {
-                push(vm, NUMBER_VAL(num));
-                callClosure(vm, closure, 1);
-                run(vm);
+                callReentrant(vm, OBJ_VAL(closure), NUMBER_VAL(num));
             }
         }
         else {
             for (double num = from; num >= to; num += by) {
-                push(vm, NUMBER_VAL(num));
-                callClosure(vm, closure, 1);
-                run(vm);
+                callReentrant(vm, OBJ_VAL(closure), NUMBER_VAL(num));
             }
         }
-        vm->apiStackDepth--;
     }
     RETURN_NIL;
 }
@@ -1618,7 +1668,9 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->arrayClass, Array, addAll, 1);
     DEF_METHOD(vm->arrayClass, Array, clear, 0);
     DEF_METHOD(vm->arrayClass, Array, clone, 0);
+    DEF_METHOD(vm->arrayClass, Array, collect, 1);
     DEF_METHOD(vm->arrayClass, Array, contains, 1);
+    DEF_METHOD(vm->arrayClass, Array, detect, 1);
     DEF_METHOD(vm->arrayClass, Array, each, 1);
     DEF_METHOD(vm->arrayClass, Array, equals, 1);
     DEF_METHOD(vm->arrayClass, Array, getAt, 1);
@@ -1631,8 +1683,10 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->arrayClass, Array, next, 1);
     DEF_METHOD(vm->arrayClass, Array, nextValue, 1);
     DEF_METHOD(vm->arrayClass, Array, putAt, 2);
+    DEF_METHOD(vm->arrayClass, Array, reject, 1);
     DEF_METHOD(vm->arrayClass, Array, remove, 1);
     DEF_METHOD(vm->arrayClass, Array, removeAt, 1);
+    DEF_METHOD(vm->arrayClass, Array, select, 1);
     DEF_METHOD(vm->arrayClass, Array, slice, 2);
     DEF_METHOD(vm->arrayClass, Array, toString, 0);
 
