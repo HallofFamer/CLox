@@ -1046,6 +1046,47 @@ LOX_METHOD(LinkedList, toString) {
     RETURN_OBJ(linkToString(vm, self));
 }
 
+LOX_METHOD(List, eachIndex) {
+    ASSERT_ARG_COUNT("List::eachIndex(closure)", 1);
+    ASSERT_ARG_TYPE("List::eachIndex(closure)", 0, Closure);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value index = INT_VAL(0);
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
+
+    while (index != NIL_VAL) {
+        push(vm, receiver);
+        Value element = callReentrant(vm, nextValueMethod, index);
+        callReentrant(vm, OBJ_VAL(closure), index, element);
+        push(vm, receiver);
+        index = callReentrant(vm, nextMethod, index);
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(List, getAt) {
+    ASSERT_ARG_COUNT("List::getAt(index)", 1);
+    ASSERT_ARG_TYPE("List::getAt(index)", 0, Int);
+    int position = AS_INT(args[0]);
+    Value index = INT_VAL(0);
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
+
+    while (index != NIL_VAL) {
+        push(vm, receiver);
+        Value element = callReentrant(vm, nextValueMethod, index);
+        if (index == position) RETURN_VAL(element);
+        push(vm, receiver);
+        index = callReentrant(vm, nextMethod, index);
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(List, putAt) {
+    raiseError(vm, "Not implemented, subclass responsibility.");
+    RETURN_NIL;
+}
+
 LOX_METHOD(Node, clone) {
     ASSERT_ARG_COUNT("Node::clone()", 0);
     ObjNode* self = AS_NODE(receiver);
@@ -1659,8 +1700,12 @@ void registerCollectionPackage(VM* vm) {
     loadSourceFile(vm, "src/std/collection.lox");
     ObjClass* collectionClass = getNativeClass(vm, "Collection");
     bindSuperclass(vm, collectionClass, vm->objectClass);
-    ObjClass* listClass = getNativeClass(vm, "List");
+
+    ObjClass* listClass = defineNativeClass(vm, "List");
     bindSuperclass(vm, listClass, collectionClass);
+    DEF_METHOD(listClass, List, eachIndex, 1);
+    DEF_METHOD(listClass, List, getAt, 1);
+    DEF_METHOD(listClass, List, putAt, 2);
 
     vm->arrayClass = defineNativeClass(vm, "Array");
     bindSuperclass(vm, vm->arrayClass, listClass);

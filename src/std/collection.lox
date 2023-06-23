@@ -87,26 +87,6 @@ class Collection with TEnumerable {
     }
 }
 
-class List < Collection { 
-
-    eachIndex(closure) { 
-        for(var (index, element) : this){ 
-            closure(index, element);
-        }
-    }
-
-    getAt(index) { 
-        for(var (i, element) : this){ 
-            if(i == index) return element;
-        }
-        return nil;
-    }
-
-    putAt(index, element) {
-        error("Not implemented, subclass responsibility.");
-    }
-}
-
 class Dictionary < Collection {
     collect(closure){
         var collected = this.getClass()();

@@ -45,6 +45,13 @@ a.each(fun(e){
 });
 println("");
 
+println("Square each element with index: ");
+a.eachIndex(fun(i, e){ 
+    print("Element at index " + i.toString() + ": ");
+    println(e * e);
+});
+println("");
+
 print("Collect elements into a new array with sqaured values: ");
 println(a.collect(fun(e) { return e * e; }));
 
