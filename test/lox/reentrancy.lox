@@ -63,6 +63,7 @@ println(a.select(fun(e) { return e.isOdd(); }));
 
 print("Reject odd numbers from array: ");
 println(a.reject(fun(e) { return e.isOdd(); }));
+println("");
 
 println("Reentrancy test passed for Array class.");
 println("");

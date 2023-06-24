@@ -93,7 +93,7 @@ Value pop(VM* vm);
 bool isFalsey(Value value);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 bool callMethod(VM* vm, Value method, int argCount);
-Value callReentrant(VM* vm, Value callee, ...);
+Value callReentrant(VM* vm, Value receiver, Value callee, ...);
 bool loadGlobal(VM* vm, ObjString* name, Value* value);
 void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);

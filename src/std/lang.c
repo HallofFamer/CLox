@@ -415,7 +415,7 @@ LOX_METHOD(Int, downTo) {
     ObjClosure* closure = AS_CLOSURE(args[1]);
 
     for (int i = self; i >= to; i--) {
-        callReentrant(vm, OBJ_VAL(closure), INT_VAL(i));
+        callReentrant(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
     }
     RETURN_NIL;
 }
@@ -461,7 +461,7 @@ LOX_METHOD(Int, timesRepeat) {
     ObjClosure* closure = AS_CLOSURE(args[0]);
 
     for (int i = 0; i < self; i++) {
-        callReentrant(vm, OBJ_VAL(closure), INT_VAL(i));
+        callReentrant(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
     }
     RETURN_NIL;
 }
@@ -509,7 +509,7 @@ LOX_METHOD(Int, upTo) {
     ObjClosure* closure = AS_CLOSURE(args[1]);
 
     for (int i = self; i <= to; i++) {
-        callReentrant(vm, OBJ_VAL(closure), INT_VAL(i));
+        callReentrant(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
     }
     RETURN_NIL;
 }
@@ -816,12 +816,12 @@ LOX_METHOD(Number, step) {
     else {
         if (by > 0) {
             for (double num = self; num <= to; num += by) {
-                callReentrant(vm, OBJ_VAL(closure), NUMBER_VAL(num));
+                callReentrant(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
             }
         }
         else {
             for (double num = self; num >= to; num += by) {
-                callReentrant(vm, OBJ_VAL(closure), NUMBER_VAL(num));
+                callReentrant(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
             }
         }
     }
@@ -1082,7 +1082,6 @@ LOX_METHOD(String, trim) {
 }
 
 LOX_METHOD(TComparable, compareTo) {
-    ASSERT_ARG_COUNT("TComparable::compareTo(other)", 1);
     raiseError(vm, "Not implemented, subclass responsibility.");
     RETURN_NIL;
 }
@@ -1091,7 +1090,7 @@ LOX_METHOD(TComparable, equals) {
     ASSERT_ARG_COUNT("TComparable::equals(other)", 1);
     if (valuesEqual(receiver, args[0])) RETURN_TRUE;
     else {
-        Value result = invokeObjMethod(vm, receiver, "compareTo", args[0]);
+        Value result = callReentrant(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
         RETURN_BOOL(result == 0);
     }
 }
