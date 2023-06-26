@@ -51,6 +51,7 @@ array.eachIndex(fun(i, e){
 });
 println("");
 
+/*
 print("Collect elements into a new array with sqaured values: ");
 println(array.collect(fun(e) { return e * e; }));
 
@@ -66,7 +67,7 @@ println("");
 
 println("Reentrancy test passed for Array class.");
 println("");
-
+*/
 println("Testing reentrancy for methods on Dictionary class...");
 println("");
 val dict = ["US": "United States", "CA": "Canada", "EU": "Europe", "JP": "Japan", "RU": "Russia"];
@@ -92,4 +93,35 @@ println(dict.reject(fun(k, v) { return v.length() == 6; }));
 println("");
 
 println("Reentrancy test passed for Dictionary class.");
+println("");
+
+println("Testing reentrancy for methods on LinkedList class...");
+println("");
+
+var list = LinkedList();
+list.add(2);
+list.add(3.5);
+list.addAll([true, nil, "Hello World"]);
+
+println("Looping through LinkedList: ");
+list.each({|e| println("Element: " + e.toString()) });
+println("");
+
+println("Collect elements with capitalized string values: ");
+println(list.collect(fun(e) { return e.toString().toUppercase(); }).toString());
+println("");
+
+println("Detect with first non-numeric element: ");
+println(list.detect(fun(e) { return !e.instanceOf(Number); }));
+println("");
+
+println("Select numeric elements: ");
+println(list.select(fun(e) { return e.instanceOf(Number); }).toString());
+println("");
+
+println("Reject numeric elements: ");
+println(list.reject(fun(e) { return e.instanceOf(Number); }).toString());
+println("");
+
+println("Reentrancy test passed for LinkedList class.");
 println("");

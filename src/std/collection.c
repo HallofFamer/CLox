@@ -343,6 +343,20 @@ static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
     }
 }
 
+Value newCollection(VM* vm, ObjClass* klass) {
+    switch (klass->obj.type) {
+        case OBJ_ARRAY: return OBJ_VAL(newArray(vm));
+        case OBJ_DICTIONARY: return OBJ_VAL(newDictionary(vm));
+        case OBJ_RANGE: return OBJ_VAL(newRange(vm, 0, 0));
+        default: {
+            ObjInstance* collection = newInstance(vm, klass);
+            Value initMethod = getObjMethod(vm, OBJ_VAL(collection), "init");
+            callReentrant(vm, OBJ_VAL(collection), initMethod);
+            return OBJ_VAL(collection);
+        }
+    }
+}
+
 ObjInstance* setCopy(VM* vm, ObjInstance* original) {
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, original, "dict"));
     ObjDictionary* dict2 = newDictionary(vm);
@@ -628,6 +642,168 @@ LOX_METHOD(ArrayClass, fromElements) {
     push(vm, OBJ_VAL(array));
     for (int i = 0; i < argCount; i++) {
         valueArrayWrite(vm, &array->elements, args[i]);
+    }
+    pop(vm);
+    RETURN_OBJ(array);
+}
+
+LOX_METHOD(Collection, add) {
+    raiseError(vm, "Not implemented, subclass responsibility.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(Collection, addAll) {
+    ASSERT_ARG_COUNT("Collection::addAll(collection)", 1);
+    ASSERT_ARG_INSTANCE_OF("Collection::addAll(collection)", 0, Collection);
+    Value collection = args[0];
+    Value addMethod = getObjMethod(vm, receiver, "add");
+    Value nextMethod = getObjMethod(vm, collection, "next");
+    Value nextValueMethod = getObjMethod(vm, collection, "nextValue");
+    Value index = callReentrant(vm, collection, nextMethod, NIL_VAL);
+
+    while (index != NIL_VAL) {
+        Value element = callReentrant(vm, collection, nextValueMethod, index);
+        callReentrant(vm, receiver, addMethod, element);
+        index = callReentrant(vm, collection, nextMethod, index);
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(Collection, collect) {
+    ASSERT_ARG_COUNT("Collection::collect(closure)", 1);
+    ASSERT_ARG_TYPE("Collection::collect(closure)", 0, Closure);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value addMethod = getObjMethod(vm, receiver, "add");
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
+    Value index = callReentrant(vm, receiver, nextMethod, NIL_VAL);
+
+    Value collected = newCollection(vm, getObjClass(vm, receiver));
+    push(vm, collected);
+    while (index != NIL_VAL) {
+        Value element = callReentrant(vm, receiver, nextValueMethod, index);
+        Value result = callReentrant(vm, receiver, OBJ_VAL(closure), element);
+        callReentrant(vm, collected, addMethod, result);
+        index = callReentrant(vm, receiver, nextMethod, index);
+    }
+    pop(vm);
+    RETURN_OBJ(collected);
+}
+
+LOX_METHOD(Collection, detect) {
+    ASSERT_ARG_COUNT("Collection::detect(closure)", 1);
+    ASSERT_ARG_TYPE("Collection::detect(closure)", 0, Closure);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
+    Value index = callReentrant(vm, receiver, nextMethod, NIL_VAL);
+
+    while (index != NIL_VAL) {
+        Value element = callReentrant(vm, receiver, nextValueMethod, index);
+        Value result = callReentrant(vm, receiver, OBJ_VAL(closure), element);
+        if (!isFalsey(result)) RETURN_VAL(element);
+        index = callReentrant(vm, receiver, nextMethod, index);
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(Collection, each) {
+    ASSERT_ARG_COUNT("Collection::each(closure)", 1);
+    ASSERT_ARG_TYPE("Collection::each(closure)", 0, Closure);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
+    Value index = callReentrant(vm, receiver, nextMethod, NIL_VAL);
+
+    while (index != NIL_VAL) {
+        Value element = callReentrant(vm, receiver, nextValueMethod, index);
+        Value result = callReentrant(vm, receiver, OBJ_VAL(closure), element);
+        index = callReentrant(vm, receiver, nextMethod, index);
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(Collection, init) {
+    raiseError(vm, "Cannot instantiate from class Collection.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(Collection, isEmpty) {
+    ASSERT_ARG_COUNT("Collection::isEmpty()", 1);
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value index = callReentrant(vm, receiver, nextMethod, NIL_VAL);
+    RETURN_BOOL(index == NIL_VAL);
+}
+
+LOX_METHOD(Collection, length) {
+    ASSERT_ARG_COUNT("Collection::length()", 1);
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value index = callReentrant(vm, receiver, nextMethod, NIL_VAL);
+    
+    int length = 0;
+    while (index != NIL_VAL) {
+        index = callReentrant(vm, receiver, nextMethod, index);
+        length++;
+    }
+    RETURN_INT(length);
+}
+
+LOX_METHOD(Collection, reject) {
+    ASSERT_ARG_COUNT("Collection::reject(closure)", 1);
+    ASSERT_ARG_TYPE("Collection::reject(closure)", 0, Closure);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value addMethod = getObjMethod(vm, receiver, "add");
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
+    Value index = callReentrant(vm, receiver, nextMethod, NIL_VAL);
+
+    Value rejected = newCollection(vm, getObjClass(vm, receiver));
+    push(vm, rejected);
+    while (index != NIL_VAL) {
+        Value element = callReentrant(vm, receiver, nextValueMethod, index);
+        Value result = callReentrant(vm, receiver, OBJ_VAL(closure), element);
+        if(isFalsey(result)) callReentrant(vm, rejected, addMethod, element);
+        index = callReentrant(vm, receiver, nextMethod, index);
+    }
+    pop(vm);
+    RETURN_OBJ(rejected);
+}
+
+LOX_METHOD(Collection, select) {
+    ASSERT_ARG_COUNT("Collection::select(closure)", 1);
+    ASSERT_ARG_TYPE("Collection::select(closure)", 0, Closure);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value addMethod = getObjMethod(vm, receiver, "add");
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
+    Value index = callReentrant(vm, receiver, nextMethod, NIL_VAL);
+
+    Value selected = newCollection(vm, getObjClass(vm, receiver));
+    push(vm, selected);
+    while (index != NIL_VAL) {
+        Value element = callReentrant(vm, receiver, nextValueMethod, index);
+        Value result = callReentrant(vm, receiver, OBJ_VAL(closure), element);
+        if (!isFalsey(result)) callReentrant(vm, selected, addMethod, element);
+        index = callReentrant(vm, receiver, nextMethod, index);
+    }
+    pop(vm);
+    RETURN_OBJ(selected);
+}
+
+LOX_METHOD(Collection, toArray) {
+    ASSERT_ARG_COUNT("Collection::toArray(closure)", 1);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value addMethod = getObjMethod(vm, receiver, "add");
+    Value nextMethod = getObjMethod(vm, receiver, "next");
+    Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
+    Value index = callReentrant(vm, receiver, nextMethod, NIL_VAL);
+
+    ObjArray* array = newArray(vm);
+    push(vm, OBJ_VAL(array));
+    while (index != NIL_VAL) {
+        Value element = callReentrant(vm, receiver, nextValueMethod, index);
+        valueArrayWrite(vm, &array->elements, element);
+        index = callReentrant(vm, receiver, nextMethod, index);
     }
     pop(vm);
     RETURN_OBJ(array);
@@ -1104,8 +1280,8 @@ LOX_METHOD(LinkedList, nextValue) {
     ObjInstance* self = AS_INSTANCE(receiver);
     int length = AS_INT(getObjProperty(vm, self, "length"));
     int index = AS_INT(args[0]);
-    if (index == 0) RETURN_VAL(getObjProperty(vm, self, "first"));
-    if (index > 0 && index < length) RETURN_VAL(getObjProperty(vm, self, "current"));
+    if (index == 0) RETURN_VAL(AS_NODE(getObjProperty(vm, self, "first"))->element);
+    if (index > 0 && index < length) RETURN_VAL(AS_NODE(getObjProperty(vm, self, "current"))->element);
     RETURN_NIL;
 }
 
@@ -1824,8 +2000,22 @@ LOX_METHOD(Stack, toString) {
 
 void registerCollectionPackage(VM* vm) {
     loadSourceFile(vm, "src/std/collection.lox");
-    ObjClass* collectionClass = getNativeClass(vm, "Collection");
+    ObjClass* enumerableTrait = getNativeClass(vm, "TEnumerable");
+
+    ObjClass* collectionClass = defineNativeClass(vm, "Collection");
     bindSuperclass(vm, collectionClass, vm->objectClass);
+    bindTrait(vm, collectionClass, enumerableTrait);
+    DEF_METHOD(collectionClass, Collection, add, 1);
+    DEF_METHOD(collectionClass, Collection, addAll, 1);
+    DEF_METHOD(collectionClass, Collection, collect, 1);
+    DEF_METHOD(collectionClass, Collection, detect, 1);
+    DEF_METHOD(collectionClass, Collection, each, 1);
+    DEF_METHOD(collectionClass, Collection, init, 0);
+    DEF_METHOD(collectionClass, Collection, isEmpty, 0);
+    DEF_METHOD(collectionClass, Collection, length, 0);
+    DEF_METHOD(collectionClass, Collection, reject, 1);
+    DEF_METHOD(collectionClass, Collection, select, 1);
+    DEF_METHOD(collectionClass, Collection, toArray, 0);
 
     ObjClass* listClass = defineNativeClass(vm, "List");
     bindSuperclass(vm, listClass, collectionClass);
