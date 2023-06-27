@@ -1998,9 +1998,20 @@ LOX_METHOD(Stack, toString) {
     RETURN_OBJ(linkToString(vm, self));
 }
 
+LOX_METHOD(TEnumerable, next) {
+    raiseError(vm, "Not implemented, subclass responsibility.");
+    RETURN_NIL;
+}
+
+LOX_METHOD(TEnumerable, nextValue) {
+    raiseError(vm, "Not implemented, subclass responsibility.");
+    RETURN_NIL;
+}
+
 void registerCollectionPackage(VM* vm) {
-    loadSourceFile(vm, "src/std/collection.lox");
-    ObjClass* enumerableTrait = getNativeClass(vm, "TEnumerable");
+    ObjClass* enumerableTrait = defineNativeTrait(vm, "TEnumerable");
+    DEF_METHOD(enumerableTrait, TEnumerable, next, 1);
+    DEF_METHOD(enumerableTrait, TEnumerable, nextValue, 1);
 
     ObjClass* collectionClass = defineNativeClass(vm, "Collection");
     bindSuperclass(vm, collectionClass, vm->objectClass);
