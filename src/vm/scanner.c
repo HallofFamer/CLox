@@ -136,7 +136,13 @@ static TokenType checkKeyword(Scanner* scanner, int start, int length,
 
 static TokenType identifierType(Scanner* scanner) {
     switch (scanner->start[0]) {
-        case 'a': return checkKeyword(scanner, 1, 2, "nd", TOKEN_AND);
+        case 'a': 
+            if (scanner->current - scanner->start > 1) {
+                switch (scanner->start[1]) {
+                    case 'n': return checkKeyword(scanner, 2, 1, "d", TOKEN_AND);
+                    case 's': return checkKeyword(scanner, 2, 0, "", TOKEN_AS);
+                }
+            }          
         case 'b': return checkKeyword(scanner, 1, 4, "reak", TOKEN_BREAK);
         case 'c':
             if (scanner->current - scanner->start > 1) {

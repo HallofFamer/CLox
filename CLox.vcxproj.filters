@@ -213,6 +213,9 @@
     <None Include="test\lox\reentrancy.lox">
       <Filter>Test Files\lox</Filter>
     </None>
+    <None Include="test\lox\namespace.lox">
+      <Filter>Test Files\lox</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vm\assert.h">

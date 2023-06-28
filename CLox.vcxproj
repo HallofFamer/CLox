@@ -190,6 +190,7 @@
     <None Include="test\lox\linkedlist.lox" />
     <None Include="test\lox\loop.lox" />
     <None Include="test\lox\method.lox" />
+    <None Include="test\lox\namespace.lox" />
     <None Include="test\lox\native.lox" />
     <None Include="test\lox\object.lox" />
     <None Include="test\lox\queue.lox" />
