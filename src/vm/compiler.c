@@ -722,6 +722,7 @@ ParseRule rules[] = {
     [TOKEN_NUMBER]        = {number,     NULL,        PREC_NONE},
     [TOKEN_INT]           = {integer,    NULL,        PREC_NONE},
     [TOKEN_AND]           = {NULL,       and_,        PREC_AND},
+    [TOKEN_AS]            = {NULL,       NULL,        PREC_NONE},
     [TOKEN_BREAK]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_CASE]          = {NULL,       NULL,        PREC_NONE},
     [TOKEN_CLASS]         = {klass,      NULL,        PREC_NONE},
@@ -731,12 +732,14 @@ ParseRule rules[] = {
     [TOKEN_FOR]           = {NULL,       NULL,        PREC_NONE},
     [TOKEN_FUN]           = {closure,    NULL,        PREC_NONE},
     [TOKEN_IF]            = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_NAMESPACE]     = {NULL,       NULL,        PREC_NONE},
     [TOKEN_NIL]           = {literal,    NULL,        PREC_NONE},
     [TOKEN_OR]            = {NULL,       or_,         PREC_OR},
     [TOKEN_REQUIRE]       = {NULL,       NULL,        PREC_NONE},
     [TOKEN_RETURN]        = {NULL,       NULL,        PREC_NONE},
     [TOKEN_SUPER]         = {super_,     NULL,        PREC_NONE},
     [TOKEN_SWITCH]        = {NULL,       NULL,        PREC_NONE},
+    [TOKEN_USING]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_THIS]          = {this_,      NULL,        PREC_NONE},
     [TOKEN_TRAIT]         = {trait,      NULL,        PREC_NONE},
     [TOKEN_TRUE]          = {literal,    NULL,        PREC_NONE},
@@ -924,6 +927,21 @@ static void funDeclaration(Compiler* compiler) {
     markInitialized(compiler, false);
     function(compiler, TYPE_FUNCTION);
     defineVariable(compiler, global, false);
+}
+
+static void namespaceDeclaration(Compiler* compiler) {
+    uint8_t namespaceDepth = 0;
+    do {
+        if (namespaceDepth > UINT4_MAX) {
+            errorAtCurrent(compiler->parser, "Can't have more than 15 levels of namespace depth.");
+        }
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace name.");
+        variable(compiler, false);
+        namespaceDepth++;
+    } while (match(compiler->parser, TOKEN_DOT));
+
+    consume(compiler->parser, TOKEN_SEMICOLON, "Expect semicolon after namespace declaration.");
+    //emitBytes(compiler, OP_NAMESPACE, namespaceDepth);
 }
 
 static void traitDeclaration(Compiler* compiler) {
@@ -1186,6 +1204,9 @@ static void declaration(Compiler* compiler) {
     else if (check(compiler->parser, TOKEN_FUN) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
         advance(compiler->parser);
         funDeclaration(compiler);
+    }
+    else if (match(compiler->parser, TOKEN_NAMESPACE)) {
+        namespaceDeclaration(compiler);
     }
     else if (check(compiler->parser, TOKEN_TRAIT) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
         advance(compiler->parser);

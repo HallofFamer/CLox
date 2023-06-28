@@ -20,6 +20,7 @@ void assertArgIsEntry(VM* vm, const char* method, Value* args, int index);
 void assertArgIsFile(VM* vm, const char* method, Value* args, int index);
 void assertArgIsFloat(VM* vm, const char* method, Value* args, int index);
 void assertArgIsInt(VM* vm, const char* method, Value* args, int index);
+void assertArgIsNamespace(VM* vm, const char* method, Value* args, int index);
 void assertArgIsNode(VM* vm, const char* method, Value* args, int index);
 void assertArgIsNumber(VM* vm, const char* method, Value* args, int index);
 void assertArgIsRange(VM* vm, const char* method, Value* args, int index);

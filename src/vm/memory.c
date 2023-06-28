@@ -284,6 +284,7 @@ static void markRoots(VM* vm) {
         markObject(vm, (Obj*)upvalue);
     }
 
+    markTable(vm, &vm->namespaces);
     markTable(vm, &vm->globalValues);
     markTable(vm, &vm->globalVariables);
     markCompilerRoots(vm);

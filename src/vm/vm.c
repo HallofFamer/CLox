@@ -133,6 +133,7 @@ void initVM(VM* vm) {
     vm->grayCapacity = 0;
     vm->grayStack = NULL;
 
+    initTable(&vm->namespaces);
     initTable(&vm->globalValues);
     initTable(&vm->globalVariables);
     initTable(&vm->strings);

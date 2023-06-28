@@ -83,6 +83,13 @@ void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
+void assertArgIsNamespace(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_NAMESPACE(args[index]) && !isObjInstanceOf(vm, args[index], vm->namespaceClass)) {
+        runtimeError(vm, "method %s expects argument %d to be a namespace.", method, index + 1);
+        exit(70);
+    }
+}
+
 void assertArgIsNode(VM* vm, const char* method, Value* args, int index) {
     if (!IS_NODE(args[index]) && !isObjInstanceOf(vm, args[index], vm->nodeClass)) {
         runtimeError(vm, "method %s expects argument %d to be a link node.", method, index + 1);
