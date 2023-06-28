@@ -158,7 +158,13 @@ static TokenType identifierType(Scanner* scanner) {
             }
             break;
         case 'i': return checkKeyword(scanner, 1, 1, "f", TOKEN_IF);
-        case 'n': return checkKeyword(scanner, 1, 2, "il", TOKEN_NIL);
+        case 'n': 
+            if (scanner->current - scanner->start > 1) {
+                switch (scanner->start[1]) {
+                    case 'a': return checkKeyword(scanner, 2, 7, "mespace", TOKEN_NAMESPACE);
+                    case 'i': return checkKeyword(scanner, 2, 1, "l", TOKEN_NIL);
+                }
+            }
         case 'o': return checkKeyword(scanner, 1, 1, "r", TOKEN_OR);
         case 'r': 
             if (scanner->current - scanner->start > 2) {
@@ -184,6 +190,7 @@ static TokenType identifierType(Scanner* scanner) {
                 }
             }
             break;
+        case 'u': return checkKeyword(scanner, 1, 1, "sing", TOKEN_USING);
         case 'v': 
             if (scanner->current - scanner->start > 2) {
                 switch (scanner->start[2]) {
