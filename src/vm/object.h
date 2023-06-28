@@ -253,7 +253,6 @@ void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject);
 Value getClassProperty(VM* vm, ObjClass* klass, char* name);
 void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value);
 Value getObjMethod(VM* vm, Value object, char* name);
-Value invokeObjMethod(VM* vm, Value object, char* name, ...);
 void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type) {

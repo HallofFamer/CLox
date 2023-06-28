@@ -372,27 +372,6 @@ Value getObjMethod(VM* vm, Value object, char* name) {
     return method;
 }
 
-Value invokeObjMethod(VM* vm, Value object, char* name, ...) {
-    Value method = getObjMethod(vm, object, name);
-    push(vm, method);
-    int argCount = IS_NATIVE_METHOD(method) ? AS_NATIVE_METHOD(method)->arity : AS_CLOSURE(method)->function->arity;
-    va_list args;
-    va_start(args, name);
-    for (int i = 0; i < argCount; i++) {
-        push(vm, va_arg(args, Value));
-    }
-    va_end(args);
-
-    callMethod(vm, method, argCount);
-    if (IS_CLOSURE(method)) {
-        vm->apiStackDepth++;
-        run(vm);
-        vm->apiStackDepth--;
-    }
-    Value result = pop(vm);
-    return result;
-}
-
 static void printArray(ObjArray* array) {
     printf("[");
     for (int i = 0; i < array->elements.count; i++) {
@@ -466,6 +445,9 @@ void printObject(Value value) {
         case OBJ_DICTIONARY:
             printDictionary(AS_DICTIONARY(value));
             break;
+        case OBJ_ENTRY:
+            printf("<entry>");
+            break;
         case OBJ_FILE:
             printf("<file \"%s\">", AS_FILE(value)->name->chars);
             break;
@@ -477,6 +459,9 @@ void printObject(Value value) {
             break;
         case OBJ_METHOD:
             printf("<method %s::%s>", AS_METHOD(value)->behavior->name->chars, AS_METHOD(value)->closure->function->name->chars);
+            break;
+        case OBJ_NODE:
+            printf("<node>");
             break;
         case OBJ_NAMESPACE:
             printf("<namespace %s.%s>", AS_NAMESPACE(value)->path->chars, AS_NAMESPACE(value)->name->chars);
