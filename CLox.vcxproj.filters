@@ -171,9 +171,6 @@
     <None Include="test\lox\file.lox">
       <Filter>Test Files\lox</Filter>
     </None>
-    <None Include="src\std\collection.lox">
-      <Filter>Source Files\std</Filter>
-    </None>
     <None Include="test\lox\array.lox">
       <Filter>Test Files\lox</Filter>
     </None>
