@@ -24,6 +24,7 @@ typedef enum {
     OP_GET_SUBSCRIPT,
     OP_SET_SUBSCRIPT,
     OP_GET_SUPER,
+    OP_GET_NAMESPACE,
     OP_EQUAL,
     OP_GREATER,
     OP_LESS,
@@ -53,6 +54,7 @@ typedef enum {
     OP_DICTIONARY,
     OP_RANGE,
     OP_REQUIRE,
+    OP_NAMESPACE,
     OP_RETURN,
     OP_RETURN_NONLOCAL,
     OP_END

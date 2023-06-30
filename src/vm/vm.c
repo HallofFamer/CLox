@@ -666,6 +666,10 @@ InterpretResult run(VM* vm) {
                 }
                 break;
             }
+            case OP_GET_NAMESPACE: { 
+                ObjString* name = READ_STRING();
+                break;
+            }
             case OP_EQUAL: {
                 Value b = pop(vm);
                 Value a = pop(vm);
@@ -896,6 +900,10 @@ InterpretResult run(VM* vm) {
                 push(vm, OBJ_VAL(closure));
                 callClosure(vm, closure, 0);
                 frame = &vm->frames[vm->frameCount - 1];
+                break;
+            }
+            case OP_NAMESPACE: {
+                printf("Declaring namespace: \n");
                 break;
             }
             case OP_RETURN: {

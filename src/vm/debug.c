@@ -111,6 +111,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return simpleInstruction("OP_SET_SUBSCRIPT", offset);
           case OP_GET_SUPER:
               return constantInstruction("OP_GET_SUPER", chunk, offset);
+          case OP_GET_NAMESPACE:
+              return constantInstruction("OP_GET_NAMESPACE", chunk, offset);
           case OP_EQUAL:
               return simpleInstruction("OP_EQUAL", offset);
           case OP_GREATER:
@@ -169,6 +171,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return simpleInstruction("OP_RANGE", offset);
           case OP_REQUIRE:
               return simpleInstruction("OP_REQUIRE", offset);
+          case OP_NAMESPACE:
+              return byteInstruction("OP_NAMESPACE", chunk, offset);
           case OP_RETURN:
               return simpleInstruction("OP_RETURN", offset);
           case OP_RETURN_NONLOCAL:
