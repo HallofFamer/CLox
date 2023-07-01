@@ -133,7 +133,6 @@ void initVM(VM* vm) {
     vm->grayCapacity = 0;
     vm->grayStack = NULL;
 
-    initTable(&vm->namespaces);
     initTable(&vm->globalValues);
     initTable(&vm->globalVariables);
     initTable(&vm->strings);
@@ -666,10 +665,6 @@ InterpretResult run(VM* vm) {
                 }
                 break;
             }
-            case OP_GET_NAMESPACE: { 
-                ObjString* name = READ_STRING();
-                break;
-            }
             case OP_EQUAL: {
                 Value b = pop(vm);
                 Value a = pop(vm);
@@ -903,7 +898,8 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_NAMESPACE: {
-                printf("Declaring namespace: \n");
+                ObjString* name = READ_STRING();
+                printf("Current namespace: %s\n", name->chars);
                 break;
             }
             case OP_RETURN: {

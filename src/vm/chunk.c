@@ -54,7 +54,6 @@ int opCodeOffset(Chunk* chunk, int ip) {
         case OP_SET_LOCAL:
         case OP_GET_UPVALUE:
         case OP_SET_UPVALUE:
-        case OP_GET_NAMESPACE:
         case OP_JUMP_IF_FALSE:
         case OP_JUMP_IF_EMPTY:
         case OP_JUMP:
