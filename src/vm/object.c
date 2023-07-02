@@ -109,10 +109,10 @@ ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure) {
     return method;
 }
 
-ObjNamespace* newNamespace(VM* vm, ObjString* name, ObjString* path) {
+ObjNamespace* newNamespace(VM* vm, ObjString* name, ObjNamespace* enclosing) {
     ObjNamespace* namespace = ALLOCATE_OBJ(ObjNamespace, OBJ_NAMESPACE, vm->namespaceClass);
     namespace->name = name;
-    namespace->path = path;
+    namespace->enclosing = enclosing;
     initTable(&namespace->values);
     return namespace;
 }
@@ -460,17 +460,17 @@ void printObject(Value value) {
         case OBJ_METHOD:
             printf("<method %s::%s>", AS_METHOD(value)->behavior->name->chars, AS_METHOD(value)->closure->function->name->chars);
             break;
-        case OBJ_NODE:
-            printf("<node>");
-            break;
         case OBJ_NAMESPACE:
-            printf("<namespace %s.%s>", AS_NAMESPACE(value)->path->chars, AS_NAMESPACE(value)->name->chars);
+            printf("<namespace %s>", AS_NAMESPACE(value)->name->chars);
             break;
         case OBJ_NATIVE_FUNCTION:
             printf("<native function %s>", AS_NATIVE_FUNCTION(value)->name->chars);
             break;
         case OBJ_NATIVE_METHOD:
             printf("<native method %s::%s>", AS_NATIVE_METHOD(value)->klass->name->chars, AS_NATIVE_METHOD(value)->name->chars);
+            break;
+        case OBJ_NODE:
+            printf("<node>");
             break;
         case OBJ_RANGE:
             printf("%d..%d", AS_RANGE(value)->from, AS_RANGE(value)->to);

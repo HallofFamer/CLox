@@ -138,7 +138,7 @@ static void blackenObject(VM* vm, Obj* object) {
         case OBJ_NAMESPACE: {
             ObjNamespace* namespace = (ObjNamespace*)object;
             markObject(vm, (Obj*)namespace->name);
-            markObject(vm, (Obj*)namespace->path);
+            if(namespace->enclosing != NULL) markObject(vm, (Obj*)namespace->enclosing);
             markTable(vm, &namespace->values);
             break;
         }
@@ -284,7 +284,6 @@ static void markRoots(VM* vm) {
         markObject(vm, (Obj*)upvalue);
     }
 
-    markTable(vm, &vm->namespaces);
     markTable(vm, &vm->globalValues);
     markTable(vm, &vm->globalVariables);
     markCompilerRoots(vm);

@@ -101,6 +101,11 @@ typedef void (*FreeFunction)(void* data);
 
 typedef struct {
     Obj obj;
+    Table fields;
+} ObjInstance;
+
+typedef struct {
+    Obj obj;
     ObjString* name;
     int arity;
     NativeFunction function;
@@ -113,20 +118,6 @@ typedef struct {
     int arity;
     NativeMethod method;
 } ObjNativeMethod;
-
-struct ObjNode {
-    Obj obj;
-    Value element;
-    struct ObjNode* prev;
-    struct ObjNode* next;
-};
-
-struct ObjString {
-    Obj obj;
-    int length;
-    uint32_t hash;
-    char chars[];
-};
 
 typedef struct {
     Obj obj;
@@ -153,13 +144,6 @@ typedef struct {
     bool isOpen;
     FILE* file;
 } ObjFile;
-
-typedef struct {
-    Obj obj;
-    ObjString* name;
-    ObjString* path;
-    Table values;
-} ObjNamespace;
 
 typedef struct {
     Obj obj;
@@ -211,10 +195,26 @@ struct ObjClass {
     Table methods;
 };
 
-typedef struct {
+struct ObjNamespace {
     Obj obj;
-    Table fields;
-} ObjInstance;
+    ObjString* name;
+    struct ObjNamespace* enclosing;
+    Table values;
+};
+
+struct ObjNode {
+    Obj obj;
+    Value element;
+    struct ObjNode* prev;
+    struct ObjNode* next;
+};
+
+struct ObjString {
+    Obj obj;
+    int length;
+    uint32_t hash;
+    char chars[];
+};
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
 ObjArray* newArray(VM* vm);
@@ -226,8 +226,8 @@ ObjEntry* newEntry(VM* vm, Value key, Value value);
 ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
-ObjNamespace* newNamespace(VM* vm, ObjString* name, ObjString* path);
 ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure);
+ObjNamespace* newNamespace(VM* vm, ObjString* name, ObjNamespace* enclosing);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
