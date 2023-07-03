@@ -197,7 +197,8 @@ struct ObjClass {
 
 struct ObjNamespace {
     Obj obj;
-    ObjString* name;
+    ObjString* shortName;
+    ObjString* fullName;
     struct ObjNamespace* enclosing;
     Table values;
 };

@@ -51,7 +51,10 @@ struct VM {
     ObjClass* entryClass;
     ObjClass* fileClass;
 
-    ObjNamespace* defaultNamespace;
+    ObjNamespace* rootNamespace;
+    ObjNamespace* cloxNamespace;
+    ObjNamespace* stdNamespace;
+    ObjNamespace* langNamespace;
     ObjNamespace* currentNamespace;
 
     CallFrame frames[FRAMES_MAX];

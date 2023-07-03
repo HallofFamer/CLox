@@ -109,10 +109,17 @@ ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure) {
     return method;
 }
 
-ObjNamespace* newNamespace(VM* vm, ObjString* name, ObjNamespace* enclosing) {
+ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing) {
     ObjNamespace* namespace = ALLOCATE_OBJ(ObjNamespace, OBJ_NAMESPACE, vm->namespaceClass);
-    namespace->name = name;
+    namespace->shortName = shortName;
     namespace->enclosing = enclosing;
+    if (namespace->enclosing != NULL) {
+        char chars[UINT8_MAX];
+        int length = sprintf_s(chars, namespace->enclosing->fullName->length + shortName->length + 1, "%s.%s",
+            namespace->enclosing->fullName->chars, shortName->chars);
+        namespace->fullName = copyString(vm, chars, length);
+    }
+    else namespace->fullName = namespace->shortName;
     initTable(&namespace->values);
     return namespace;
 }
@@ -461,7 +468,7 @@ void printObject(Value value) {
             printf("<method %s::%s>", AS_METHOD(value)->behavior->name->chars, AS_METHOD(value)->closure->function->name->chars);
             break;
         case OBJ_NAMESPACE:
-            printf("<namespace %s>", AS_NAMESPACE(value)->name->chars);
+            printf("<namespace %s>", AS_NAMESPACE(value)->fullName->chars);
             break;
         case OBJ_NATIVE_FUNCTION:
             printf("<native function %s>", AS_NATIVE_FUNCTION(value)->name->chars);
