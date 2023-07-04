@@ -27,7 +27,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name);
 void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction function);
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, NativeMethod method);
 ObjClass* defineNativeTrait(VM * vm, const char* name);
-ObjNamespace* defineNativeNamespace(VM* vm, const char* path, const char* name);
+ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* enclosing);
 ObjClass* defineSpecialClass(VM * vm, const char* name, BehaviorType behavior);
 ObjClass* getNativeClass(VM* vm, const char* name);
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name);

@@ -117,13 +117,10 @@ ObjClass* defineNativeTrait(VM* vm, const char* name) {
     return nativeTrait;
 }
 
-ObjNamespace* defineNativeNamespace(VM* vm, const char* path, const char* name) {
-    ObjString* parentPath = newString(vm, path);
-    push(vm, OBJ_VAL(parentPath));
+ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* enclosing) {
     ObjString* shortName = newString(vm, name);
     push(vm, OBJ_VAL(shortName));
-    ObjNamespace* namespace = newNamespace(vm, shortName, parentPath);
-    pop(vm);
+    ObjNamespace* namespace = newNamespace(vm, shortName, enclosing);
     pop(vm);
     return namespace;
 }
