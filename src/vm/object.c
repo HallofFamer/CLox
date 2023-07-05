@@ -113,10 +113,9 @@ ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing
     ObjNamespace* namespace = ALLOCATE_OBJ(ObjNamespace, OBJ_NAMESPACE, vm->namespaceClass);
     namespace->shortName = shortName;
     namespace->enclosing = enclosing;
-    if (namespace->enclosing != NULL) {
+    if (namespace->enclosing != NULL && namespace->enclosing->shortName->length > 0) {
         char chars[UINT8_MAX];
-        int length = sprintf_s(chars, namespace->enclosing->fullName->length + shortName->length + 1, "%s.%s",
-            namespace->enclosing->fullName->chars, shortName->chars);
+        int length = sprintf_s(chars, UINT8_MAX, "%s.%s", namespace->enclosing->fullName->chars, shortName->chars);
         namespace->fullName = copyString(vm, chars, length);
     }
     else namespace->fullName = namespace->shortName;

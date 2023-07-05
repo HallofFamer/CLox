@@ -1267,12 +1267,10 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->traitClass, Trait, superclass, 0);
     DEF_METHOD(vm->traitClass, Trait, toString, 0);
 
-    //ObjNamespace* langNamespace = defineNativeNamespace(vm, "clox.std", "lang");
     vm->rootNamespace = defineNativeNamespace(vm, "", NULL);
     vm->cloxNamespace = defineNativeNamespace(vm, "clox", vm->rootNamespace);
     vm->stdNamespace = defineNativeNamespace(vm, "std", vm->cloxNamespace);
     vm->langNamespace = defineNativeNamespace(vm, "lang", vm->stdNamespace);
-    printValue(vm->langNamespace);
 
     vm->nilClass = defineNativeClass(vm, "Nil");
     bindSuperclass(vm, vm->nilClass, vm->objectClass);
