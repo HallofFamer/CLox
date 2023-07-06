@@ -137,7 +137,7 @@ static void blackenObject(VM* vm, Obj* object) {
         }
         case OBJ_NAMESPACE: {
             ObjNamespace* namespace = (ObjNamespace*)object;
-            markObject(vm, (Obj*)namespace->name);
+            markObject(vm, (Obj*)namespace->shortName);
             if(namespace->enclosing != NULL) markObject(vm, (Obj*)namespace->enclosing);
             markTable(vm, &namespace->values);
             break;
