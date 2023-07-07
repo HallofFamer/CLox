@@ -1271,6 +1271,7 @@ void registerLangPackage(VM* vm) {
     vm->cloxNamespace = defineNativeNamespace(vm, "clox", vm->rootNamespace);
     vm->stdNamespace = defineNativeNamespace(vm, "std", vm->cloxNamespace);
     vm->langNamespace = defineNativeNamespace(vm, "lang", vm->stdNamespace);
+    vm->currentNamespace = vm->rootNamespace;
 
     vm->nilClass = defineNativeClass(vm, "Nil");
     bindSuperclass(vm, vm->nilClass, vm->objectClass);
