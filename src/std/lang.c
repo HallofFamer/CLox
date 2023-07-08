@@ -643,6 +643,25 @@ LOX_METHOD(Namespace, clone) {
     RETURN_OBJ(receiver);
 }
 
+LOX_METHOD(Namespace, enclosing) {
+    ASSERT_ARG_COUNT("Namespace::enclosing()", 0);
+    ObjNamespace* self = AS_NAMESPACE(receiver);
+    if (self->enclosing != NULL && self->enclosing->enclosing != NULL) RETURN_OBJ(self->enclosing);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Namespace, fullName) {
+    ASSERT_ARG_COUNT("Namespace::fullName()", 0);
+    ObjNamespace* self = AS_NAMESPACE(receiver);
+    RETURN_OBJ(self->fullName);
+}
+
+LOX_METHOD(Namespace, shortName) {
+    ASSERT_ARG_COUNT("Namespace::shortName()", 0);
+    ObjNamespace* self = AS_NAMESPACE(receiver);
+    RETURN_OBJ(self->shortName);
+}
+
 LOX_METHOD(Namespace, init) {
     raiseError(vm, "Cannot instantiate from class Namespace.");
     RETURN_NIL;
@@ -1253,7 +1272,10 @@ void registerLangPackage(VM* vm) {
     vm->namespaceClass = defineNativeClass(vm, "Namespace");
     bindSuperclass(vm, vm->namespaceClass, vm->objectClass);
     DEF_METHOD(vm->namespaceClass, Namespace, clone, 0);
+    DEF_METHOD(vm->namespaceClass, Namespace, enclosing, 0);
+    DEF_METHOD(vm->namespaceClass, Namespace, fullName, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, init, 0);
+    DEF_METHOD(vm->namespaceClass, Namespace, shortName, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, toString, 0);
 
     vm->traitClass = defineNativeClass(vm, "Trait");
