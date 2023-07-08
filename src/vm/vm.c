@@ -899,9 +899,20 @@ InterpretResult run(VM* vm) {
             }
             case OP_NAMESPACE: {
                 ObjString* name = READ_STRING();
-                printf("Current namespace: %s\n", name->chars);
+                Value value;
+                if (!tableGet(&vm->currentNamespace->values, name, &value)) {
+                    value = defineNativeNamespace(vm, name->chars, vm->currentNamespace);
+                }
+                else if (!IS_NAMESPACE(value)) {
+                    runtimeError(vm, "%s is not a namespace", name->chars);
+                }
+                vm->currentNamespace = AS_NAMESPACE(value);
+                printf("Current namespace: %s\n", vm->currentNamespace->fullName->chars);
                 break;
             }
+            case OP_USING:
+                printf("Importing namespace...");
+                break;
             case OP_RETURN: {
                 Value result = pop(vm);
                 closeUpvalues(vm, frame->slots);
