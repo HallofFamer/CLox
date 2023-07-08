@@ -650,6 +650,11 @@ static void trait(Compiler* compiler, bool canAssign) {
     behavior(compiler, BEHAVIOR_TRAIT, syntheticToken("@"));
 }
 
+static void namespace_(Compiler* compiler, bool canAssign) {
+    uint8_t nameConstant = identifierConstant(compiler, &compiler->parser->previous);
+    emitBytes(compiler, OP_NAMESPACE, nameConstant);
+}
+
 static void super_(Compiler* compiler, bool canAssign) {
     if (compiler->parser->vm->currentClass == NULL) {
         error(compiler->parser, "Cannot use 'super' outside of a class.");
@@ -936,12 +941,11 @@ static void namespaceDeclaration(Compiler* compiler) {
             errorAtCurrent(compiler->parser, "Can't have more than 15 levels of namespace depth.");
         }
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace name.");
-        variable(compiler, false);
+        namespace_(compiler, false);
         namespaceDepth++;
     } while (match(compiler->parser, TOKEN_DOT));
 
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect semicolon after namespace declaration.");
-    //emitBytes(compiler, OP_NAMESPACE, namespaceDepth);
 }
 
 static void traitDeclaration(Compiler* compiler) {
