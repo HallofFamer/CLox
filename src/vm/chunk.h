@@ -54,6 +54,7 @@ typedef enum {
     OP_RANGE,
     OP_REQUIRE,
     OP_NAMESPACE,
+    OP_USING,
     OP_RETURN,
     OP_RETURN_NONLOCAL,
     OP_END
