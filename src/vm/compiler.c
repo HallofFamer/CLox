@@ -651,8 +651,9 @@ static void trait(Compiler* compiler, bool canAssign) {
 }
 
 static void namespace_(Compiler* compiler, bool canAssign) {
-    uint8_t nameConstant = identifierConstant(compiler, &compiler->parser->previous);
-    emitBytes(compiler, OP_NAMESPACE, nameConstant);
+    consume(compiler->parser, TOKEN_IDENTIFIER, "Expect Namespace identifier.");
+    ObjString* name = copyString(compiler->parser->vm, compiler->parser->previous.start, compiler->parser->previous.length);
+    emitConstant(compiler, OBJ_VAL(name));
 }
 
 static void super_(Compiler* compiler, bool canAssign) {
@@ -744,10 +745,10 @@ ParseRule rules[] = {
     [TOKEN_RETURN]        = {NULL,       NULL,        PREC_NONE},
     [TOKEN_SUPER]         = {super_,     NULL,        PREC_NONE},
     [TOKEN_SWITCH]        = {NULL,       NULL,        PREC_NONE},
-    [TOKEN_USING]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_THIS]          = {this_,      NULL,        PREC_NONE},
     [TOKEN_TRAIT]         = {trait,      NULL,        PREC_NONE},
     [TOKEN_TRUE]          = {literal,    NULL,        PREC_NONE},
+    [TOKEN_USING]         = {NULL,       NULL,        PREC_NONE},
     [TOKEN_VAL]           = {NULL,       NULL,        PREC_NONE},
     [TOKEN_VAR]           = {NULL,       NULL,        PREC_NONE},
     [TOKEN_WHILE]         = {NULL,       NULL,        PREC_NONE},
@@ -940,12 +941,12 @@ static void namespaceDeclaration(Compiler* compiler) {
         if (namespaceDepth > UINT4_MAX) {
             errorAtCurrent(compiler->parser, "Can't have more than 15 levels of namespace depth.");
         }
-        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace name.");
         namespace_(compiler, false);
         namespaceDepth++;
     } while (match(compiler->parser, TOKEN_DOT));
 
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect semicolon after namespace declaration.");
+    emitBytes(compiler, OP_NAMESPACE, namespaceDepth);
 }
 
 static void traitDeclaration(Compiler* compiler) {

@@ -242,6 +242,33 @@ static ObjArray* makeTraitArray(VM* vm, uint8_t behaviorCount) {
     return traits;
 }
 
+static ObjNamespace* defineNamespace(VM* vm, ObjString* name) {
+    Value value;
+    if (!tableGet(&vm->currentNamespace->values, name, &value)) {
+        value = defineNativeNamespace(vm, name->chars, vm->currentNamespace);
+    }
+    else if (!IS_NAMESPACE(value)) {
+        runtimeError(vm, "%s is not a namespace", name->chars);
+    }
+    return AS_NAMESPACE(value);
+}
+
+static void declareNamespace(VM* vm, uint8_t namespaceDepth) {
+    for (int i = 0; i < namespaceDepth; i++) {
+        ObjString* name = AS_STRING(peek(vm, namespaceDepth - i - 1));
+        Value value;
+        if (!tableGet(&vm->currentNamespace->values, name, &value)) {
+            vm->currentNamespace = defineNamespace(vm, name);
+        }
+        else vm->currentNamespace = AS_NAMESPACE(value);
+    }
+
+    while (namespaceDepth > 0) {
+        pop(vm);
+        namespaceDepth--;
+    }
+}
+
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
     if (closure->function->arity > 0 && argCount != closure->function->arity) {
         runtimeError(vm, "Expected %d arguments but got %d.", closure->function->arity, argCount);
@@ -898,15 +925,9 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_NAMESPACE: {
-                ObjString* name = READ_STRING();
-                Value value;
-                if (!tableGet(&vm->currentNamespace->values, name, &value)) {
-                    value = defineNativeNamespace(vm, name->chars, vm->currentNamespace);
-                }
-                else if (!IS_NAMESPACE(value)) {
-                    runtimeError(vm, "%s is not a namespace", name->chars);
-                }
-                vm->currentNamespace = AS_NAMESPACE(value);
+                uint8_t namespaceDepth = READ_BYTE();
+                vm->currentNamespace = vm->rootNamespace;
+                declareNamespace(vm, namespaceDepth);
                 printf("Current namespace: %s\n", vm->currentNamespace->fullName->chars);
                 break;
             }
