@@ -242,31 +242,22 @@ static ObjArray* makeTraitArray(VM* vm, uint8_t behaviorCount) {
     return traits;
 }
 
-static ObjNamespace* defineNamespace(VM* vm, ObjString* name) {
-    Value value;
-    if (!tableGet(&vm->currentNamespace->values, name, &value)) {
-        value = defineNativeNamespace(vm, name->chars, vm->currentNamespace);
-    }
-    else if (!IS_NAMESPACE(value)) {
-        runtimeError(vm, "%s is not a namespace", name->chars);
-    }
-    return AS_NAMESPACE(value);
-}
-
-static void declareNamespace(VM* vm, uint8_t namespaceDepth) {
-    for (int i = 0; i < namespaceDepth; i++) {
-        ObjString* name = AS_STRING(peek(vm, namespaceDepth - i - 1));
+static ObjNamespace* declareNamespace(VM* vm, uint8_t namespaceDepth) {
+    ObjNamespace* currentNamespace = vm->rootNamespace;
+    for (int i = namespaceDepth - 1; i >= 0; i--) {
+        ObjString* name = AS_STRING(peek(vm, i));
         Value value;
-        if (!tableGet(&vm->currentNamespace->values, name, &value)) {
-            vm->currentNamespace = defineNamespace(vm, name);
+        if (!tableGet(&currentNamespace->values, name, &value)) {
+            currentNamespace = defineNativeNamespace(vm, name->chars, currentNamespace);
         }
-        else vm->currentNamespace = AS_NAMESPACE(value);
+        else currentNamespace = AS_NAMESPACE(value);
     }
 
     while (namespaceDepth > 0) {
         pop(vm);
         namespaceDepth--;
     }
+    return currentNamespace;
 }
 
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
@@ -926,8 +917,7 @@ InterpretResult run(VM* vm) {
             }
             case OP_NAMESPACE: {
                 uint8_t namespaceDepth = READ_BYTE();
-                vm->currentNamespace = vm->rootNamespace;
-                declareNamespace(vm, namespaceDepth);
+                vm->currentNamespace = declareNamespace(vm, namespaceDepth);
                 printf("Current namespace: %s\n", vm->currentNamespace->fullName->chars);
                 break;
             }

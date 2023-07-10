@@ -1178,6 +1178,12 @@ static void switchStatement(Compiler* compiler) {
     emitByte(compiler, OP_POP);
 }
 
+static void usingStatement(Compiler* compiler) {
+    expression(compiler);
+    consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after using statement.");
+    emitByte(compiler, OP_USING);
+}
+
 static void whileStatement(Compiler* compiler) {
     int loopStart = compiler->innermostLoopStart;
     int scopeDepth = compiler->innermostLoopScopeDepth;
@@ -1247,6 +1253,9 @@ static void statement(Compiler* compiler) {
     }
     else if (match(compiler->parser, TOKEN_SWITCH)) {
         switchStatement(compiler);
+    }
+    else if (match(compiler->parser, TOKEN_USING)) {
+        usingStatement(compiler);
     }
     else if (match(compiler->parser, TOKEN_WHILE)) {
         whileStatement(compiler);
