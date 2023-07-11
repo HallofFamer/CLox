@@ -918,7 +918,6 @@ InterpretResult run(VM* vm) {
             case OP_NAMESPACE: {
                 uint8_t namespaceDepth = READ_BYTE();
                 vm->currentNamespace = declareNamespace(vm, namespaceDepth);
-                printf("Current namespace: %s\n", vm->currentNamespace->fullName->chars);
                 break;
             }
             case OP_USING:

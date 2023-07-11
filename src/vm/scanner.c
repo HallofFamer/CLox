@@ -196,7 +196,7 @@ static TokenType identifierType(Scanner* scanner) {
                 }
             }
             break;
-        case 'u': return checkKeyword(scanner, 1, 1, "sing", TOKEN_USING);
+        case 'u': return checkKeyword(scanner, 1, 4, "sing", TOKEN_USING);
         case 'v': 
             if (scanner->current - scanner->start > 2) {
                 switch (scanner->start[2]) {
