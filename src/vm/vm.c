@@ -135,6 +135,7 @@ void initVM(VM* vm) {
 
     initTable(&vm->globalValues);
     initTable(&vm->globalVariables);
+    initTable(&vm->namespaces);
     initTable(&vm->strings);
     vm->initString = NULL;
     vm->initString = copyString(vm, "init", 4);

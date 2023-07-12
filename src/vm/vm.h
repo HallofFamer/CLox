@@ -70,6 +70,7 @@ struct VM {
 
     Table globalValues;
     Table globalVariables;
+    Table namespaces;
     Table strings;
     ObjString* initString;
     ObjUpvalue* openUpvalues;
