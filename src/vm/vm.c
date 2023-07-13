@@ -403,7 +403,8 @@ static bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
 }
 
 bool loadGlobal(VM* vm, ObjString* name, Value* value) {
-    if (tableGet(&vm->globalValues, name, value)) return true;
+    //if (tableGet(&vm->globalValues, name, value)) return true;
+    if (tableGet(&vm->rootNamespace->values, name, value)) return true;
     return tableGet(&vm->globalVariables, name, value);
 } 
 
@@ -509,7 +510,7 @@ InterpretResult run(VM* vm) {
             }
             case OP_DEFINE_GLOBAL_VAL: { 
                 ObjString* name = READ_STRING();
-                tableSet(vm, &vm->globalValues, name, peek(vm, 0));
+                tableSet(vm, &vm->rootNamespace->values, name, peek(vm, 0));
                 pop(vm);
                 break;
             } 
@@ -580,8 +581,23 @@ InterpretResult run(VM* vm) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
                 }
+                else if (IS_NAMESPACE(receiver)) {
+                    ObjNamespace* namespace = AS_NAMESPACE(receiver);
+                    ObjString* name = READ_STRING();
+                    Value value;
+
+                    if (tableGet(&namespace->values, name, &value)) {
+                        pop(vm);
+                        push(vm, value);
+                        break;
+                    }
+                    else {
+                        runtimeError(vm, "Undefined subnamespace '%s'.", name->chars);
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                }
                 else{
-                    runtimeError(vm, "Only instances and classes can get properties.");
+                    runtimeError(vm, "Only instances, classes and namespaces can get properties.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;

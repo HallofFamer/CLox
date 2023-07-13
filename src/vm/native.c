@@ -121,7 +121,8 @@ ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* encl
     ObjString* shortName = newString(vm, name);
     push(vm, OBJ_VAL(shortName));
     ObjNamespace* namespace = newNamespace(vm, shortName, enclosing);
-    tableSet(vm, &vm->namespaces, namespace->fullName, namespace);
+    tableSet(vm, &vm->namespaces, namespace->fullName, OBJ_VAL(namespace));
+    if (enclosing != NULL) tableSet(vm, &enclosing->values, namespace->shortName, OBJ_VAL(namespace));
     pop(vm);
     return namespace;
 }
