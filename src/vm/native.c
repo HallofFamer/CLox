@@ -120,11 +120,13 @@ ObjClass* defineNativeTrait(VM* vm, const char* name) {
 ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* enclosing) {
     ObjString* shortName = newString(vm, name);
     push(vm, OBJ_VAL(shortName));
-    ObjNamespace* namespace = newNamespace(vm, shortName, enclosing);
-    tableSet(vm, &vm->namespaces, namespace->fullName, OBJ_VAL(namespace));
-    if (enclosing != NULL) tableSet(vm, &enclosing->values, namespace->shortName, OBJ_VAL(namespace));
+    ObjNamespace* nativeNamespace = newNamespace(vm, shortName, enclosing);
+    push(vm, OBJ_VAL(nativeNamespace));
+    tableSet(vm, &vm->namespaces, nativeNamespace->fullName, OBJ_VAL(nativeNamespace));
+    tableSet(vm, &enclosing->values, nativeNamespace->shortName, OBJ_VAL(nativeNamespace));
     pop(vm);
-    return namespace;
+    pop(vm);
+    return nativeNamespace;
 }
 
 ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behavior) {
@@ -137,6 +139,17 @@ ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behavior) {
     pop(vm);
     pop(vm);
     return nativeClass;
+}
+
+ObjNamespace* defineRootNamespace(VM* vm) {
+    ObjString* name = newString(vm, "");
+    push(vm, OBJ_VAL(name));
+    ObjNamespace* rootNamespace = newNamespace(vm, name, NULL);
+    push(vm, OBJ_VAL(rootNamespace));
+    tableSet(vm, &vm->namespaces, name, rootNamespace);
+    pop(vm);
+    pop(vm);
+    return rootNamespace;
 }
 
 ObjClass* getNativeClass(VM* vm, const char* name) {

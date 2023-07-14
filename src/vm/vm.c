@@ -150,6 +150,7 @@ void initVM(VM* vm) {
 void freeVM(VM* vm) {
     freeTable(vm, &vm->globalValues);
     freeTable(vm, &vm->globalVariables);
+    freeTable(vm, &vm->namespaces);
     freeTable(vm, &vm->strings);
     vm->initString = NULL;
     freeObjects(vm);
@@ -938,7 +939,8 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_USING:
-                printf("Importing namespace...");
+                printf("Importing namespace: %s\n", AS_NAMESPACE(peek(vm, 0))->fullName->chars);
+                pop(vm);
                 break;
             case OP_RETURN: {
                 Value result = pop(vm);

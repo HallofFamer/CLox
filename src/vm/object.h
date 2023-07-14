@@ -228,7 +228,7 @@ ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure);
-ObjNamespace* newNamespace(VM* vm, ObjString* name, ObjNamespace* enclosing);
+ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
