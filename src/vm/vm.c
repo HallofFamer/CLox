@@ -133,7 +133,6 @@ void initVM(VM* vm) {
     vm->grayCapacity = 0;
     vm->grayStack = NULL;
 
-    initTable(&vm->globalValues);
     initTable(&vm->globalVariables);
     initTable(&vm->namespaces);
     initTable(&vm->strings);
@@ -148,7 +147,6 @@ void initVM(VM* vm) {
 }
 
 void freeVM(VM* vm) {
-    freeTable(vm, &vm->globalValues);
     freeTable(vm, &vm->globalVariables);
     freeTable(vm, &vm->namespaces);
     freeTable(vm, &vm->strings);
@@ -837,13 +835,13 @@ InterpretResult run(VM* vm) {
             case OP_CLASS: { 
                 ObjString* className = READ_STRING();
                 push(vm, OBJ_VAL(newClass(vm, className)));
-                tableSet(vm, &vm->globalValues, className, peek(vm, 0));
+                tableSet(vm, &vm->rootNamespace->values, className, peek(vm, 0));
                 break;
             }
             case OP_TRAIT: { 
                 ObjString* traitName = READ_STRING();
                 push(vm, OBJ_VAL(createTrait(vm, traitName)));
-                tableSet(vm, &vm->globalValues, traitName, peek(vm, 0));
+                tableSet(vm, &vm->rootNamespace->values, traitName, peek(vm, 0));
                 break;
             }
             case OP_ANONYMOUS: {

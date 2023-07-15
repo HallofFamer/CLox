@@ -68,7 +68,6 @@ struct VM {
     Compiler* currentCompiler;
     ClassCompiler* currentClass;
 
-    Table globalValues;
     Table globalVariables;
     Table namespaces;
     Table strings;

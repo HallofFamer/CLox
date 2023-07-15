@@ -388,7 +388,7 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
             emitBytes(compiler, OP_DEFINE_GLOBAL_VAR, global);
         }
         else {
-            tableSet(compiler->parser->vm, &compiler->parser->vm->globalValues, name, NIL_VAL);
+            tableSet(compiler->parser->vm, &compiler->parser->vm->rootNamespace->values, name, NIL_VAL);
             emitBytes(compiler, OP_DEFINE_GLOBAL_VAL, global);
         }
     }
@@ -601,7 +601,7 @@ static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
         case OP_SET_GLOBAL: { 
             ObjString* name = identifierName(compiler, arg);
             Value value;
-            if (tableGet(&compiler->parser->vm->globalValues, name, &value)) { 
+            if (tableGet(&compiler->parser->vm->rootNamespace->values, name, &value)) { 
                 error(compiler->parser, "Cannot assign to immutable global variables.");
             }
             break;
