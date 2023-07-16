@@ -384,7 +384,7 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
         }
 
         if (isMutable) {
-            tableSet(compiler->parser->vm, &compiler->parser->vm->globalVariables, name, NIL_VAL);
+            tableSet(compiler->parser->vm, &compiler->parser->vm->globals, name, NIL_VAL);
             emitBytes(compiler, OP_DEFINE_GLOBAL_VAR, global);
         }
         else {

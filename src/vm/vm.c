@@ -133,7 +133,7 @@ void initVM(VM* vm) {
     vm->grayCapacity = 0;
     vm->grayStack = NULL;
 
-    initTable(&vm->globalVariables);
+    initTable(&vm->globals);
     initTable(&vm->namespaces);
     initTable(&vm->strings);
     vm->initString = NULL;
@@ -147,7 +147,7 @@ void initVM(VM* vm) {
 }
 
 void freeVM(VM* vm) {
-    freeTable(vm, &vm->globalVariables);
+    freeTable(vm, &vm->globals);
     freeTable(vm, &vm->namespaces);
     freeTable(vm, &vm->strings);
     vm->initString = NULL;
@@ -404,7 +404,7 @@ static bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
 bool loadGlobal(VM* vm, ObjString* name, Value* value) {
     //if (tableGet(&vm->globalValues, name, value)) return true;
     if (tableGet(&vm->rootNamespace->values, name, value)) return true;
-    return tableGet(&vm->globalVariables, name, value);
+    return tableGet(&vm->globals, name, value);
 } 
 
 static ObjUpvalue* captureUpvalue(VM* vm, Value* local) {
@@ -515,7 +515,7 @@ InterpretResult run(VM* vm) {
             } 
             case OP_DEFINE_GLOBAL_VAR: {
                 ObjString* name = READ_STRING();
-                tableSet(vm, &vm->globalVariables, name, peek(vm, 0));
+                tableSet(vm, &vm->globals, name, peek(vm, 0));
                 pop(vm);
                 break;
             }
@@ -531,8 +531,8 @@ InterpretResult run(VM* vm) {
             }
             case OP_SET_GLOBAL: {
                 ObjString* name = READ_STRING();
-                if (tableSet(vm, &vm->globalVariables, name, peek(vm, 0))) {
-                    tableDelete(&vm->globalVariables, name);
+                if (tableSet(vm, &vm->globals, name, peek(vm, 0))) {
+                    tableDelete(&vm->globals, name);
                     runtimeError(vm, "Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
