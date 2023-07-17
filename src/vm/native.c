@@ -153,13 +153,18 @@ ObjNamespace* defineRootNamespace(VM* vm) {
 }
 
 ObjClass* getNativeClass(VM* vm, const char* name) {
+    ObjString* className = newString(vm, name);
     Value klass;
-    tableGet(&vm->currentNamespace->values, newString(vm, name), &klass);
-    if (!IS_CLASS(klass)) {
+    tableGet(&vm->currentNamespace->values, className, &klass);
+    if (IS_CLASS(klass)) return AS_CLASS(klass);
+
+    Value klass2;
+    tableGet(&vm->langNamespace->values, className, &klass2);
+    if (IS_CLASS(klass2)) return AS_CLASS(klass2);
+    else {
         runtimeError(vm, "Native class %s is undefined.", name);
         exit(70);
     }
-    return AS_CLASS(klass);
 }
 
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name) {
