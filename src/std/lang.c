@@ -1179,7 +1179,21 @@ static void bindMethodClass(VM* vm, ObjClass* klass) {
     }
 }
 
+static void bindNamespaceClass(VM* vm) {
+    for (int i = 0; i < vm->namespaces.capacity; i++) {
+        Entry* entry = &vm->namespaces.entries[i];
+        if (entry->key == NULL) continue;
+        entry->key->obj.klass = vm->namespaceClass;
+    }
+}
+
 void registerLangPackage(VM* vm) {
+    vm->rootNamespace = defineRootNamespace(vm);
+    vm->cloxNamespace = defineNativeNamespace(vm, "clox", vm->rootNamespace);
+    vm->stdNamespace = defineNativeNamespace(vm, "std", vm->cloxNamespace);
+    vm->langNamespace = defineNativeNamespace(vm, "lang", vm->stdNamespace);
+    vm->currentNamespace = vm->langNamespace;
+
     vm->objectClass = defineSpecialClass(vm, "Object", BEHAVIOR_CLASS);
     DEF_METHOD(vm->objectClass, Object, clone, 0);
     DEF_METHOD(vm->objectClass, Object, equals, 1);
@@ -1277,6 +1291,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->namespaceClass, Namespace, init, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, shortName, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, toString, 0);
+    bindNamespaceClass(vm);
 
     vm->traitClass = defineNativeClass(vm, "Trait");
     bindSuperclass(vm, vm->traitClass, behaviorClass);
@@ -1288,12 +1303,6 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->traitClass, Trait, memberOf, 1);
     DEF_METHOD(vm->traitClass, Trait, superclass, 0);
     DEF_METHOD(vm->traitClass, Trait, toString, 0);
-
-    vm->rootNamespace = defineNativeNamespace(vm, "", NULL);
-    vm->cloxNamespace = defineNativeNamespace(vm, "clox", vm->rootNamespace);
-    vm->stdNamespace = defineNativeNamespace(vm, "std", vm->cloxNamespace);
-    vm->langNamespace = defineNativeNamespace(vm, "lang", vm->stdNamespace);
-    vm->currentNamespace = vm->rootNamespace;
 
     vm->nilClass = defineNativeClass(vm, "Nil");
     bindSuperclass(vm, vm->nilClass, vm->objectClass);
@@ -1431,4 +1440,5 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->boundMethodClass, BoundMethod, receiver, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, toString, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, upvalueCount, 0);
+    vm->currentNamespace = vm->rootNamespace;
 }
