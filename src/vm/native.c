@@ -129,29 +129,6 @@ ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* encl
     return nativeNamespace;
 }
 
-ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behavior) {
-    ObjString* className = newString(vm, name);
-    push(vm, OBJ_VAL(className));
-    ObjClass* nativeClass = createClass(vm, className, NULL, behavior);
-    nativeClass->isNative = true;
-    push(vm, OBJ_VAL(nativeClass));
-    tableSet(vm, &vm->rootNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
-    pop(vm);
-    pop(vm);
-    return nativeClass;
-}
-
-ObjNamespace* defineRootNamespace(VM* vm) {
-    ObjString* name = newString(vm, "");
-    push(vm, OBJ_VAL(name));
-    ObjNamespace* rootNamespace = newNamespace(vm, name, NULL);
-    push(vm, OBJ_VAL(rootNamespace));
-    tableSet(vm, &vm->namespaces, name, rootNamespace);
-    pop(vm);
-    pop(vm);
-    return rootNamespace;
-}
-
 ObjClass* getNativeClass(VM* vm, const char* namespaceName, const char* className) {
     ObjNamespace* namespace = getNativeNamespace(vm, namespaceName);
     Value klass;
