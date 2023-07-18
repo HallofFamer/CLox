@@ -152,19 +152,15 @@ ObjNamespace* defineRootNamespace(VM* vm) {
     return rootNamespace;
 }
 
-ObjClass* getNativeClass(VM* vm, const char* name) {
-    ObjString* className = newString(vm, name);
+ObjClass* getNativeClass(VM* vm, const char* namespaceName, const char* className) {
+    ObjNamespace* namespace = getNativeNamespace(vm, namespaceName);
     Value klass;
-    tableGet(&vm->currentNamespace->values, className, &klass);
-    if (IS_CLASS(klass)) return AS_CLASS(klass);
-
-    Value klass2;
-    tableGet(&vm->langNamespace->values, className, &klass2);
-    if (IS_CLASS(klass2)) return AS_CLASS(klass2);
-    else {
-        runtimeError(vm, "Native class %s is undefined.", name);
+    tableGet(&namespace->values, newString(vm, className), &klass);
+    if (!IS_CLASS(klass)) {
+        runtimeError(vm, "Class %s.%s is undefined.", namespaceName, className);
         exit(70);
     }
+    return AS_CLASS(klass);
 }
 
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name) {
