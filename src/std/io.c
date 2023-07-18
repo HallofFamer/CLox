@@ -319,13 +319,13 @@ LOX_METHOD(FileClass, open) {
     ObjFile* file = newFile(vm, AS_STRING(args[0]));
     push(vm, OBJ_VAL(file));
     if (mode->chars == "r") {
-        ObjInstance* fileReadStream = newInstance(vm, getNativeClass(vm, "FileReadStream"));
+        ObjInstance* fileReadStream = newInstance(vm, getNativeClass(vm, "clox.std.io", "FileReadStream"));
         setFileProperty(vm, fileReadStream, file, "r");
         pop(vm);
         RETURN_OBJ(fileReadStream);
     }
     else if (mode->chars == "w") {
-        ObjInstance*  fileWriteStream = newInstance(vm, getNativeClass(vm, "FileWriteStream"));
+        ObjInstance*  fileWriteStream = newInstance(vm, getNativeClass(vm, "clox.std.io", "FileWriteStream"));
         setFileProperty(vm, fileWriteStream, file, "w");
         pop(vm);
         RETURN_OBJ(fileWriteStream);
@@ -522,6 +522,9 @@ LOX_METHOD(WriteStream, put) {
 }
 
 void registerIOPackage(VM* vm) {
+    ObjNamespace* ioNamespace = defineNativeNamespace(vm, "io", vm->stdNamespace);
+    vm->currentNamespace = ioNamespace;
+
     vm->fileClass = defineNativeClass(vm, "File");
     bindSuperclass(vm, vm->fileClass, vm->objectClass);
     DEF_METHOD(vm->fileClass, File, create, 0);
@@ -599,4 +602,6 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, putLine, 0);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, putSpace, 0);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, putString, 1);
+
+    vm->currentNamespace = vm->rootNamespace;
 }

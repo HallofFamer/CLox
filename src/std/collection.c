@@ -364,7 +364,7 @@ ObjInstance* setCopy(VM* vm, ObjInstance* original) {
     dictAddAll(vm, dict, dict2);
     pop(vm);
 
-    ObjInstance* copied = newInstance(vm, getNativeClass(vm, "Set"));
+    ObjInstance* copied = newInstance(vm, getNativeClass(vm, "clox.std.collection", "Set"));
     setObjProperty(vm, copied, "dict", OBJ_VAL(dict2));
     return copied;
 }
@@ -654,7 +654,7 @@ LOX_METHOD(Collection, add) {
 
 LOX_METHOD(Collection, addAll) {
     ASSERT_ARG_COUNT("Collection::addAll(collection)", 1);
-    ASSERT_ARG_INSTANCE_OF("Collection::addAll(collection)", 0, Collection);
+    ASSERT_ARG_INSTANCE_OF("Collection::addAll(collection)", 0, clox.std.collection, Collection);
     Value collection = args[0];
     Value addMethod = getObjMethod(vm, receiver, "add");
     Value nextMethod = getObjMethod(vm, collection, "next");
@@ -934,7 +934,7 @@ LOX_METHOD(Dictionary, entrySet) {
     }
     pop(vm);
     
-    ObjInstance* entrySet = newInstance(vm, getNativeClass(vm, "Set"));
+    ObjInstance* entrySet = newInstance(vm, getNativeClass(vm, "clox.std.collection", "Set"));
     setObjProperty(vm, entrySet, "dict", OBJ_VAL(entryDict));
     RETURN_OBJ(entrySet);
 }
@@ -975,7 +975,7 @@ LOX_METHOD(Dictionary, keySet) {
     }
     pop(vm);
     
-    ObjInstance* keySet = newInstance(vm, getNativeClass(vm, "Set"));
+    ObjInstance* keySet = newInstance(vm, getNativeClass(vm, "clox.std.collection", "Set"));
     setObjProperty(vm, keySet, "dict", OBJ_VAL(keyDict));
     RETURN_OBJ(keySet);
 }
@@ -1095,7 +1095,7 @@ LOX_METHOD(Dictionary, valueSet) {
     }
     pop(vm);
     
-    ObjInstance* valueSet = newInstance(vm, getNativeClass(vm, "Set"));
+    ObjInstance* valueSet = newInstance(vm, getNativeClass(vm, "clox.std.collection", "Set"));
     setObjProperty(vm, valueSet, "dict", OBJ_VAL(valueDict));
     RETURN_OBJ(valueSet);
 }
@@ -2009,6 +2009,9 @@ LOX_METHOD(TEnumerable, nextValue) {
 }
 
 void registerCollectionPackage(VM* vm) {
+    ObjNamespace* collectionNamespace = defineNativeNamespace(vm, "collection", vm->stdNamespace);
+    vm->currentNamespace = collectionNamespace;
+
     ObjClass* enumerableTrait = defineNativeTrait(vm, "TEnumerable");
     DEF_METHOD(enumerableTrait, TEnumerable, next, 1);
     DEF_METHOD(enumerableTrait, TEnumerable, nextValue, 1);
@@ -2207,4 +2210,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(queueClass, Queue, search, 1);
     DEF_METHOD(queueClass, Queue, toArray, 0);
     DEF_METHOD(queueClass, Queue, toString, 0);
+
+    vm->currentNamespace = vm->rootNamespace;
 }

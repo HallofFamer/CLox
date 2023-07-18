@@ -560,7 +560,7 @@ LOX_METHOD(Metaclass, namedInstance) {
     ASSERT_ARG_COUNT("Metaclass::namedInstance()", 0);
     ObjClass* metaclass = AS_CLASS(receiver);
     ObjString* className = subString(vm, metaclass->name, 0, metaclass->name->length - 7);
-    RETURN_OBJ(getNativeClass(vm, className->chars));
+    RETURN_OBJ(getNativeClass(vm, vm->langNamespace->fullName->chars, className->chars));
 }
 
 LOX_METHOD(Metaclass, superclass) {
@@ -1440,5 +1440,6 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->boundMethodClass, BoundMethod, receiver, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, toString, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, upvalueCount, 0);
+
     vm->currentNamespace = vm->rootNamespace;
 }
