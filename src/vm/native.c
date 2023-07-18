@@ -187,6 +187,16 @@ ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
     return AS_NATIVE_METHOD(method);
 }
 
+ObjNamespace* getNativeNamespace(VM* vm, const char* name) {
+    Value namespace;
+    tableGet(&vm->namespaces, newString(vm, name), &namespace);
+    if (!IS_NAMESPACE(namespace)) {
+        runtimeError(vm, "Namespace %s is undefined.", name);
+        exit(70);
+    }
+    return AS_NAMESPACE(namespace);
+}
+
 void loadSourceFile(VM* vm, const char* filePath) {
     char* source = readFile(filePath);
     interpret(vm, source);
