@@ -188,6 +188,7 @@ struct ObjClass {
     Obj obj;
     ObjString* name;
     BehaviorType behavior;
+    struct ObjNamespace* namespace;
     struct ObjClass* superclass;
     ValueArray traits;
     bool isNative;
@@ -200,6 +201,7 @@ struct ObjNamespace {
     ObjString* shortName;
     ObjString* fullName;
     struct ObjNamespace* enclosing;
+    bool isRoot;
     Table values;
 };
 

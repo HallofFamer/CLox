@@ -39,6 +39,13 @@ LOX_METHOD(Behavior, clone) {
     RETURN_OBJ(receiver);
 }
 
+LOX_METHOD(Behavior, fullName) {
+    ASSERT_ARG_COUNT("Behavior::fullName()", 0);
+    ObjClass* self = AS_CLASS(receiver);
+    if(self->namespace->isRoot) RETURN_OBJ(self->name);
+    else RETURN_STRING_FMT("%s.%s", self->namespace->fullName->chars, self->name->chars);
+}
+
 LOX_METHOD(Behavior, getMethod) {
     ASSERT_ARG_COUNT("Behavior::getMethod(method)", 1);
     ASSERT_ARG_TYPE("Behavior::getMethod(method)", 0, String);
@@ -268,7 +275,9 @@ LOX_METHOD(Class, superclass) {
 
 LOX_METHOD(Class, toString) {
     ASSERT_ARG_COUNT("Class::toString()", 0);
-    RETURN_STRING_FMT("<class %s>", AS_CLASS(receiver)->name->chars);
+    ObjClass* self = AS_CLASS(receiver);
+    if (self->namespace->isRoot) RETURN_STRING_FMT("<class %s>", self->name->chars);
+    else RETURN_STRING_FMT("<class %s.%s>", self->namespace->fullName->chars, self->name->chars);
 }
 
 LOX_METHOD(Float, clone) {
@@ -558,9 +567,9 @@ LOX_METHOD(Metaclass, memberOf) {
 
 LOX_METHOD(Metaclass, namedInstance) {
     ASSERT_ARG_COUNT("Metaclass::namedInstance()", 0);
-    ObjClass* metaclass = AS_CLASS(receiver);
-    ObjString* className = subString(vm, metaclass->name, 0, metaclass->name->length - 7);
-    RETURN_OBJ(getNativeClass(vm, vm->langNamespace->fullName->chars, className->chars));
+    ObjClass* self = AS_CLASS(receiver);
+    ObjString* className = subString(vm, self->name, 0, self->name->length - 7);
+    RETURN_OBJ(getNativeClass(vm, self->namespace->fullName->chars, className->chars));
 }
 
 LOX_METHOD(Metaclass, superclass) {
@@ -570,7 +579,9 @@ LOX_METHOD(Metaclass, superclass) {
 
 LOX_METHOD(Metaclass, toString) {
     ASSERT_ARG_COUNT("Metaclass::toString()", 0);
-    RETURN_STRING_FMT("<metaclass %s>", AS_CLASS(receiver)->name->chars);
+    ObjClass* self = AS_CLASS(receiver);
+    if (self->namespace->isRoot) RETURN_STRING_FMT("<class %s>", self->name->chars);
+    else RETURN_STRING_FMT("<metaclass %s.%s>", self->namespace->fullName->chars, self->name->chars);
 }
 
 LOX_METHOD(Method, arity) {
@@ -1157,7 +1168,9 @@ LOX_METHOD(Trait, superclass) {
 
 LOX_METHOD(Trait, toString) {
     ASSERT_ARG_COUNT("Trait::toString()", 0);
-    RETURN_STRING_FMT("<trait %s>", AS_CLASS(receiver)->name->chars);
+    ObjClass* self = AS_CLASS(receiver);
+    if (self->namespace->isRoot) RETURN_STRING_FMT("<trait %s>", self->name->chars);
+    else RETURN_STRING_FMT("<trait %s.%s>", self->namespace->fullName->chars, self->name->chars);
 }
 
 static void bindStringClass(VM* vm) {
@@ -1203,6 +1216,7 @@ static ObjNamespace* defineRootNamespace(VM* vm) {
     ObjString* name = newString(vm, "");
     push(vm, OBJ_VAL(name));
     ObjNamespace* rootNamespace = newNamespace(vm, name, NULL);
+    rootNamespace->isRoot = true;
     push(vm, OBJ_VAL(rootNamespace));
     tableSet(vm, &vm->namespaces, name, rootNamespace);
     pop(vm);

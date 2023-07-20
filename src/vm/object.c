@@ -113,12 +113,15 @@ ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing
     ObjNamespace* namespace = ALLOCATE_OBJ(ObjNamespace, OBJ_NAMESPACE, vm->namespaceClass);
     namespace->shortName = shortName;
     namespace->enclosing = enclosing;
-    if (namespace->enclosing != NULL && namespace->enclosing->shortName->length > 0) {
+    namespace->isRoot = false;
+
+    if (namespace->enclosing != NULL && !namespace->enclosing->isRoot) { 
         char chars[UINT8_MAX];
         int length = sprintf_s(chars, UINT8_MAX, "%s.%s", namespace->enclosing->fullName->chars, shortName->chars);
         namespace->fullName = copyString(vm, chars, length);
-    }
+    } 
     else namespace->fullName = namespace->shortName;
+
     initTable(&namespace->values);
     return namespace;
 }
@@ -184,6 +187,7 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
     push(vm, OBJ_VAL(klass));
     klass->name = name != NULL ? name : newString(vm, "");
     klass->behavior = behavior;
+    klass->namespace = vm->currentNamespace;
     klass->superclass = NULL;
     klass->isNative = false;
     initValueArray(&klass->traits);
@@ -198,6 +202,7 @@ ObjClass* createTrait(VM* vm, ObjString* name) {
     push(vm, OBJ_VAL(trait));
     trait->name = name != NULL ? name : createBehaviorName(vm, BEHAVIOR_TRAIT, NULL);
     trait->behavior = BEHAVIOR_TRAIT;
+    trait->namespace = vm->currentNamespace;
     trait->superclass = NULL;
     trait->isNative = false;
     initValueArray(&trait->traits);
