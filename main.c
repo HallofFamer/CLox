@@ -23,9 +23,10 @@ static void repl(VM* vm) {
 }
 
 static void runFile(VM* vm, const char* filePath) {
-    char* source = readFile(filePath);
-    InterpretResult result = interpret(vm, source);
-    free(source);
+    Module module;
+    initModule(vm, &module, filePath);
+    InterpretResult result = interpret(vm, module.source);
+    freeModule(vm, &module);
 
     if (result == INTERPRET_COMPILE_ERROR) exit(65);
     if (result == INTERPRET_RUNTIME_ERROR) exit(70);

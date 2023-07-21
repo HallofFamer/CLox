@@ -19,6 +19,7 @@
 #define MAX_CASES 256
 
 typedef struct VM VM;
+typedef struct Module Module;
 typedef struct Compiler Compiler;
 typedef struct ClassCompiler ClassCompiler;
 

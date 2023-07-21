@@ -120,9 +120,25 @@ void initConfiguration(VM* vm) {
     vm->config = config;
 }
 
+void initModule(VM* vm, Module* module, const char* filePath) {
+    module->filePath = filePath;
+    module->source = readFile(filePath);
+    initTable(&module->values);
+    tableAddAll(vm, &vm->langNamespace->values, &module->values);
+    tableSet(vm, &vm->modules, newString(vm, filePath), NIL_VAL);
+    vm->currentModule = module;
+}
+
+void freeModule(VM* vm, Module* module) {
+    freeTable(vm, &module->values);
+    free(module->source);
+    vm->currentModule = module->lastModule;
+}
+
 void initVM(VM* vm) {
     resetStack(vm);
     initConfiguration(vm);
+    vm->currentModule = NULL;
     vm->currentCompiler = NULL;
     vm->currentClass = NULL;
     vm->objects = NULL;
@@ -135,6 +151,7 @@ void initVM(VM* vm) {
 
     initTable(&vm->globals);
     initTable(&vm->namespaces);
+    initTable(&vm->modules);
     initTable(&vm->strings);
     vm->initString = NULL;
     vm->initString = copyString(vm, "init", 4);
@@ -149,6 +166,7 @@ void initVM(VM* vm) {
 void freeVM(VM* vm) {
     freeTable(vm, &vm->globals);
     freeTable(vm, &vm->namespaces);
+    freeTable(vm, &vm->modules);
     freeTable(vm, &vm->strings);
     vm->initString = NULL;
     freeObjects(vm);
@@ -402,9 +420,10 @@ static bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
 }
 
 bool loadGlobal(VM* vm, ObjString* name, Value* value) {
-    //if (tableGet(&vm->globalValues, name, value)) return true;
-    if (tableGet(&vm->rootNamespace->values, name, value)) return true;
-    return tableGet(&vm->globals, name, value);
+    if (tableGet(&vm->currentModule->values, name, value)) return true;
+    else if (tableGet(&vm->currentNamespace->values, name, value)) return true;
+    else if (tableGet(&vm->rootNamespace->values, name, value)) return true;
+    else return tableGet(&vm->globals, name, value);
 } 
 
 static ObjUpvalue* captureUpvalue(VM* vm, Value* local) {

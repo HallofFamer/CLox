@@ -29,6 +29,13 @@ typedef struct {
     bool gcStressMode;
 } Configuration;
 
+struct Module {
+    char* filePath;
+    char* source;
+    Table values;
+    struct Module* lastModule;
+};
+
 struct VM {
     ObjClass* objectClass;
     ObjClass* classClass;
@@ -65,11 +72,13 @@ struct VM {
     int apiStackDepth;
 
     Configuration config;
+    Module* currentModule;
     Compiler* currentCompiler;
     ClassCompiler* currentClass;
 
     Table globals;
     Table namespaces;
+    Table modules;
     Table strings;
     ObjString* initString;
     ObjUpvalue* openUpvalues;
@@ -91,6 +100,8 @@ typedef enum {
 
 void initVM(VM* vm);
 void freeVM(VM* vm);
+void initModule(VM* vm, Module* module, const char* filePath);
+void freeModule(VM* vm, Module* module);
 void push(VM* vm, Value value);
 Value pop(VM* vm);
 bool isFalsey(Value value);
