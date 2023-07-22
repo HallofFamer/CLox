@@ -955,10 +955,22 @@ InterpretResult run(VM* vm) {
                 vm->currentNamespace = declareNamespace(vm, namespaceDepth);
                 break;
             }
-            case OP_USING:
-                printf("Importing namespace: %s\n", AS_NAMESPACE(peek(vm, 0))->fullName->chars);
-                pop(vm);
+            case OP_USING: {
+                Value value = pop(vm);
+                if (IS_CLASS(value)) {
+                    ObjClass* klass = AS_CLASS(value);
+                    tableSet(vm, &vm->currentModule->values, klass->name, value);
+                }
+                else if (IS_NAMESPACE(value)) {
+                    ObjNamespace* namespace = AS_NAMESPACE(value);
+                    tableSet(vm, &vm->currentModule->values, namespace->shortName, value);
+                }
+                else {
+                    runtimeError(vm, "Only classes, traits and namespaces may be imported.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 break;
+            }
             case OP_RETURN: {
                 Value result = pop(vm);
                 closeUpvalues(vm, frame->slots);

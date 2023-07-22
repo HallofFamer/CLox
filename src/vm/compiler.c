@@ -379,7 +379,7 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     else {
         ObjString* name = identifierName(compiler, global);
         Value value;
-        if (loadGlobal(compiler->parser->vm, name, &value)) {
+        if (tableGet(&compiler->parser->vm->globals, name, &value)) {
             error(compiler->parser, "Cannot redeclare global variable.");
         }
 
