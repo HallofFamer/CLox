@@ -126,6 +126,7 @@ void initModule(VM* vm, Module* module, const char* filePath) {
     initTable(&module->values);
     tableAddAll(vm, &vm->langNamespace->values, &module->values);
     tableSet(vm, &vm->modules, newString(vm, filePath), NIL_VAL);
+    module->lastModule = NULL;
     vm->currentModule = module;
 }
 
@@ -957,7 +958,11 @@ InterpretResult run(VM* vm) {
             }
             case OP_USING: {
                 Value value = pop(vm);
-                if (IS_CLASS(value)) {
+                ObjString* alias = READ_STRING();
+                if (alias->length > 0) {
+                    tableSet(vm, &vm->currentModule->values, alias, value);
+                }
+                else if (IS_CLASS(value)) {
                     ObjClass* klass = AS_CLASS(value);
                     tableSet(vm, &vm->currentModule->values, klass->name, value);
                 }

@@ -1180,8 +1180,14 @@ static void switchStatement(Compiler* compiler) {
 
 static void usingStatement(Compiler* compiler) {
     expression(compiler);
+    uint8_t alias = makeConstant(compiler, OBJ_VAL(newString(compiler->parser->vm, "")));
+    if (match(compiler->parser, TOKEN_AS)) {
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect alias after 'as'.");
+        Token name = compiler->parser->previous;
+        alias = identifierConstant(compiler, &name);
+    }
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after using statement.");
-    emitByte(compiler, OP_USING);
+    emitBytes(compiler, OP_USING, alias);
 }
 
 static void whileStatement(Compiler* compiler) {
