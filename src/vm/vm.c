@@ -938,9 +938,14 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
+                Module module;
+                initModule(vm, &module, AS_CSTRING(filePath));
+                /*
                 char* source = readFile(AS_CSTRING(filePath));
                 ObjFunction* function = compile(vm, source);
-                free(source);                
+                free(source);
+                */
+                ObjFunction* function = compile(vm, module.source);
                 if (function == NULL) return INTERPRET_COMPILE_ERROR;
                 push(vm, OBJ_VAL(function));
 
@@ -948,6 +953,7 @@ InterpretResult run(VM* vm) {
                 pop(vm);
                 push(vm, OBJ_VAL(closure));
                 callClosure(vm, closure, 0);
+                freeModule(vm, &module);
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
             }
