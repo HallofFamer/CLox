@@ -1,1 +1,9 @@
 namespace clox.test;
+using clox.std.collection;
+using clox.std.util.Date;
+using clox.std.util.UUID as ID;
+
+println(collection);
+println(collection.Array);
+println(Date);
+println(ID);
