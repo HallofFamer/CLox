@@ -2,7 +2,7 @@ var range = 0..4;
 println("Creating an instance of Range class: (" + range.from().toString() + ".." +range.to().toString() + ")");
 print("Length of Range: ");
 println(range.length());
-print("Range contains value 2 :");
+print("Range contains value 2: ");
 println(range.contains(2));
 print("Range element at index 3: ");
 println(range.getAt(3));

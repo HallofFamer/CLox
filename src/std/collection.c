@@ -1690,8 +1690,8 @@ LOX_METHOD(Range, step) {
     ObjRange* self = AS_RANGE(receiver);
     double from = self->from;
     double to = self->to;
-    double by = AS_NUMBER(args[1]);
-    ObjClosure* closure = AS_CLOSURE(args[2]);
+    double by = AS_NUMBER(args[0]);
+    ObjClosure* closure = AS_CLOSURE(args[1]);
 
     if (by == 0) raiseError(vm, "Step size cannot be 0");
     else {
