@@ -126,7 +126,7 @@ void initModule(VM* vm, Module* module, const char* filePath) {
     initTable(&module->values);
     tableAddAll(vm, &vm->langNamespace->values, &module->values);
     tableSet(vm, &vm->modules, newString(vm, filePath), NIL_VAL);
-    module->lastModule = NULL;
+    module->lastModule = vm->currentModule;
     vm->currentModule = module;
 }
 
@@ -940,11 +940,6 @@ InterpretResult run(VM* vm) {
 
                 Module module;
                 initModule(vm, &module, AS_CSTRING(filePath));
-                /*
-                char* source = readFile(AS_CSTRING(filePath));
-                ObjFunction* function = compile(vm, source);
-                free(source);
-                */
                 ObjFunction* function = compile(vm, module.source);
                 if (function == NULL) return INTERPRET_COMPILE_ERROR;
                 push(vm, OBJ_VAL(function));
