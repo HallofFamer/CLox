@@ -1179,7 +1179,14 @@ static void switchStatement(Compiler* compiler) {
 }
 
 static void usingStatement(Compiler* compiler) {
-    expression(compiler);
+    //expression(compiler);
+    emitConstant(compiler, NIL_VAL);
+    do { 
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace identifier."); 
+        uint8_t identifier = identifierConstant(compiler, &compiler->parser->previous);
+        emitBytes(compiler, OP_SUBNAMESPACE, identifier);
+    } while (match(compiler->parser, TOKEN_DOT));
+
     uint8_t alias = makeConstant(compiler, OBJ_VAL(newString(compiler->parser->vm, "")));
     if (match(compiler->parser, TOKEN_AS)) {
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect alias after 'as'.");

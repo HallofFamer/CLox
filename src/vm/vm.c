@@ -460,6 +460,15 @@ static void closeUpvalues(VM* vm, Value* last) {
     }
 }
 
+static Value resolveIdentifier(VM* vm, ObjNamespace* namespace, ObjString* name) {
+    Value value;
+    if (tableGet(&namespace->values, name, &value)) return value;
+    else {
+        // Attempt to use autoloading mechanism for classes/traits/namespaces.
+        return NIL_VAL;
+    }
+}
+
 static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     Value method = peek(vm, 0);
     ObjClass* klass = AS_CLASS(peek(vm, 1));
@@ -957,9 +966,23 @@ InterpretResult run(VM* vm) {
                 vm->currentNamespace = declareNamespace(vm, namespaceDepth);
                 break;
             }
+            case OP_SUBNAMESPACE: { 
+                Value enclosing = pop(vm);
+                ObjString* name = READ_STRING();
+                if (IS_NAMESPACE(enclosing)) {
+                    push(vm, resolveIdentifier(vm, AS_NAMESPACE(enclosing), name));
+                }
+                else {
+                    Value value;
+                    tableGet(&vm->namespaces, name, &value);
+                    push(vm, value);
+                }
+                break;
+            }
             case OP_USING: {
                 Value value = pop(vm);
                 ObjString* alias = READ_STRING();
+ 
                 if (alias->length > 0) {
                     tableSet(vm, &vm->currentModule->values, alias, value);
                 }
