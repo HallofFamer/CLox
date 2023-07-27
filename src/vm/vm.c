@@ -942,9 +942,13 @@ InterpretResult run(VM* vm) {
             }
             case OP_REQUIRE: {
                 Value filePath = pop(vm);
+                Value value;
                 if (!IS_STRING(filePath)) {
                     runtimeError(vm, "Required file path must be a string.");
                     return INTERPRET_RUNTIME_ERROR;
+                }
+                else if (tableGet(&vm->modules, AS_STRING(filePath), &value)) {
+                    break;
                 }
 
                 Module module;
