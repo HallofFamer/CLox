@@ -1179,7 +1179,6 @@ static void switchStatement(Compiler* compiler) {
 }
 
 static void usingStatement(Compiler* compiler) {
-    //expression(compiler);
     emitConstant(compiler, NIL_VAL);
     do { 
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace identifier."); 

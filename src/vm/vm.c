@@ -977,9 +977,12 @@ InterpretResult run(VM* vm) {
                     push(vm, resolveIdentifier(vm, AS_NAMESPACE(enclosing), name));
                 }
                 else {
-                    Value value;
-                    tableGet(&vm->namespaces, name, &value);
-                    push(vm, value);
+                    Value value = NIL_VAL;
+                    if (tableGet(&vm->namespaces, name, &value)) push(vm, value);
+                    else {
+                        runtimeError(vm, "Undefined identifier %s.", name->chars);
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
                 }
                 break;
             }
