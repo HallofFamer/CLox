@@ -484,7 +484,7 @@ static void closeUpvalues(VM* vm, Value* last) {
     }
 }
 
-static Value resolveIdentifier(VM* vm, ObjNamespace* namespace, ObjString* name) {
+static Value resolveNamespace(VM* vm, ObjNamespace* namespace, ObjString* name) {
     Value value;
     if (tableGet(&namespace->values, name, &value)) return value;
     else {
@@ -994,12 +994,12 @@ InterpretResult run(VM* vm) {
                 vm->currentNamespace = declareNamespace(vm, namespaceDepth);
                 break;
             }
-            case OP_SUBNAMESPACE: { 
+            case OP_USING: { 
                 uint8_t namespaceDepth = READ_BYTE();
                 usingNamespace(vm, namespaceDepth);
                 break;
             }
-            case OP_USING: {
+            case OP_ALIAS: {
                 Value value = pop(vm);
                 ObjString* alias = READ_STRING();
  

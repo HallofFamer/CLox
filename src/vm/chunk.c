@@ -70,8 +70,8 @@ int opCodeOffset(Chunk* chunk, int ip) {
         case OP_INSTANCE_METHOD:
         case OP_CLASS_METHOD:
         case OP_NAMESPACE:
-        case OP_SUBNAMESPACE:
         case OP_USING:
+        case OP_ALIAS:
             return 2;
 
         case OP_INVOKE:

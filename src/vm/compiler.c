@@ -1189,16 +1189,17 @@ static void usingStatement(Compiler* compiler) {
         emitIdentifier(compiler, &compiler->parser->previous);
         namespaceDepth++;
     } while (match(compiler->parser, TOKEN_DOT));
-    emitBytes(compiler, OP_SUBNAMESPACE, namespaceDepth);
 
+    emitBytes(compiler, OP_USING, namespaceDepth);
     uint8_t alias = makeConstant(compiler, OBJ_VAL(newString(compiler->parser->vm, "")));
+
     if (match(compiler->parser, TOKEN_AS)) {
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect alias after 'as'.");
         Token name = compiler->parser->previous;
         alias = identifierConstant(compiler, &name);
     }
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after using statement.");
-    emitBytes(compiler, OP_USING, alias);
+    emitBytes(compiler, OP_ALIAS, alias);
 }
 
 static void whileStatement(Compiler* compiler) {
