@@ -1179,12 +1179,13 @@ static void switchStatement(Compiler* compiler) {
 }
 
 static void usingStatement(Compiler* compiler) {
-    emitConstant(compiler, NIL_VAL);
+    uint8_t namespaceDepth = 0;
     do { 
-        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace identifier."); 
-        uint8_t identifier = identifierConstant(compiler, &compiler->parser->previous);
-        emitBytes(compiler, OP_SUBNAMESPACE, identifier);
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace identifier.");
+        emitConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, compiler->parser->previous.start, compiler->parser->previous.length)));
+        namespaceDepth++;
     } while (match(compiler->parser, TOKEN_DOT));
+    emitBytes(compiler, OP_SUBNAMESPACE, namespaceDepth);
 
     uint8_t alias = makeConstant(compiler, OBJ_VAL(newString(compiler->parser->vm, "")));
     if (match(compiler->parser, TOKEN_AS)) {

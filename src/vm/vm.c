@@ -279,6 +279,30 @@ static ObjNamespace* declareNamespace(VM* vm, uint8_t namespaceDepth) {
     return currentNamespace;
 }
 
+static void usingNamespace(VM* vm, uint8_t namespaceDepth) {
+    ObjNamespace* currentNamespace = vm->rootNamespace;
+    Value value;
+    for (int i = namespaceDepth - 1; i >= 1; i--) {
+        ObjString* name = AS_STRING(peek(vm, i));
+        if (!tableGet(&currentNamespace->values, name, &value)) {
+            currentNamespace = defineNativeNamespace(vm, name->chars, currentNamespace);
+        }
+        else currentNamespace = AS_NAMESPACE(value);
+    }
+
+    ObjString* shortName = AS_STRING(peek(vm, 0));
+    if (!tableGet(&currentNamespace->values, shortName, &value)) {
+        runtimeError(vm, "Undefined identifier %s.", shortName->chars);
+        return INTERPRET_RUNTIME_ERROR;
+    }
+
+    while (namespaceDepth > 0) {
+        pop(vm);
+        namespaceDepth--;
+    }
+    push(vm, value);
+}
+
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
     if (closure->function->arity > 0 && argCount != closure->function->arity) {
         runtimeError(vm, "Expected %d arguments but got %d.", closure->function->arity, argCount);
@@ -971,19 +995,8 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_SUBNAMESPACE: { 
-                Value enclosing = pop(vm);
-                ObjString* name = READ_STRING();
-                if (IS_NAMESPACE(enclosing)) {
-                    push(vm, resolveIdentifier(vm, AS_NAMESPACE(enclosing), name));
-                }
-                else {
-                    Value value = NIL_VAL;
-                    if (tableGet(&vm->namespaces, name, &value)) push(vm, value);
-                    else {
-                        runtimeError(vm, "Undefined identifier %s.", name->chars);
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                }
+                uint8_t namespaceDepth = READ_BYTE();
+                usingNamespace(vm, namespaceDepth);
                 break;
             }
             case OP_USING: {
