@@ -1,3 +1,5 @@
+using clox.std.util.UUID;
+
 val uuid = UUID();
 print("Creating new UUID object: ");
 println(uuid.toString());

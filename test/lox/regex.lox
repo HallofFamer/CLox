@@ -1,3 +1,5 @@
+using clox.std.util.Regex;
+
 var regex = Regex("[Hh]ello [Ww]orld[!]?");
 print("Creating regular expression pattern: ");
 println(regex.toString());

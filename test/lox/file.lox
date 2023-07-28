@@ -1,3 +1,5 @@
+using clox.std.io.File;
+
 var file = File("test/others/file_input.txt");
 println("Creating new file object: ");
 println(file);

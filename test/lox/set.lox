@@ -1,3 +1,6 @@
+using clox.std.collection.Set;
+using clox.std.util.Date;
+
 var set = Set();
 println("Testing class Set...");
 println("Class for set object: " + set.getClassName());

@@ -1,3 +1,5 @@
+using clox.std.collection.Queue;
+
 var queue = Queue();
 println("Testing class Queue...");
 println("Class for queue object: " + queue.getClassName());

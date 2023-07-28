@@ -1,3 +1,5 @@
+using clox.std.collection.Stack;
+
 var stack = Stack();
 println("Testing class Stack...");
 println("Class for stack object: " + stack.getClassName());

@@ -1,3 +1,5 @@
+using clox.std.collection.Dictionary;
+
 var dict = Dictionary();
 print("Creating empty dictionary: ");
 println(dict);

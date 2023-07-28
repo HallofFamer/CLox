@@ -1,3 +1,5 @@
+using clox.std.collection.LinkedList;
+
 println("Testing reentrancy for methods on Int class...");
 println("");
 val n = 5;

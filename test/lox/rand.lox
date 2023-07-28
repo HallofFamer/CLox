@@ -1,3 +1,5 @@
+using clox.std.util.Random;
+
 var rand = Random();
 println("Generating random numbers between 0 to 10000: ");
 println("Current seed is: " + rand.getSeed().toString());

@@ -1,3 +1,7 @@
+using clox.std.util.Date;
+using clox.std.util.DateTime;
+using clox.std.util.Duration;
+
 var nowDate = Date.now;
 println("Current Date is: " + nowDate.toString());
 println("Current Date's timestamp is: " + nowDate.getTimestamp().toString());

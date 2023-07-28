@@ -1,3 +1,5 @@
+using clox.std.collection.Array;
+
 var array = [];
 print("Creating empty array: ");
 println(array);

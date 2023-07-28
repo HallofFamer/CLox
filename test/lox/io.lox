@@ -1,3 +1,9 @@
+using clox.std.io.BinaryReadStream;
+using clox.std.io.BinaryWriteStream;
+using clox.std.io.File;
+using clox.std.io.FileReadStream;
+using clox.std.io.FileWriteStream;
+
 var fileIn = File("test/others/file_input.txt");
 println(fileIn);
 println("Creating a read stream for input file.");
