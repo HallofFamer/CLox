@@ -90,6 +90,13 @@ static void emitBytes(Compiler* compiler, uint8_t byte1, uint8_t byte2) {
     emitByte(compiler, byte2);
 }
 
+static int emitJump(Compiler* compiler, uint8_t instruction) {
+    emitByte(compiler, instruction);
+    emitByte(compiler, 0xff);
+    emitByte(compiler, 0xff);
+    return currentChunk(compiler)->count - 2;
+}
+
 static void emitLoop(Compiler* compiler, int loopStart) {
     emitByte(compiler, OP_LOOP);
 
@@ -98,13 +105,6 @@ static void emitLoop(Compiler* compiler, int loopStart) {
 
     emitByte(compiler, (offset >> 8) & 0xff);
     emitByte(compiler, offset & 0xff);
-}
-
-static int emitJump(Compiler* compiler, uint8_t instruction) {
-    emitByte(compiler, instruction);
-    emitByte(compiler, 0xff);
-    emitByte(compiler, 0xff);
-    return currentChunk(compiler)->count - 2;
 }
 
 static void emitReturn(Compiler* compiler, uint8_t depth) {
@@ -245,6 +245,10 @@ static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
 static bool identifiersEqual(Token* a, Token* b) {
     if (a->length != b->length) return false;
     return memcmp(a->start, b->start, a->length) == 0;
+}
+
+static void emitIdentifier(Compiler* compiler, Token* token) {
+    emitBytes(compiler, OP_CONSTANT, identifierConstant(compiler, token));
 }
 
 static int resolveLocal(Compiler* compiler, Token* name) {
@@ -1182,7 +1186,7 @@ static void usingStatement(Compiler* compiler) {
     uint8_t namespaceDepth = 0;
     do { 
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace identifier.");
-        emitConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, compiler->parser->previous.start, compiler->parser->previous.length)));
+        emitIdentifier(compiler, &compiler->parser->previous);
         namespaceDepth++;
     } while (match(compiler->parser, TOKEN_DOT));
     emitBytes(compiler, OP_SUBNAMESPACE, namespaceDepth);
