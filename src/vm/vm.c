@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 
 #include "debug.h"
@@ -134,6 +135,21 @@ void freeModule(VM* vm, Module* module) {
     freeTable(vm, &module->values);
     free(module->source);
     vm->currentModule = module->lastModule;
+}
+
+static bool runModule(VM* vm, ObjString* filePath) {
+    Module module;
+    initModule(vm, &module, filePath->chars);
+    ObjFunction* function = compile(vm, module.source);
+    if (function == NULL) return false;
+    push(vm, OBJ_VAL(function));
+
+    ObjClosure* closure = newClosure(vm, function);
+    pop(vm);
+    push(vm, OBJ_VAL(closure));
+    callClosure(vm, closure, 0);
+    freeModule(vm, &module);
+    return true;
 }
 
 void initVM(VM* vm) {
@@ -279,6 +295,54 @@ static ObjNamespace* declareNamespace(VM* vm, uint8_t namespaceDepth) {
     return currentNamespace;
 }
 
+static ObjString* resolveNamespacedFile(VM* vm, ObjNamespace* enclosingNamespace, ObjString* shortName) {
+    int length = enclosingNamespace->fullName->length + shortName->length + 5;
+    char* heapChars = ALLOCATE(char, length + 1);
+    int offset = 0;
+    while (offset < enclosingNamespace->fullName->length) {
+        char currentChar = enclosingNamespace->fullName->chars[offset];
+        heapChars[offset] = (currentChar == '.') ? '/' : currentChar;
+        offset++;
+    }
+    heapChars[offset++] = '/';
+
+    int startIndex = offset;
+    heapChars[offset++] = (char)tolower(shortName->chars[0]);
+    while (offset < startIndex + shortName->length) {
+        heapChars[offset] = shortName->chars[offset - startIndex];
+        offset++;
+    }
+
+    heapChars[offset++] = '.';
+    heapChars[length - 3] = 'l';
+    heapChars[length - 2] = 'o';
+    heapChars[length - 1] = 'x';
+    heapChars[length] = '\n';
+
+    return takeString(vm, heapChars, length);
+}
+
+static bool loadNamespacedValue(VM* vm, ObjString* filePath) {
+    struct stat fileStat;
+    if (stat(filePath->chars, &fileStat) == -1) {
+        runtimeError(vm, "Failed to load source file %s", filePath->chars);
+        return false;
+    }
+    return true;
+}
+
+static Value resolveNamespacedValue(VM* vm, ObjNamespace* enclosingNamespace, ObjString* shortName) {
+    Value value;
+    if (tableGet(&enclosingNamespace->values, shortName, &value)) return value;
+    /*
+    else {
+        if (!loadNamespacedValue(vm, enclosingNamespace, shortName)) return NIL_VAL;
+        return tableGet(&enclosingNamespace->values, shortName, &value) ? value : NIL_VAL;
+    }
+    */
+    else return NIL_VAL;
+}
+
 static Value usingNamespace(VM* vm, uint8_t namespaceDepth) {
     ObjNamespace* currentNamespace = vm->rootNamespace;
     Value value;
@@ -291,15 +355,20 @@ static Value usingNamespace(VM* vm, uint8_t namespaceDepth) {
     }
 
     ObjString* shortName = AS_STRING(peek(vm, 0));
-    if (!tableGet(&currentNamespace->values, shortName, &value)) {
+    value = resolveNamespacedValue(vm, currentNamespace, shortName);
+    /*
+    if (IS_NIL(value)) {
         runtimeError(vm, "Undefined class/trait %s in %s namespace.", 
             shortName->chars, currentNamespace->isRoot ? "<root>" : currentNamespace->fullName->chars);
-        return NIL_VAL;
     }
+    */
+
     while (namespaceDepth > 0) {
         pop(vm);
         namespaceDepth--;
     }
+    push(vm, OBJ_VAL(shortName));
+    push(vm, OBJ_VAL(currentNamespace));
     return value;
 }
 
@@ -481,15 +550,6 @@ static void closeUpvalues(VM* vm, Value* last) {
         upvalue->closed = *upvalue->location;
         upvalue->location = &upvalue->closed;
         vm->openUpvalues = upvalue->next;
-    }
-}
-
-static Value resolveNamespace(VM* vm, ObjNamespace* namespace, ObjString* name) {
-    Value value;
-    if (tableGet(&namespace->values, name, &value)) return value;
-    else {
-        // Attempt to use autoloading mechanism for classes/traits/namespaces.
-        return NIL_VAL;
     }
 }
 
@@ -975,17 +1035,7 @@ InterpretResult run(VM* vm) {
                     break;
                 }
 
-                Module module;
-                initModule(vm, &module, AS_CSTRING(filePath));
-                ObjFunction* function = compile(vm, module.source);
-                if (function == NULL) return INTERPRET_COMPILE_ERROR;
-                push(vm, OBJ_VAL(function));
-
-                ObjClosure* closure = newClosure(vm, function);
-                pop(vm);
-                push(vm, OBJ_VAL(closure));
-                callClosure(vm, closure, 0);
-                freeModule(vm, &module);
+                runModule(vm, AS_STRING(filePath));
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
             }
@@ -997,7 +1047,27 @@ InterpretResult run(VM* vm) {
             case OP_USING: { 
                 uint8_t namespaceDepth = READ_BYTE();
                 Value value = usingNamespace(vm, namespaceDepth);
-                if (IS_NIL(value)) return INTERPRET_RUNTIME_ERROR;
+                ObjNamespace* enclosingNamespace = AS_NAMESPACE(pop(vm));
+                ObjString* shortName = AS_STRING(pop(vm));
+
+                if (IS_NIL(value)) {
+                    ObjString* filePath = resolveNamespacedFile(vm, enclosingNamespace, shortName);
+                    struct stat fileStat;
+                    if (stat(filePath->chars, &fileStat) == -1) {
+                        runtimeError(vm, "Failed to load source file %s", filePath->chars);
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    runModule(vm, filePath);
+                    frame = &vm->frames[vm->frameCount - 1];
+
+                    /*
+                    if (!tableGet(&enclosingNamespace->values, shortName, &value)) {
+                        runtimeError(vm, "Undefined class/trait %s.%s", enclosingNamespace->fullName->chars, shortName->chars);
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    */
+                    tableGet(&enclosingNamespace->values, shortName, &value);
+                }
                 push(vm, value);
                 break;
             }
