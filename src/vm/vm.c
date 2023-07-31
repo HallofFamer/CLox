@@ -279,7 +279,7 @@ static ObjNamespace* declareNamespace(VM* vm, uint8_t namespaceDepth) {
     return currentNamespace;
 }
 
-static void usingNamespace(VM* vm, uint8_t namespaceDepth) {
+static Value usingNamespace(VM* vm, uint8_t namespaceDepth) {
     ObjNamespace* currentNamespace = vm->rootNamespace;
     Value value;
     for (int i = namespaceDepth - 1; i >= 1; i--) {
@@ -292,15 +292,15 @@ static void usingNamespace(VM* vm, uint8_t namespaceDepth) {
 
     ObjString* shortName = AS_STRING(peek(vm, 0));
     if (!tableGet(&currentNamespace->values, shortName, &value)) {
-        runtimeError(vm, "Undefined identifier %s.", shortName->chars);
-        return INTERPRET_RUNTIME_ERROR;
+        runtimeError(vm, "Undefined class/trait %s in %s namespace.", 
+            shortName->chars, currentNamespace->isRoot ? "<root>" : currentNamespace->fullName->chars);
+        return NIL_VAL;
     }
-
     while (namespaceDepth > 0) {
         pop(vm);
         namespaceDepth--;
     }
-    push(vm, value);
+    return value;
 }
 
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
@@ -996,7 +996,9 @@ InterpretResult run(VM* vm) {
             }
             case OP_USING: { 
                 uint8_t namespaceDepth = READ_BYTE();
-                usingNamespace(vm, namespaceDepth);
+                Value value = usingNamespace(vm, namespaceDepth);
+                if (IS_NIL(value)) return INTERPRET_RUNTIME_ERROR;
+                push(vm, value);
                 break;
             }
             case OP_ALIAS: {
