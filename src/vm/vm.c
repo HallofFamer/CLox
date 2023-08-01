@@ -278,21 +278,21 @@ static ObjArray* makeTraitArray(VM* vm, uint8_t behaviorCount) {
 }
 
 static ObjNamespace* declareNamespace(VM* vm, uint8_t namespaceDepth) {
-    ObjNamespace* currentNamespace = vm->rootNamespace;
+    ObjNamespace* enclosingNamespace = vm->rootNamespace;
     for (int i = namespaceDepth - 1; i >= 0; i--) {
         ObjString* name = AS_STRING(peek(vm, i));
         Value value;
-        if (!tableGet(&currentNamespace->values, name, &value)) {
-            currentNamespace = defineNativeNamespace(vm, name->chars, currentNamespace);
+        if (!tableGet(&enclosingNamespace->values, name, &value)) {
+            enclosingNamespace = defineNativeNamespace(vm, name->chars, enclosingNamespace);
         }
-        else currentNamespace = AS_NAMESPACE(value);
+        else enclosingNamespace = AS_NAMESPACE(value);
     }
 
     while (namespaceDepth > 0) {
         pop(vm);
         namespaceDepth--;
     }
-    return currentNamespace;
+    return enclosingNamespace;
 }
 
 static ObjString* resolveNamespacedFile(VM* vm, ObjNamespace* enclosingNamespace, ObjString* shortName) {
@@ -307,7 +307,6 @@ static ObjString* resolveNamespacedFile(VM* vm, ObjNamespace* enclosingNamespace
     heapChars[offset++] = '/';
 
     int startIndex = offset;
-    heapChars[offset++] = (char)tolower(shortName->chars[0]);
     while (offset < startIndex + shortName->length) {
         heapChars[offset] = shortName->chars[offset - startIndex];
         offset++;
@@ -318,58 +317,30 @@ static ObjString* resolveNamespacedFile(VM* vm, ObjNamespace* enclosingNamespace
     heapChars[length - 2] = 'o';
     heapChars[length - 1] = 'x';
     heapChars[length] = '\n';
-
     return takeString(vm, heapChars, length);
 }
 
-static bool loadNamespacedValue(VM* vm, ObjString* filePath) {
-    struct stat fileStat;
-    if (stat(filePath->chars, &fileStat) == -1) {
-        runtimeError(vm, "Failed to load source file %s", filePath->chars);
-        return false;
-    }
-    return true;
-}
-
-static Value resolveNamespacedValue(VM* vm, ObjNamespace* enclosingNamespace, ObjString* shortName) {
-    Value value;
-    if (tableGet(&enclosingNamespace->values, shortName, &value)) return value;
-    /*
-    else {
-        if (!loadNamespacedValue(vm, enclosingNamespace, shortName)) return NIL_VAL;
-        return tableGet(&enclosingNamespace->values, shortName, &value) ? value : NIL_VAL;
-    }
-    */
-    else return NIL_VAL;
-}
-
 static Value usingNamespace(VM* vm, uint8_t namespaceDepth) {
-    ObjNamespace* currentNamespace = vm->rootNamespace;
+    ObjNamespace* enclosingNamespace = vm->rootNamespace;
     Value value;
     for (int i = namespaceDepth - 1; i >= 1; i--) {
         ObjString* name = AS_STRING(peek(vm, i));
-        if (!tableGet(&currentNamespace->values, name, &value)) {
-            currentNamespace = defineNativeNamespace(vm, name->chars, currentNamespace);
+        if (!tableGet(&enclosingNamespace->values, name, &value)) {
+            enclosingNamespace = defineNativeNamespace(vm, name->chars, enclosingNamespace);
         }
-        else currentNamespace = AS_NAMESPACE(value);
+        else enclosingNamespace = AS_NAMESPACE(value);
     }
 
     ObjString* shortName = AS_STRING(peek(vm, 0));
-    value = resolveNamespacedValue(vm, currentNamespace, shortName);
-    /*
-    if (IS_NIL(value)) {
-        runtimeError(vm, "Undefined class/trait %s in %s namespace.", 
-            shortName->chars, currentNamespace->isRoot ? "<root>" : currentNamespace->fullName->chars);
-    }
-    */
-
+    bool valueExists = tableGet(&enclosingNamespace->values, shortName, &value);
     while (namespaceDepth > 0) {
         pop(vm);
         namespaceDepth--;
     }
+
     push(vm, OBJ_VAL(shortName));
-    push(vm, OBJ_VAL(currentNamespace));
-    return value;
+    push(vm, OBJ_VAL(enclosingNamespace));
+    return valueExists ? value : NIL_VAL;
 }
 
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
@@ -948,7 +919,7 @@ InterpretResult run(VM* vm) {
             case OP_CLASS: { 
                 ObjString* className = READ_STRING();
                 push(vm, OBJ_VAL(newClass(vm, className)));
-                tableSet(vm, &vm->rootNamespace->values, className, peek(vm, 0));
+                tableSet(vm, &vm->currentNamespace->values, className, peek(vm, 0));
                 break;
             }
             case OP_TRAIT: { 
@@ -1047,8 +1018,8 @@ InterpretResult run(VM* vm) {
             case OP_USING: { 
                 uint8_t namespaceDepth = READ_BYTE();
                 Value value = usingNamespace(vm, namespaceDepth);
-                ObjNamespace* enclosingNamespace = AS_NAMESPACE(pop(vm));
-                ObjString* shortName = AS_STRING(pop(vm));
+                ObjNamespace* enclosingNamespace = AS_NAMESPACE(peek(vm, 0));
+                ObjString* shortName = AS_STRING(peek(vm, 1));
 
                 if (IS_NIL(value)) {
                     ObjString* filePath = resolveNamespacedFile(vm, enclosingNamespace, shortName);
@@ -1058,23 +1029,21 @@ InterpretResult run(VM* vm) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     runModule(vm, filePath);
-                    frame = &vm->frames[vm->frameCount - 1];
-
-                    /*
-                    if (!tableGet(&enclosingNamespace->values, shortName, &value)) {
-                        runtimeError(vm, "Undefined class/trait %s.%s", enclosingNamespace->fullName->chars, shortName->chars);
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    */
-                    tableGet(&enclosingNamespace->values, shortName, &value);
+                    frame = &vm->frames[vm->frameCount - 1];                  
                 }
-                push(vm, value);
                 break;
             }
             case OP_ALIAS: {
-                Value value = pop(vm);
-                ObjString* alias = READ_STRING();
- 
+                ObjNamespace* enclosingNamespace = AS_NAMESPACE(pop(vm));
+                ObjString* shortName = AS_STRING(pop(vm));
+                Value value;
+                tableGet(&enclosingNamespace->values, shortName, &value);
+                if (IS_NIL(value)) {
+                    runtimeError(vm, "Undefined class/trait %s.%s", enclosingNamespace->fullName->chars, shortName->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjString* alias = READ_STRING(); 
                 if (alias->length > 0) {
                     tableSet(vm, &vm->currentModule->values, alias, value);
                 }
@@ -1102,7 +1071,6 @@ InterpretResult run(VM* vm) {
                 }
 
                 vm->stackTop = frame->slots;
-                push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
