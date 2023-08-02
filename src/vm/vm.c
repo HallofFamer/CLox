@@ -295,7 +295,35 @@ static ObjNamespace* declareNamespace(VM* vm, uint8_t namespaceDepth) {
     return enclosingNamespace;
 }
 
-static ObjString* resolveNamespacedFile(VM* vm, ObjNamespace* enclosingNamespace, ObjString* shortName) {
+static Value usingNamespace(VM* vm, uint8_t namespaceDepth) {
+    ObjNamespace* enclosingNamespace = vm->rootNamespace;
+    Value value;
+    for (int i = namespaceDepth - 1; i >= 1; i--) {
+        ObjString* name = AS_STRING(peek(vm, i));
+        if (!tableGet(&enclosingNamespace->values, name, &value)) {
+            enclosingNamespace = defineNativeNamespace(vm, name->chars, enclosingNamespace);
+        }
+        else enclosingNamespace = AS_NAMESPACE(value);
+    }
+
+    ObjString* shortName = AS_STRING(peek(vm, 0));
+    bool valueExists = tableGet(&enclosingNamespace->values, shortName, &value);
+    while (namespaceDepth > 0) {
+        pop(vm);
+        namespaceDepth--;
+    }
+
+    push(vm, OBJ_VAL(shortName));
+    push(vm, OBJ_VAL(enclosingNamespace));
+    return valueExists ? value : NIL_VAL;
+}
+
+static bool sourceFileExists(ObjString* filePath) {
+    struct stat fileStat;
+    return stat(filePath->chars, &fileStat) == 0;
+}
+
+static ObjString* resolveNamespacedFile(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
     int length = enclosingNamespace->fullName->length + shortName->length + 5;
     char* heapChars = ALLOCATE(char, length + 1);
     int offset = 0;
@@ -320,27 +348,31 @@ static ObjString* resolveNamespacedFile(VM* vm, ObjNamespace* enclosingNamespace
     return takeString(vm, heapChars, length);
 }
 
-static Value usingNamespace(VM* vm, uint8_t namespaceDepth) {
-    ObjNamespace* enclosingNamespace = vm->rootNamespace;
-    Value value;
-    for (int i = namespaceDepth - 1; i >= 1; i--) {
-        ObjString* name = AS_STRING(peek(vm, i));
-        if (!tableGet(&enclosingNamespace->values, name, &value)) {
-            enclosingNamespace = defineNativeNamespace(vm, name->chars, enclosingNamespace);
-        }
-        else enclosingNamespace = AS_NAMESPACE(value);
+static bool sourceDirectoryExists(ObjString* directoryPath) {
+    struct stat directoryStat;
+    if (stat(directoryPath->chars, &directoryStat) == 0) return (directoryStat.st_mode & S_IFMT) == S_IFDIR;
+    return false;
+}
+
+static ObjString* resolveNamespacedDirectory(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
+    int length = enclosingNamespace->fullName->length + shortName->length + 1;
+    char* heapChars = ALLOCATE(char, length + 1);
+    int offset = 0;
+    while (offset < enclosingNamespace->fullName->length) {
+        char currentChar = enclosingNamespace->fullName->chars[offset];
+        heapChars[offset] = (currentChar == '.') ? '/' : currentChar;
+        offset++;
+    }
+    heapChars[offset++] = '/';
+
+    int startIndex = offset;
+    while (offset < startIndex + shortName->length) {
+        heapChars[offset] = shortName->chars[offset - startIndex];
+        offset++;
     }
 
-    ObjString* shortName = AS_STRING(peek(vm, 0));
-    bool valueExists = tableGet(&enclosingNamespace->values, shortName, &value);
-    while (namespaceDepth > 0) {
-        pop(vm);
-        namespaceDepth--;
-    }
-
-    push(vm, OBJ_VAL(shortName));
-    push(vm, OBJ_VAL(enclosingNamespace));
-    return valueExists ? value : NIL_VAL;
+    heapChars[length] = '\n';
+    return takeString(vm, heapChars, length);
 }
 
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
@@ -524,6 +556,13 @@ static void closeUpvalues(VM* vm, Value* last) {
     }
 }
 
+static void defineNamespace(VM* vm, ObjString* name, ObjNamespace* enclosing) {
+    ObjNamespace* namespace = newNamespace(vm, name, enclosing);
+    push(vm, OBJ_VAL(namespace));
+    tableSet(vm, &enclosing->values, name, OBJ_VAL(namespace));
+    pop(vm);
+}
+
 static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     Value method = peek(vm, 0);
     ObjClass* klass = AS_CLASS(peek(vm, 1));
@@ -665,18 +704,29 @@ InterpretResult run(VM* vm) {
                     }
                 }
                 else if (IS_NAMESPACE(receiver)) {
-                    ObjNamespace* namespace = AS_NAMESPACE(receiver);
+                    ObjNamespace* enclosing = AS_NAMESPACE(receiver);
                     ObjString* name = READ_STRING();
                     Value value;
 
-                    if (tableGet(&namespace->values, name, &value)) {
+                    if (tableGet(&enclosing->values, name, &value)) {
                         pop(vm);
                         push(vm, value);
                         break;
                     }
                     else {
-                        runtimeError(vm, "Undefined subnamespace '%s'.", name->chars);
-                        return INTERPRET_RUNTIME_ERROR;
+                        ObjString* filePath = resolveNamespacedFile(vm, name, enclosing);
+                        if (!sourceFileExists(filePath)) { 
+                            runtimeError(vm, "Undefined class '%s.%s'.", enclosing->fullName->chars, name->chars);
+                            return INTERPRET_RUNTIME_ERROR;
+                        }
+                        vm->apiStackDepth++;
+                        runModule(vm, filePath);
+                        run(vm);
+                        vm->apiStackDepth--;
+                        
+                        pop(vm);
+                        tableGet(&enclosing->values, name, &value);
+                        push(vm, value);
                     }
                 }
                 else{
@@ -1022,14 +1072,24 @@ InterpretResult run(VM* vm) {
                 ObjString* shortName = AS_STRING(peek(vm, 1));
 
                 if (IS_NIL(value)) {
-                    ObjString* filePath = resolveNamespacedFile(vm, enclosingNamespace, shortName);
-                    struct stat fileStat;
-                    if (stat(filePath->chars, &fileStat) == -1) {
-                        runtimeError(vm, "Failed to load source file %s", filePath->chars);
-                        return INTERPRET_RUNTIME_ERROR;
+                    ObjString* filePath = resolveNamespacedFile(vm, shortName, enclosingNamespace);
+                    if (sourceFileExists(filePath)) {
+                        vm->apiStackDepth++;
+                        runModule(vm, filePath);
+                        run(vm);
+                        vm->apiStackDepth--;
                     }
-                    runModule(vm, filePath);
-                    frame = &vm->frames[vm->frameCount - 1];                  
+                    else {
+                        ObjString* directoryPath = resolveNamespacedDirectory(vm, shortName, enclosingNamespace);
+                        if (!sourceDirectoryExists(directoryPath)) { 
+                            runtimeError(vm, "Failed to load source file for %s", filePath->chars);
+                            return INTERPRET_RUNTIME_ERROR;
+                        }
+                        else if (!tableGet(&enclosingNamespace->values, shortName, &value)) { 
+                            defineNamespace(vm, shortName, enclosingNamespace);
+                        }
+                    }
+                
                 }
                 break;
             }

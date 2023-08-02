@@ -2,10 +2,10 @@ namespace clox.test;
 using clox.std.collection;
 using clox.std.util.Date;
 using clox.std.util.UUID as ID;
-using test.lox.Fraction;
+using test.lox;
 
 println(collection);
 println(collection.Array);
 println(Date);
 println(ID);
-println(Fraction);
+println(lox.Fraction);
