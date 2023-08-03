@@ -137,21 +137,6 @@ void freeModule(VM* vm, Module* module) {
     vm->currentModule = module->lastModule;
 }
 
-static bool runModule(VM* vm, ObjString* filePath) {
-    Module module;
-    initModule(vm, &module, filePath->chars);
-    ObjFunction* function = compile(vm, module.source);
-    if (function == NULL) return false;
-    push(vm, OBJ_VAL(function));
-
-    ObjClosure* closure = newClosure(vm, function);
-    pop(vm);
-    push(vm, OBJ_VAL(closure));
-    callClosure(vm, closure, 0);
-    freeModule(vm, &module);
-    return true;
-}
-
 void initVM(VM* vm) {
     resetStack(vm);
     initConfiguration(vm);
@@ -556,13 +541,6 @@ static void closeUpvalues(VM* vm, Value* last) {
     }
 }
 
-static void defineNamespace(VM* vm, ObjString* name, ObjNamespace* enclosing) {
-    ObjNamespace* namespace = newNamespace(vm, name, enclosing);
-    push(vm, OBJ_VAL(namespace));
-    tableSet(vm, &enclosing->values, name, OBJ_VAL(namespace));
-    pop(vm);
-}
-
 static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     Value method = peek(vm, 0);
     ObjClass* klass = AS_CLASS(peek(vm, 1));
@@ -576,6 +554,30 @@ static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
 
     tableSet(vm, &klass->methods, name, method);
     pop(vm);
+}
+
+
+static bool runModule(VM* vm, ObjString* filePath) {
+    Module module;
+    initModule(vm, &module, filePath->chars);
+    ObjFunction* function = compile(vm, module.source);
+    if (function == NULL) return false;
+    push(vm, OBJ_VAL(function));
+
+    ObjClosure* closure = newClosure(vm, function);
+    pop(vm);
+    push(vm, OBJ_VAL(closure));
+    callClosure(vm, closure, 0);
+    freeModule(vm, &module);
+    return true;
+}
+
+static bool runModuleReentrant(VM* vm, ObjString* filePath) { 
+    vm->apiStackDepth++;
+    bool runStatus = runModule(vm, filePath);
+    run(vm);
+    vm->apiStackDepth--;
+    return runStatus;
 }
 
 InterpretResult run(VM* vm) {
@@ -719,11 +721,8 @@ InterpretResult run(VM* vm) {
                             runtimeError(vm, "Undefined class '%s.%s'.", enclosing->fullName->chars, name->chars);
                             return INTERPRET_RUNTIME_ERROR;
                         }
-                        vm->apiStackDepth++;
-                        runModule(vm, filePath);
-                        run(vm);
-                        vm->apiStackDepth--;
-                        
+
+                        runModuleReentrant(vm, filePath);                        
                         pop(vm);
                         tableGet(&enclosing->values, name, &value);
                         push(vm, value);
@@ -1068,38 +1067,33 @@ InterpretResult run(VM* vm) {
             case OP_USING: { 
                 uint8_t namespaceDepth = READ_BYTE();
                 Value value = usingNamespace(vm, namespaceDepth);
-                ObjNamespace* enclosingNamespace = AS_NAMESPACE(peek(vm, 0));
-                ObjString* shortName = AS_STRING(peek(vm, 1));
+                ObjNamespace* enclosingNamespace = AS_NAMESPACE(pop(vm));
+                ObjString* shortName = AS_STRING(pop(vm));
 
-                if (IS_NIL(value)) {
+                if (!IS_NIL(value)) push(vm, value);
+                else {
                     ObjString* filePath = resolveNamespacedFile(vm, shortName, enclosingNamespace);
-                    if (sourceFileExists(filePath)) {
-                        vm->apiStackDepth++;
-                        runModule(vm, filePath);
-                        run(vm);
-                        vm->apiStackDepth--;
-                    }
+                    if (sourceFileExists(filePath)) runModuleReentrant(vm, filePath);
                     else {
                         ObjString* directoryPath = resolveNamespacedDirectory(vm, shortName, enclosingNamespace);
-                        if (!sourceDirectoryExists(directoryPath)) { 
+                        if (!sourceDirectoryExists(directoryPath)) {
                             runtimeError(vm, "Failed to load source file for %s", filePath->chars);
                             return INTERPRET_RUNTIME_ERROR;
                         }
-                        else if (!tableGet(&enclosingNamespace->values, shortName, &value)) { 
-                            defineNamespace(vm, shortName, enclosingNamespace);
+                        else if (!tableGet(&enclosingNamespace->values, shortName, &value)) {
+                            ObjNamespace* namespace = newNamespace(vm, shortName, enclosingNamespace);
+                            push(vm, OBJ_VAL(namespace));
+                            tableSet(vm, &enclosingNamespace->values, shortName, OBJ_VAL(namespace));
                         }
                     }
-                
+
                 }
                 break;
             }
             case OP_ALIAS: {
-                ObjNamespace* enclosingNamespace = AS_NAMESPACE(pop(vm));
-                ObjString* shortName = AS_STRING(pop(vm));
-                Value value;
-                tableGet(&enclosingNamespace->values, shortName, &value);
+                Value value = pop(vm);
                 if (IS_NIL(value)) {
-                    runtimeError(vm, "Undefined class/trait %s.%s", enclosingNamespace->fullName->chars, shortName->chars);
+                    runtimeError(vm, "Undefined class/trait/namespace specified.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
