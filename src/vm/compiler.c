@@ -950,7 +950,7 @@ static void namespaceDeclaration(Compiler* compiler) {
     } while (match(compiler->parser, TOKEN_DOT));
 
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect semicolon after namespace declaration.");
-    emitBytes(compiler, OP_NAMESPACE, namespaceDepth);
+    emitBytes(compiler, OP_DECLARE_NAMESPACE, namespaceDepth);
 }
 
 static void traitDeclaration(Compiler* compiler) {
@@ -1190,7 +1190,7 @@ static void usingStatement(Compiler* compiler) {
         namespaceDepth++;
     } while (match(compiler->parser, TOKEN_DOT));
 
-    emitBytes(compiler, OP_USING, namespaceDepth);
+    emitBytes(compiler, OP_GET_NAMESPACE, namespaceDepth);
     uint8_t alias = makeConstant(compiler, OBJ_VAL(newString(compiler->parser->vm, "")));
 
     if (match(compiler->parser, TOKEN_AS)) {
@@ -1199,7 +1199,7 @@ static void usingStatement(Compiler* compiler) {
         alias = identifierConstant(compiler, &name);
     }
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after using statement.");
-    emitBytes(compiler, OP_ALIAS, alias);
+    emitBytes(compiler, OP_USING_NAMESPACE, alias);
 }
 
 static void whileStatement(Compiler* compiler) {

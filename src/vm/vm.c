@@ -724,6 +724,7 @@ InterpretResult run(VM* vm) {
 
                         runModuleReentrant(vm, filePath);                        
                         pop(vm);
+                        pop(vm);
                         tableGet(&enclosing->values, name, &value);
                         push(vm, value);
                     }
@@ -1059,12 +1060,12 @@ InterpretResult run(VM* vm) {
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
             }
-            case OP_NAMESPACE: {
+            case OP_DECLARE_NAMESPACE: {
                 uint8_t namespaceDepth = READ_BYTE();
                 vm->currentNamespace = declareNamespace(vm, namespaceDepth);
                 break;
             }
-            case OP_USING: { 
+            case OP_GET_NAMESPACE: { 
                 uint8_t namespaceDepth = READ_BYTE();
                 Value value = usingNamespace(vm, namespaceDepth);
                 ObjNamespace* enclosingNamespace = AS_NAMESPACE(pop(vm));
@@ -1090,7 +1091,7 @@ InterpretResult run(VM* vm) {
                 }
                 break;
             }
-            case OP_ALIAS: {
+            case OP_USING_NAMESPACE: {
                 Value value = pop(vm);
                 if (IS_NIL(value)) {
                     runtimeError(vm, "Undefined class/trait/namespace specified.");
@@ -1125,6 +1126,7 @@ InterpretResult run(VM* vm) {
                 }
 
                 vm->stackTop = frame->slots;
+                push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
