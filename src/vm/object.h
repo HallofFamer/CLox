@@ -62,6 +62,7 @@ typedef enum {
     OBJ_FUNCTION,
     OBJ_INSTANCE,
     OBJ_METHOD,
+    OBJ_MODULE,
     OBJ_NAMESPACE,
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
@@ -158,6 +159,15 @@ typedef struct {
     FreeFunction freeFunction;
 } ObjRecord;
 
+typedef struct {
+    Obj obj;
+    ObjString* name;
+    ObjString* path;
+    bool isNative;
+    Table values;
+    Table proxy;
+} ObjModule;
+
 typedef struct ObjUpvalue {
     Obj obj;
     Value* location;
@@ -230,6 +240,7 @@ ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure);
+ObjModule* newModule(VM* vm, ObjString* name, ObjString* path);
 ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);

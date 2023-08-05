@@ -136,6 +136,14 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)method->closure);
             break;
         }
+        case OBJ_MODULE: {
+            ObjModule* module = (ObjModule*)object;
+            markObject(vm, (Obj*)module->name);
+            markObject(vm, (Obj*)module->path);
+            markTable(vm, &module->values);
+            markTable(vm, &module->proxy);
+            break;
+        }
         case OBJ_NAMESPACE: {
             ObjNamespace* namespace = (ObjNamespace*)object;
             markObject(vm, (Obj*)namespace->shortName);
@@ -235,6 +243,13 @@ static void freeObject(VM* vm, Obj* object) {
             FREE(ObjMethod, object);
             break;
         }
+        case OBJ_MODULE: {
+            ObjModule* module = (ObjModule*)object;
+            freeTable(vm, &module->values);
+            freeTable(vm, &module->proxy);
+            FREE(ObjModule, object);
+            break;
+        }             
         case OBJ_NAMESPACE: { 
             ObjNamespace* namespace = (ObjNamespace*)object;
             freeTable(vm, &namespace->values);
