@@ -1,4 +1,5 @@
 namespace test.lox;
+using clox.std.collection.Array;
 
 class Fraction {
 
@@ -12,7 +13,6 @@ class Fraction {
 
     reduce(){
         var gcd = this.numerator.gcd(this.denominator);
-        println(gcd);
         var numerator = this.numerator / gcd;
         var denominator = this.denominator / gcd;
         return Fraction(numerator.toInt(), denominator.toInt());

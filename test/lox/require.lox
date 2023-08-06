@@ -1,3 +1,4 @@
+namespace test.lox;
 val filePath = "test/lox/fraction.lox";
 require filePath;
 

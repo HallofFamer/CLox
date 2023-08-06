@@ -308,7 +308,7 @@ static bool sourceFileExists(ObjString* filePath) {
     return stat(filePath->chars, &fileStat) == 0;
 }
 
-static ObjString* resolveNamespacedFile(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
+static ObjString* resolveSourceFile(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
     int length = enclosingNamespace->fullName->length + shortName->length + 5;
     char* heapChars = ALLOCATE(char, length + 1);
     int offset = 0;
@@ -339,7 +339,7 @@ static bool sourceDirectoryExists(ObjString* directoryPath) {
     return false;
 }
 
-static ObjString* resolveNamespacedDirectory(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
+static ObjString* resolveSourceDirectory(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
     int length = enclosingNamespace->fullName->length + shortName->length + 1;
     char* heapChars = ALLOCATE(char, length + 1);
     int offset = 0;
@@ -716,7 +716,7 @@ InterpretResult run(VM* vm) {
                         break;
                     }
                     else {
-                        ObjString* filePath = resolveNamespacedFile(vm, name, enclosing);
+                        ObjString* filePath = resolveSourceFile(vm, name, enclosing);
                         if (!sourceFileExists(filePath)) { 
                             runtimeError(vm, "Undefined class '%s.%s'.", enclosing->fullName->chars, name->chars);
                             return INTERPRET_RUNTIME_ERROR;
@@ -1073,10 +1073,10 @@ InterpretResult run(VM* vm) {
 
                 if (!IS_NIL(value)) push(vm, value);
                 else {
-                    ObjString* filePath = resolveNamespacedFile(vm, shortName, enclosingNamespace);
+                    ObjString* filePath = resolveSourceFile(vm, shortName, enclosingNamespace);
                     if (sourceFileExists(filePath)) runModuleReentrant(vm, filePath);
                     else {
-                        ObjString* directoryPath = resolveNamespacedDirectory(vm, shortName, enclosingNamespace);
+                        ObjString* directoryPath = resolveSourceDirectory(vm, shortName, enclosingNamespace);
                         if (!sourceDirectoryExists(directoryPath)) {
                             runtimeError(vm, "Failed to load source file for %s", filePath->chars);
                             return INTERPRET_RUNTIME_ERROR;
