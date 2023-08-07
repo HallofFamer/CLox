@@ -134,7 +134,7 @@ void initModule(VM* vm, Module* module, const char* filePath) {
 void freeModule(VM* vm, Module* module) {
     freeTable(vm, &module->values);
     free(module->source);
-    vm->currentModule = module->lastModule;
+    //vm->currentModule = module->lastModule;
 }
 
 void initVM(VM* vm) {
@@ -559,7 +559,9 @@ static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
 
 static bool runModule(VM* vm, ObjString* filePath) {
     Module module;
+    Module* lastModule = vm->currentModule;
     initModule(vm, &module, filePath->chars);
+
     ObjFunction* function = compile(vm, module.source);
     if (function == NULL) return false;
     push(vm, OBJ_VAL(function));
@@ -569,6 +571,7 @@ static bool runModule(VM* vm, ObjString* filePath) {
     push(vm, OBJ_VAL(closure));
     callClosure(vm, closure, 0);
     freeModule(vm, &module);
+    vm->currentModule = lastModule;
     return true;
 }
 
