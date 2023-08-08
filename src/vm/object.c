@@ -114,6 +114,8 @@ ObjModule* newModule(VM* vm, ObjString* path) {
     module->path = path;
     module->isNative = false;
     initTable(&module->values);
+    tableAddAll(vm, &vm->langNamespace->values, &module->values);
+    tableSet(vm, &vm->modules, path, NIL_VAL);
     return module;
 }
 
