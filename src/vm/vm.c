@@ -121,20 +121,6 @@ void initConfiguration(VM* vm) {
     vm->config = config;
 }
 
-void initModule(VM* vm, Module* module, const char* filePath) {
-    module->filePath = filePath;
-    module->source = readFile(filePath);
-    initTable(&module->values);
-    tableAddAll(vm, &vm->langNamespace->values, &module->values);
-    tableSet(vm, &vm->modules, newString(vm, filePath), NIL_VAL);
-    vm->currentModule = module;
-}
-
-void freeModule(VM* vm, Module* module) {
-    freeTable(vm, &module->values);
-    free(module->source);
-}
-
 void initVM(VM* vm) {
     resetStack(vm);
     initConfiguration(vm);
@@ -554,13 +540,12 @@ static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     pop(vm);
 }
 
+static bool loadModule(VM* vm, ObjString* path) {
+    ObjModule* lastModule = vm->currentModule;
+    vm->currentModule = newModule(vm, path);
 
-static bool runModule(VM* vm, ObjString* filePath) {
-    Module module;
-    Module* lastModule = vm->currentModule;
-    initModule(vm, &module, filePath->chars);
-
-    ObjFunction* function = compile(vm, module.source);
+    char* source = readFile(path->chars);
+    ObjFunction* function = compile(vm, source);
     if (function == NULL) return false;
     push(vm, OBJ_VAL(function));
 
@@ -568,17 +553,13 @@ static bool runModule(VM* vm, ObjString* filePath) {
     pop(vm);
     push(vm, OBJ_VAL(closure));
     callClosure(vm, closure, 0);
-    freeModule(vm, &module);
     vm->currentModule = lastModule;
-    return true;
-}
+    free(source);
 
-static bool runModuleReentrant(VM* vm, ObjString* filePath) { 
     vm->apiStackDepth++;
-    bool runStatus = runModule(vm, filePath);
     run(vm);
     vm->apiStackDepth--;
-    return runStatus;
+    return true;
 }
 
 InterpretResult run(VM* vm) {
@@ -723,7 +704,7 @@ InterpretResult run(VM* vm) {
                             return INTERPRET_RUNTIME_ERROR;
                         }
 
-                        runModuleReentrant(vm, filePath);                        
+                        loadModule(vm, filePath);                        
                         pop(vm);
                         pop(vm);
                         tableGet(&enclosing->values, name, &value);
@@ -1057,7 +1038,7 @@ InterpretResult run(VM* vm) {
                     break;
                 }
 
-                runModule(vm, AS_STRING(filePath));
+                loadModule(vm, AS_STRING(filePath));
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
             }
@@ -1075,7 +1056,7 @@ InterpretResult run(VM* vm) {
                 if (!IS_NIL(value)) push(vm, value);
                 else {
                     ObjString* filePath = resolveSourceFile(vm, shortName, enclosingNamespace);
-                    if (sourceFileExists(filePath)) runModuleReentrant(vm, filePath);
+                    if (sourceFileExists(filePath)) loadModule(vm, filePath);
                     else {
                         ObjString* directoryPath = resolveSourceDirectory(vm, shortName, enclosingNamespace);
                         if (!sourceDirectoryExists(directoryPath)) {
