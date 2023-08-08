@@ -127,14 +127,12 @@ void initModule(VM* vm, Module* module, const char* filePath) {
     initTable(&module->values);
     tableAddAll(vm, &vm->langNamespace->values, &module->values);
     tableSet(vm, &vm->modules, newString(vm, filePath), NIL_VAL);
-    module->lastModule = vm->currentModule;
     vm->currentModule = module;
 }
 
 void freeModule(VM* vm, Module* module) {
     freeTable(vm, &module->values);
     free(module->source);
-    //vm->currentModule = module->lastModule;
 }
 
 void initVM(VM* vm) {

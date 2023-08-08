@@ -33,7 +33,6 @@ struct Module {
     char* filePath;
     char* source;
     Table values;
-    struct Module* lastModule;
 };
 
 struct VM {
