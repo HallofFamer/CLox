@@ -37,6 +37,9 @@ https://github.com/munificent/craftinginterpreters
 - Class methods in class declaration, and `trait` keyword for trait declaration(since version 1.5)
 - Allow loading lox source files in lox script and another lox source file with `require` keyword(since version 1.5)
 - Anonymous classes/traits similar to anonymous functions/lambda(since version 1.5)
+- Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions(since version 1.6)
+- Refactor the existing standard library with namespaces(`clox.std` package)(since version 1.6)
+- Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible(since version 1.6)
 
 ## Roadmap
 
