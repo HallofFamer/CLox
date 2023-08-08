@@ -109,13 +109,11 @@ ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure) {
     return method;
 }
 
-ObjModule* newModule(VM* vm, ObjString* name, ObjString* path) {
+ObjModule* newModule(VM* vm, ObjString* path) {
     ObjModule* module = ALLOCATE_OBJ(ObjModule, OBJ_MODULE, NULL);
-    module->name = name;
     module->path = path;
     module->isNative = false;
     initTable(&module->values);
-    initTable(&module->proxy);
     return module;
 }
 
