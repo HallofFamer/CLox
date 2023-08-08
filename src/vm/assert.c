@@ -83,6 +83,13 @@ void assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
     }
 }
 
+void assertArgIsMethod(VM* vm, const char* method, Value* args, int index) { 
+    if (!IS_NAMESPACE(args[index]) && !isObjInstanceOf(vm, args[index], vm->methodClass)) {
+        runtimeError(vm, "method %s expects argument %d to be a method.", method, index + 1);
+        exit(70);
+    }
+}
+
 void assertArgIsNamespace(VM* vm, const char* method, Value* args, int index) {
     if (!IS_NAMESPACE(args[index]) && !isObjInstanceOf(vm, args[index], vm->namespaceClass)) {
         runtimeError(vm, "method %s expects argument %d to be a namespace.", method, index + 1);
