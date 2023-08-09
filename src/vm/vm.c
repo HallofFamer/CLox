@@ -911,6 +911,16 @@ InterpretResult run(VM* vm) {
             case OP_INVOKE: {
                 ObjString* method = READ_STRING();
                 uint8_t argCount = READ_BYTE();
+                Value receiver = peek(vm, argCount);
+                if (IS_NAMESPACE(receiver)) { 
+                    ObjNamespace* namespace = AS_NAMESPACE(receiver);
+                    Value behavior;
+                    if (tableGet(&namespace->values, method, &behavior)) {
+                        runtimeError(vm, "Class must be imported to the current namespace before being called.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                }
+                
                 if (!invoke(vm, method, argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
