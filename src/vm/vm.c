@@ -469,6 +469,13 @@ static bool invoke(VM* vm, ObjString* name, int argCount) {
             return callValue(vm, value, argCount);
         }
     }
+    else if (IS_NAMESPACE(receiver)) { 
+        ObjNamespace* namespace = AS_NAMESPACE(receiver);
+        Value value;
+        if (tableGet(&namespace->values, name, &value)) { 
+            return callValue(vm, value, argCount);
+        }
+    }
     return invokeFromClass(vm, getObjClass(vm, receiver), name, argCount);
 }
 
@@ -911,16 +918,7 @@ InterpretResult run(VM* vm) {
             case OP_INVOKE: {
                 ObjString* method = READ_STRING();
                 uint8_t argCount = READ_BYTE();
-                Value receiver = peek(vm, argCount);
-                if (IS_NAMESPACE(receiver)) { 
-                    ObjNamespace* namespace = AS_NAMESPACE(receiver);
-                    Value behavior;
-                    if (tableGet(&namespace->values, method, &behavior)) {
-                        runtimeError(vm, "Class must be imported to the current namespace before being called.");
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                }
-                
+
                 if (!invoke(vm, method, argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }

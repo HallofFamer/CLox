@@ -9,3 +9,8 @@ println(collection.Array);
 println(Date);
 println(ID);
 println(lox.Fraction);
+
+val frac = lox.Fraction(3, 6);
+println(frac.toString());
+val frac2 = frac.reduce();
+println(frac2.toString());
