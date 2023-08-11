@@ -298,5 +298,6 @@
     <Text Include="test\others\file_output.txt">
       <Filter>Test Files\others</Filter>
     </Text>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>

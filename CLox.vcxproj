@@ -237,6 +237,7 @@
     <ClInclude Include="src\vm\vm.h" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="CMakeLists.txt" />
     <Text Include="test\others\file_input.txt" />
     <Text Include="test\others\file_output.txt" />
   </ItemGroup>
