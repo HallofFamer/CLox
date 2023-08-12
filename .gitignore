@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/build
+/CLox.rc
+/CLox.sln
+/CLox.vcxproj.filters
+/CLox.vcxproj
+/CLox1.rc
