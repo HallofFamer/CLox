@@ -1218,7 +1218,7 @@ static ObjNamespace* defineRootNamespace(VM* vm) {
     ObjNamespace* rootNamespace = newNamespace(vm, name, NULL);
     rootNamespace->isRoot = true;
     push(vm, OBJ_VAL(rootNamespace));
-    tableSet(vm, &vm->namespaces, name, rootNamespace);
+    tableSet(vm, &vm->namespaces, name, OBJ_VAL(rootNamespace));
     pop(vm);
     pop(vm);
     return rootNamespace;
