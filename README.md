@@ -92,11 +92,13 @@ https://github.com/munificent/craftinginterpreters
 - Object ID and generic object table which enable inheritance for special build-in classes such as `String` and `Array`.
 
 ## Build and Run Clox
+
 To build and Run this project, execute the following commands: 
 ```
-$ git clone -b master https://github.com/HallofFamer/CLox.git
+git clone -b master https://github.com/HallofFamer/CLox.git
 cd CLox
 mkdir build
+cmake -S . -B build
 cmake --build "build"
 ./clox
 ```

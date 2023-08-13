@@ -1,0 +1,7 @@
+{
+  "name": "clox",
+  "version": "1.6.0",
+  "dependencies": [
+    "curl"
+  ]
+}
