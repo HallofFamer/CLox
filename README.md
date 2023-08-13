@@ -77,7 +77,7 @@ https://github.com/munificent/craftinginterpreters
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
 - Refactor the existing standard library with namespaces(`clox.std` package).
 - Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible.
-- Improved CLox standard library with New package `clox.std.network` and `clox.std.security`.
+- Improved CLox standard library with New package `clox.std.network`.
 
 ### CLox 1.7.0
 - Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
@@ -90,6 +90,16 @@ https://github.com/munificent/craftinginterpreters
 - Improved string concatenation, addition of string interpolation and UTF-8 strings.
 - Method interception when an undefined method call is invoked on an object/class, similar to Smalltalk's doesNotUnderstand: message.
 - Object ID and generic object table which enable inheritance for special build-in classes such as `String` and `Array`.
+
+## Build and Run Clox
+To build and Run this project, execute the following commands: 
+```
+$ git clone -b master https://github.com/HallofFamer/CLox.git
+cd CLox
+mkdir build
+cmake --build "build"
+./clox
+```
 
 ## FAQ
 
