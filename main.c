@@ -10,7 +10,7 @@
 
 static void repl(VM* vm) {
     printf("REPL for CLox version %s\n", vm->config.version);
-    vm->currentModule = newModule(vm, "");
+    vm->currentModule = newModule(vm, "<repl>");
     char line[1024];
     for (;;) {
         printf("> ");
@@ -30,6 +30,7 @@ static void runFile(VM* vm, const char* filePath) {
     char* source = readFile(filePath);
     InterpretResult result = interpret(vm, source);
     free(source);
+
     if (result == INTERPRET_COMPILE_ERROR) exit(65);
     if (result == INTERPRET_RUNTIME_ERROR) exit(70);
 }
