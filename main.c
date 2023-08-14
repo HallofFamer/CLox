@@ -10,6 +10,7 @@
 
 static void repl(VM* vm) {
     printf("REPL for CLox version %s\n", vm->config.version);
+    vm->currentModule = newModule(vm, "");
     char line[1024];
     for (;;) {
         printf("> ");
