@@ -13,8 +13,8 @@ void registerNetworkPackage(VM* vm) {
     ObjNamespace* networkNamespace = defineNativeNamespace(vm, "network", vm->stdNamespace);
     vm->currentNamespace = networkNamespace;
 
-    ObjClass* urlClass = defineNativeClass(vm, "URL");
-    bindSuperclass(vm, urlClass, vm->objectClass);
+    ObjClass* uriClass = defineNativeClass(vm, "URI");
+    bindSuperclass(vm, uriClass, vm->objectClass);
 
     vm->currentNamespace = vm->rootNamespace;
 }

@@ -118,6 +118,7 @@ set(no_group_source_files
     "clox.ini"
     "main.c"
     "README.md"
+    "vcpkg.json"
 )
 source_group("" FILES ${no_group_source_files})
 
@@ -140,6 +141,8 @@ set(Source_Files__std
     "src/std/io.h"
     "src/std/lang.c"
     "src/std/lang.h"
+    "src/std/network.c"
+    "src/std/network.h"
     "src/std/util.c"
     "src/std/util.h"
 )
