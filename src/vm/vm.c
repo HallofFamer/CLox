@@ -17,6 +17,7 @@
 #include "../std/collection.h"
 #include "../std/io.h"
 #include "../std/lang.h"
+#include "../std/network.h"
 #include "../std/util.h"
 
 static void resetStack(VM* vm) {
@@ -145,6 +146,7 @@ void initVM(VM* vm) {
     registerLangPackage(vm);
     registerCollectionPackage(vm);
     registerIOPackage(vm);
+    registerNetworkPackage(vm);
     registerUtilPackage(vm);
     registerNativeFunctions(vm);
 }
