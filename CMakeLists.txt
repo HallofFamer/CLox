@@ -116,6 +116,7 @@ set(PROJECT_NAME CLox)
 ################################################################################
 set(no_group_source_files
     "clox.ini"
+    "CMakeLists.txt"
     "main.c"
     "README.md"
     "vcpkg.json"
@@ -168,6 +169,7 @@ set(Source_Files__vm
     "src/vm/native.h"
     "src/vm/object.c"
     "src/vm/object.h"
+    "src/vm/os.h"
     "src/vm/parser.c"
     "src/vm/parser.h"
     "src/vm/scanner.c"
@@ -350,5 +352,7 @@ if(MSVC)
             /SUBSYSTEM:CONSOLE
         )
     endif()
+else ()
+    target_link_libraries(${PROJECT_NAME} m)
 endif()
 
