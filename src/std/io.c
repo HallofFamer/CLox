@@ -2,22 +2,11 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#ifdef _WIN32
-#include <direct.h>
-#include <io.h>
-#else
-#include <unistd.h>
-#define _chmod(path, mode) chmod(path, mode)
-#define fopen_s(fp,filename,mode) ((*(fp))=fopen((filename),(mode)))==NULL
-#define _getcwd(buffer, size) getcwd(buffer, size)
-#define _mkdir(path) mkdir(path, 777)
-#define _rmdir(path) rmdir(path)
-#endif // _WIN32
-
 #include "io.h"
 #include "../vm/assert.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
+#include "../vm/os.h"
 #include "../vm/string.h"
 #include "../vm/vm.h"
 

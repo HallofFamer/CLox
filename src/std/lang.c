@@ -11,6 +11,7 @@
 #include "../vm/hash.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
+#include "../vm/os.h"
 #include "../vm/string.h"
 #include "../vm/vm.h"
 

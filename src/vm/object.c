@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "native.h"
 #include "object.h"
+#include "os.h"
 #include "string.h"
 #include "vm.h"
 

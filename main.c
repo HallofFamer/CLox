@@ -6,11 +6,12 @@
 #include "src/vm/common.h"
 #include "src/vm/chunk.h"
 #include "src/vm/debug.h"
+#include "src/vm/os.h"
 #include "src/vm/vm.h"
 
 static void repl(VM* vm) {
     printf("REPL for CLox version %s\n", vm->config.version);
-    vm->currentModule = newModule(vm, "<repl>");
+    vm->currentModule = newModule(vm, newString(vm, "<repl>"));
     char line[1024];
     for (;;) {
         printf("> ");

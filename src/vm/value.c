@@ -3,6 +3,7 @@
 
 #include "memory.h"
 #include "object.h"
+#include "os.h"
 #include "string.h"
 #include "value.h"
 
