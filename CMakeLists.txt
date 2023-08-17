@@ -83,32 +83,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Sub-projects
 ################################################################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 set(PROJECT_NAME CLox)
 
 ################################################################################
@@ -247,6 +221,8 @@ set(ALL_FILES
 # Target
 ################################################################################
 add_executable(${PROJECT_NAME} ${ALL_FILES})
+find_package(CURL CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 
 use_props(${PROJECT_NAME} "${CMAKE_CONFIGURATION_TYPES}" "${DEFAULT_CXX_PROPS}")
 set(ROOT_NAMESPACE CLox)
@@ -254,6 +230,7 @@ set(ROOT_NAMESPACE CLox)
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_GLOBAL_KEYWORD "Win32Proj"
 )
+
 if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
     set_target_properties(${PROJECT_NAME} PROPERTIES
         INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
@@ -263,6 +240,7 @@ elseif("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x86")
         INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
     )
 endif()
+
 ################################################################################
 # Compile definitions
 ################################################################################
@@ -356,3 +334,6 @@ else ()
     target_link_libraries(${PROJECT_NAME} m)
 endif()
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_LIST_DIR}/clox.ini $<TARGET_FILE_DIR:${PROJECT_NAME}>
+)
