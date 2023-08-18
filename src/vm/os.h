@@ -14,16 +14,13 @@
 #define strtok_s(str,delim,ctx) strtok(str,delim)
 #define _chmod(path, mode) chmod(path, mode)
 #define _getcwd(buffer, size) getcwd(buffer, size)
-#define _itoa_s(value,buffer,bufsz,radix) itoa(value,buffer,radix)
 #define _mkdir(path) mkdir(path, 777)
 #define _rmdir(path) rmdir(path)
 #define _strdup(str1) strdup(str1)
-#define _strrev(str) strrev(str)
-#define _ultoa_s(value,buffer,bufsz,radix) ultoa(value,buffer,radix)
 #endif
 
 static bool isWindows() { 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
     return true;
 #else
     return false;

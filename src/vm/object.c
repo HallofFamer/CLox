@@ -186,11 +186,9 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
 }
 
 static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass* superclass) {
-    char hexTimestamp[16];
-    int length = 16;
-    _ultoa_s((unsigned long)time(NULL), hexTimestamp, length, 16);
-    if (behaviorType == BEHAVIOR_TRAIT) return formattedString(vm, "Trait@%s", hexTimestamp);
-    else return formattedString(vm, "%s@%s", superclass->name->chars, hexTimestamp);
+    unsigned long currentTimeStamp = (unsigned long)time(NULL);
+    if (behaviorType == BEHAVIOR_TRAIT) return formattedString(vm, "Trait@%x", currentTimeStamp);
+    else return formattedString(vm, "%s@%x", superclass->name->chars, currentTimeStamp);
 }
 
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior) {
