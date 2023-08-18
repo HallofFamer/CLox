@@ -38,8 +38,9 @@ https://github.com/munificent/craftinginterpreters
 - Allow loading lox source files in lox script and another lox source file with `require` keyword(since version 1.5)
 - Anonymous classes/traits similar to anonymous functions/lambda(since version 1.5)
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions(since version 1.6)
-- Refactor the existing standard library with namespaces(`clox.std` package)(since version 1.6)
+- Refactor the existing standard library in `clox.std` namespace(since version 1.6)
 - Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible(since version 1.6)
+- 
 
 ## Roadmap
 
@@ -75,9 +76,9 @@ https://github.com/munificent/craftinginterpreters
 
 ### CLox 1.6.0(upcoming version)
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
-- Refactor the existing standard library with namespaces(`clox.std` package).
+- Refactor the existing standard library with namespaces(in `clox.std` package), add new package `clox.std.network`.
 - Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible.
-- Improved CLox standard library with New package `clox.std.network`.
+- Cross-platform build with Cmake and package manager with vcpkg.
 
 ### CLox 1.7.0
 - Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
@@ -93,15 +94,20 @@ https://github.com/munificent/craftinginterpreters
 
 ## Build and Run Clox
 
-To build and Run this project, execute the following commands: 
+#### Windows
 ```
 git clone -b master https://github.com/HallofFamer/CLox.git
 cd CLox
 mkdir build
-cmake -S . -B build
-cmake --build "build"
+vcpkg install
+cmake -DCMAKE_BUILD_TYPE=Release -B ./build
+cmake --build ./build --config Release
+cd x64/Release
 ./clox
 ```
+
+#### Linux
+Coming soon!
 
 ## FAQ
 
