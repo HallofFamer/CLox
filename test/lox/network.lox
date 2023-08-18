@@ -1,2 +1,12 @@
-using clox.std.network;
-println(URI);
+using clox.std.network.URL;
+
+val url = URL("https", "google.com", 0, "", "", "");
+println("URL is: " + url.toString());
+println("URL is absolute: " + url.isAbsolute().toString());
+println("URL is relative: " + url.isRelative().toString());
+println("");
+
+val url2 = URL("", "", 0, "account/login", "", "top");
+println("URL2 is: " + url2.toString());
+println("URL2 is absolute: " + url2.isAbsolute().toString());
+println("URL2 is relative: " + url2.isRelative().toString());
