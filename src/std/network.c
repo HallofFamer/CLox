@@ -39,7 +39,7 @@ LOX_METHOD(URI, toString) {
     ObjString* fragment = AS_STRING(getObjProperty(vm, self, "fragment"));
 
     ObjString* uriString = formattedString(vm, "%s://%s", scheme->chars, host->chars);
-    if (port > 0) uriString = formattedString(vm, "%s:%d", uriString->chars, port);
+    if (port > 0 && port < 65536) uriString = formattedString(vm, "%s:%d", uriString->chars, port);
     if (path->length > 0) uriString = formattedString(vm, "%s/%s", uriString->chars, path->chars);
     if (query->length > 0) uriString = formattedString(vm, "%s&%s", uriString->chars, query->chars);
     if (fragment->length > 0) uriString = formattedString(vm, "%s#%s", uriString->chars, fragment->chars);
