@@ -10,3 +10,14 @@ val url2 = URL("", "", 0, "account/login", "", "top");
 println("URL2 is: " + url2.toString());
 println("URL2 is absolute: " + url2.isAbsolute().toString());
 println("URL2 is relative: " + url2.isRelative().toString());
+println("");
+
+val url3 = URL.parse("http://www.example.com:8080/dir/file.html?var=val&var2=val2#anchor");
+println("Parsing url3: ");
+println("Scheme: " + url3.scheme);
+println("Host: " + url3.host);
+println("Port: " + url3.port.toString());
+println("Path: " + url3.path);
+println("Query: " + url3.queryDict().toString());
+println("Fragment: " + url3.fragment);
+println("");
