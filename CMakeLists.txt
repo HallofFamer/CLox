@@ -106,6 +106,8 @@ set(Source_Files__inc
     "src/inc/regex.h"
     "src/inc/uuid4.c"
     "src/inc/uuid4.h"
+    "src/inc/yuarel.c"
+    "src/inc/yuarel.h"    
 )
 source_group("Source Files\\inc" FILES ${Source_Files__inc})
 
