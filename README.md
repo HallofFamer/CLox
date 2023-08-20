@@ -1,11 +1,13 @@
 # CLox
-Another implementation of ByteCode Interpreter for Lox in C.
+Another implementation of ByteCode Interpreter for Lox in C, with tons of new features.
+
 
 ## Introduction
 CLox is an implementation of the programming language Lox in C. Currently it uses naive single-pass compiler, and only runtime optimization is performed. In future it is planned to have a multi-pass compiler with AST and compiler optimization. The initial version of CLox has only features already present in the original Lox reference implementation, but subsequent versions will continue to add new features to make it a powerful language. This is an experiment on the design and implementation of language features, before I start to implement the backend of my own programming language Mysidia. Stay tuned. 
 
 The original version of Lox programming language can be found at Bob Nystrom's repository:
 https://github.com/munificent/craftinginterpreters
+
 
 ## Features
 - Scanner, Parser and Single-Pass Compiler
@@ -40,7 +42,8 @@ https://github.com/munificent/craftinginterpreters
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions(since version 1.6)
 - Refactor the existing standard library in `clox.std` namespace(since version 1.6)
 - Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible(since version 1.6)
-- 
+- Cross-platform build with Cmake and package manager with vcpkg.
+
 
 ## Roadmap
 
@@ -92,22 +95,23 @@ https://github.com/munificent/craftinginterpreters
 - Method interception when an undefined method call is invoked on an object/class, similar to Smalltalk's doesNotUnderstand: message.
 - Object ID and generic object table which enable inheritance for special build-in classes such as `String` and `Array`.
 
+
 ## Build and Run Clox
 
-#### Windows
+#### Windows(with vcpkg)
 ```
 git clone -b master https://github.com/HallofFamer/CLox.git
 cd CLox
 mkdir build
-vcpkg install
-cmake -DCMAKE_BUILD_TYPE=Release -B ./build
+cmake -DCMAKE_TOOLCHAIN_FILE:STRING="[$VCPKG_PATH]/scripts/buildsystems/vcpkg.cmake" -B ./build
 cmake --build ./build --config Release
 cd x64/Release
 ./clox
 ```
 
 #### Linux
-Coming soon!
+Coming Soon!
+
 
 ## FAQ
 
