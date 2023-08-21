@@ -11,6 +11,30 @@
 #include "../vm/value.h"
 #include "../vm/vm.h"
 
+static bool urlIsAbsolute(VM* vm, ObjInstance* url) {
+    ObjString* host = AS_STRING(getObjProperty(vm, url, "host"));
+    return host->length > 0;
+}
+
+static ObjString* urlToString(VM* vm, ObjInstance* url) {
+    ObjString* scheme = AS_STRING(getObjProperty(vm, url, "scheme"));
+    ObjString* host = AS_STRING(getObjProperty(vm, url, "host"));
+    int port = AS_INT(getObjProperty(vm, url, "port"));
+    ObjString* path = AS_STRING(getObjProperty(vm, url, "path"));
+    ObjString* query = AS_STRING(getObjProperty(vm, url, "query"));
+    ObjString* fragment = AS_STRING(getObjProperty(vm, url, "fragment"));
+
+    ObjString* urlString = newString(vm, "");
+    if (host->length > 0) {
+        urlString = (scheme->length > 0) ? formattedString(vm, "%s://%s", scheme->chars, host->chars) : host;
+        if (port > 0 && port < 65536) urlString = formattedString(vm, "%s:%d", urlString->chars, port);
+    }
+    if (path->length > 0) urlString = formattedString(vm, "%s/%s", urlString->chars, path->chars);
+    if (query->length > 0) urlString = formattedString(vm, "%s&%s", urlString->chars, query->chars);
+    if (fragment->length > 0) urlString = formattedString(vm, "%s#%s", urlString->chars, fragment->chars);
+    return urlString;
+}
+
 LOX_METHOD(URL, init) {
     ASSERT_ARG_COUNT("URL::init(scheme, host, port, path, query, fragment)", 6);
     ASSERT_ARG_TYPE("URL::init(scheme, host, port, path, query, fragment)", 0, String);
@@ -32,16 +56,12 @@ LOX_METHOD(URL, init) {
 
 LOX_METHOD(URL, isAbsolute) {
     ASSERT_ARG_COUNT("URL::isAbsolute()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    ObjString* host = AS_STRING(getObjProperty(vm, self, "host"));
-    RETURN_BOOL(host->length > 0);
+    RETURN_BOOL(urlIsAbsolute(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(URL, isRelative) {
     ASSERT_ARG_COUNT("URL::isRelative()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    ObjString* host = AS_STRING(getObjProperty(vm, self, "host"));
-    RETURN_BOOL(host->length == 0);
+    RETURN_BOOL(!urlIsAbsolute(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(URL, pathArray) {
@@ -93,25 +113,38 @@ LOX_METHOD(URL, queryDict) {
     }
 }
 
+LOX_METHOD(URL, relativize) {
+    ASSERT_ARG_COUNT("URL::relativize(url)", 1);
+    ASSERT_ARG_INSTANCE_OF("URL::relativize(url)", 0, clox.std.network, URL);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjInstance* url = AS_INSTANCE(args[0]);
+    if (urlIsAbsolute(vm, self) || urlIsAbsolute(vm, url)) RETURN_OBJ(url);
+
+    ObjString* urlString = urlToString(vm, self);
+    ObjString* urlString2 = urlToString(vm, url);
+    int index = searchString(vm, urlString, urlString2, 0);
+    if (index == 0) {
+        ObjInstance* relativized = newInstance(vm, self->obj.klass);
+        ObjString* relativizedURL = subString(vm, urlString, urlString2->length, urlString->length); 
+        struct yuarel component;
+        char fullURL[UINT8_MAX];
+        sprintf_s(fullURL, UINT8_MAX, "%s%s", "https://example.com/", relativizedURL->chars);
+        yuarel_parse(&component, fullURL);
+
+        setObjProperty(vm, relativized, "scheme", OBJ_VAL(newString(vm, "")));
+        setObjProperty(vm, relativized, "host", OBJ_VAL(newString(vm, "")));
+        setObjProperty(vm, relativized, "port", INT_VAL(0));
+        setObjProperty(vm, relativized, "path", OBJ_VAL(newString(vm, component.path != NULL ? component.path : "")));
+        setObjProperty(vm, relativized, "query", OBJ_VAL(newString(vm, component.query != NULL ? component.query : "")));
+        setObjProperty(vm, relativized, "fragment", OBJ_VAL(newString(vm, component.fragment != NULL ? component.fragment : "")));
+        RETURN_OBJ(relativized);
+    }
+    RETURN_OBJ(url);
+}
+
 LOX_METHOD(URL, toString) {
     ASSERT_ARG_COUNT("URL::toString()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    ObjString* scheme = AS_STRING(getObjProperty(vm, self, "scheme"));
-    ObjString* host = AS_STRING(getObjProperty(vm, self, "host"));
-    int port = AS_INT(getObjProperty(vm, self, "port"));
-    ObjString* path = AS_STRING(getObjProperty(vm, self, "path"));
-    ObjString* query = AS_STRING(getObjProperty(vm, self, "query"));
-    ObjString* fragment = AS_STRING(getObjProperty(vm, self, "fragment"));
-
-    ObjString* uriString = newString(vm, "");
-    if (host->length > 0) {
-        uriString = (scheme->length > 0) ? formattedString(vm, "%s://%s", scheme->chars, host->chars) : host;
-        if (port > 0 && port < 65536) uriString = formattedString(vm, "%s:%d", uriString->chars, port);
-    }
-    if (path->length > 0) uriString = formattedString(vm, "%s/%s", uriString->chars, path->chars);
-    if (query->length > 0) uriString = formattedString(vm, "%s&%s", uriString->chars, query->chars);
-    if (fragment->length > 0) uriString = formattedString(vm, "%s#%s", uriString->chars, fragment->chars);
-    RETURN_OBJ(uriString);
+    RETURN_OBJ(urlToString(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(URLClass, parse) {
@@ -145,6 +178,7 @@ void registerNetworkPackage(VM* vm) {
     DEF_METHOD(urlClass, URL, isRelative, 0);
     DEF_METHOD(urlClass, URL, pathArray, 0);
     DEF_METHOD(urlClass, URL, queryDict, 0);
+    DEF_METHOD(urlClass, URL, relativize, 1);
     DEF_METHOD(urlClass, URL, toString, 0);
 
     ObjClass* urlMetaclass = urlClass->obj.klass;
