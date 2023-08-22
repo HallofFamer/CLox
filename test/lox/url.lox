@@ -1,0 +1,28 @@
+using clox.std.network.URL;
+
+val url = URL("https", "google.com", 0, "", "", "");
+println("URL is " + url.toString());
+println("URL is absolute: " + url.isAbsolute().toString());
+println("URL is relative: " + url.isRelative().toString());
+println("");
+
+val url2 = URL("", "", 0, "products/details/1", "", "top");
+println("URL2 is " + url2.toString());
+println("URL2 is absolute: " + url2.isAbsolute().toString());
+println("URL2 is relative: " + url2.isRelative().toString());
+println("");
+
+val url3 = URL.parse("http://www.example.com:8080/dir/file.html?var=val&var2=val2#anchor");
+println("Parsing url3: ");
+println("Scheme: " + url3.scheme);
+println("Host: " + url3.host);
+println("Port: " + url3.port.toString());
+println("Path: " + url3.pathArray().toString());
+println("Query: " + url3.queryDict().toString());
+println("Fragment: " + url3.fragment);
+println("");
+
+val url3 = URL("", "", 0, "products/", "", "");
+println("URL3 is " + url3.toString());
+print("Relativize URL2 with URL3: ");
+println(url2.relativize(url3).toString());

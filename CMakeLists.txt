@@ -93,7 +93,6 @@ set(no_group_source_files
     "CMakeLists.txt"
     "main.c"
     "README.md"
-    "vcpkg.json"
 )
 source_group("" FILES ${no_group_source_files})
 
@@ -200,6 +199,7 @@ set(Test_Files__lox
     "test/lox/super.lox"
     "test/lox/switch.lox"
     "test/lox/trait.lox"
+    "test/lox/url.lox"
     "test/lox/uuid.lox"
     "test/lox/variable.lox"
 )
@@ -224,8 +224,15 @@ set(ALL_FILES
 # Target
 ################################################################################
 add_executable(${PROJECT_NAME} ${ALL_FILES})
-find_package(CURL CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+
+if (MSVC)
+    find_package(CURL CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+else ()
+    set(CURL_LIBRARY "-lcurl")
+    set(CURL_INCLUDE_DIR "/usr/bin/curl")
+    find_package(CURL REQUIRED)
+endif()
 
 use_props(${PROJECT_NAME} "${CMAKE_CONFIGURATION_TYPES}" "${DEFAULT_CXX_PROPS}")
 set(ROOT_NAMESPACE CLox)
