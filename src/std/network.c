@@ -7,9 +7,19 @@
 #include "../vm/dict.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
+#include "../vm/os.h"
 #include "../vm/string.h"
 #include "../vm/value.h"
 #include "../vm/vm.h"
+
+static bool ipIsV4(ObjString* address) {
+    unsigned char b1, b2, b3, b4;
+    if (4 != sscanf_s(address->chars, "%hhu.%hhu.%hhu.%hhu", &b1, &b2, &b3, &b4))
+        return false;
+    char buf[16];
+    snprintf(buf, 16, "%hhu.%hhu.%hhu.%hhu", b1, b2, b3, b4);
+    return !strcmp(address->chars, buf);
+}
 
 static bool urlIsAbsolute(VM* vm, ObjInstance* url) {
     ObjString* host = AS_STRING(getObjProperty(vm, url, "host"));
@@ -35,6 +45,32 @@ static ObjString* urlToString(VM* vm, ObjInstance* url) {
     return urlString;
 }
 
+LOX_METHOD(IPAddress, init) {
+    ASSERT_ARG_COUNT("IPAddress::init(address)", 1);
+    ASSERT_ARG_TYPE("IPAddress::init(address)", 0, String);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    if (!ipIsV4(AS_STRING(args[0]))) { 
+        raiseError(vm, "Invalid IPv4 address specified.");
+        RETURN_NIL;
+    }
+    setObjProperty(vm, self, "address", args[0]); 
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(IPAddress, isIPV4) {
+    ASSERT_ARG_COUNT("IPAddress::isIPV4()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    Value address = getObjProperty(vm, self, "address");
+    RETURN_BOOL(ipIsV4(AS_STRING(address)));
+}
+
+LOX_METHOD(IPAddress, toString) {
+    ASSERT_ARG_COUNT("IPAddress::toString()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    Value address = getObjProperty(vm, self, "address");
+    RETURN_OBJ(AS_STRING(address));
+}
+
 LOX_METHOD(URL, init) {
     ASSERT_ARG_COUNT("URL::init(scheme, host, port, path, query, fragment)", 6);
     ASSERT_ARG_TYPE("URL::init(scheme, host, port, path, query, fragment)", 0, String);
@@ -51,7 +87,7 @@ LOX_METHOD(URL, init) {
     setObjProperty(vm, self, "path", args[3]);
     setObjProperty(vm, self, "query", args[4]);
     setObjProperty(vm, self, "fragment", args[5]);
-    RETURN_OBJ(receiver);
+    RETURN_OBJ(self);
 }
 
 LOX_METHOD(URL, isAbsolute) {
@@ -183,6 +219,12 @@ void registerNetworkPackage(VM* vm) {
 
     ObjClass* urlMetaclass = urlClass->obj.klass;
     DEF_METHOD(urlMetaclass, URLClass, parse, 1);
+
+    ObjClass* ipAddressClass = defineNativeClass(vm, "IPAddress");
+    bindSuperclass(vm, ipAddressClass, vm->objectClass);
+    DEF_METHOD(ipAddressClass, IPAddress, init, 1);
+    DEF_METHOD(ipAddressClass, IPAddress, isIPV4, 0);
+    DEF_METHOD(ipAddressClass, IPAddress, toString, 0);
 
     vm->currentNamespace = vm->rootNamespace;
 }
