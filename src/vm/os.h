@@ -2,11 +2,19 @@
 #ifndef clox_os_h
 #define clox_os_h
 
+#include "common.h"
+
 #ifdef _WIN32
 #include <direct.h>
 #include <io.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #else
-#include <unistd.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
 #define fopen_s(fp,filename,mode) ((*(fp))=fopen((filename),(mode)))==NULL
 #define localtime_s(buf,timer) localtime(timer)
 #define sscanf_s(buffer,format,...) sscanf(buffer,format,__VA_ARGS__)
@@ -17,6 +25,10 @@
 #define _mkdir(path) mkdir(path, 777)
 #define _rmdir(path) rmdir(path)
 #define _strdup(str1) strdup(str1)
+
+void strrev(char str[]);
+char* _strrev(char* str);
+void _itoa_s(int value, char buffer[], size_t bufsz, int radix);
 #endif
 
 static bool isWindows() { 

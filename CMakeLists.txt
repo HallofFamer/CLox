@@ -144,6 +144,7 @@ set(Source_Files__vm
     "src/vm/native.h"
     "src/vm/object.c"
     "src/vm/object.h"
+    "src/vm/os.c"
     "src/vm/os.h"
     "src/vm/parser.c"
     "src/vm/parser.h"
