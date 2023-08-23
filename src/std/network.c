@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <curl/curl.h>
+
 #include "network.h"
 #include "../inc/yuarel.h"
 #include "../vm/assert.h"
@@ -14,11 +16,36 @@
 
 static bool ipIsV4(ObjString* address) {
     unsigned char b1, b2, b3, b4;
-    if (4 != sscanf_s(address->chars, "%hhu.%hhu.%hhu.%hhu", &b1, &b2, &b3, &b4))
-        return false;
-    char buf[16];
-    snprintf(buf, 16, "%hhu.%hhu.%hhu.%hhu", b1, b2, b3, b4);
-    return !strcmp(address->chars, buf);
+    if (sscanf_s(address->chars, "%hhu.%hhu.%hhu.%hhu", &b1, &b2, &b3, &b4) != 4) return false;
+    char buffer[16];
+    snprintf(buffer, 16, "%hhu.%hhu.%hhu.%hhu", b1, b2, b3, b4);
+    return !strcmp(address->chars, buffer);
+}
+
+static bool ipIsV6(ObjString* address) {
+    unsigned short b1, b2, b3, b4, b5, b6, b7, b8;
+    if (sscanf_s(address->chars, "%04hx:%04hx:%04hx:%04hx:%04hx:%04hx:%04hx:%04hx", &b1, &b2, &b3, &b4, &b5, &b6, &b7, &b8) != 8) return false;
+    char buffer[40];
+    snprintf(buffer, 40, "%04hx:%04hx:%04hx:%04hx:%04hx:%04hx:%04hx:%04hx", b1, b2, b3, b4, b5, b6, b7, b8);
+    return !strcmp(address->chars, buffer);
+}
+
+static int ipParseBlock(VM* vm, ObjString* address, int startIndex, int endIndex, int radix) {
+    ObjString* bString = subString(vm, address, startIndex, endIndex);
+    return strtol(bString->chars, NULL, radix);
+}
+
+static void ipWriteByteArray(VM* vm, ObjArray* array, ObjString* address, int radix) {
+    push(vm, OBJ_VAL(array));
+    int d = 0;
+    for (int i = 0; i < address->length; i++) {
+        if (address->chars[i] == '.' || address->chars[i] == ':') {
+            valueArrayWrite(vm, &array->elements, INT_VAL(ipParseBlock(vm, address, d, i, radix)));
+            d = i + 1;
+        }
+    }
+    valueArrayWrite(vm, &array->elements, INT_VAL(ipParseBlock(vm, address, d, address->length - 1, radix)));
+    pop(vm);
 }
 
 static bool urlIsAbsolute(VM* vm, ObjInstance* url) {
@@ -49,19 +76,42 @@ LOX_METHOD(IPAddress, init) {
     ASSERT_ARG_COUNT("IPAddress::init(address)", 1);
     ASSERT_ARG_TYPE("IPAddress::init(address)", 0, String);
     ObjInstance* self = AS_INSTANCE(receiver);
-    if (!ipIsV4(AS_STRING(args[0]))) { 
-        raiseError(vm, "Invalid IPv4 address specified.");
+    ObjString* address = AS_STRING(args[0]);
+    int version = -1;
+    if (ipIsV4(address)) version = 4;
+    else if (ipIsV6(address)) version = 6;
+    else {
+        raiseError(vm, "Invalid IP address specified.");
         RETURN_NIL;
     }
-    setObjProperty(vm, self, "address", args[0]); 
+    setObjProperty(vm, self, "address", args[0]);
+    setObjProperty(vm, self, "version", INT_VAL(version));
     RETURN_OBJ(self);
 }
 
 LOX_METHOD(IPAddress, isIPV4) {
     ASSERT_ARG_COUNT("IPAddress::isIPV4()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    Value address = getObjProperty(vm, self, "address");
-    RETURN_BOOL(ipIsV4(AS_STRING(address)));
+    int version = AS_INT(getObjProperty(vm, self, "version"));
+    RETURN_BOOL(version == 4);
+}
+
+LOX_METHOD(IPAddress, isIPV6) {
+    ASSERT_ARG_COUNT("IPAddress::isIPV6()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int version = AS_INT(getObjProperty(vm, self, "version"));
+    RETURN_BOOL(version == 6);
+}
+
+LOX_METHOD(IPAddress, toArray) {
+    ASSERT_ARG_COUNT("IPAddress::toArray()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* address = AS_STRING(getObjProperty(vm, self, "address"));
+    int version = AS_INT(getObjProperty(vm, self, "version"));
+    ObjArray* array = newArray(vm);
+    ipWriteByteArray(vm, array, address, version == 6 ? 16 : 10);
+    RETURN_OBJ(array);
+
 }
 
 LOX_METHOD(IPAddress, toString) {
@@ -224,6 +274,8 @@ void registerNetworkPackage(VM* vm) {
     bindSuperclass(vm, ipAddressClass, vm->objectClass);
     DEF_METHOD(ipAddressClass, IPAddress, init, 1);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV4, 0);
+    DEF_METHOD(ipAddressClass, IPAddress, isIPV6, 0);
+    DEF_METHOD(ipAddressClass, IPAddress, toArray, 0);
     DEF_METHOD(ipAddressClass, IPAddress, toString, 0);
 
     vm->currentNamespace = vm->rootNamespace;
