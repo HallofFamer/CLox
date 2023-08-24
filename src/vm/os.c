@@ -61,3 +61,20 @@ void _itoa_s(int value, char buffer[], size_t bufsz, int radix) {
     strrev(buffer);
 }
 #endif
+
+void runAtStartup() {
+#ifdef _WIN32
+    WSADATA wsaData;
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != NO_ERROR) {
+        printf("Socket startup failed.");
+        exit(60);
+    }
+#endif
+}
+
+void runAtExit(void) {
+#ifdef _WIN32
+    WSACleanup();
+#endif
+}

@@ -46,23 +46,6 @@ static void runScript(VM* vm, const char* path, const char* script) {
     runFile(vm, scriptPath);
 }
 
-static void runAtStartup() {
-#ifdef _WIN32
-    WSADATA wsaData;
-    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != NO_ERROR) {
-        printf("Socket startup failed.");
-        exit(60);
-    }
-#endif
-}
-
-static void runAtExit(void) {
-#ifdef _WIN32
-    WSACleanup();
-#endif
-}
-
 int main(int argc, char* argv[]) {;
     VM vm;
     initVM(&vm);

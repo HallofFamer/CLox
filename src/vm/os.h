@@ -31,7 +31,10 @@ char* _strrev(char* str);
 void _itoa_s(int value, char buffer[], size_t bufsz, int radix);
 #endif
 
-static bool isWindows() { 
+void runAtStartup();
+void runAtExit(void);
+
+static inline bool isWindows() { 
 #if defined(_WIN32)
     return true;
 #else
