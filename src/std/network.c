@@ -14,6 +14,58 @@
 #include "../vm/value.h"
 #include "../vm/vm.h"
 
+static struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
+    struct addrinfo hints, *result;
+    void* ptr = NULL;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags |= AI_CANONNAME;
+
+    *status = getaddrinfo(domainName, NULL, &hints, &result);
+    return result;
+}
+
+static ObjString* dnsGetDomainFromIPAddress(VM* vm, const char* ipAddress, int* status) {
+    struct sockaddr_in socketAddress;
+    char domainString[NI_MAXHOST];
+    memset(&socketAddress, 0, sizeof socketAddress);
+    socketAddress.sin_family = AF_INET;
+    inet_pton(AF_INET, ipAddress, &socketAddress.sin_addr);
+
+    *status = getnameinfo((struct sockaddr*)&socketAddress, sizeof(socketAddress), domainString, NI_MAXHOST, NULL, 0, 0);
+    return newString(vm, domainString);
+}
+
+static ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
+    char ipString[100];
+    void* source = NULL;
+    ObjArray* ipAddresses = newArray(vm);
+    push(vm, OBJ_VAL(ipAddresses));
+
+    while (result) {
+        inet_ntop(result->ai_family, result->ai_addr->sa_data, ipString, 100);
+        switch (result->ai_family) {
+        case AF_INET:
+            source = &((struct sockaddr_in*)result->ai_addr)->sin_addr;
+            break;
+        case AF_INET6:
+            source = &((struct sockaddr_in6*)result->ai_addr)->sin6_addr;
+            break;
+        }
+
+        if (source != NULL) {
+            inet_ntop(result->ai_family, source, ipString, 100);
+            valueArrayWrite(vm, &ipAddresses->elements, OBJ_VAL(newString(vm, ipString)));
+        }
+        result = result->ai_next;
+    }
+
+    pop(vm);
+    return ipAddresses;
+}
+
 static bool ipIsV4(ObjString* address) {
     unsigned char b1, b2, b3, b4;
     if (sscanf_s(address->chars, "%hhu.%hhu.%hhu.%hhu", &b1, &b2, &b3, &b4) != 4) return false;
@@ -72,6 +124,52 @@ static ObjString* urlToString(VM* vm, ObjInstance* url) {
     return urlString;
 }
 
+LOX_METHOD(Domain, init) {
+    ASSERT_ARG_COUNT("Domain::init(name)", 1);
+    ASSERT_ARG_TYPE("Domain::init(name)", 0, String);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "name", args[0]);
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Domain, ipAddresses) {
+    ASSERT_ARG_COUNT("Domain::ipAddresses()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* name = AS_STRING(getObjProperty(vm, self, "name"));
+
+    int status = -1;
+    struct addrinfo* result = dnsGetDomainInfo(vm, name->chars, &status);
+    if (status) {
+        raiseError(vm, "Failed to get IP address information for domain.");
+        RETURN_NIL;
+    }
+
+    ObjArray* ipAddresses = dnsGetIPAddressesFromDomain(vm, result);
+    freeaddrinfo(result);
+    RETURN_OBJ(ipAddresses);
+}
+
+LOX_METHOD(Domain, toString) {
+    ASSERT_ARG_COUNT("Domain::toString(name)", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* name = AS_STRING(getObjProperty(vm, self, "name"));
+    RETURN_OBJ(name);
+}
+
+LOX_METHOD(IPAddress, domain) {
+    ASSERT_ARG_COUNT("IPAddress::domain", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* address = AS_STRING(getObjProperty(vm, self, "address"));
+
+    int status = -1;
+    ObjString* domain = dnsGetDomainFromIPAddress(vm, address->chars, &status);
+    if (status) {
+        raiseError(vm, "Failed to get domain information for IP Address.");
+        RETURN_NIL;
+    }
+    RETURN_OBJ(domain);
+}
+
 LOX_METHOD(IPAddress, init) {
     ASSERT_ARG_COUNT("IPAddress::init(address)", 1);
     ASSERT_ARG_TYPE("IPAddress::init(address)", 0, String);
@@ -111,7 +209,6 @@ LOX_METHOD(IPAddress, toArray) {
     ObjArray* array = newArray(vm);
     ipWriteByteArray(vm, array, address, version == 6 ? 16 : 10);
     RETURN_OBJ(array);
-
 }
 
 LOX_METHOD(IPAddress, toString) {
@@ -272,11 +369,18 @@ void registerNetworkPackage(VM* vm) {
 
     ObjClass* ipAddressClass = defineNativeClass(vm, "IPAddress");
     bindSuperclass(vm, ipAddressClass, vm->objectClass);
+    DEF_METHOD(ipAddressClass, IPAddress, domain, 0);
     DEF_METHOD(ipAddressClass, IPAddress, init, 1);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV4, 0);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV6, 0);
     DEF_METHOD(ipAddressClass, IPAddress, toArray, 0);
     DEF_METHOD(ipAddressClass, IPAddress, toString, 0);
+
+    ObjClass* domainClass = defineNativeClass(vm, "Domain");
+    bindSuperclass(vm, domainClass, vm->objectClass);
+    DEF_METHOD(domainClass, Domain, init, 1);
+    DEF_METHOD(domainClass, Domain, ipAddresses, 0);
+    DEF_METHOD(domainClass, Domain, toString, 0);
 
     vm->currentNamespace = vm->rootNamespace;
 }

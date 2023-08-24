@@ -1,7 +1,11 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "os.h"
 
 #ifdef _WIN32
     // define windows only functions.
+    #pragma comment(lib,"WS2_32")
 #else
     // define non-windows functions.
 void strrev(char str[]) {
