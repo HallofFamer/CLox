@@ -218,6 +218,35 @@ LOX_METHOD(IPAddress, toString) {
     RETURN_OBJ(AS_STRING(address));
 }
 
+LOX_METHOD(Socket, close) {
+    ASSERT_ARG_COUNT("Socket::close()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
+    closesocket(descriptor);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Socket, connect) { 
+    ASSERT_ARG_COUNT("Socket::connect(ipAddress)", 1);
+    ASSERT_ARG_INSTANCE_OF("Socket::connect(IPAddress)", 0, clox.std.network, IPAddress);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjInstance* ipAddress = AS_INSTANCE(args[0]);
+
+    struct sockaddr_in socketAddress = { 0 };
+    ObjString* ipString = AS_STRING(getObjProperty(vm, ipAddress, "address"));
+    if (inet_pton(AF_INET, ipString->chars, &socketAddress.sin_addr) <= 0) {
+        raiseError(vm, "Invalid socket address provided.");
+        RETURN_NIL;
+    }
+
+    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor")); 
+    if (connect(descriptor, (struct sockaddr*)&socketAddress, sizeof(socketAddress)) <= 0) {
+        raiseError(vm, "Socket connection failed.");
+        RETURN_NIL;
+    }
+    RETURN_NIL;
+}
+
 LOX_METHOD(Socket, init) {
     ASSERT_ARG_COUNT("Socket::init(addressFamily, socketType, protocolType)", 3);
     ASSERT_ARG_TYPE("Socket::init(addressFamily, socketType, protocolType)", 0, Int);
@@ -235,6 +264,28 @@ LOX_METHOD(Socket, init) {
     setObjProperty(vm, self, "protocolType", args[2]);
     setObjProperty(vm, self, "descriptor", INT_VAL(descriptor));
     RETURN_OBJ(self);
+}
+
+LOX_METHOD(Socket, receive) {
+    ASSERT_ARG_COUNT("Socket::receive()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
+    char message[UINT8_MAX] = "";
+    if (recv(descriptor, message, UINT8_MAX, 0) < 0) {
+        raiseError(vm, "Failed to receive message from socket.");
+        RETURN_NIL;
+    }
+    RETURN_STRING(message, (int)strlen(message));
+}
+
+LOX_METHOD(Socket, send) {
+    ASSERT_ARG_COUNT("Socket::send(message)", 1);
+    ASSERT_ARG_TYPE("Socket::send(message)", 0, String);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* message = AS_STRING(args[0]);
+    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
+    if (send(descriptor, message->chars, message->length, 0) < 0) raiseError(vm, "Failed to send message to socket.");
+    RETURN_NIL;
 }
 
 LOX_METHOD(Socket, toString) {
@@ -412,7 +463,11 @@ void registerNetworkPackage(VM* vm) {
 
     ObjClass* socketClass = defineNativeClass(vm, "Socket");
     bindSuperclass(vm, socketClass, vm->objectClass);
+    DEF_METHOD(socketClass, Socket, close, 0);
+    DEF_METHOD(socketClass, Socket, connect, 1);
     DEF_METHOD(socketClass, Socket, init, 3);
+    DEF_METHOD(socketClass, Socket, receive, 0);
+    DEF_METHOD(socketClass, Socket, send, 1);
     DEF_METHOD(socketClass, Socket, toString, 0);
 
     ObjClass* socketMetaclass = socketClass->obj.klass;

@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#define closesocket(descriptor) close(descriptor)
 #define fopen_s(fp,filename,mode) ((*(fp))=fopen((filename),(mode)))==NULL
 #define localtime_s(buf,timer) localtime(timer)
 #define sscanf_s(buffer,format,...) sscanf(buffer,format,__VA_ARGS__)

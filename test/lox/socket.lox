@@ -1,4 +1,13 @@
+using clox.std.network.IPAddress;
 using clox.std.network.Socket;
 
 val socket = Socket(Socket.afINET, Socket.sockSTREAM, Socket.protoIP);
 println("Creating " + socket.toString());
+val ipAddress = IPAddress("142.250.191.78");
+println("Connecting Socket to IP address.");
+socket.connect(ipAddress);
+println("Send message 'Hello World' through socket.");
+socket.send("Hello World");
+println("Receive message: " + socket.receive());
+println("Closing socket...");
+socket.close();

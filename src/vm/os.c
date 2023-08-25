@@ -67,7 +67,6 @@ void runAtStartup() {
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (result != NO_ERROR) {
-        printf("Socket startup failed.");
         exit(60);
     }
 #endif
