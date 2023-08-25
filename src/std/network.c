@@ -218,6 +218,34 @@ LOX_METHOD(IPAddress, toString) {
     RETURN_OBJ(AS_STRING(address));
 }
 
+LOX_METHOD(Socket, init) {
+    ASSERT_ARG_COUNT("Socket::init(addressFamily, socketType, protocolType)", 3);
+    ASSERT_ARG_TYPE("Socket::init(addressFamily, socketType, protocolType)", 0, Int);
+    ASSERT_ARG_TYPE("Socket::init(addressFamily, socketType, protocolType)", 1, Int);
+    ASSERT_ARG_TYPE("Socket::init(addressFamily, socketType, protocolType)", 2, Int);
+
+    SOCKET descriptor = socket(AS_INT(args[0]), AS_INT(args[1]), AS_INT(args[2]));
+    if (descriptor == INVALID_SOCKET) {
+        raiseError(vm, "Socket creation failed...");
+        RETURN_NIL;
+    }
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "addressFamily", args[0]);
+    setObjProperty(vm, self, "socketType", args[1]);
+    setObjProperty(vm, self, "protocolType", args[2]);
+    setObjProperty(vm, self, "descriptor", INT_VAL(descriptor));
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Socket, toString) {
+    ASSERT_ARG_COUNT("Socket::toString()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    Value addressFamily = getObjProperty(vm, self, "addressFamily");
+    Value socketType = getObjProperty(vm, self, "socketType");
+    Value protocolType = getObjProperty(vm, self, "protocolType");
+    RETURN_STRING_FMT("Socket - AddressFamily: %d, SocketType: %d, ProtocolType: %d", AS_INT(addressFamily), AS_INT(socketType), AS_INT(protocolType));
+}
+
 LOX_METHOD(URL, init) {
     ASSERT_ARG_COUNT("URL::init(scheme, host, port, path, query, fragment)", 6);
     ASSERT_ARG_TYPE("URL::init(scheme, host, port, path, query, fragment)", 0, String);
@@ -381,6 +409,31 @@ void registerNetworkPackage(VM* vm) {
     DEF_METHOD(domainClass, Domain, init, 1);
     DEF_METHOD(domainClass, Domain, ipAddresses, 0);
     DEF_METHOD(domainClass, Domain, toString, 0);
+
+    ObjClass* socketClass = defineNativeClass(vm, "Socket");
+    bindSuperclass(vm, socketClass, vm->objectClass);
+    DEF_METHOD(socketClass, Socket, init, 3);
+    DEF_METHOD(socketClass, Socket, toString, 0);
+
+    ObjClass* socketMetaclass = socketClass->obj.klass;
+    setClassProperty(vm, socketClass, "afUNSPEC", INT_VAL(AF_UNSPEC));
+    setClassProperty(vm, socketClass, "afUNIX", INT_VAL(AF_UNIX));
+    setClassProperty(vm, socketClass, "afINET", INT_VAL(AF_INET));
+    setClassProperty(vm, socketClass, "afIPX", INT_VAL(AF_IPX));
+    setClassProperty(vm, socketClass, "afDECnet", INT_VAL(AF_DECnet));
+    setClassProperty(vm, socketClass, "afAPPLETALK", INT_VAL(AF_APPLETALK));
+    setClassProperty(vm, socketClass, "afINET6", INT_VAL(AF_INET6));
+    setClassProperty(vm, socketClass, "sockSTREAM", INT_VAL(SOCK_STREAM));
+    setClassProperty(vm, socketClass, "sockDGRAM", INT_VAL(SOCK_DGRAM));
+    setClassProperty(vm, socketClass, "sockRAW", INT_VAL(SOCK_RAW));
+    setClassProperty(vm, socketClass, "sockRDM", INT_VAL(SOCK_RDM));
+    setClassProperty(vm, socketClass, "sockSEQPACKET", INT_VAL(SOCK_SEQPACKET));
+    setClassProperty(vm, socketClass, "protoIP", INT_VAL(IPPROTO_IP));
+    setClassProperty(vm, socketClass, "protoICMP", INT_VAL(IPPROTO_ICMP));
+    setClassProperty(vm, socketClass, "protoTCP", INT_VAL(IPPROTO_TCP));
+    setClassProperty(vm, socketClass, "protoUDP", INT_VAL(IPPROTO_UDP));
+    setClassProperty(vm, socketClass, "protoICMPV6", INT_VAL(IPPROTO_ICMPV6));
+    setClassProperty(vm, socketClass, "protoRAW", INT_VAL(IPPROTO_RAW));
 
     vm->currentNamespace = vm->rootNamespace;
 }

@@ -194,6 +194,7 @@ set(Test_Files__lox
     "test/lox/regex.lox"
     "test/lox/require.lox"
     "test/lox/set.lox"
+    "test/lox/socket.lox"
     "test/lox/stack.lox"
     "test/lox/string.lox"
     "test/lox/sum.lox"

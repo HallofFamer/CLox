@@ -1,0 +1,4 @@
+using clox.std.network.Socket;
+
+val socket = Socket(Socket.afINET, Socket.sockSTREAM, Socket.protoIP);
+println("Creating " + socket.toString());
