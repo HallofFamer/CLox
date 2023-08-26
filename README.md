@@ -98,19 +98,24 @@ https://github.com/munificent/craftinginterpreters
 
 ## Build and Run Clox
 
-#### Windows(with vcpkg)
+#### Windows(with git, cmake and vcpkg, need to replace [$VCPKG_PATH] with installation path of vcpkg)
+```
+git clone -b master https://github.com/HallofFamer/CLox.git
+cd CLox
+cmake -DCMAKE_TOOLCHAIN_FILE:STRING="[$VCPKG_PATH]/scripts/buildsystems/vcpkg.cmake" -S . -B ./build
+cmake --build ./build --config Release
+./x64/Release/CLox
+```
+
+#### Linux(with git, cmake and curl)
 ```
 git clone -b master https://github.com/HallofFamer/CLox.git
 cd CLox
 mkdir build
-cmake -DCMAKE_TOOLCHAIN_FILE:STRING="[$VCPKG_PATH]/scripts/buildsystems/vcpkg.cmake" -B ./build
+cmake -S . -B ./build
 cmake --build ./build --config Release
-cd x64/Release
-./clox
+./build/CLox
 ```
-
-#### Linux
-Coming Soon!
 
 
 ## FAQ
