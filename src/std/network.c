@@ -150,10 +150,22 @@ LOX_METHOD(Domain, ipAddresses) {
 }
 
 LOX_METHOD(Domain, toString) {
-    ASSERT_ARG_COUNT("Domain::toString(name)", 0);
+    ASSERT_ARG_COUNT("Domain::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjString* name = AS_STRING(getObjProperty(vm, self, "name"));
     RETURN_OBJ(name);
+}
+
+LOX_METHOD(HTTPClient, close) {
+    ASSERT_ARG_COUNT("HTTPClient::close()", 0);
+    curl_global_cleanup();
+    RETURN_NIL;
+}
+
+LOX_METHOD(HTTPClient, init) {
+    ASSERT_ARG_COUNT("HTTPClient::init()", 0);
+    curl_global_init(CURL_GLOBAL_ALL);
+    RETURN_VAL(receiver);
 }
 
 LOX_METHOD(IPAddress, domain) {
@@ -461,8 +473,10 @@ void registerNetworkPackage(VM* vm) {
     DEF_METHOD(domainClass, Domain, ipAddresses, 0);
     DEF_METHOD(domainClass, Domain, toString, 0);
 
+    ObjClass* closableTrait = getNativeClass(vm, "clox.std.io", "TClosable");
     ObjClass* socketClass = defineNativeClass(vm, "Socket");
     bindSuperclass(vm, socketClass, vm->objectClass);
+    bindTrait(vm, socketClass, closableTrait);
     DEF_METHOD(socketClass, Socket, close, 0);
     DEF_METHOD(socketClass, Socket, connect, 1);
     DEF_METHOD(socketClass, Socket, init, 3);
@@ -489,6 +503,12 @@ void registerNetworkPackage(VM* vm) {
     setClassProperty(vm, socketClass, "protoUDP", INT_VAL(IPPROTO_UDP));
     setClassProperty(vm, socketClass, "protoICMPV6", INT_VAL(IPPROTO_ICMPV6));
     setClassProperty(vm, socketClass, "protoRAW", INT_VAL(IPPROTO_RAW));
+
+    ObjClass* httpClientClass = defineNativeClass(vm, "HTTPClient");
+    bindSuperclass(vm, httpClientClass, vm->objectClass);
+    bindTrait(vm, httpClientClass, closableTrait);
+    DEF_METHOD(httpClientClass, HTTPClient, close, 0);
+    DEF_METHOD(httpClientClass, HTTPClient, init, 0);
 
     vm->currentNamespace = vm->rootNamespace;
 }
