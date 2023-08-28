@@ -1,4 +1,7 @@
 using clox.std.network.HTTPClient;
 
 val client = HTTPClient();
+print("Creating HTTP Client: ");
 println(client);
+println("Sending get request to example.com: ");
+println(client.get("https://example.com"));

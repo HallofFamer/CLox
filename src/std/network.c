@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> 
 
 #include <curl/curl.h>
 
@@ -13,6 +13,11 @@
 #include "../vm/string.h"
 #include "../vm/value.h"
 #include "../vm/vm.h"
+
+typedef struct CURLResponse {
+    char* content;
+    size_t size;
+} CURLResponse;
 
 static struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     struct addrinfo hints, *result;
@@ -64,6 +69,20 @@ static ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
 
     pop(vm);
     return ipAddresses;
+}
+
+static size_t httpWriteResponse(void* contents, size_t size, size_t nmemb, void* userdata) {
+    size_t realsize = size * nmemb;
+    CURLResponse* mem = (CURLResponse*)userdata;
+
+    char* ptr = realloc(mem->content, mem->size + realsize + 1);
+    if (!ptr) return 0;
+
+    mem->content = ptr;
+    memcpy(&(mem->content[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->content[mem->size] = 0;
+    return realsize;
 }
 
 static bool ipIsV4(ObjString* address) {
@@ -160,6 +179,32 @@ LOX_METHOD(HTTPClient, close) {
     ASSERT_ARG_COUNT("HTTPClient::close()", 0);
     curl_global_cleanup();
     RETURN_NIL;
+}
+
+LOX_METHOD(HTTPClient, get) {
+    ASSERT_ARG_COUNT("HTTPClient::get(url)", 1);
+    ASSERT_ARG_TYPE("HTTPClient::get(url)", 0, String);
+    CURL* curl = curl_easy_init();
+    if (curl == NULL) {
+        raiseError(vm, "Failed to initiate a GET request using CURL.");
+        RETURN_NIL;
+    }
+
+    ObjString* url = AS_STRING(args[0]);
+    CURLResponse curlResponse = { .content = malloc(0), .size = 0 };
+    curl_easy_setopt(curl, CURLOPT_URL, url->chars);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpWriteResponse);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&curlResponse);
+    CURLcode curlCode = curl_easy_perform(curl);
+
+    if (curlCode != CURLE_OK) {
+        raiseError(vm, "Failed to complete a GET request from URL.");
+        curl_easy_cleanup(curl);
+        RETURN_NIL;
+    }
+    curl_easy_cleanup(curl);
+    ObjString* response = copyString(vm, curlResponse.content, curlResponse.size);
+    RETURN_OBJ(response);
 }
 
 LOX_METHOD(HTTPClient, init) {
@@ -508,6 +553,7 @@ void registerNetworkPackage(VM* vm) {
     bindSuperclass(vm, httpClientClass, vm->objectClass);
     bindTrait(vm, httpClientClass, closableTrait);
     DEF_METHOD(httpClientClass, HTTPClient, close, 0);
+    DEF_METHOD(httpClientClass, HTTPClient, get, 1);
     DEF_METHOD(httpClientClass, HTTPClient, init, 0);
 
     vm->currentNamespace = vm->rootNamespace;
