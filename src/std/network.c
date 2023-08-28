@@ -71,10 +71,96 @@ static ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
     return ipAddresses;
 }
 
+static ObjArray* httpCreateCookies(VM* vm, CURL* curl) {
+    struct curl_slist* cookies = NULL;
+    curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
+    ObjArray* cookieArray = newArray(vm);
+    if (cookies) {
+        push(vm, OBJ_VAL(cookieArray));
+        struct curl_slist* cookieNode = cookies;
+        while (cookieNode) {
+            valueArrayWrite(vm, &cookieArray->elements, OBJ_VAL(newString(vm, cookieNode->data)));
+            cookieNode = cookieNode->next;
+        }
+        curl_slist_free_all(cookies);
+        pop(vm);
+    }
+    return cookieArray;
+}
+
+
+static ObjInstance* httpCreateResponse(VM* vm, CURL* curl, CURLResponse curlResponse) {
+    long statusCode;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &statusCode);
+
+    char* contentType;
+    curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &contentType);
+
+    ObjInstance* httpResponse = newInstance(vm, getNativeClass(vm, "clox.std.network", "HTTPResponse"));
+    push(vm, OBJ_VAL(httpResponse));
+    setObjProperty(vm, httpResponse, "content", OBJ_VAL(copyString(vm, curlResponse.content, curlResponse.size)));
+    setObjProperty(vm, httpResponse, "contentType", OBJ_VAL(newString(vm, contentType)));
+    setObjProperty(vm, httpResponse, "cookies", OBJ_VAL(httpCreateCookies(vm, curl)));
+    setObjProperty(vm, httpResponse, "status", INT_VAL(statusCode));
+    pop(vm);
+    return httpResponse;
+}
+
+static ObjString* httpParsePostData(VM* vm, ObjDictionary* dict) {
+    if (dict->count == 0) return newString(vm, "");
+    else {
+        char string[UINT8_MAX] = "";
+        size_t offset = 0;
+        int startIndex = 0;
+
+        for (int i = 0; i < dict->capacity; i++) {
+            ObjEntry* entry = &dict->entries[i];
+            if (IS_UNDEFINED(entry->key)) continue;
+            Value key = entry->key;
+            char* keyChars = valueToString(vm, key);
+            size_t keyLength = strlen(keyChars);
+            Value value = entry->value;
+            char* valueChars = valueToString(vm, value);
+            size_t valueLength = strlen(valueChars);
+
+            memcpy(string + offset, keyChars, keyLength);
+            offset += keyLength;
+            memcpy(string + offset, "=", 1);
+            offset += 1;
+            memcpy(string + offset, valueChars, valueLength);
+            offset += valueLength;
+            startIndex = i + 1;
+            break;
+        }
+
+        for (int i = startIndex; i < dict->capacity; i++) {
+            ObjEntry* entry = &dict->entries[i];
+            if (IS_UNDEFINED(entry->key)) continue;
+            Value key = entry->key;
+            char* keyChars = valueToString(vm, key);
+            size_t keyLength = strlen(keyChars);
+            Value value = entry->value;
+            char* valueChars = valueToString(vm, value);
+            size_t valueLength = strlen(valueChars);
+
+            memcpy(string + offset, "&", 1);
+            offset += 1;
+            memcpy(string + offset, keyChars, keyLength);
+            offset += keyLength;
+            memcpy(string + offset, "=", 1);
+            offset += 1;
+            memcpy(string + offset, valueChars, valueLength);
+            offset += valueLength;
+        }
+
+        string[offset] = '\0';
+        return copyString(vm, string, (int)offset + 1);
+    }
+}
+
 static size_t httpWriteResponse(void* contents, size_t size, size_t nmemb, void* userdata) {
     size_t realsize = size * nmemb;
     CURLResponse* mem = (CURLResponse*)userdata;
-
     char* ptr = realloc(mem->content, mem->size + realsize + 1);
     if (!ptr) return 0;
 
@@ -195,22 +281,53 @@ LOX_METHOD(HTTPClient, get) {
     curl_easy_setopt(curl, CURLOPT_URL, url->chars);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpWriteResponse);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&curlResponse);
-    CURLcode curlCode = curl_easy_perform(curl);
 
+    CURLcode curlCode = curl_easy_perform(curl);
     if (curlCode != CURLE_OK) {
         raiseError(vm, "Failed to complete a GET request from URL.");
         curl_easy_cleanup(curl);
         RETURN_NIL;
     }
+
+    ObjInstance* httpResponse = httpCreateResponse(vm, curl, curlResponse);
     curl_easy_cleanup(curl);
-    ObjString* response = copyString(vm, curlResponse.content, curlResponse.size);
-    RETURN_OBJ(response);
+    RETURN_OBJ(httpResponse);
 }
 
 LOX_METHOD(HTTPClient, init) {
     ASSERT_ARG_COUNT("HTTPClient::init()", 0);
     curl_global_init(CURL_GLOBAL_ALL);
     RETURN_VAL(receiver);
+}
+
+LOX_METHOD(HTTPClient, post) {
+    ASSERT_ARG_COUNT("HTTPClient::post(url, data)", 2);
+    ASSERT_ARG_TYPE("HTTPClient::post(url, data)", 0, String);
+    ASSERT_ARG_TYPE("HTTPClient::post(url, data)", 1, Dictionary);
+    CURL* curl = curl_easy_init();
+    if (curl == NULL) {
+        raiseError(vm, "Failed to initiate a POST request using CURL.");
+        RETURN_NIL;
+    }
+
+    ObjString* url = AS_STRING(args[0]);
+    ObjDictionary* data = AS_DICTIONARY(args[1]);
+    CURLResponse curlResponse = { .content = malloc(0), .size = 0 };
+    curl_easy_setopt(curl, CURLOPT_URL, url->chars);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, httpParsePostData(vm, data)->chars);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpWriteResponse);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&curlResponse);
+
+    CURLcode curlCode = curl_easy_perform(curl);
+    if (curlCode != CURLE_OK) {
+        raiseError(vm, "Failed to complete a POST request from URL.");
+        curl_easy_cleanup(curl);
+        RETURN_NIL;
+    }
+
+    ObjInstance* httpResponse = httpCreateResponse(vm, curl, curlResponse);
+    curl_easy_cleanup(curl);
+    RETURN_OBJ(httpResponse);
 }
 
 LOX_METHOD(IPAddress, domain) {
@@ -555,6 +672,10 @@ void registerNetworkPackage(VM* vm) {
     DEF_METHOD(httpClientClass, HTTPClient, close, 0);
     DEF_METHOD(httpClientClass, HTTPClient, get, 1);
     DEF_METHOD(httpClientClass, HTTPClient, init, 0);
+    DEF_METHOD(httpClientClass, HTTPClient, post, 2);
+
+    ObjClass* httpResponseClass = defineNativeClass(vm, "HTTPResponse");
+    bindSuperclass(vm, httpResponseClass, vm->objectClass);
 
     vm->currentNamespace = vm->rootNamespace;
 }
