@@ -20,6 +20,14 @@ void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, con
     }
 }
 
+void assertArgInstanceOfEither(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className, const char* namespaceName2, const char* className2) {
+    if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, namespaceName, className)) && !isObjInstanceOf(vm, args[index], getNativeClass(vm, namespaceName2, className2))) {
+        runtimeError(vm, "method %s expects argument %d to be an instance of class %s or %s but got %s.",
+            method, index + 1, className, className2, getObjClass(vm, args[index])->name->chars);
+        exit(70);
+    }   
+}
+
 void assertArgIsArray(VM* vm, const char* method, Value* args, int index) {
     if (!IS_ARRAY(args[index]) && !isObjInstanceOf(vm, args[index], vm->arrayClass)) {
         runtimeError(vm, "method %s expects argument %d to be an array.", method, index + 1);
