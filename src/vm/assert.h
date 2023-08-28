@@ -7,7 +7,7 @@
 
 #define ASSERT_ARG_COUNT(method, expectedCount) assertArgCount(vm, method, expectedCount, argCount)
 #define ASSERT_ARG_INSTANCE_OF(method, index, namespaceName, className) assertArgInstanceOf(vm, method, args, index, #namespaceName, #className)
-#define ASSERT_ARG_INSTANCE_OF_EITHER(method, index, namespaceName, className, namespaceName2, className2) assertArgInstanceOfEither(vm, method, args, index, namespaceName, className, namespaceName2, className2)
+#define ASSERT_ARG_INSTANCE_OF_EITHER(method, index, namespaceName, className, namespaceName2, className2) assertArgInstanceOfEither(vm, method, args, index, #namespaceName, #className, #namespaceName2, #className2)
 #define ASSERT_ARG_TYPE(method, index, type) assertArgIs##type(vm, method, args, index)
 
 void assertArgCount(VM* vm, const char* method, int expectedCount, int actualCount);
