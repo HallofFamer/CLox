@@ -98,7 +98,7 @@ static ObjInstance* httpCreateResponse(VM* vm, CURL* curl, CURLResponse curlResp
 
     ObjInstance* httpResponse = newInstance(vm, getNativeClass(vm, "clox.std.network", "HTTPResponse"));
     push(vm, OBJ_VAL(httpResponse));
-    setObjProperty(vm, httpResponse, "content", OBJ_VAL(copyString(vm, curlResponse.content, curlResponse.size)));
+    setObjProperty(vm, httpResponse, "content", OBJ_VAL(copyString(vm, curlResponse.content, (int)curlResponse.size)));
     setObjProperty(vm, httpResponse, "contentType", OBJ_VAL(newString(vm, contentType)));
     setObjProperty(vm, httpResponse, "cookies", OBJ_VAL(httpCreateCookies(vm, curl)));
     setObjProperty(vm, httpResponse, "status", INT_VAL(statusCode));
@@ -210,6 +210,14 @@ static bool urlIsAbsolute(VM* vm, ObjInstance* url) {
     return host->length > 0;
 }
 
+static ObjString* urlRaw(VM* vm, Value value) {
+    if (IS_INSTANCE(value)) {
+        ObjInstance* url = AS_INSTANCE(value);
+        return AS_STRING(getObjProperty(vm, url, "raw"));
+    }
+    else return AS_STRING(value);
+}
+
 static ObjString* urlToString(VM* vm, ObjInstance* url) {
     ObjString* scheme = AS_STRING(getObjProperty(vm, url, "scheme"));
     ObjString* host = AS_STRING(getObjProperty(vm, url, "host"));
@@ -269,14 +277,14 @@ LOX_METHOD(HTTPClient, close) {
 
 LOX_METHOD(HTTPClient, get) {
     ASSERT_ARG_COUNT("HTTPClient::get(url)", 1);
-    ASSERT_ARG_TYPE("HTTPClient::get(url)", 0, String);
+    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::get(url)", 0, clox.std.lang, String, clox.std.network, URL);
     CURL* curl = curl_easy_init();
     if (curl == NULL) {
         raiseError(vm, "Failed to initiate a GET request using CURL.");
         RETURN_NIL;
     }
 
-    ObjString* url = AS_STRING(args[0]);
+    ObjString* url = urlRaw(vm, args[0]);
     CURLResponse curlResponse = { .content = malloc(0), .size = 0 };
     curl_easy_setopt(curl, CURLOPT_URL, url->chars);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpWriteResponse);
@@ -310,7 +318,7 @@ LOX_METHOD(HTTPClient, post) {
         RETURN_NIL;
     }
 
-    ObjString* url = AS_STRING(args[0]);
+    ObjString* url = urlRaw(vm, args[0]);
     ObjDictionary* data = AS_DICTIONARY(args[1]);
     CURLResponse curlResponse = { .content = malloc(0), .size = 0 };
     curl_easy_setopt(curl, CURLOPT_URL, url->chars);
@@ -487,6 +495,7 @@ LOX_METHOD(URL, init) {
     setObjProperty(vm, self, "path", args[3]);
     setObjProperty(vm, self, "query", args[4]);
     setObjProperty(vm, self, "fragment", args[5]);
+    setObjProperty(vm, self, "raw", OBJ_VAL(urlToString(vm, self)));
     RETURN_OBJ(self);
 }
 
@@ -556,7 +565,7 @@ LOX_METHOD(URL, relativize) {
     ObjInstance* url = AS_INSTANCE(args[0]);
     if (urlIsAbsolute(vm, self) || urlIsAbsolute(vm, url)) RETURN_OBJ(url);
 
-    ObjString* urlString = urlToString(vm, self);
+    ObjString* urlString = AS_STRING(getObjProperty(vm, self, "raw"));
     ObjString* urlString2 = urlToString(vm, url);
     int index = searchString(vm, urlString, urlString2, 0);
     if (index == 0) {
@@ -564,7 +573,7 @@ LOX_METHOD(URL, relativize) {
         ObjString* relativizedURL = subString(vm, urlString, urlString2->length, urlString->length); 
         struct yuarel component;
         char fullURL[UINT8_MAX];
-        sprintf_s(fullURL, UINT8_MAX, "%s%s", "https://example.com/", relativizedURL->chars);
+        int length = sprintf_s(fullURL, UINT8_MAX, "%s%s", "https://example.com/", relativizedURL->chars);
         yuarel_parse(&component, fullURL);
 
         setObjProperty(vm, relativized, "scheme", OBJ_VAL(newString(vm, "")));
@@ -573,6 +582,7 @@ LOX_METHOD(URL, relativize) {
         setObjProperty(vm, relativized, "path", OBJ_VAL(newString(vm, component.path != NULL ? component.path : "")));
         setObjProperty(vm, relativized, "query", OBJ_VAL(newString(vm, component.query != NULL ? component.query : "")));
         setObjProperty(vm, relativized, "fragment", OBJ_VAL(newString(vm, component.fragment != NULL ? component.fragment : "")));
+        setObjProperty(vm, relativized, "raw", OBJ_VAL(relativizedURL));
         RETURN_OBJ(relativized);
     }
     RETURN_OBJ(url);
@@ -580,7 +590,9 @@ LOX_METHOD(URL, relativize) {
 
 LOX_METHOD(URL, toString) {
     ASSERT_ARG_COUNT("URL::toString()", 0);
-    RETURN_OBJ(urlToString(vm, AS_INSTANCE(receiver)));
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* raw = AS_STRING(getObjProperty(vm, self, "raw"));
+    RETURN_OBJ(raw);
 }
 
 LOX_METHOD(URLClass, parse) {
@@ -588,6 +600,7 @@ LOX_METHOD(URLClass, parse) {
     ASSERT_ARG_TYPE("URL class::parse(url)", 0, String);
     ObjInstance* instance = newInstance(vm, AS_CLASS(receiver));
     ObjString* url = AS_STRING(args[0]);
+
     struct yuarel component;
     if (yuarel_parse(&component, url->chars) == -1) {
         raiseError(vm, "Failed to parse url.");
@@ -600,6 +613,8 @@ LOX_METHOD(URLClass, parse) {
     setObjProperty(vm, instance, "path", OBJ_VAL(newString(vm, component.path != NULL ? component.path : "")));
     setObjProperty(vm, instance, "query", OBJ_VAL(newString(vm, component.query != NULL ? component.query : "")));
     setObjProperty(vm, instance, "fragment", OBJ_VAL(newString(vm, component.fragment != NULL ? component.fragment : "")));
+    setObjProperty(vm, instance, "raw", OBJ_VAL(urlToString(vm, instance)));
+
     RETURN_OBJ(instance);
 }
 

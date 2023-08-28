@@ -12,6 +12,7 @@
 
 void assertArgCount(VM* vm, const char* method, int expectedCount, int actualCount);
 void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className);
+void assertArgInstanceOfEither(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className, const char* namespaceName2, const char* className2);
 void assertArgIsArray(VM* vm, const char* method, Value* args, int index);
 void assertArgIsBool(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClass(VM* vm, const char* method, Value* args, int index);
