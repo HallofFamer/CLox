@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <stdlib.h> 
 #include <string.h> 
 
 #include <curl/curl.h>
@@ -15,9 +15,34 @@
 #include "../vm/vm.h"
 
 typedef struct CURLResponse {
+    char* headers;
     char* content;
     size_t size;
 } CURLResponse;
+
+typedef enum HTTPMethod {
+    HTTP_HEAD, 
+    HTTP_GET, 
+    HTTP_POST, 
+    HTTP_PUT, 
+    HTTP_DELETE, 
+    HTTP_PATCH, 
+    HTTP_OPTIONS, 
+    HTTP_TRACE,
+    HTTP_CONNECT
+} HTTPMethod;
+
+char* httpMethods[9] = {
+    [HTTP_HEAD] = "HEAD",
+    [HTTP_GET] = "GET",
+    [HTTP_POST] = "POST",
+    [HTTP_PUT] = "PUT",
+    [HTTP_DELETE] = "DELETE",
+    [HTTP_PATCH] = "PATCH",
+    [HTTP_OPTIONS] = "OPTIONS",
+    [HTTP_TRACE] = "TRACE",
+    [HTTP_CONNECT] = "CONNECT"
+};
 
 static struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     struct addrinfo hints, *result;
@@ -92,7 +117,6 @@ static ObjArray* httpCreateCookies(VM* vm, CURL* curl) {
 static ObjInstance* httpCreateResponse(VM* vm, CURL* curl, CURLResponse curlResponse) {
     long statusCode;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &statusCode);
-
     char* contentType;
     curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &contentType);
 
@@ -101,20 +125,71 @@ static ObjInstance* httpCreateResponse(VM* vm, CURL* curl, CURLResponse curlResp
     setObjProperty(vm, httpResponse, "content", OBJ_VAL(copyString(vm, curlResponse.content, (int)curlResponse.size)));
     setObjProperty(vm, httpResponse, "contentType", OBJ_VAL(newString(vm, contentType)));
     setObjProperty(vm, httpResponse, "cookies", OBJ_VAL(httpCreateCookies(vm, curl)));
+    setObjProperty(vm, httpResponse, "headers", OBJ_VAL(newString(vm, curlResponse.headers)));
     setObjProperty(vm, httpResponse, "status", INT_VAL(statusCode));
     pop(vm);
     return httpResponse;
 }
 
-static ObjString* httpParsePostData(VM* vm, ObjDictionary* dict) {
-    if (dict->count == 0) return newString(vm, "");
+static size_t httpCURLHeaders(char* header, size_t size, size_t nitems, void* userdata) {
+    size_t realsize = size * nitems;
+    if (nitems != 2) {
+        CURLResponse* curlResponse = (CURLResponse*)userdata;
+        curlResponse->headers = header;
+    }
+    return realsize;
+}
+
+static size_t httpCURLResponse(void* contents, size_t size, size_t nmemb, void* userdata) {
+    size_t realsize = size * nmemb;
+    CURLResponse* mem = (CURLResponse*)userdata;
+    char* ptr = realloc(mem->content, mem->size + realsize + 1);
+    if (!ptr) return 0;
+
+    mem->content = ptr;
+    memcpy(&(mem->content[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->content[mem->size] = 0;
+    return realsize;
+}
+
+static char* httpMapMethod(HTTPMethod method) {
+    switch (method) {
+        case HTTP_GET: return "GET";
+        case HTTP_POST: return "POST";
+        case HTTP_PUT: return "PUT";
+        case HTTP_DELETE: return "DELETE";
+        case HTTP_PATCH: return "PATCH";
+        case HTTP_OPTIONS: return "OPTIONS";
+        case HTTP_TRACE: return "TRACE";
+        case HTTP_CONNECT: return "CONNECT";
+        default: return "HEAD";
+    }
+}
+
+static struct curl_slist* httpParseHeaders(VM* vm, ObjDictionary* headers, CURL* curl) {
+    struct curl_slist* headerList = NULL;
+    for (int i = 0; i < headers->capacity; i++) {
+        ObjEntry* entry = &headers->entries[i];
+        if (!IS_STRING(entry->key) || !IS_STRING(entry->value)) continue;
+
+        char header[UINT8_MAX] = "";
+        sprintf_s(header, UINT8_MAX, "%s:%s", AS_STRING(entry->key)->chars, AS_STRING(entry->value)->chars);
+        headerList = curl_slist_append(headerList, header);
+    }
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerList);
+    return headerList;
+}
+
+static ObjString* httpParsePostData(VM* vm, ObjDictionary* postData) {
+    if (postData->count == 0) return newString(vm, "");
     else {
         char string[UINT8_MAX] = "";
         size_t offset = 0;
         int startIndex = 0;
 
-        for (int i = 0; i < dict->capacity; i++) {
-            ObjEntry* entry = &dict->entries[i];
+        for (int i = 0; i < postData->capacity; i++) {
+            ObjEntry* entry = &postData->entries[i];
             if (IS_UNDEFINED(entry->key)) continue;
             Value key = entry->key;
             char* keyChars = valueToString(vm, key);
@@ -133,8 +208,8 @@ static ObjString* httpParsePostData(VM* vm, ObjDictionary* dict) {
             break;
         }
 
-        for (int i = startIndex; i < dict->capacity; i++) {
-            ObjEntry* entry = &dict->entries[i];
+        for (int i = startIndex; i < postData->capacity; i++) {
+            ObjEntry* entry = &postData->entries[i];
             if (IS_UNDEFINED(entry->key)) continue;
             Value key = entry->key;
             char* keyChars = valueToString(vm, key);
@@ -158,17 +233,36 @@ static ObjString* httpParsePostData(VM* vm, ObjDictionary* dict) {
     }
 }
 
-static size_t httpWriteResponse(void* contents, size_t size, size_t nmemb, void* userdata) {
-    size_t realsize = size * nmemb;
-    CURLResponse* mem = (CURLResponse*)userdata;
-    char* ptr = realloc(mem->content, mem->size + realsize + 1);
-    if (!ptr) return 0;
+static ObjString* httpRawURL(VM* vm, Value value) {
+    if (IS_INSTANCE(value)) {
+        ObjInstance* url = AS_INSTANCE(value);
+        return AS_STRING(getObjProperty(vm, url, "raw"));
+    }
+    else return AS_STRING(value);
+}
 
-    mem->content = ptr;
-    memcpy(&(mem->content[mem->size]), contents, realsize);
-    mem->size += realsize;
-    mem->content[mem->size] = 0;
-    return realsize;
+static CURLcode httpSendRequest(VM* vm, Value* args, HTTPMethod method, CURL* curl, CURLResponse* curlResponse) {
+    ObjString* url = httpRawURL(vm, args[0]);
+    curlResponse->content = malloc(0);
+    curlResponse->size = 0;
+
+    curl_easy_setopt(curl, CURLOPT_URL, url->chars);
+    if (method > HTTP_POST) {
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, httpMapMethod(method));
+    }
+ 
+    if (method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH) {
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, httpParsePostData(vm, AS_DICTIONARY(args[1]))->chars);
+    }
+    else if (method == HTTP_OPTIONS) {
+        curl_easy_setopt(curl, CURLOPT_REQUEST_TARGET, "*");
+    }
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpCURLResponse);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)curlResponse);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, httpCURLHeaders);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*)curlResponse);
+    return curl_easy_perform(curl);
 }
 
 static bool ipIsV4(ObjString* address) {
@@ -208,14 +302,6 @@ static void ipWriteByteArray(VM* vm, ObjArray* array, ObjString* address, int ra
 static bool urlIsAbsolute(VM* vm, ObjInstance* url) {
     ObjString* host = AS_STRING(getObjProperty(vm, url, "host"));
     return host->length > 0;
-}
-
-static ObjString* urlRaw(VM* vm, Value value) {
-    if (IS_INSTANCE(value)) {
-        ObjInstance* url = AS_INSTANCE(value);
-        return AS_STRING(getObjProperty(vm, url, "raw"));
-    }
-    else return AS_STRING(value);
 }
 
 static ObjString* urlToString(VM* vm, ObjInstance* url) {
@@ -275,22 +361,41 @@ LOX_METHOD(HTTPClient, close) {
     RETURN_NIL;
 }
 
+LOX_METHOD(HTTPClient, delete) {
+    ASSERT_ARG_COUNT("HTTPClient::delete(url)", 1);
+    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::delete(url)", 0, clox.std.lang, String, clox.std.network, URL);
+    CURL* curl = curl_easy_init();
+
+    if (curl == NULL) {
+        raiseError(vm, "Failed to initiate a DELETE request using CURL.");
+        RETURN_NIL;
+    }
+
+    CURLResponse curlResponse;
+    CURLcode curlCode = httpSendRequest(vm, args, HTTP_DELETE, curl, &curlResponse);
+    if (curlCode != CURLE_OK) {
+        raiseError(vm, "Failed to complete a DELETE request from URL.");
+        curl_easy_cleanup(curl);
+        RETURN_NIL;
+    }
+
+    ObjInstance* httpResponse = httpCreateResponse(vm, curl, curlResponse);
+    curl_easy_cleanup(curl);
+    RETURN_OBJ(httpResponse);
+}
+
 LOX_METHOD(HTTPClient, get) {
     ASSERT_ARG_COUNT("HTTPClient::get(url)", 1);
     ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::get(url)", 0, clox.std.lang, String, clox.std.network, URL);
     CURL* curl = curl_easy_init();
+
     if (curl == NULL) {
         raiseError(vm, "Failed to initiate a GET request using CURL.");
         RETURN_NIL;
     }
 
-    ObjString* url = urlRaw(vm, args[0]);
-    CURLResponse curlResponse = { .content = malloc(0), .size = 0 };
-    curl_easy_setopt(curl, CURLOPT_URL, url->chars);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpWriteResponse);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&curlResponse);
-
-    CURLcode curlCode = curl_easy_perform(curl);
+    CURLResponse curlResponse;
+    CURLcode curlCode = httpSendRequest(vm, args, HTTP_GET, curl, &curlResponse);
     if (curlCode != CURLE_OK) {
         raiseError(vm, "Failed to complete a GET request from URL.");
         curl_easy_cleanup(curl);
@@ -308,27 +413,120 @@ LOX_METHOD(HTTPClient, init) {
     RETURN_VAL(receiver);
 }
 
+LOX_METHOD(HTTPClient, options) {
+    ASSERT_ARG_COUNT("HTTPClient::options(url)", 1);
+    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::options(url)", 0, clox.std.lang, String, clox.std.network, URL);
+    CURL* curl = curl_easy_init();
+
+    if (curl == NULL) {
+        raiseError(vm, "Failed to initiate an OPTIONS request using CURL.");
+        RETURN_NIL;
+    }
+
+    CURLResponse curlResponse;
+    CURLcode curlCode = httpSendRequest(vm, args, HTTP_OPTIONS, curl, &curlResponse);
+    if (curlCode != CURLE_OK) {
+        raiseError(vm, "Failed to complete an OPTIONS request from URL.");
+        curl_easy_cleanup(curl);
+        RETURN_NIL;
+    }
+
+    ObjInstance* httpResponse = httpCreateResponse(vm, curl, curlResponse);
+    curl_easy_cleanup(curl);
+    RETURN_OBJ(httpResponse);
+}
+
+LOX_METHOD(HTTPClient, patch) {
+    ASSERT_ARG_COUNT("HTTPClient::put(url, data)", 2);
+    ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 0, String);
+    ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 1, Dictionary);
+
+    CURL* curl = curl_easy_init();
+    if (curl == NULL) {
+        raiseError(vm, "Failed to initiate a PATCH request using CURL.");
+        RETURN_NIL;
+    }
+
+    CURLResponse curlResponse;
+    CURLcode curlCode = httpSendRequest(vm, args, HTTP_PATCH, curl, &curlResponse);
+    if (curlCode != CURLE_OK) {
+        raiseError(vm, "Failed to complete a PATCH request from URL.");
+        curl_easy_cleanup(curl);
+        RETURN_NIL;
+    }
+
+    ObjInstance* httpResponse = httpCreateResponse(vm, curl, curlResponse);
+    curl_easy_cleanup(curl);
+    RETURN_OBJ(httpResponse);
+}
+
 LOX_METHOD(HTTPClient, post) {
     ASSERT_ARG_COUNT("HTTPClient::post(url, data)", 2);
     ASSERT_ARG_TYPE("HTTPClient::post(url, data)", 0, String);
     ASSERT_ARG_TYPE("HTTPClient::post(url, data)", 1, Dictionary);
+
     CURL* curl = curl_easy_init();
     if (curl == NULL) {
         raiseError(vm, "Failed to initiate a POST request using CURL.");
         RETURN_NIL;
     }
 
-    ObjString* url = urlRaw(vm, args[0]);
-    ObjDictionary* data = AS_DICTIONARY(args[1]);
-    CURLResponse curlResponse = { .content = malloc(0), .size = 0 };
-    curl_easy_setopt(curl, CURLOPT_URL, url->chars);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, httpParsePostData(vm, data)->chars);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpWriteResponse);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&curlResponse);
-
-    CURLcode curlCode = curl_easy_perform(curl);
+    CURLResponse curlResponse;
+    CURLcode curlCode = httpSendRequest(vm, args, HTTP_POST, curl, &curlResponse);
     if (curlCode != CURLE_OK) {
         raiseError(vm, "Failed to complete a POST request from URL.");
+        curl_easy_cleanup(curl);
+        RETURN_NIL;
+    }
+
+    ObjInstance* httpResponse = httpCreateResponse(vm, curl, curlResponse);
+    curl_easy_cleanup(curl);
+    RETURN_OBJ(httpResponse);
+}
+
+LOX_METHOD(HTTPClient, put) {
+    ASSERT_ARG_COUNT("HTTPClient::put(url, data)", 2);
+    ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 0, String);
+    ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 1, Dictionary);
+
+    CURL* curl = curl_easy_init();
+    if (curl == NULL) {
+        raiseError(vm, "Failed to initiate a PUT request using CURL.");
+        RETURN_NIL;
+    }
+
+    CURLResponse curlResponse;
+    CURLcode curlCode = httpSendRequest(vm, args, HTTP_PUT, curl, &curlResponse);
+    if (curlCode != CURLE_OK) {
+        raiseError(vm, "Failed to complete a PUT request from URL.");
+        curl_easy_cleanup(curl);
+        RETURN_NIL;
+    }
+
+    ObjInstance* httpResponse = httpCreateResponse(vm, curl, curlResponse);
+    curl_easy_cleanup(curl);
+    RETURN_OBJ(httpResponse);
+}
+
+LOX_METHOD(HTTPClient, send) {
+    ASSERT_ARG_COUNT("HTTPClient::send(method, url, headers, data)", 4);
+    ASSERT_ARG_TYPE("HTTPClient::send(method, url, headers, data)", 0, Int);
+    ASSERT_ARG_TYPE("HTTPClient::send(method, url, headers, data)", 1, String);
+    ASSERT_ARG_TYPE("HTTPClient::send(method, url, headers, data)", 2, Dictionary);
+    ASSERT_ARG_TYPE("HTTPClient::send(method, url, headers, data)", 3, Dictionary);
+
+    CURL* curl = curl_easy_init();
+    if (curl == NULL) {
+        raiseError(vm, "Failed to initiate a PUT request using CURL.");
+        RETURN_NIL;
+    }
+
+    struct curl_slist* headers = httpParseHeaders(vm, AS_DICTIONARY(args[2]), curl);
+    CURLResponse curlResponse;
+    CURLcode curlCode = httpSendRequest(vm, (Value[]) { args[1], args[3] }, (HTTPMethod)AS_INT(args[0]), curl, &curlResponse);
+    curl_slist_free_all(headers);
+    if (curlCode != CURLE_OK) {
+        raiseError(vm, "Failed to complete a PUT request from URL.");
         curl_easy_cleanup(curl);
         RETURN_NIL;
     }
@@ -614,7 +812,6 @@ LOX_METHOD(URLClass, parse) {
     setObjProperty(vm, instance, "query", OBJ_VAL(newString(vm, component.query != NULL ? component.query : "")));
     setObjProperty(vm, instance, "fragment", OBJ_VAL(newString(vm, component.fragment != NULL ? component.fragment : "")));
     setObjProperty(vm, instance, "raw", OBJ_VAL(urlToString(vm, instance)));
-
     RETURN_OBJ(instance);
 }
 
@@ -685,9 +882,25 @@ void registerNetworkPackage(VM* vm) {
     bindSuperclass(vm, httpClientClass, vm->objectClass);
     bindTrait(vm, httpClientClass, closableTrait);
     DEF_METHOD(httpClientClass, HTTPClient, close, 0);
+    DEF_METHOD(httpClientClass, HTTPClient, delete, 1);
     DEF_METHOD(httpClientClass, HTTPClient, get, 1);
     DEF_METHOD(httpClientClass, HTTPClient, init, 0);
+    DEF_METHOD(httpClientClass, HTTPClient, options, 1);
+    DEF_METHOD(httpClientClass, HTTPClient, patch, 2);
     DEF_METHOD(httpClientClass, HTTPClient, post, 2);
+    DEF_METHOD(httpClientClass, HTTPClient, put, 2);
+    DEF_METHOD(httpClientClass, HTTPClient, send, 4);
+
+    ObjClass* httpClientMetaclass = httpClientClass->obj.klass;
+    setClassProperty(vm, httpClientClass, "httpHEAD", INT_VAL(HTTP_HEAD));
+    setClassProperty(vm, httpClientClass, "httpGET", INT_VAL(HTTP_GET));
+    setClassProperty(vm, httpClientClass, "httpPOST", INT_VAL(HTTP_POST));
+    setClassProperty(vm, httpClientClass, "httpPUT", INT_VAL(HTTP_PUT));
+    setClassProperty(vm, httpClientClass, "httpDELETE", INT_VAL(HTTP_DELETE));
+    setClassProperty(vm, httpClientClass, "httpPATCH", INT_VAL(HTTP_PATCH));
+    setClassProperty(vm, httpClientClass, "httpOPTIONS", INT_VAL(HTTP_OPTIONS));
+    setClassProperty(vm, httpClientClass, "httpTRACE", INT_VAL(HTTP_TRACE));
+    setClassProperty(vm, httpClientClass, "httpCONNECT", INT_VAL(HTTP_CONNECT));
 
     ObjClass* httpResponseClass = defineNativeClass(vm, "HTTPResponse");
     bindSuperclass(vm, httpResponseClass, vm->objectClass);
