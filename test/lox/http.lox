@@ -1,8 +1,10 @@
+namespace clox.test;
 using clox.std.network.HTTPClient;
+using clox.std.network.HTTPRequest;
 using clox.std.network.URL;
 
 val client = HTTPClient();
-print("Creating HTTP Client: ");
+print("Initializing HTTP Client: ");
 println(client);
 println("");
 
@@ -19,7 +21,7 @@ println(response.content);
 println("");
 
 println("Sending post request to httpbin.com: ");
-var response2 = client.post("http://mockbin.com/request", ["name" : "Ordland", "age": 34, "location" : "United States"]);
+var response2 = client.post("https://mockbin.com/request", ["name" : "Ordland", "age": 34, "location" : "United States"]);
 print("Status: ");
 println(response2.status);
 print("Cookies: ");
@@ -31,7 +33,7 @@ println(response2.content);
 println("");
 
 println("Sending put request to httpbin.com: ");
-var response3 = client.put("http://mockbin.com/request", ["id": 521, "name" : "Ordland", "age": 34, "location" : "United States"]);
+var response3 = client.put("https://mockbin.com/request", ["id": 521, "name" : "Ordland", "age": 34, "location" : "United States"]);
 print("Status: ");
 println(response3.status);
 print("Cookies: ");
@@ -43,7 +45,7 @@ println(response3.content);
 println("");
 
 println("Sending delete request to httpbin.com: ");
-var response4 = client.delete("http://mockbin.com/request?id=521");
+var response4 = client.delete("https://mockbin.com/request?id=521");
 print("Status: ");
 println(response4.status);
 print("Cookies: ");
@@ -55,7 +57,7 @@ println(response4.content);
 println("");
 
 println("Sending patch request to httpbin.com: ");
-var response5 = client.patch("http://mockbin.com/request", ["name" : "Hall of Famer", "location" : "New Jersey, United States"]);
+var response5 = client.patch("https://mockbin.com/request", ["name" : "Hall of Famer", "location" : "New Jersey, United States"]);
 print("Status: ");
 println(response5.status);
 print("Cookies: ");
@@ -66,8 +68,13 @@ println("Content: ");
 println(response5.content);
 println("");
 
+println("Creating a HTTPRequest object: ");
+val request = HTTPRequest("https://mockbin.com/request", HTTPRequest.httpPOST, ["Accept": "*/*", "Content-Type": "application/json"], ["name" : "Ordland", "age": 34, "location" : "United States"]);
+println(request.toString());
+println("");
+
 println("Sending generic HTTP request to example.com: ");
-var response6 = client.send(HTTPClient.httpPOST, "http://mockbin.com/request", ["Accept": "*/*", "Content-Type": "application/json"], ["name" : "Ordland", "age": 34, "location" : "United States"]);
+var response6 = client.send(request);
 print("Status: ");
 println(response6.status);
 print("Cookies: ");
@@ -77,3 +84,6 @@ println(response6.contentType);
 println("Content: ");
 println(response6.content);
 println("");
+
+println("Closing HTTP Client... ");
+client.close();

@@ -30,7 +30,8 @@ typedef enum HTTPMethod {
     HTTP_PATCH, 
     HTTP_OPTIONS, 
     HTTP_TRACE,
-    HTTP_CONNECT
+    HTTP_CONNECT,
+    HTTP_QUERY
 } HTTPMethod;
 
 static struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
@@ -87,21 +88,39 @@ static ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
 
 static ObjArray* httpCreateCookies(VM* vm, CURL* curl) {
     struct curl_slist* cookies = NULL;
-    curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
+    CURLcode curlCode = curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
     ObjArray* cookieArray = newArray(vm);
-    if (cookies) {
+
+    if (curlCode == CURLE_OK) {
         push(vm, OBJ_VAL(cookieArray));
         struct curl_slist* cookieNode = cookies;
+
         while (cookieNode) {
             valueArrayWrite(vm, &cookieArray->elements, OBJ_VAL(newString(vm, cookieNode->data)));
             cookieNode = cookieNode->next;
         }
+
         curl_slist_free_all(cookies);
         pop(vm);
     }
     return cookieArray;
 }
 
+static ObjArray* httpCreateHeaders(VM* vm, CURLResponse curlResponse) {
+    ObjString* headerString = copyString(vm, curlResponse.headers, (int)curlResponse.hSize);
+    ObjArray* headers = newArray(vm);
+    int startIndex = 0;
+    push(vm, OBJ_VAL(headers));
+
+    for (int i = 0; i < curlResponse.hSize - 1; i++) {
+        if (curlResponse.headers[i] == '\n') {
+            valueArrayWrite(vm, &headers->elements, OBJ_VAL(subString(vm, headerString, startIndex, i - 1)));
+            startIndex = i + 1;
+        }
+    }
+    pop(vm);
+    return headers;
+}
 
 static ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse curlResponse) {
     long statusCode;
@@ -114,7 +133,7 @@ static ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLR
     setObjProperty(vm, httpResponse, "content", OBJ_VAL(copyString(vm, curlResponse.content, (int)curlResponse.cSize)));
     setObjProperty(vm, httpResponse, "contentType", OBJ_VAL(newString(vm, contentType)));
     setObjProperty(vm, httpResponse, "cookies", OBJ_VAL(httpCreateCookies(vm, curl)));
-    setObjProperty(vm, httpResponse, "headers", OBJ_VAL(copyString(vm, curlResponse.headers, (int)curlResponse.hSize)));
+    setObjProperty(vm, httpResponse, "headers", OBJ_VAL(httpCreateHeaders(vm, curlResponse)));
     setObjProperty(vm, httpResponse, "status", INT_VAL(statusCode));
     setObjProperty(vm, httpResponse, "url", OBJ_VAL(url));
     pop(vm);
@@ -159,6 +178,7 @@ static char* httpMapMethod(HTTPMethod method) {
         case HTTP_OPTIONS: return "OPTIONS";
         case HTTP_TRACE: return "TRACE";
         case HTTP_CONNECT: return "CONNECT";
+        case HTTP_QUERY: return "QUERY";
         default: return "HEAD";
     }
 }
@@ -178,7 +198,7 @@ static struct curl_slist* httpParseHeaders(VM* vm, ObjDictionary* headers, CURL*
 }
 
 static ObjString* httpParsePostData(VM* vm, ObjDictionary* postData) {
-    if (postData->count == 0) return newString(vm, "");
+    if (postData->count == 0) return emptyString(vm);
     else {
         char string[UINT8_MAX] = "";
         size_t offset = 0;
@@ -243,7 +263,8 @@ static CURLcode httpSendRequest(VM* vm, ObjString* url, HTTPMethod method, ObjDi
     curlResponse->hSize = 0;
     curlResponse->cSize = 0;
 
-    curl_easy_setopt(curl, CURLOPT_URL, url->chars);
+    char* urlChars = url->chars;
+    curl_easy_setopt(curl, CURLOPT_URL, urlChars);
     if (method > HTTP_POST) {
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, httpMapMethod(method));
     }
@@ -252,7 +273,8 @@ static CURLcode httpSendRequest(VM* vm, ObjString* url, HTTPMethod method, ObjDi
         curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
     }
     else if (method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH) {
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, httpParsePostData(vm, data)->chars);
+        char* dataChars = httpParsePostData(vm, data)->chars;
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, dataChars);
     }
     else if (method == HTTP_OPTIONS) {
         curl_easy_setopt(curl, CURLOPT_REQUEST_TARGET, "*");
@@ -262,6 +284,7 @@ static CURLcode httpSendRequest(VM* vm, ObjString* url, HTTPMethod method, ObjDi
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)curlResponse);
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, httpCURLHeaders);
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*)curlResponse);
+    curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
     return curl_easy_perform(curl);
 }
 
@@ -312,7 +335,7 @@ static ObjString* urlToString(VM* vm, ObjInstance* url) {
     ObjString* query = AS_STRING(getObjProperty(vm, url, "query"));
     ObjString* fragment = AS_STRING(getObjProperty(vm, url, "fragment"));
 
-    ObjString* urlString = newString(vm, "");
+    ObjString* urlString = emptyString(vm);
     if (host->length > 0) {
         urlString = (scheme->length > 0) ? formattedString(vm, "%s://%s", scheme->chars, host->chars) : host;
         if (port > 0 && port < 65536) urlString = formattedString(vm, "%s:%d", urlString->chars, port);
@@ -465,7 +488,7 @@ LOX_METHOD(HTTPClient, options) {
 
 LOX_METHOD(HTTPClient, patch) {
     ASSERT_ARG_COUNT("HTTPClient::put(url, data)", 2);
-    ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 0, String);
+    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::put(url, data)", 0, clox.std.lang, String, clox.std.network, URL);
     ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 1, Dictionary);
     ObjString* url = httpRawURL(vm, args[0]);
     ObjDictionary* data = AS_DICTIONARY(args[1]);
@@ -491,7 +514,7 @@ LOX_METHOD(HTTPClient, patch) {
 
 LOX_METHOD(HTTPClient, post) {
     ASSERT_ARG_COUNT("HTTPClient::post(url, data)", 2);
-    ASSERT_ARG_TYPE("HTTPClient::post(url, data)", 0, String);
+    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::post(url, data)", 0, clox.std.lang, String, clox.std.network, URL);
     ASSERT_ARG_TYPE("HTTPClient::post(url, data)", 1, Dictionary);
     ObjString* url = httpRawURL(vm, args[0]);
     ObjDictionary* data = AS_DICTIONARY(args[1]);
@@ -517,7 +540,7 @@ LOX_METHOD(HTTPClient, post) {
 
 LOX_METHOD(HTTPClient, put) {
     ASSERT_ARG_COUNT("HTTPClient::put(url, data)", 2);
-    ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 0, String);
+    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::put(url, data)", 0, clox.std.lang, String, clox.std.network, URL);
     ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 1, Dictionary);
     ObjString* url = httpRawURL(vm, args[0]);
     ObjDictionary* data = AS_DICTIONARY(args[1]);
@@ -574,13 +597,14 @@ LOX_METHOD(HTTPClient, send) {
 
 LOX_METHOD(HTTPRequest, init) {
     ASSERT_ARG_COUNT("HTTPRequest::init(url, method, headers, data)", 4);
-    ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 0, String);
+    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPRequest::init(url, method, headers, data)", 0, clox.std.lang, String, clox.std.network, URL);
     ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 1, Int);
     ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 2, Dictionary);
     ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 3, Dictionary);
 
     ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "url", args[0]);
+    Value rawURL = OBJ_VAL(httpRawURL(vm, args[0]));
+    setObjProperty(vm, self, "url", rawURL);
     setObjProperty(vm, self, "method", args[1]);
     setObjProperty(vm, self, "headers", args[2]);
     setObjProperty(vm, self, "data", args[3]);
@@ -640,12 +664,14 @@ LOX_METHOD(IPAddress, init) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjString* address = AS_STRING(args[0]);
     int version = -1;
+
     if (ipIsV4(address)) version = 4;
     else if (ipIsV6(address)) version = 6;
     else {
         raiseError(vm, "Invalid IP address specified.");
         RETURN_NIL;
     }
+
     setObjProperty(vm, self, "address", args[0]);
     setObjProperty(vm, self, "version", INT_VAL(version));
     RETURN_OBJ(self);
@@ -690,27 +716,6 @@ LOX_METHOD(Socket, close) {
     RETURN_NIL;
 }
 
-LOX_METHOD(Socket, connect) { 
-    ASSERT_ARG_COUNT("Socket::connect(ipAddress)", 1);
-    ASSERT_ARG_INSTANCE_OF("Socket::connect(IPAddress)", 0, clox.std.network, IPAddress);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    ObjInstance* ipAddress = AS_INSTANCE(args[0]);
-
-    struct sockaddr_in socketAddress = { 0 };
-    ObjString* ipString = AS_STRING(getObjProperty(vm, ipAddress, "address"));
-    if (inet_pton(AF_INET, ipString->chars, &socketAddress.sin_addr) <= 0) {
-        raiseError(vm, "Invalid socket address provided.");
-        RETURN_NIL;
-    }
-
-    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor")); 
-    if (connect(descriptor, (struct sockaddr*)&socketAddress, sizeof(socketAddress)) <= 0) {
-        raiseError(vm, "Socket connection failed.");
-        RETURN_NIL;
-    }
-    RETURN_NIL;
-}
-
 LOX_METHOD(Socket, init) {
     ASSERT_ARG_COUNT("Socket::init(addressFamily, socketType, protocolType)", 3);
     ASSERT_ARG_TYPE("Socket::init(addressFamily, socketType, protocolType)", 0, Int);
@@ -722,6 +727,7 @@ LOX_METHOD(Socket, init) {
         raiseError(vm, "Socket creation failed...");
         RETURN_NIL;
     }
+
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "addressFamily", args[0]);
     setObjProperty(vm, self, "socketType", args[1]);
@@ -759,6 +765,119 @@ LOX_METHOD(Socket, toString) {
     Value socketType = getObjProperty(vm, self, "socketType");
     Value protocolType = getObjProperty(vm, self, "protocolType");
     RETURN_STRING_FMT("Socket - AddressFamily: %d, SocketType: %d, ProtocolType: %d", AS_INT(addressFamily), AS_INT(socketType), AS_INT(protocolType));
+}
+
+LOX_METHOD(SocketAddress, init) {
+    ASSERT_ARG_COUNT("SocketAddress::init(address, family, port)", 3);
+    ASSERT_ARG_TYPE("SocketAddress::init(address, family, port)", 0, String);
+    ASSERT_ARG_TYPE("SocketAddress::init(address, family, port)", 1, Int);
+    ASSERT_ARG_TYPE("SocketAddress::init(address, family, port)", 2, Int);
+
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "address", args[0]);
+    setObjProperty(vm, self, "family", args[1]);
+    setObjProperty(vm, self, "port", args[2]);
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(SocketAddress, ipAddress) {
+    ASSERT_ARG_COUNT("SocketAddress::ipAddress()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    Value address = getObjProperty(vm, self, "address");
+
+    ObjInstance* ipAddress = newInstance(vm, getNativeClass(vm, "clox.std.network", "IPAddress"));
+    push(vm, OBJ_VAL(ipAddress));
+    copyObjProperty(vm, self, ipAddress, "address");
+    pop(vm);
+    RETURN_OBJ(ipAddress);
+}
+
+LOX_METHOD(SocketAddress, toString) {
+    ASSERT_ARG_COUNT("SocketAddress::toString()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    char* address = AS_CSTRING(getObjProperty(vm, self, "address"));
+    int port = AS_INT(getObjProperty(vm, self, "port"));
+    RETURN_STRING_FMT("%s:%d", address, port);
+}
+
+LOX_METHOD(SocketClient, connect) {
+    ASSERT_ARG_COUNT("SocketClient::connect(socketAddress)", 1);
+    ASSERT_ARG_INSTANCE_OF("SocketClient::connect(socketAddress)", 0, clox.std.network, SocketAddress);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjInstance* socketAddress = AS_INSTANCE(args[0]);
+
+    struct sockaddr_in sockAddr = { 0 };
+    ObjString* ipAddress = AS_STRING(getObjProperty(vm, socketAddress, "address"));
+    int addressFamily = AS_INT(getObjProperty(vm, socketAddress, "family"));
+    if (inet_pton(addressFamily, ipAddress->chars, &sockAddr.sin_addr) <= 0) {
+        raiseError(vm, "Invalid socket address provided.");
+        RETURN_NIL;
+    }
+
+    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
+    if (connect(descriptor, (struct sockaddr*)&sockAddr, sizeof(sockAddr)) <= 0) {
+        raiseError(vm, "Socket connection failed.");
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(SocketServer, accept) {
+    ASSERT_ARG_COUNT("SocketServer::accept()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
+
+    struct sockaddr_in socketAddress = { 0 };
+    int clientSize = sizeof(socketAddress);
+    if (accept(descriptor, (struct sockaddr*)&socketAddress, &clientSize)) {
+        raiseError(vm, "Failed to accept client connection.");
+        RETURN_NIL;
+    }
+    char ipAddress[UINT8_MAX];
+    inet_ntop(socketAddress.sin_family, (struct sockaddr*)&socketAddress, ipAddress, UINT8_MAX);
+
+    ObjInstance* clientAddress = newInstance(vm, getNativeClass(vm, "clox.std.network", "SocketAddress"));
+    push(vm, OBJ_VAL(clientAddress));
+    setObjProperty(vm, clientAddress, "address", OBJ_VAL(newString(vm, ipAddress)));
+    setObjProperty(vm, clientAddress, "family", INT_VAL(socketAddress.sin_family));
+    setObjProperty(vm, clientAddress, "port", INT_VAL(socketAddress.sin_port));
+    pop(vm);
+    RETURN_OBJ(clientAddress);
+}
+
+LOX_METHOD(SocketServer, bind) {
+    ASSERT_ARG_COUNT("SocketServer::bind(serverAddress)", 1);
+    ASSERT_ARG_INSTANCE_OF("socketServer::bind(serverAddress)", 0, clox.std.network, SocketAddress);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjInstance* serverAddress = AS_INSTANCE(args[0]);
+
+    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
+    ObjString* ipAddress = AS_STRING(getObjProperty(vm, serverAddress, "address"));
+    int addressFamily = AS_INT(getObjProperty(vm, serverAddress, "family"));
+    int port = AS_INT(getObjProperty(vm, serverAddress, "port"));
+
+    struct sockaddr_in socketAddress = {
+        .sin_family = addressFamily,
+        .sin_port = htons(port)
+    };
+
+    if (inet_pton(addressFamily, ipAddress->chars, &socketAddress.sin_addr) <= 0) {
+        raiseError(vm, "Invalid socket address provided.");
+    }
+    else if (bind(descriptor, (struct sockaddr*)&socketAddress, sizeof(socketAddress)) < 0) {
+        raiseError(vm, "Failed to bind to port on socket address.");
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(SocketServer, listen) {
+    ASSERT_ARG_COUNT("SocketServer::listen()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
+
+    if (listen(descriptor, 1) < 0) {
+        raiseError(vm, "Failed to listen for incoming connections.");
+    }
+    RETURN_NIL;
 }
 
 LOX_METHOD(URL, init) {
@@ -858,8 +977,8 @@ LOX_METHOD(URL, relativize) {
         int length = sprintf_s(fullURL, UINT8_MAX, "%s%s", "https://example.com/", relativizedURL->chars);
         yuarel_parse(&component, fullURL);
 
-        setObjProperty(vm, relativized, "scheme", OBJ_VAL(newString(vm, "")));
-        setObjProperty(vm, relativized, "host", OBJ_VAL(newString(vm, "")));
+        setObjProperty(vm, relativized, "scheme", OBJ_VAL(emptyString(vm)));
+        setObjProperty(vm, relativized, "host", OBJ_VAL(emptyString(vm)));
         setObjProperty(vm, relativized, "port", INT_VAL(0));
         setObjProperty(vm, relativized, "path", OBJ_VAL(newString(vm, component.path != NULL ? component.path : "")));
         setObjProperty(vm, relativized, "query", OBJ_VAL(newString(vm, component.query != NULL ? component.query : "")));
@@ -916,6 +1035,12 @@ void registerNetworkPackage(VM* vm) {
     ObjClass* urlMetaclass = urlClass->obj.klass;
     DEF_METHOD(urlMetaclass, URLClass, parse, 1);
 
+    ObjClass* domainClass = defineNativeClass(vm, "Domain");
+    bindSuperclass(vm, domainClass, vm->objectClass);
+    DEF_METHOD(domainClass, Domain, init, 1);
+    DEF_METHOD(domainClass, Domain, ipAddresses, 0);
+    DEF_METHOD(domainClass, Domain, toString, 0);
+
     ObjClass* ipAddressClass = defineNativeClass(vm, "IPAddress");
     bindSuperclass(vm, ipAddressClass, vm->objectClass);
     DEF_METHOD(ipAddressClass, IPAddress, domain, 0);
@@ -925,24 +1050,22 @@ void registerNetworkPackage(VM* vm) {
     DEF_METHOD(ipAddressClass, IPAddress, toArray, 0);
     DEF_METHOD(ipAddressClass, IPAddress, toString, 0);
 
-    ObjClass* domainClass = defineNativeClass(vm, "Domain");
-    bindSuperclass(vm, domainClass, vm->objectClass);
-    DEF_METHOD(domainClass, Domain, init, 1);
-    DEF_METHOD(domainClass, Domain, ipAddresses, 0);
-    DEF_METHOD(domainClass, Domain, toString, 0);
+    ObjClass* socketAddressClass = defineNativeClass(vm, "SocketAddress");
+    bindSuperclass(vm, socketAddressClass, vm->objectClass);
+    DEF_METHOD(socketAddressClass, SocketAddress, init, 3);
+    DEF_METHOD(socketAddressClass, SocketAddress, ipAddress, 0);
+    DEF_METHOD(socketAddressClass, SocketAddress, toString, 0);
 
     ObjClass* closableTrait = getNativeClass(vm, "clox.std.io", "TClosable");
     ObjClass* socketClass = defineNativeClass(vm, "Socket");
     bindSuperclass(vm, socketClass, vm->objectClass);
     bindTrait(vm, socketClass, closableTrait);
     DEF_METHOD(socketClass, Socket, close, 0);
-    DEF_METHOD(socketClass, Socket, connect, 1);
     DEF_METHOD(socketClass, Socket, init, 3);
     DEF_METHOD(socketClass, Socket, receive, 0);
     DEF_METHOD(socketClass, Socket, send, 1);
     DEF_METHOD(socketClass, Socket, toString, 0);
 
-    ObjClass* socketMetaclass = socketClass->obj.klass;
     setClassProperty(vm, socketClass, "afUNSPEC", INT_VAL(AF_UNSPEC));
     setClassProperty(vm, socketClass, "afUNIX", INT_VAL(AF_UNIX));
     setClassProperty(vm, socketClass, "afINET", INT_VAL(AF_INET));
@@ -961,6 +1084,16 @@ void registerNetworkPackage(VM* vm) {
     setClassProperty(vm, socketClass, "protoUDP", INT_VAL(IPPROTO_UDP));
     setClassProperty(vm, socketClass, "protoICMPV6", INT_VAL(IPPROTO_ICMPV6));
     setClassProperty(vm, socketClass, "protoRAW", INT_VAL(IPPROTO_RAW));
+
+    ObjClass* socketClientClass = defineNativeClass(vm, "SocketClient");
+    bindSuperclass(vm, socketClientClass, socketClass);
+    DEF_METHOD(socketClientClass, SocketClient, connect, 1);
+
+    ObjClass* socketServerClass = defineNativeClass(vm, "SocketServer");
+    bindSuperclass(vm, socketServerClass, socketClass);
+    DEF_METHOD(socketServerClass, SocketServer, accept, 1);
+    DEF_METHOD(socketServerClass, SocketServer, bind, 1);
+    DEF_METHOD(socketServerClass, SocketServer, listen, 0);
 
     ObjClass* httpClientClass = defineNativeClass(vm, "HTTPClient");
     bindSuperclass(vm, httpClientClass, vm->objectClass);
@@ -990,6 +1123,7 @@ void registerNetworkPackage(VM* vm) {
     setClassProperty(vm, httpRequestClass, "httpOPTIONS", INT_VAL(HTTP_OPTIONS));
     setClassProperty(vm, httpRequestClass, "httpTRACE", INT_VAL(HTTP_TRACE));
     setClassProperty(vm, httpRequestClass, "httpCONNECT", INT_VAL(HTTP_CONNECT));
+    setClassProperty(vm, httpRequestClass, "httpQUERY", INT_VAL(HTTP_QUERY));
 
     ObjClass* httpResponseClass = defineNativeClass(vm, "HTTPResponse");
     bindSuperclass(vm, httpResponseClass, vm->objectClass);
@@ -1003,7 +1137,7 @@ void registerNetworkPackage(VM* vm) {
     setClassProperty(vm, httpResponseClass, "statusForbidden", INT_VAL(403));
     setClassProperty(vm, httpResponseClass, "statusNotFound", INT_VAL(404));
     setClassProperty(vm, httpResponseClass, "statusMethodNotAllowed", INT_VAL(405));
-    setClassProperty(vm, httpResponseClass, "statusInternalError", INT_VAL(500));
+    setClassProperty(vm, httpResponseClass, "statusInternalServerError", INT_VAL(500));
     setClassProperty(vm, httpResponseClass, "statusBadGateway", INT_VAL(502));
     setClassProperty(vm, httpResponseClass, "statusServiceUnavailable", INT_VAL(503));
 
