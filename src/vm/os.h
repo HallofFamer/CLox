@@ -14,6 +14,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #define closesocket(descriptor) close(descriptor)
 #define fopen_s(fp,filename,mode) ((*(fp))=fopen((filename),(mode)))==NULL
@@ -21,11 +22,13 @@
 #define sscanf_s(buffer,format,...) sscanf(buffer,format,__VA_ARGS__)
 #define sprintf_s(buffer,bufsz,format,...) sprintf(buffer,format,__VA_ARGS__)
 #define strtok_s(str,delim,ctx) strtok(str,delim)
-#define _chmod(path, mode) chmod(path, mode)
-#define _getcwd(buffer, size) getcwd(buffer, size)
-#define _mkdir(path) mkdir(path, 777)
+#define _chmod(path,mode) chmod(path,mode)
+#define _getcwd(buffer,size) getcwd(buffer,size)
+#define _mkdir(path) mkdir(path,777)
 #define _rmdir(path) rmdir(path)
 #define _strdup(str1) strdup(str1)
+#define SOCKET int
+#define INVALID_SOCKET (SOCKET)(~0)
 
 void strrev(char str[]);
 char* _strrev(char* str);

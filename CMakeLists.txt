@@ -173,6 +173,7 @@ set(Test_Files__lox
     "test/lox/fibonacci.lox"
     "test/lox/file.lox"
     "test/lox/fraction.lox"
+    "test/lox/http.lox"
     "test/lox/initializer.lox"
     "test/lox/invoke.lox"
     "test/lox/io.lox"
@@ -231,9 +232,8 @@ if (MSVC)
     find_package(CURL CONFIG REQUIRED)
     target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 else ()
-    set(CURL_LIBRARY "-lcurl")
-    set(CURL_INCLUDE_DIR "/usr/bin/curl")
     find_package(CURL REQUIRED)
+    target_link_libraries(${PROJECT_NAME} CURL::libcurl)   
 endif()
 
 use_props(${PROJECT_NAME} "${CMAKE_CONFIGURATION_TYPES}" "${DEFAULT_CXX_PROPS}")
