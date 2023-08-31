@@ -42,7 +42,7 @@ https://github.com/munificent/craftinginterpreters
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions(since version 1.6)
 - Refactor the existing standard library in `clox.std` namespace(since version 1.6)
 - Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible(since version 1.6)
-- Cross-platform build with Cmake and package manager with vcpkg.
+- Cross-platform build with Cmake and package manager with vcpkg(since version 1.6)
 
 
 ## Roadmap
@@ -71,22 +71,22 @@ https://github.com/munificent/craftinginterpreters
 - Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten. 
 - New class `Range` in package `collection`, as well as range operator(`..`) for range literals. 
 
-### CLox 1.5.0(current version)
+### CLox 1.5.0
 - Refined object model which is similar to Smalltalk's metaclass system.
 - Class methods in class declaration, and `trait` keyword for trait declaration.
 - Allow loading lox source files in lox script and another lox source file with `require` keyword. 
 - Anonymous classes/traits similar to anonymous functions/lambda.
 
-### CLox 1.6.0(upcoming version)
+### CLox 1.6.0(current version)
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
-- Refactor the existing standard library with namespaces(in `clox.std` package), add new package `clox.std.network`.
-- Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible.
-- Cross-platform build with Cmake and package manager with vcpkg.
+- Refactor the existing standard library with namespaces(in `clox.std` parent package), add new package `clox.std.network`.
+- Fix reentrancy problem with CLox, calling Lox closures from within C API becomes possible.
+- Cross-platform build with Cmake, as well as package manager with vcpkg(windows only).
 
-### CLox 1.7.0
+### CLox 1.7.0(upcoming version)
 - Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
 - Improved CLox standard library with addition of class `Exception` and various exception subclasses.
-- Null safe operator (?.) which short-circuit if nil is found in a long expression.
+- Safe navigation operator (?.) which short-circuit if nil is found in a long expression.
 - VM optimization for instance variable representations, and inline caching.
 
 ### CLox 1.8.0
@@ -94,6 +94,12 @@ https://github.com/munificent/craftinginterpreters
 - Improved string concatenation, addition of string interpolation and UTF-8 strings.
 - Method interception when an undefined method call is invoked on an object/class, similar to Smalltalk's doesNotUnderstand: message.
 - Object ID and generic object table which enable inheritance for special build-in classes such as `String` and `Array`.
+
+### CLox 1.9.0
+- Add class `Promise` to the standard library(`clox.std.util`), which uses libuv to handle async tasks that completes in future. 
+- Introduction of async and await keywords, which allows C#/JS style of concurrency.
+- Refactoring package `clox.std.io` and `clox.std.network` to use async non-blocking calls, add new package `clox.std.sql`.
+- First class execution context, possible to manipulate stack frames during function/method calls.
 
 
 ## Build and Run Clox
@@ -107,7 +113,7 @@ cmake --build ./build --config Release
 ./x64/Release/CLox
 ```
 
-#### Linux(with git, cmake and curl)
+#### Linux(with git, cmake and curl, need to install one of the libcurl4-dev packages)
 ```
 git clone -b master https://github.com/HallofFamer/CLox.git
 cd CLox
