@@ -496,15 +496,15 @@ void printObject(Value value) {
             printf("%d..%d", AS_RANGE(value)->from, AS_RANGE(value)->to);
             break;
         case OBJ_RECORD:
-            printf("record");
+            printf("<record>");
             break;
         case OBJ_STRING:
             printf("%s", AS_CSTRING(value));
             break;
         case OBJ_UPVALUE:
-            printf("upvalue");
+            printf("<upvalue>");
             break;
         default:
-            printf("");
+            printf("<unknown>");
   }
 }
