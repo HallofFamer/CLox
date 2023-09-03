@@ -175,6 +175,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return byteInstruction("OP_GET_NAMESPACE", chunk, offset);
           case OP_USING_NAMESPACE: 
               return byteInstruction("OP_USING_NAMESPACE", chunk, offset);
+          case OP_THROW:
+              return simpleInstruction("OP_THROW", offset);
           case OP_RETURN:
               return simpleInstruction("OP_RETURN", offset);
           case OP_RETURN_NONLOCAL:
