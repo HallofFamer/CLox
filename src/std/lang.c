@@ -281,6 +281,22 @@ LOX_METHOD(Class, toString) {
     else RETURN_STRING_FMT("<class %s.%s>", self->namespace->fullName->chars, self->name->chars);
 }
 
+LOX_METHOD(Exception, init) {
+    ASSERT_ARG_COUNT("Exception::init(message)", 1);
+    ASSERT_ARG_TYPE("Exception::init(message)", 0, String);
+    ObjInstance* exception = AS_INSTANCE(receiver);
+    setObjProperty(vm, exception, "message", args[0]);
+    setObjProperty(vm, exception, "stacktrace", NIL_VAL);
+    RETURN_OBJ(exception);
+}
+
+LOX_METHOD(Exception, toString) {
+    ASSERT_ARG_COUNT("Exception::toString()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    Value message = getObjProperty(vm, self, "message");
+    RETURN_STRING_FMT("<Exception %s - %s>", self->obj.klass->name->chars, AS_CSTRING(message));
+}
+
 LOX_METHOD(Float, clone) {
     ASSERT_ARG_COUNT("Float::clone()", 0);
     RETURN_NUMBER((double)receiver);
@@ -1478,6 +1494,11 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->boundMethodClass, BoundMethod, receiver, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, toString, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, upvalueCount, 0);
+
+    vm->exceptionClass = defineNativeClass(vm, "Exception");
+    bindSuperclass(vm, vm->exceptionClass, vm->objectClass);
+    DEF_METHOD(vm->exceptionClass, Exception, init, 1);
+    DEF_METHOD(vm->exceptionClass, Exception, toString, 0);
 
     vm->currentNamespace = vm->rootNamespace;
 }

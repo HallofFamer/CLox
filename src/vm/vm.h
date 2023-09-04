@@ -44,6 +44,7 @@ struct VM {
     ObjClass* boundMethodClass;
     ObjClass* namespaceClass;
     ObjClass* traitClass;
+    ObjClass* exceptionClass;
     ObjClass* arrayClass;
     ObjClass* dictionaryClass;
     ObjClass* rangeClass;
