@@ -572,25 +572,6 @@ static bool loadModule(VM* vm, ObjString* path) {
     return true;
 }
 
-static ObjArray* getStackTrace(VM* vm) {
-    ObjArray* stackTrace = newArray(vm);
-    push(vm, OBJ_VAL(stackTrace));
-    for (int i = vm->frameCount - 1; i >= 0; i--) {
-        char stackTraceBuffer[UINT8_MAX];
-        CallFrame* frame = &vm->frames[i];
-        ObjFunction* function = frame->closure->function;
-        size_t instruction = frame->ip - function->chunk.code - 1;
-        uint32_t line = function->chunk.lines[instruction];
-        
-        uint8_t length = snprintf(stackTraceBuffer, UINT8_MAX, "[line %d] in %s()", line,
-            function->name == NULL ? "script" : function->name->chars);
-        ObjString* stackElement = copyString(vm, stackTraceBuffer, length);
-        valueArrayWrite(vm, &stackTrace->elements, OBJ_VAL(stackElement));
-    }
-    pop(vm);
-    return stackTrace;
-}
-
 static void propagate(VM* vm) {
     ObjInstance* exception = AS_INSTANCE(peek(vm, 0));
     ObjString* message = AS_STRING(getObjProperty(vm, exception, "message"));
@@ -601,6 +582,42 @@ static void propagate(VM* vm) {
         fprintf(stderr, "%s;\n", AS_CSTRING(item));
     }
     fflush(stderr);
+}
+
+ObjArray* getStackTrace(VM* vm) {
+    ObjArray* stackTrace = newArray(vm);
+    push(vm, OBJ_VAL(stackTrace));
+    for (int i = vm->frameCount - 1; i >= 0; i--) {
+        char stackTraceBuffer[UINT8_MAX];
+        CallFrame* frame = &vm->frames[i];
+        ObjModule* module = frame->closure->module;
+        ObjFunction* function = frame->closure->function;
+        size_t instruction = frame->ip - function->chunk.code - 1;
+        uint32_t line = function->chunk.lines[instruction];
+
+        uint8_t length = snprintf(stackTraceBuffer, UINT8_MAX, "[line %d] in [method %s()] at [file %s]", line,
+            function->name == NULL ? "script" : function->name->chars, module->path->chars);
+        ObjString* stackElement = copyString(vm, stackTraceBuffer, length);
+        valueArrayWrite(vm, &stackTrace->elements, OBJ_VAL(stackElement));
+    }
+    pop(vm);
+    return stackTrace;
+}
+
+void throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...) {
+    char chars[UINT8_MAX];
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(chars, UINT8_MAX, format, args);
+    va_end(args);
+    ObjString* message = copyString(vm, chars, length);
+
+    ObjArray* stacktrace = getStackTrace(vm);
+    ObjInstance* exception = newInstance(vm, exceptionClass);
+    push(vm, OBJ_VAL(exception));
+    setObjProperty(vm, exception, "message", OBJ_VAL(message));
+    setObjProperty(vm, exception, "stacktrace", OBJ_VAL(stacktrace));
+    propagate(vm);
 }
 
 InterpretResult run(VM* vm) {
@@ -1098,7 +1115,17 @@ InterpretResult run(VM* vm) {
                 if (!IS_NIL(value)) push(vm, value);
                 else {
                     ObjString* filePath = resolveSourceFile(vm, shortName, enclosingNamespace);
-                    if (sourceFileExists(filePath)) loadModule(vm, filePath);
+                    if (sourceFileExists(filePath)) {
+                        loadModule(vm, filePath);
+                        if (tableGet(&enclosingNamespace->values, shortName, &value)) {
+                            pop(vm);
+                            push(vm, value);
+                        }
+                        else {
+                            runtimeError(vm, "Undefined class/trait/namespace %s specified", shortName->chars);
+                            return INTERPRET_RUNTIME_ERROR;
+                        }
+                    }
                     else {
                         ObjString* directoryPath = resolveSourceDirectory(vm, shortName, enclosingNamespace);
                         if (!sourceDirectoryExists(directoryPath)) {
@@ -1143,7 +1170,7 @@ InterpretResult run(VM* vm) {
                 ObjArray* stackTrace = getStackTrace(vm);
                 Value exception = peek(vm, 0);
                 if (!isObjInstanceOf(vm, exception, vm->exceptionClass)) {
-                    runtimeError(vm, "Only instances of class clox.std.Exception may be thrown.");
+                    runtimeError(vm, "Only instances of class clox.std.lang.Exception may be thrown.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 setObjProperty(vm, AS_INSTANCE(exception), "stacktrace", OBJ_VAL(stackTrace));
