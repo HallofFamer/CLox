@@ -3,14 +3,11 @@
 #include <string.h>
 
 #include "compiler.h"
+#include "debug.h"
 #include "memory.h"
 #include "parser.h"
 #include "scanner.h"
 #include "string.h"
-
-#ifdef DEBUG_PRINT_CODE
-#include "debug.h"
-#endif
 
 typedef enum {
     PREC_NONE,
