@@ -572,14 +572,14 @@ static bool loadModule(VM* vm, ObjString* path) {
     return true;
 }
 
-static void propagate(VM* vm) {
+static void propagateException(VM* vm) {
     ObjInstance* exception = AS_INSTANCE(peek(vm, 0));
     ObjString* message = AS_STRING(getObjProperty(vm, exception, "message"));
-    fprintf(stderr, "Unhandled %s: %s\n", exception->obj.klass->name->chars, message->chars);
+    fprintf(stderr, "Unhandled %s.%s: %s\n", exception->obj.klass->namespace->fullName->chars, exception->obj.klass->name->chars, message->chars);
     ObjArray* stackTrace = AS_ARRAY(getObjProperty(vm, exception, "stacktrace"));
     for (int i = 0; i < stackTrace->elements.count; i++) {
         Value item = stackTrace->elements.values[i];
-        fprintf(stderr, "%s;\n", AS_CSTRING(item));
+        fprintf(stderr, "    %s.\n", AS_CSTRING(item));
     }
     fflush(stderr);
 }
@@ -595,8 +595,8 @@ ObjArray* getStackTrace(VM* vm) {
         size_t instruction = frame->ip - function->chunk.code - 1;
         uint32_t line = function->chunk.lines[instruction];
 
-        uint8_t length = snprintf(stackTraceBuffer, UINT8_MAX, "[line %d] in [method %s()] at [file %s]", line,
-            function->name == NULL ? "script" : function->name->chars, module->path->chars);
+        uint8_t length = snprintf(stackTraceBuffer, UINT8_MAX, "in %s() from %s at line %d",
+            function->name == NULL ? "script" : function->name->chars, module->path->chars, line);
         ObjString* stackElement = copyString(vm, stackTraceBuffer, length);
         valueArrayWrite(vm, &stackTrace->elements, OBJ_VAL(stackElement));
     }
@@ -617,7 +617,7 @@ void throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...) {
     push(vm, OBJ_VAL(exception));
     setObjProperty(vm, exception, "message", OBJ_VAL(message));
     setObjProperty(vm, exception, "stacktrace", OBJ_VAL(stacktrace));
-    propagate(vm);
+    propagateException(vm);
 }
 
 InterpretResult run(VM* vm) {
@@ -1174,7 +1174,7 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 setObjProperty(vm, AS_INSTANCE(exception), "stacktrace", OBJ_VAL(stackTrace));
-                propagate(vm);
+                propagateException(vm);
                 return INTERPRET_RUNTIME_ERROR;
             }
             case OP_RETURN: {
