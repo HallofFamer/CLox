@@ -176,6 +176,7 @@ typedef struct ObjUpvalue {
 typedef struct {
     Obj obj;
     ObjFunction* function;
+    ObjModule* module;
     ObjUpvalue** upvalues;
     int upvalueCount;
 } ObjClosure;

@@ -60,6 +60,7 @@ ObjClosure* newClosure(VM* vm, ObjFunction* function) {
 
     ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE, vm->functionClass);
     closure->function = function;
+    closure->module = vm->currentModule;
     closure->upvalues = upvalues;
     closure->upvalueCount = function->upvalueCount;
     return closure;
