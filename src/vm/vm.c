@@ -26,6 +26,13 @@ static void resetStack(VM* vm) {
     vm->frameCount = 0;
     vm->apiStackDepth = 0;
     vm->openUpvalues = NULL;
+    for (int i = 0; i < FRAMES_MAX; i++) {
+        CallFrame* frame = &vm->frames[i];
+        frame->closure = NULL;
+        frame->ip = NULL;
+        frame->slots = NULL;
+        frame->handlerCount = 0;
+    }
 }
 
 void runtimeError(VM* vm, const char* format, ...) {
@@ -572,8 +579,20 @@ static bool loadModule(VM* vm, ObjString* path) {
     return true;
 }
 
-static void propagateException(VM* vm) {
+static bool propagateException(VM* vm) {
     ObjInstance* exception = AS_INSTANCE(peek(vm, 0));
+    while (vm->frameCount > 0) {
+        CallFrame* frame = &vm->frames[vm->frameCount - 1];
+        for (int i = frame->handlerCount; i > 0; i--) {
+            ExceptionHandler handler = frame->handlerStack[i - 1];
+            if (isObjInstanceOf(vm, OBJ_VAL(exception), handler.exceptionClass)) {
+                frame->ip = &frame->closure->function->chunk.code[handler.handlerAddress];
+                return true;
+            }
+        }
+        vm->frameCount--;
+    }
+
     ObjString* message = AS_STRING(getObjProperty(vm, exception, "message"));
     fprintf(stderr, "Unhandled %s.%s: %s\n", exception->obj.klass->namespace->fullName->chars, exception->obj.klass->name->chars, message->chars);
     ObjArray* stackTrace = AS_ARRAY(getObjProperty(vm, exception, "stacktrace"));
@@ -582,6 +601,18 @@ static void propagateException(VM* vm) {
         fprintf(stderr, "    %s.\n", AS_CSTRING(item));
     }
     fflush(stderr);
+    return false;
+}
+
+static void pushExceptionHandler(VM* vm, ObjClass* exceptionClass, uint16_t handlerAddress) {
+    CallFrame* frame = &vm->frames[vm->frameCount - 1];
+    if (frame->handlerCount >= UINT4_MAX) {
+        runtimeError(vm, "Too many nested exception handlers.");
+        exit(70);
+    }
+    frame->handlerStack[frame->handlerCount].handlerAddress = handlerAddress;
+    frame->handlerStack[frame->handlerCount].exceptionClass = exceptionClass;
+    frame->handlerCount++;
 }
 
 ObjArray* getStackTrace(VM* vm) {
@@ -1174,9 +1205,26 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 setObjProperty(vm, AS_INSTANCE(exception), "stacktrace", OBJ_VAL(stackTrace));
-                propagateException(vm);
+                if (propagateException(vm)) {
+                    frame = &vm->frames[vm->frameCount - 1];
+                    break;
+                }
                 return INTERPRET_RUNTIME_ERROR;
             }
+            case OP_TRY: {
+                ObjString* exceptionClass = READ_STRING();
+                uint16_t handlerAddress = READ_SHORT();
+                Value value;
+                if (!loadGlobal(vm, exceptionClass, &value)){
+                    runtimeError(vm, "'%s' is not an instance of clox.std.lang.Exception", exceptionClass->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                pushExceptionHandler(vm, AS_CLASS(value), handlerAddress);
+                break;
+            }
+            case OP_CATCH:
+                frame->handlerCount--;
+                break;
             case OP_RETURN: {
                 Value result = pop(vm);
                 closeUpvalues(vm, frame->slots);

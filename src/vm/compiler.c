@@ -1209,8 +1209,8 @@ static void tryStatement(Compiler* compiler) {
     
     if (match(compiler->parser, TOKEN_CATCH)) {
         beginScope(compiler);
-        consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after catch");
-        consume(compiler, TOKEN_IDENTIFIER, "Expect type name to catch");
+        consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after catch");
+        consume(compiler->parser, TOKEN_IDENTIFIER, "Expect type name to catch");
         uint8_t name = identifierConstant(compiler, &compiler->parser->previous);
         currentChunk(compiler)->code[exceptionType] = name;
         patchAddress(compiler, handlerAddress);
