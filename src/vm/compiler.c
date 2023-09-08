@@ -144,6 +144,11 @@ static void patchJump(Compiler* compiler, int offset) {
     currentChunk(compiler)->code[offset + 1] = jump & 0xff;
 }
 
+static void patchAddress(Compiler* compiler, int offset) {
+    currentChunk(compiler)->code[offset] = (currentChunk(compiler)->count >> 8) & 0xff;
+    currentChunk(compiler)->code[offset + 1] = currentChunk(compiler)->count & 0xff;
+}
+
 static void endLoop(Compiler* compiler) {
     int offset = compiler->innermostLoopStart;
     Chunk* chunk = currentChunk(compiler);
@@ -1192,6 +1197,39 @@ static void throwStatement(Compiler* compiler) {
     emitByte(compiler, OP_THROW);
 }
 
+static void tryStatement(Compiler* compiler) {
+    emitByte(compiler, OP_TRY);
+    int exceptionType = currentChunk(compiler)->count;
+    emitByte(compiler, 0xff);
+    int handlerAddress = currentChunk(compiler)->count;
+    emitBytes(compiler, 0xff, 0xff);
+    statement(compiler);
+    emitByte(compiler, OP_CATCH);
+    int successJump = emitJump(compiler, OP_JUMP);
+    
+    if (match(compiler->parser, TOKEN_CATCH)) {
+        beginScope(compiler);
+        consume(compiler, TOKEN_LEFT_PAREN, "Expect '(' after catch");
+        consume(compiler, TOKEN_IDENTIFIER, "Expect type name to catch");
+        uint8_t name = identifierConstant(compiler, &compiler->parser->previous);
+        currentChunk(compiler)->code[exceptionType] = name;
+        patchAddress(compiler, handlerAddress);
+
+        if (check(compiler->parser, TOKEN_IDENTIFIER)) {
+            consume(compiler->parser, TOKEN_IDENTIFIER, "Expect identifier after exception type.");
+            addLocal(compiler, compiler->parser->previous);
+            markInitialized(compiler, false);
+            uint8_t variable = resolveLocal(compiler, &compiler->parser->previous);
+            emitBytes(compiler, OP_SET_LOCAL, variable);
+        }
+        consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after catch statement");
+        emitByte(compiler, OP_CATCH);
+        statement(compiler);
+        endScope(compiler);
+    }
+    patchJump(compiler, successJump);
+}
+
 static void usingStatement(Compiler* compiler) {
     uint8_t namespaceDepth = 0;
     do { 
@@ -1284,6 +1322,9 @@ static void statement(Compiler* compiler) {
     }
     else if (match(compiler->parser, TOKEN_THROW)) {
         throwStatement(compiler);
+    }
+    else if (match(compiler->parser, TOKEN_TRY)) {
+        tryStatement(compiler);
     }
     else if (match(compiler->parser, TOKEN_USING)) {
         usingStatement(compiler);

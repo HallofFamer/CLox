@@ -77,7 +77,7 @@ int opCodeOffset(Chunk* chunk, int ip) {
         case OP_INVOKE:
         case OP_SUPER_INVOKE:
         case OP_TRY:
-        case OP_END_TRY:
+        case OP_CATCH:
             return 3;
 
         case OP_CLOSURE: {

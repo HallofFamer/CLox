@@ -58,7 +58,7 @@ typedef enum {
     OP_USING_NAMESPACE,
     OP_THROW,
     OP_TRY,
-    OP_END_TRY,
+    OP_CATCH,
     OP_RETURN,
     OP_RETURN_NONLOCAL,
     OP_END
