@@ -4,11 +4,19 @@ using clox.std.collection.Array;
 class Fraction {
 
     init(numerator, denominator){
-        if(!numerator.instanceOf(Int) or !numerator.instanceOf(Int)){
-            error("Numerator and Denominator must be integers.");
-        }
+        this.validateNumbers(numerator, denominator);
         this.numerator = numerator;
         this.denominator = denominator;
+    }
+
+    validateNumbers(numerator, denominator){
+        if(!numerator.instanceOf(Int) or !denominator.instanceOf(Int)){
+            throw Exception("Numerator and Denominator must be integers.");
+        }
+        
+        if(denominator == 0){
+            throw Exception("Denominator of a Fraction object cannot be 0.");
+        }
     }
 
     reduce(){

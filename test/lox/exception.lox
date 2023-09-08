@@ -1,0 +1,4 @@
+namespace test.lox;
+using test.lox.Fraction;
+
+val frac = Fraction(3, 0);
