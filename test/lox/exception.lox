@@ -1,4 +1,10 @@
 namespace test.lox;
 using test.lox.Fraction;
 
-val frac = Fraction(3, 0);
+try{
+    val frac = Fraction(3, 0);
+    println("Try statement executed successfully.");
+}
+catch(Exception e){ 
+    println("Caught exception: " + e.message);
+}
