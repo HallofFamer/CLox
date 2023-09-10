@@ -6,5 +6,5 @@ try{
     println("Try statement executed successfully.");
 }
 catch(Exception e){ 
-    println("Caught exception: " + e.message);
+    println("Caught exception with message: " + e.message);
 }

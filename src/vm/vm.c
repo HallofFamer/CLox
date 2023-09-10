@@ -21,11 +21,7 @@
 #include "../std/network.h"
 #include "../std/util.h"
 
-static void resetStack(VM* vm) {
-    vm->stackTop = vm->stack;
-    vm->frameCount = 0;
-    vm->apiStackDepth = 0;
-    vm->openUpvalues = NULL;
+static void resetCallFrames(VM* vm) {
     for (int i = 0; i < FRAMES_MAX; i++) {
         CallFrame* frame = &vm->frames[i];
         frame->closure = NULL;
@@ -33,6 +29,14 @@ static void resetStack(VM* vm) {
         frame->slots = NULL;
         frame->handlerCount = 0;
     }
+}
+
+static void resetStack(VM* vm) {
+    vm->stackTop = vm->stack;
+    vm->frameCount = 0;
+    vm->apiStackDepth = 0;
+    vm->openUpvalues = NULL;
+    resetCallFrames(vm);
 }
 
 void runtimeError(VM* vm, const char* format, ...) {
@@ -1216,10 +1220,16 @@ InterpretResult run(VM* vm) {
                 uint16_t handlerAddress = READ_SHORT();
                 Value value;
                 if (!loadGlobal(vm, exceptionClass, &value)){
-                    runtimeError(vm, "'%s' is not an instance of clox.std.lang.Exception", exceptionClass->chars);
+                    runtimeError(vm, "Undefined class %s specified as exception type.", exceptionClass->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                pushExceptionHandler(vm, AS_CLASS(value), handlerAddress);
+
+                ObjClass* klass = AS_CLASS(value);
+                if (!isClassExtendingSuperclass(klass, vm->exceptionClass)) {
+                    runtimeError(vm, "Expect subclass of clox.std.lang.Exception, but got Class %s.", exceptionClass->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                pushExceptionHandler(vm, klass, handlerAddress);
                 break;
             }
             case OP_CATCH:
