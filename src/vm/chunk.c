@@ -72,13 +72,16 @@ int opCodeOffset(Chunk* chunk, int ip) {
         case OP_DECLARE_NAMESPACE:
         case OP_GET_NAMESPACE:
         case OP_USING_NAMESPACE:
+        case OP_CATCH:
+        case OP_FINALLY:
             return 2;
 
         case OP_INVOKE:
         case OP_SUPER_INVOKE:
-        case OP_TRY:
-        case OP_CATCH:
             return 3;
+
+        case OP_TRY:
+            return 5;
 
         case OP_CLOSURE: {
             int constant = (chunk->code[ip + 1] << 8) | chunk->code[ip + 2];

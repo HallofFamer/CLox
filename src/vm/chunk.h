@@ -59,6 +59,7 @@ typedef enum {
     OP_THROW,
     OP_TRY,
     OP_CATCH,
+    OP_FINALLY,
     OP_RETURN,
     OP_RETURN_NONLOCAL,
     OP_END
