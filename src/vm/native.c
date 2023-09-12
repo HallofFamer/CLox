@@ -129,6 +129,12 @@ ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* encl
     return nativeNamespace;
 }
 
+ObjInstance* defineNativeException(VM* vm, const char* name, ObjClass* superClass) {
+    ObjClass* exceptionClass = defineNativeClass(vm, name);
+    bindSuperclass(vm, exceptionClass, superClass);
+    return exceptionClass;
+}
+
 ObjClass* getNativeClass(VM* vm, const char* namespaceName, const char* className) {
     ObjNamespace* namespace = getNativeNamespace(vm, namespaceName);
     Value klass;
