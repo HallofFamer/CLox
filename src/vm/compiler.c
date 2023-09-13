@@ -1203,9 +1203,11 @@ static void tryStatement(Compiler* compiler) {
     emitByte(compiler, 0xff);
     int handlerAddress = currentChunk(compiler)->count;
     emitBytes(compiler, 0xff, 0xff);
+    int finallyAddress = currentChunk(compiler)->count;
+    emitBytes(compiler, 0xff, 0xff);
     statement(compiler);
     emitByte(compiler, OP_CATCH);
-    int successJump = emitJump(compiler, OP_JUMP);
+    int catchJump = emitJump(compiler, OP_JUMP);
     
     if (match(compiler->parser, TOKEN_CATCH)) {
         beginScope(compiler);
@@ -1227,7 +1229,22 @@ static void tryStatement(Compiler* compiler) {
         statement(compiler);
         endScope(compiler);
     }
-    patchJump(compiler, successJump);
+    else {
+        errorAtCurrent(compiler->parser, "Must have a catch statement following a try statement.");
+    }
+    patchJump(compiler, catchJump);
+
+    if (match(compiler->parser, TOKEN_FINALLY)) {
+        emitByte(compiler, OP_FALSE);
+        patchAddress(compiler, finallyAddress);
+        statement(compiler);
+
+        int finallyJump = emitJump(compiler, OP_JUMP_IF_FALSE);
+        emitByte(compiler, OP_POP);
+        emitByte(compiler, OP_FINALLY);
+        patchJump(compiler, finallyJump);
+        emitByte(compiler, OP_POP);
+    }
 }
 
 static void usingStatement(Compiler* compiler) {
