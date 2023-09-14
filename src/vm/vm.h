@@ -13,6 +13,7 @@
 
 typedef struct {
     uint16_t handlerAddress;
+    uint16_t finallyAddress;
     ObjClass* exceptionClass;
 } ExceptionHandler;
 

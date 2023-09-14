@@ -593,6 +593,11 @@ static bool propagateException(VM* vm) {
                 frame->ip = &frame->closure->function->chunk.code[handler.handlerAddress];
                 return true;
             }
+            else if (handler.finallyAddress != UINT16_MAX){
+                push(vm, TRUE_VAL);
+                frame->ip = &frame->closure->function->chunk.code[handler.finallyAddress];
+                return true;
+            }
         }
         vm->frameCount--;
     }
@@ -608,7 +613,7 @@ static bool propagateException(VM* vm) {
     return false;
 }
 
-static void pushExceptionHandler(VM* vm, ObjClass* exceptionClass, uint16_t handlerAddress) {
+static void pushExceptionHandler(VM* vm, ObjClass* exceptionClass, uint16_t handlerAddress, uint16_t finallyAddress) {
     CallFrame* frame = &vm->frames[vm->frameCount - 1];
     if (frame->handlerCount >= UINT4_MAX) {
         runtimeError(vm, "Too many nested exception handlers.");
@@ -616,6 +621,7 @@ static void pushExceptionHandler(VM* vm, ObjClass* exceptionClass, uint16_t hand
     }
     frame->handlerStack[frame->handlerCount].handlerAddress = handlerAddress;
     frame->handlerStack[frame->handlerCount].exceptionClass = exceptionClass;
+    frame->handlerStack[frame->handlerCount].finallyAddress = finallyAddress;
     frame->handlerCount++;
 }
 
@@ -1218,6 +1224,7 @@ InterpretResult run(VM* vm) {
             case OP_TRY: {
                 ObjString* exceptionClass = READ_STRING();
                 uint16_t handlerAddress = READ_SHORT();
+                uint16_t finallyAddress = READ_SHORT();
                 Value value;
                 if (!loadGlobal(vm, exceptionClass, &value)){
                     runtimeError(vm, "Undefined class %s specified as exception type.", exceptionClass->chars);
@@ -1229,12 +1236,20 @@ InterpretResult run(VM* vm) {
                     runtimeError(vm, "Expect subclass of clox.std.lang.Exception, but got Class %s.", exceptionClass->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                pushExceptionHandler(vm, klass, handlerAddress);
+                pushExceptionHandler(vm, klass, handlerAddress, finallyAddress);
                 break;
             }
             case OP_CATCH:
                 frame->handlerCount--;
                 break;
+            case OP_FINALLY: { 
+                frame->handlerCount--;
+                if (propagateException(vm)) {
+                    frame = &vm->frames[vm->frameCount - 1];
+                    break;
+                }
+                return INTERPRET_RUNTIME_ERROR;
+            }
             case OP_RETURN: {
                 Value result = pop(vm);
                 closeUpvalues(vm, frame->slots);
