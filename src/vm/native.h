@@ -22,6 +22,8 @@
 #define RETURN_OBJ(value) return OBJ_VAL(value)
 #define RETURN_STRING(chars, length) return OBJ_VAL(copyString(vm, chars, length))
 #define RETURN_STRING_FMT(...) return OBJ_VAL(formattedString(vm, __VA_ARGS__))
+#define THROW_EXCEPTION(namespace, klass, message) return OBJ_VAL(throwException(vm, getNativeClass(vm, #namespace, #klass), message))
+#define THROW_EXCEPTION_FMT(namespace, klass, message, ...) return OBJ_VAL(throwException(vm, getNativeClass(vm, #namespace, #klass), message, __VA_ARGS__))
 
 ObjClass* defineNativeClass(VM* vm, const char* name);
 void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction function);

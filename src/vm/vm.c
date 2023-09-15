@@ -645,7 +645,7 @@ ObjArray* getStackTrace(VM* vm) {
     return stackTrace;
 }
 
-void throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...) {
+ObjInstance* throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...) {
     char chars[UINT8_MAX];
     va_list args;
     va_start(args, format);
@@ -658,7 +658,8 @@ void throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...) {
     push(vm, OBJ_VAL(exception));
     setObjProperty(vm, exception, "message", OBJ_VAL(message));
     setObjProperty(vm, exception, "stacktrace", OBJ_VAL(stacktrace));
-    propagateException(vm);
+    if (!propagateException(vm)) exit(70);
+    else return exception;
 }
 
 InterpretResult run(VM* vm) {
@@ -965,6 +966,10 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_DIVIDE: 
+                if (IS_INT(peek(vm, 0)) && AS_INT(peek(vm, 0)) == 0) {
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "ArithmeticException");
+                    throwException(vm, exceptionClass, "Divide by 0 is illegal.");
+                }
                 BINARY_OP(NUMBER_VAL, /); 
                 break;
             case OP_NOT:
