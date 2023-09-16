@@ -672,12 +672,14 @@ InterpretResult run(VM* vm) {
 #define BINARY_OP(valueType, op) \
     do { \
         if (!IS_NUMBER(peek(vm, 0)) || !IS_NUMBER(peek(vm, 1))) { \
-            runtimeError(vm, "Operands must be numbers."); \
-            return INTERPRET_RUNTIME_ERROR; \
+            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException"); \
+            throwException(vm, exceptionClass, "Operands must be numbers."); \
         } \
-        double b = AS_NUMBER(pop(vm)); \
-        double a = AS_NUMBER(pop(vm)); \
-        push(vm, valueType(a op b)); \
+        else { \
+            double b = AS_NUMBER(pop(vm)); \
+            double a = AS_NUMBER(pop(vm)); \
+            push(vm, valueType(a op b)); \
+        } \
     } while (false)
 
     for (;;) {
@@ -847,21 +849,25 @@ InterpretResult run(VM* vm) {
                     if (IS_STRING(peek(vm, 0))) {
                         ObjString* string = AS_STRING(pop(vm));
                         if (index < 0 || index > string->length) {
-                            runtimeError(vm, "String index is out of bound.");
-                            return INTERPRET_RUNTIME_ERROR;
+                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IndexOutOfBoundsException");
+                            throwException(vm, exceptionClass, "String index is out of bound: %d.", index);
                         }
-                        char chars[2] = { string->chars[index], '\0' };
-                        ObjString* element = copyString(vm, chars, 1);
-                        push(vm, OBJ_VAL(element));
+                        else {
+                            char chars[2] = { string->chars[index], '\0' };
+                            ObjString* element = copyString(vm, chars, 1);
+                            push(vm, OBJ_VAL(element));
+                        }
                     }
                     else if (IS_ARRAY(peek(vm, 0))) {
                         ObjArray* array = AS_ARRAY(pop(vm));
                         if (index < 0 || index > array->elements.count) {
-                            runtimeError(vm, "Array index is out of bound.");
-                            return INTERPRET_RUNTIME_ERROR;
+                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IndexOutOfBoundsException");
+                            throwException(vm, exceptionClass, "Array index is out of bound: %d.", index);
                         }
-                        Value element = array->elements.values[index];
-                        push(vm, element);
+                        else {
+                            Value element = array->elements.values[index];
+                            push(vm, element);
+                        }
                     }
                     else {
                         runtimeError(vm, "Only String or Array can have integer subscripts.");
@@ -876,8 +882,8 @@ InterpretResult run(VM* vm) {
                     else push(vm, NIL_VAL);
                 }
                 else {
-                    runtimeError(vm, "Subscript must be integer or string.");
-                    return INTERPRET_RUNTIME_ERROR;
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    throwException(vm, exceptionClass, "Subscript must be integer or string.");
                 }
                 break;
             }
@@ -887,11 +893,13 @@ InterpretResult run(VM* vm) {
                     int index = AS_INT(pop(vm));
                     ObjArray* array = AS_ARRAY(pop(vm));
                     if (index < 0 || index > array->elements.count) {
-                        runtimeError(vm, "Array index is out of bound.");
-                        return INTERPRET_RUNTIME_ERROR;
+                        ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IndexOutOfBoundsException");
+                        throwException(vm, exceptionClass, "Array index is out of bound: %d.", index);
                     }
-                    valueArrayInsert(vm, &array->elements, index, element);
-                    push(vm, OBJ_VAL(array));
+                    else {
+                        valueArrayInsert(vm, &array->elements, index, element);
+                        push(vm, OBJ_VAL(array));
+                    }
                 }
                 else if (IS_DICTIONARY(peek(vm, 2))) {
                     Value value = pop(vm);
@@ -942,8 +950,8 @@ InterpretResult run(VM* vm) {
                     push(vm, NUMBER_VAL(a + b));
                 }
                 else {
-                    runtimeError(vm, "Operands must be two numbers or two strings.");
-                    return INTERPRET_RUNTIME_ERROR;
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    throwException(vm, exceptionClass, "Operands must be two numbers or two strings.");
                 }
                 break;
             }
@@ -970,18 +978,17 @@ InterpretResult run(VM* vm) {
                     ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "ArithmeticException");
                     throwException(vm, exceptionClass, "Divide by 0 is illegal.");
                 }
-                BINARY_OP(NUMBER_VAL, /); 
+                else BINARY_OP(NUMBER_VAL, /); 
                 break;
             case OP_NOT:
                 push(vm, BOOL_VAL(isFalsey(pop(vm))));
                 break;
             case OP_NEGATE:
                 if (!IS_NUMBER(peek(vm, 0))) {
-                    runtimeError(vm, "Operand must be a number.");
-                    return INTERPRET_RUNTIME_ERROR;
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException"); 
+                    throwException(vm, exceptionClass, "Operands must be numbers for negate operator.");
                 }
-
-                if(IS_INT(peek(vm, 0))) push(vm, INT_VAL(-AS_INT(pop(vm))));
+                else if(IS_INT(peek(vm, 0))) push(vm, INT_VAL(-AS_INT(pop(vm))));
                 else push(vm, NUMBER_VAL(-AS_NUMBER(pop(vm))));
                 break;
             case OP_JUMP: {
@@ -1127,8 +1134,8 @@ InterpretResult run(VM* vm) {
                     push(vm, OBJ_VAL(newRange(vm, a, b)));
                 }
                 else {
-                    runtimeError(vm, "Operands must be two integers.");
-                    return INTERPRET_RUNTIME_ERROR;
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    throwException(vm, exceptionClass, "Operands must be two integers.");
                 }
                 break;
             }
@@ -1136,8 +1143,9 @@ InterpretResult run(VM* vm) {
                 Value filePath = pop(vm);
                 Value value;
                 if (!IS_STRING(filePath)) {
-                    runtimeError(vm, "Required file path must be a string.");
-                    return INTERPRET_RUNTIME_ERROR;
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    throwException(vm, exceptionClass, "Required file path must be a string.");
+                    break;
                 }
                 else if (tableGet(&vm->modules, AS_STRING(filePath), &value)) {
                     break;
@@ -1175,8 +1183,8 @@ InterpretResult run(VM* vm) {
                     else {
                         ObjString* directoryPath = resolveSourceDirectory(vm, shortName, enclosingNamespace);
                         if (!sourceDirectoryExists(directoryPath)) {
-                            runtimeError(vm, "Failed to load source file for %s", filePath->chars);
-                            return INTERPRET_RUNTIME_ERROR;
+                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.io", "FileNotFoundException");
+                            throwException(vm, exceptionClass, "Failed to load source file for %s", filePath->chars);
                         }
                         else if (!tableGet(&enclosingNamespace->values, shortName, &value)) {
                             ObjNamespace* namespace = newNamespace(vm, shortName, enclosingNamespace);

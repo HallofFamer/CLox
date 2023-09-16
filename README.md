@@ -86,7 +86,7 @@ https://github.com/munificent/craftinginterpreters
 ### CLox 1.7.0(upcoming version)
 - Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
 - Improved CLox standard library with addition of class `Exception` and various exception subclasses.
-- Safe navigation operator (?.) which short-circuit if nil is found in a long expression.
+- Addition of nil handling operators: Optional chaining operator(?.), Nil coalescing operator(??), and Elvis operator(?:). 
 - VM optimization for instance variable representations, and inline caching.
 
 ### CLox 1.8.0
