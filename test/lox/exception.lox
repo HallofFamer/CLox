@@ -1,10 +1,27 @@
 namespace test.lox;
 using test.lox.Fraction;
 
-try{
+println("Testing handling user defined exceptions: ");
+try {
     val frac = Fraction(3, 0);
     println("Try statement executed successfully.");
 }
-catch(Exception e){ 
-    println("Caught exception with message: " + e.message);
+catch(RuntimeException e) { 
+    println("Caught " + e.getClassName() + " with message: " + e.message);
 }
+finally { 
+    println("Finally clean up...");
+}
+println("");
+
+println("Testing handling native exception: ");
+try { 
+    val range = 3..true;
+}
+catch(IllegalArgumentException e){ 
+    println("Caught " + e.getClassName() + " with message: " + e.message);
+}
+finally { 
+    println("Finally clean up...");
+}
+println("");
