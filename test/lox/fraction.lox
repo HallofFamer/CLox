@@ -11,11 +11,11 @@ class Fraction {
 
     validateNumbers(numerator, denominator){
         if(!numerator.instanceOf(Int) or !denominator.instanceOf(Int)){
-            throw Exception("Numerator and Denominator must be integers.");
+            throw IllegalArgumentException("Numerator and Denominator must be integers.");
         }
         
         if(denominator == 0){
-            throw Exception("Denominator of a Fraction object cannot be 0.");
+            throw IllegalArgumentException("Denominator of a Fraction object cannot be 0.");
         }
     }
 

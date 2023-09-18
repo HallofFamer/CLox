@@ -16,7 +16,7 @@ println("");
 
 println("Testing handling native exception: ");
 try { 
-    val range = 3..true;
+    val range = 3.."abc";
 }
 catch(IllegalArgumentException e){ 
     println("Caught " + e.getClassName() + " with message: " + e.message);
