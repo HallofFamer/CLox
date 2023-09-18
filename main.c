@@ -46,7 +46,7 @@ static void runScript(VM* vm, const char* path, const char* script) {
     runFile(vm, scriptPath);
 }
 
-int main(int argc, char* argv[]) {;
+int main(int argc, char* argv[]) {
     VM vm;
     initVM(&vm);
     runAtStartup();
