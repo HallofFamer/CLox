@@ -27,7 +27,7 @@ static ObjFile* getFileProperty(VM* vm, ObjInstance* object, char* field) {
 
 static void setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, char* mode) {
     fopen_s(&file->file, file->name->chars, mode);
-    if (file->file == NULL) raiseError(vm, "Cannot create IOStream, file either does not exist or require additional permission to access.");
+    if (file->file == NULL) THROW_EXCEPTION(clox.std.io, IOException, "Cannot create IOStream, file either does not exist or require additional permission to access.");
     file->isOpen = true;
     file->mode = newString(vm, mode);
     setObjProperty(vm, object, "file", OBJ_VAL(file));
@@ -45,7 +45,7 @@ LOX_METHOD(BinaryReadStream, init) {
 LOX_METHOD(BinaryReadStream, next) {
     ASSERT_ARG_COUNT("BinaryReadStream::next()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot read the next byte because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot read the next byte because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
     else {
         unsigned char byte;
@@ -64,7 +64,7 @@ LOX_METHOD(BinaryReadStream, nextBytes) {
     int length = AS_INT(args[0]);
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot read the next byte because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot read the next byte because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
     else {
         ObjArray* bytes = newArray(vm);
@@ -95,7 +95,7 @@ LOX_METHOD(BinaryWriteStream, put) {
     assertIntWithinRange(vm, "BinaryWriteStream::put(byte)", byte, 0, 255, 0);
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot write byte to stream because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot write byte to stream because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
     else {
         unsigned char bytes[1] = { (unsigned char)byte };
@@ -108,16 +108,16 @@ LOX_METHOD(BinaryWriteStream, putBytes) {
     ASSERT_ARG_COUNT("BinaryWriteStream::put(bytes)", 1);
     ASSERT_ARG_TYPE("BinaryWriteStream::put(bytes)", 0, Array);
     ObjArray* bytes = AS_ARRAY(args[0]);
-    if (bytes->elements.count == 0) raiseError(vm, "Cannot write empty byte array to stream.");
-
+    if (bytes->elements.count == 0) THROW_EXCEPTION(clox.std.io, IOException, "Cannot write empty byte array to stream.");
+    
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot write bytes to stream because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot write bytes to stream because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
     else {
         unsigned char* byteArray = (unsigned char*)malloc(bytes->elements.count);
         if (byteArray != NULL) {
             for (int i = 0; i < bytes->elements.count; i++) {
-                if (!IS_INT(bytes->elements.values[i])) raiseError(vm, "Cannot write bytes to stream because data is corrupted.");
+                if (!IS_INT(bytes->elements.values[i])) THROW_EXCEPTION(clox.std.io, IOException, "Cannot write bytes to stream because data is corrupted.");
                 int byte = AS_INT(bytes->elements.values[i]);
                 byteArray[i] = (unsigned char)byte;
             }
@@ -132,7 +132,10 @@ LOX_METHOD(File, create) {
     ASSERT_ARG_COUNT("File::create()", 0);
     ObjFile* self = AS_FILE(receiver);
     struct stat fileStat;
-    if (fileExists(self, &fileStat)) raiseError(vm, "Cannot create new file because it already exists.");
+    if (fileExists(self, &fileStat)) {
+        THROW_EXCEPTION(clox.std.io, IOException, "Cannot create new file because it already exists");
+    }
+    
     FILE* file;
     fopen_s(&file, self->name->chars, "w");
     if (file != NULL) {
@@ -161,7 +164,7 @@ LOX_METHOD(File, getAbsolutePath) {
     ASSERT_ARG_COUNT("File::getAbsolutePath()", 0);
     ObjFile* self = AS_FILE(receiver);
     struct stat fileStat;
-    if (!fileExists(self, &fileStat)) raiseError(vm, "Cannot get file absolute path because it does not exist.");
+    if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io, FileNotFoundException, "Cannot get file absolute path because it does not exist.");
 }
 
 LOX_METHOD(File, init) {
@@ -215,7 +218,7 @@ LOX_METHOD(File, lastAccessed) {
     ASSERT_ARG_COUNT("File::lastAccessed()", 0);
     ObjFile* self = AS_FILE(receiver);
     struct stat fileStat;
-    if (!fileExists(self, &fileStat)) raiseError(vm, "Cannot get file last accessed date because it does not exist.");
+    if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io, FileNotFoundException, "Cannot get file last accessed date because it does not exist.");
     RETURN_INT(fileStat.st_atime);
 }
 
@@ -223,7 +226,7 @@ LOX_METHOD(File, lastModified) {
     ASSERT_ARG_COUNT("File::lastModified()", 0);
     ObjFile* self = AS_FILE(receiver);
     struct stat fileStat;
-    if (!fileExists(self, &fileStat)) raiseError(vm, "Cannot get file last modified date because it does not exist.");
+    if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io, FileNotFoundException, "Cannot get file last modified date because it does not exist.");
     RETURN_INT(fileStat.st_mtime);
 }
 
@@ -291,7 +294,7 @@ LOX_METHOD(File, size) {
     ASSERT_ARG_COUNT("File::size()", 0);
     ObjFile* self = AS_FILE(receiver);
     struct stat fileStat;
-    if (!fileExists(self, &fileStat)) raiseError(vm, "Cannot get file size because it does not exist.");
+    if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io, FileNotFoundException, "Cannot get file size because it does not exist.");
     RETURN_NUMBER(fileStat.st_size);
 }
 
@@ -337,7 +340,7 @@ LOX_METHOD(FileReadStream, init) {
 LOX_METHOD(FileReadStream, next) {
     ASSERT_ARG_COUNT("FileReadStream::next()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot read the next char because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot read the next char because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
     else {
         int c = fgetc(file->file);
@@ -350,7 +353,7 @@ LOX_METHOD(FileReadStream, next) {
 LOX_METHOD(FileReadStream, nextLine) {
     ASSERT_ARG_COUNT("FileReadStream::nextLine()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot read the next line because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot read the next line because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
     else {
         char line[UINT8_MAX];
@@ -362,7 +365,7 @@ LOX_METHOD(FileReadStream, nextLine) {
 LOX_METHOD(FileReadStream, peek) {
     ASSERT_ARG_COUNT("FileReadStream::peek()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot peek the next char because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot peek the next char because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
     else {
         int c = fgetc(file->file);
@@ -386,7 +389,7 @@ LOX_METHOD(FileWriteStream, put) {
     ASSERT_ARG_COUNT("FileWriteStream::put(char)", 1);
     ASSERT_ARG_TYPE("FileWriteStream::put(char)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot write character to stream because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot write character to stream because file is already closed.");
     if (file->file != NULL) {
         ObjString* character = AS_STRING(args[0]);
         if (character->length != 1) raiseError(vm, "Method FileWriteStream::put(char) expects argument 1 to be a character(string of length 1)");
@@ -398,7 +401,7 @@ LOX_METHOD(FileWriteStream, put) {
 LOX_METHOD(FileWriteStream, putLine) {
     ASSERT_ARG_COUNT("FileWriteStream::putLine()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot write new line to stream because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot write new line to stream because file is already closed.");
     if (file->file != NULL) fputc('\n', file->file);
     RETURN_NIL;
 }
@@ -406,7 +409,7 @@ LOX_METHOD(FileWriteStream, putLine) {
 LOX_METHOD(FileWriteStream, putSpace) {
     ASSERT_ARG_COUNT("FileWriteStream::putSpace()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot write empty space to stream because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot write empty space to stream because file is already closed.");
     if (file->file != NULL) fputc(' ', file->file);    
     RETURN_NIL;
 }
@@ -415,7 +418,7 @@ LOX_METHOD(FileWriteStream, putString) {
     ASSERT_ARG_COUNT("FileWriteStream::putString(string)", 1);
     ASSERT_ARG_TYPE("FileWriteStream::putString(string)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot write string to stream because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot write string to stream because file is already closed.");
     if (file->file != NULL) {
         ObjString* string = AS_STRING(args[0]);
         fputs(string->chars, file->file);
@@ -438,7 +441,7 @@ LOX_METHOD(IOStream, file) {
 LOX_METHOD(IOStream, getPosition) {
     ASSERT_ARG_COUNT("IOStream::getPosition()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot get stream position because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot get stream position because file is already closed.");
     if (file->file == NULL) RETURN_INT(0);
     else RETURN_INT(ftell(file->file));
 }
@@ -451,7 +454,7 @@ LOX_METHOD(IOStream, init) {
 LOX_METHOD(IOStream, reset) {
     ASSERT_ARG_COUNT("IOStream::reset()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot reset stream because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot reset stream because file is already closed.");
     if (file->file != NULL) rewind(file->file);
     RETURN_NIL;
 }
@@ -481,7 +484,7 @@ LOX_METHOD(ReadStream, skip) {
     ASSERT_ARG_COUNT("ReadStream::skip(offset)", 1);
     ASSERT_ARG_TYPE("ReadStream::skip(offset)", 0, Int);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot skip stream by offset because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot skip stream by offset because file is already closed.");
     if (file->file == NULL) RETURN_FALSE;
     RETURN_BOOL(fseek(file->file, (long)AS_INT(args[0]), SEEK_CUR));
 }
@@ -495,7 +498,7 @@ LOX_METHOD(TClosable, close) {
 LOX_METHOD(WriteStream, flush) {
     ASSERT_ARG_COUNT("WriteStream::flush()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) raiseError(vm, "Cannot flush stream because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io, IOException, "Cannot flush stream because file is already closed.");
     if (file->file == NULL) RETURN_FALSE;
     RETURN_BOOL(fflush(file->file) == 0);
 }
@@ -591,6 +594,10 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, putLine, 0);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, putSpace, 0);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, putString, 1);
+
+    ObjClass* ioExceptionClass = defineNativeException(vm, "IOException", vm->exceptionClass);
+    defineNativeException(vm, "EOFException", ioExceptionClass);
+    defineNativeException(vm, "FileNotFoundException", ioExceptionClass);
 
     vm->currentNamespace = vm->rootNamespace;
 }
