@@ -386,7 +386,7 @@ LOX_METHOD(HTTPClient, close) {
 
 LOX_METHOD(HTTPClient, delete) {
     ASSERT_ARG_COUNT("HTTPClient::delete(url)", 1);
-    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::delete(url)", 0, clox.std.lang, String, clox.std.network, URL);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::delete(url)", 0, clox.std.lang, String, clox.std.network, URL);
     ObjString* url = httpRawURL(vm, args[0]);
 
     CURL* curl = curl_easy_init();
@@ -410,7 +410,7 @@ LOX_METHOD(HTTPClient, delete) {
 
 LOX_METHOD(HTTPClient, get) {
     ASSERT_ARG_COUNT("HTTPClient::get(url)", 1);
-    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::get(url)", 0, clox.std.lang, String, clox.std.network, URL);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::get(url)", 0, clox.std.lang, String, clox.std.network, URL);
     ObjString* url = httpRawURL(vm, args[0]);
 
     CURL* curl = curl_easy_init();
@@ -434,7 +434,7 @@ LOX_METHOD(HTTPClient, get) {
 
 LOX_METHOD(HTTPClient, head) {
     ASSERT_ARG_COUNT("HTTPClient::head(url)", 1);
-    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::head(url)", 0, clox.std.lang, String, clox.std.network, URL);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::head(url)", 0, clox.std.lang, String, clox.std.network, URL);
     ObjString* url = httpRawURL(vm, args[0]);
 
     CURL* curl = curl_easy_init();
@@ -464,7 +464,7 @@ LOX_METHOD(HTTPClient, init) {
 
 LOX_METHOD(HTTPClient, options) {
     ASSERT_ARG_COUNT("HTTPClient::options(url)", 1);
-    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::options(url)", 0, clox.std.lang, String, clox.std.network, URL);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::options(url)", 0, clox.std.lang, String, clox.std.network, URL);
     ObjString* url = httpRawURL(vm, args[0]);
 
     CURL* curl = curl_easy_init();
@@ -488,7 +488,7 @@ LOX_METHOD(HTTPClient, options) {
 
 LOX_METHOD(HTTPClient, patch) {
     ASSERT_ARG_COUNT("HTTPClient::put(url, data)", 2);
-    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::put(url, data)", 0, clox.std.lang, String, clox.std.network, URL);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::put(url, data)", 0, clox.std.lang, String, clox.std.network, URL);
     ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 1, Dictionary);
     ObjString* url = httpRawURL(vm, args[0]);
     ObjDictionary* data = AS_DICTIONARY(args[1]);
@@ -514,7 +514,7 @@ LOX_METHOD(HTTPClient, patch) {
 
 LOX_METHOD(HTTPClient, post) {
     ASSERT_ARG_COUNT("HTTPClient::post(url, data)", 2);
-    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::post(url, data)", 0, clox.std.lang, String, clox.std.network, URL);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::post(url, data)", 0, clox.std.lang, String, clox.std.network, URL);
     ASSERT_ARG_TYPE("HTTPClient::post(url, data)", 1, Dictionary);
     ObjString* url = httpRawURL(vm, args[0]);
     ObjDictionary* data = AS_DICTIONARY(args[1]);
@@ -540,7 +540,7 @@ LOX_METHOD(HTTPClient, post) {
 
 LOX_METHOD(HTTPClient, put) {
     ASSERT_ARG_COUNT("HTTPClient::put(url, data)", 2);
-    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPClient::put(url, data)", 0, clox.std.lang, String, clox.std.network, URL);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::put(url, data)", 0, clox.std.lang, String, clox.std.network, URL);
     ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 1, Dictionary);
     ObjString* url = httpRawURL(vm, args[0]);
     ObjDictionary* data = AS_DICTIONARY(args[1]);
@@ -597,7 +597,7 @@ LOX_METHOD(HTTPClient, send) {
 
 LOX_METHOD(HTTPRequest, init) {
     ASSERT_ARG_COUNT("HTTPRequest::init(url, method, headers, data)", 4);
-    ASSERT_ARG_INSTANCE_OF_EITHER("HTTPRequest::init(url, method, headers, data)", 0, clox.std.lang, String, clox.std.network, URL);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPRequest::init(url, method, headers, data)", 0, clox.std.lang, String, clox.std.network, URL);
     ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 1, Int);
     ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 2, Dictionary);
     ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 3, Dictionary);

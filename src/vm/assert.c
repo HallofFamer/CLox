@@ -20,7 +20,7 @@ void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, con
     }
 }
 
-void assertArgInstanceOfEither(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className, const char* namespaceName2, const char* className2) {
+void assertArgInstanceOfAny(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className, const char* namespaceName2, const char* className2) {
     if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, namespaceName, className)) && !isObjInstanceOf(vm, args[index], getNativeClass(vm, namespaceName2, className2))) {
         runtimeError(vm, "method %s expects argument %d to be an instance of class %s or %s but got %s.",
             method, index + 1, className, className2, getObjClass(vm, args[index])->name->chars);
@@ -66,6 +66,13 @@ void assertArgIsDictionary(VM* vm, const char* method, Value* args, int index) {
 void assertArgIsEntry(VM* vm, const char* method, Value* args, int index) {
     if (!IS_ENTRY(args[index]) && !isObjInstanceOf(vm, args[index], vm->entryClass)) {
         runtimeError(vm, "method %s expects argument %d to be a map entry.", method, index + 1);
+        exit(70);
+    }
+}
+
+void assertArgIsException(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_INSTANCE(args[index]) && !isObjInstanceOf(vm, args[index], vm->exceptionClass)) {
+        runtimeError(vm, "method %s expects argument %d to be an exception.", method, index + 1);
         exit(70);
     }
 }

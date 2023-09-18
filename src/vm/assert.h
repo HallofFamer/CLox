@@ -7,18 +7,19 @@
 
 #define ASSERT_ARG_COUNT(method, expectedCount) assertArgCount(vm, method, expectedCount, argCount)
 #define ASSERT_ARG_INSTANCE_OF(method, index, namespaceName, className) assertArgInstanceOf(vm, method, args, index, #namespaceName, #className)
-#define ASSERT_ARG_INSTANCE_OF_EITHER(method, index, namespaceName, className, namespaceName2, className2) assertArgInstanceOfEither(vm, method, args, index, #namespaceName, #className, #namespaceName2, #className2)
+#define ASSERT_ARG_INSTANCE_OF_ANY(method, index, namespaceName, className, namespaceName2, className2) assertArgInstanceOfAny(vm, method, args, index, #namespaceName, #className, #namespaceName2, #className2)
 #define ASSERT_ARG_TYPE(method, index, type) assertArgIs##type(vm, method, args, index)
 
 void assertArgCount(VM* vm, const char* method, int expectedCount, int actualCount);
 void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className);
-void assertArgInstanceOfEither(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className, const char* namespaceName2, const char* className2);
+void assertArgInstanceOfAny(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className, const char* namespaceName2, const char* className2);
 void assertArgIsArray(VM* vm, const char* method, Value* args, int index);
 void assertArgIsBool(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClass(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClosure(VM* vm, const char* method, Value* args, int index);
 void assertArgIsDictionary(VM* vm, const char* method, Value* args, int index);
 void assertArgIsEntry(VM* vm, const char* method, Value* args, int index);
+void assertArgIsException(VM* vm, const char* method, Value* args, int index);
 void assertArgIsFile(VM* vm, const char* method, Value* args, int index);
 void assertArgIsFloat(VM* vm, const char* method, Value* args, int index);
 void assertArgIsInt(VM* vm, const char* method, Value* args, int index);
