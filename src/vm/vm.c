@@ -182,6 +182,12 @@ Value pop(VM* vm) {
     return *vm->stackTop;
 }
 
+static void pops(VM* vm, int number) {
+    for (int i = 0; i < number; i++) {
+        pop(vm);
+    }
+}
+
 bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
@@ -524,7 +530,6 @@ static ObjUpvalue* captureUpvalue(VM* vm, Value* local) {
     if (upvalue != NULL && upvalue->location == local) {
         return upvalue;
     }
-
     ObjUpvalue* createdUpvalue = newUpvalue(vm, local);
     createdUpvalue->next = upvalue;
 
