@@ -30,7 +30,7 @@ void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction fu
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, NativeMethod method);
 ObjClass* defineNativeTrait(VM* vm, const char* name);
 ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* enclosing);
-ObjInstance* defineNativeException(VM* vm, const char* name, ObjClass* superClass);
+ObjClass* defineNativeException(VM* vm, const char* name, ObjClass* superClass);
 ObjClass* getNativeClass(VM* vm, const char* namespaceName, const char* className);
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name);
 ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name);

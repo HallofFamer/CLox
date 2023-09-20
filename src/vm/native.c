@@ -129,7 +129,7 @@ ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* encl
     return nativeNamespace;
 }
 
-ObjInstance* defineNativeException(VM* vm, const char* name, ObjClass* superClass) {
+ObjClass* defineNativeException(VM* vm, const char* name, ObjClass* superClass) {
     ObjClass* exceptionClass = defineNativeClass(vm, name);
     bindSuperclass(vm, exceptionClass, superClass);
     return exceptionClass;
