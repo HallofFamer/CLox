@@ -25,12 +25,13 @@ static ObjFile* getFileProperty(VM* vm, ObjInstance* object, char* field) {
     return AS_FILE(getObjProperty(vm, object, field));
 }
 
-static void setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, char* mode) {
+static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, char* mode) {
     fopen_s(&file->file, file->name->chars, mode);
-    if (file->file == NULL) THROW_EXCEPTION(clox.std.io, IOException, "Cannot create IOStream, file either does not exist or require additional permission to access.");
+    if (file->file == NULL) return false;
     file->isOpen = true;
     file->mode = newString(vm, mode);
     setObjProperty(vm, object, "file", OBJ_VAL(file));
+    return true;
 }
 
 LOX_METHOD(BinaryReadStream, init) {
@@ -38,7 +39,9 @@ LOX_METHOD(BinaryReadStream, init) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
     if (file == NULL) raiseError(vm, "Method BinaryReadStream::init(file) expects argument 1 to be a string or file.");
-    setFileProperty(vm, AS_INSTANCE(receiver), file, "rb");
+    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "rb")) {
+        THROW_EXCEPTION(clox.std.io, IOException, "Cannot create BinaryReadStream, file either does not exist or require additional permission to access.");
+    }
     RETURN_OBJ(self);
 }
 
@@ -84,7 +87,9 @@ LOX_METHOD(BinaryWriteStream, init) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
     if (file == NULL) raiseError(vm, "Method BinaryWriteStream::init(file) expects argument 1 to be a string or file.");
-    setFileProperty(vm, AS_INSTANCE(receiver), file, "wb");
+    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "wb")) {
+        THROW_EXCEPTION(clox.std.io, IOException, "Cannot create BinaryWriteStream, file either does not exist or require additional permission to access.");
+    }
     RETURN_OBJ(self);
 }
 
@@ -312,13 +317,17 @@ LOX_METHOD(FileClass, open) {
     push(vm, OBJ_VAL(file));
     if (mode->chars == "r") {
         ObjInstance* fileReadStream = newInstance(vm, getNativeClass(vm, "clox.std.io", "FileReadStream"));
-        setFileProperty(vm, fileReadStream, file, "r");
+        if (!setFileProperty(vm, fileReadStream, file, "r")) {
+            THROW_EXCEPTION(clox.std.io, IOException, "Cannot open FileReadStream, file either does not exist or require additional permission to access.");
+        }
         pop(vm);
         RETURN_OBJ(fileReadStream);
     }
     else if (mode->chars == "w") {
         ObjInstance*  fileWriteStream = newInstance(vm, getNativeClass(vm, "clox.std.io", "FileWriteStream"));
-        setFileProperty(vm, fileWriteStream, file, "w");
+        if (!setFileProperty(vm, fileWriteStream, file, "w")) {
+            THROW_EXCEPTION(clox.std.io, IOException, "Cannot open FileWriteStream, file either does not exist or require additional permission to access.");
+        }
         pop(vm);
         RETURN_OBJ(fileWriteStream);
     }
@@ -333,7 +342,9 @@ LOX_METHOD(FileReadStream, init) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
     if(file == NULL) raiseError(vm, "Method FileReadStream::init(file) expects argument 1 to be a string or file.");
-    setFileProperty(vm, AS_INSTANCE(receiver), file, "r");
+    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "r")) {
+        THROW_EXCEPTION(clox.std.io, IOException, "Cannot create FileReadStream, file either does not exist or require additional permission to access.");
+    }
     RETURN_OBJ(self);
 }
 
@@ -381,7 +392,9 @@ LOX_METHOD(FileWriteStream, init) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
     if(file == NULL) raiseError(vm, "Method FileWriteStream::init(file) expects argument 1 to be a string or file.");
-    setFileProperty(vm, AS_INSTANCE(receiver), file, "w");
+    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "w")) {
+        THROW_EXCEPTION(clox.std.io, IOException, "Cannot create FileWriteStream, file either does not exist or require additional permission to access.");
+    }
     RETURN_OBJ(self);
 }
 
