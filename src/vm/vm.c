@@ -177,19 +177,25 @@ void push(VM* vm, Value value) {
     vm->stackTop++;
 }
 
+static void pushes(VM* vm, int count, ...) {
+    va_list args;
+    va_start(args, count);
+    for (int i = 0; i < count; i++) {
+        Value value = va_arg(args, Value);
+        push(vm, value);
+    }
+    va_end(args);
+}
+
 Value pop(VM* vm) {
     vm->stackTop--;
     return *vm->stackTop;
 }
 
-static void pops(VM* vm, int number) {
-    for (int i = 0; i < number; i++) {
+static void pops(VM* vm, int count) {
+    for (int i = 0; i < count; i++) {
         pop(vm);
     }
-}
-
-bool isFalsey(Value value) {
-    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
 static Value peek(VM* vm, int distance) {
@@ -396,7 +402,7 @@ static bool callNativeFunction(VM* vm, NativeFunction function, int argCount) {
 
 static bool callNativeMethod(VM* vm, NativeMethod method, int argCount) {
     Value result = method(vm, vm->stackTop[-argCount - 1], argCount, vm->stackTop - argCount);
-    vm->stackTop -= argCount + 1;
+    vm->stackTop -= (size_t)argCount + 1;
     push(vm, result);
     return true;
 }

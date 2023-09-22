@@ -100,11 +100,14 @@ typedef enum {
     INTERPRET_RUNTIME_ERROR
 } InterpretResult;
 
+static inline bool isFalsey(Value value) {
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+}
+
 void initVM(VM* vm);
 void freeVM(VM* vm);
 void push(VM* vm, Value value);
 Value pop(VM* vm);
-bool isFalsey(Value value);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 bool callMethod(VM* vm, Value method, int argCount);
 Value callReentrant(VM* vm, Value receiver, Value callee, ...);
