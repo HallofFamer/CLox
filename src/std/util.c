@@ -318,8 +318,7 @@ LOX_METHOD(DateClass, parse) {
         RETURN_OBJ(instance);
     }
     else {
-        raiseError(vm, "Failed to parse Date from input string, please make sure the date has format MM/DD/YYYY.");
-        RETURN_NIL;
+        THROW_EXCEPTION(clox.std.util, DateFormatException, "Failed to parse Date from input string, please make sure the date has format YYYY-MM-DD.");
     }
 }
 
@@ -449,8 +448,7 @@ LOX_METHOD(DateTimeClass, parse) {
         RETURN_OBJ(instance);
     }
     else {
-        raiseError(vm, "Failed to parse DateTime from input string, please make sure the date has format MM/DD/YYYY.");
-        RETURN_NIL;
+        THROW_EXCEPTION(clox.std.util, DateFormatException, "Failed to parse DateTime from input string, please make sure the date has format YYYY-MM-DD H:i:s.");
     }
 }
 
@@ -792,6 +790,9 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(uuidMetaclass, UUIDClass, generate, 0);
     DEF_METHOD(uuidMetaclass, UUIDClass, isUUID, 1);
     DEF_METHOD(uuidMetaclass, UUIDClass, parse, 1);
+
+    ObjClass* runtimeExceptionClass = getNativeClass(vm, "clox.std.lang", "RuntimeException");
+    defineNativeException(vm, "DateFormatException", runtimeExceptionClass);
 
     vm->currentNamespace = vm->rootNamespace;
 }

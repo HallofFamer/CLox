@@ -1504,6 +1504,9 @@ void registerLangPackage(VM* vm) {
     defineNativeException(vm, "ArithmeticException", runtimeExceptionClass);
     defineNativeException(vm, "IllegalArgumentException", runtimeExceptionClass);
     defineNativeException(vm, "IndexOutOfBoundsException", runtimeExceptionClass);
+    defineNativeException(vm, "NotImplementedException", runtimeExceptionClass);
+    defineNativeException(vm, "OutOfMemoryException", runtimeExceptionClass);
+    defineNativeException(vm, "StackOverflowException", runtimeExceptionClass);
     defineNativeException(vm, "UnsupportedOperationException", runtimeExceptionClass);
 
     vm->currentNamespace = vm->rootNamespace;
