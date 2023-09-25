@@ -504,8 +504,7 @@ LOX_METHOD(ReadStream, skip) {
 
 LOX_METHOD(TClosable, close) {
     ASSERT_ARG_COUNT("IOStream::close()", 0);
-    raiseError(vm, "Not implemented, subclass responsibility.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(WriteStream, flush) {

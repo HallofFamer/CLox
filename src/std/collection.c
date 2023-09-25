@@ -648,8 +648,7 @@ LOX_METHOD(ArrayClass, fromElements) {
 }
 
 LOX_METHOD(Collection, add) {
-    raiseError(vm, "Not implemented, subclass responsibility.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(Collection, addAll) {
@@ -1385,8 +1384,7 @@ LOX_METHOD(List, getAt) {
 }
 
 LOX_METHOD(List, putAt) {
-    raiseError(vm, "Not implemented, subclass responsibility.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(Node, clone) {
@@ -1584,13 +1582,11 @@ LOX_METHOD(Queue, toString) {
 }
 
 LOX_METHOD(Range, add) {
-    raiseError(vm, "Cannot add an element to instance of class Range.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Cannot add an element to instance of class Range.");
 }
 
 LOX_METHOD(Range, addAll) {
-    raiseError(vm, "Cannot add a collection to instance of class Range.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Cannot add a collection to instance of class Range.");
 }
 
 LOX_METHOD(Range, clone) {
@@ -1999,13 +1995,11 @@ LOX_METHOD(Stack, toString) {
 }
 
 LOX_METHOD(TEnumerable, next) {
-    raiseError(vm, "Not implemented, subclass responsibility.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(TEnumerable, nextValue) {
-    raiseError(vm, "Not implemented, subclass responsibility.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 void registerCollectionPackage(VM* vm) {
