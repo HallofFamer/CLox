@@ -56,8 +56,7 @@ LOX_METHOD(Behavior, getMethod) {
         if (IS_NATIVE_METHOD(value)) RETURN_OBJ(AS_NATIVE_METHOD(value));
         else if(IS_CLOSURE(value)) RETURN_OBJ(newMethod(vm, self, AS_CLOSURE(value)));
         else {
-            raiseError(vm, "Invalid method object found.");
-            RETURN_NIL;
+            THROW_EXCEPTION(clox.std.lang, MethodNotFoundException, "Invalid method object found");
         }
     }
     else RETURN_NIL;
@@ -170,8 +169,7 @@ LOX_METHOD(BoundMethod, init) {
     if (IS_METHOD(args[1])) {
         ObjMethod* method = AS_METHOD(args[1]);
         if (!isObjInstanceOf(vm, args[0], method->behavior)) {
-            raiseError(vm, "Cannot bound method to object.");
-            RETURN_NIL;
+            THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot bound method to object.");
         }
         RETURN_OBJ(newBoundMethod(vm, args[0], method->closure));
     }
@@ -179,14 +177,12 @@ LOX_METHOD(BoundMethod, init) {
         ObjClass* klass = getObjClass(vm, args[0]);
         Value value;
         if (!tableGet(&klass->methods, AS_STRING(args[1]), &value)) {
-            raiseError(vm, "Cannot bound method to object.");
-            RETURN_NIL;
+            THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot bound method to object.");
         }
         RETURN_OBJ(newBoundMethod(vm, args[0], AS_CLOSURE(value)));
     }
     else {
-        raiseError(vm, "method BoundMethod::init(object, method) expects argument 2 to be a method or string.");
-        RETURN_NIL;
+        THROW_EXCEPTION(clox.std.lang, IllegalArgumentException, "method BoundMethod::init(object, method) expects argument 2 to be a method or string.");
     }
 }
 
@@ -321,8 +317,7 @@ LOX_METHOD(FloatClass, parse) {
     char* endPoint = NULL;
     double floatValue = strtod(floatString->chars, &endPoint);
     if (floatValue == 0.0) {
-        raiseError(vm, "Failed to parse float from input string.");
-        RETURN_NIL;
+        THROW_EXCEPTION(clox.std.lang, FormatException, "Failed to parse float from input string.");
     }
     RETURN_NUMBER(floatValue);
 }
@@ -549,8 +544,7 @@ LOX_METHOD(IntClass, parse) {
     char* endPoint = NULL;
     int intValue = (int)strtol(intString->chars, &endPoint, 10);
     if (intValue == 0) {
-        raiseError(vm, "Failed to parse int from input string.");
-        RETURN_NIL;
+        THROW_EXCEPTION(clox.std.lang, FormatException, "Failed to parse int from input string.");
     }
     RETURN_INT(intValue);
 }
@@ -620,8 +614,7 @@ LOX_METHOD(Method, behavior) {
 LOX_METHOD(Method, bind) {
     ASSERT_ARG_COUNT("Method::bind(receiver)", 1);
     if (IS_NATIVE_METHOD(receiver)) {
-        raiseError(vm, "Cannot bind receiver to native method.");
-        RETURN_NIL;
+        THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot bind receiver to native method.");
     }
     RETURN_OBJ(newBoundMethod(vm, args[1], AS_METHOD(receiver)->closure));
 }
@@ -859,7 +852,9 @@ LOX_METHOD(Number, step) {
     double by = AS_NUMBER(args[1]);
     ObjClosure* closure = AS_CLOSURE(args[2]);
 
-    if (by == 0) raiseError(vm, "Step size cannot be 0");
+    if (by == 0) {
+        THROW_EXCEPTION(clox.std.lang, IllegalArgumentException, "Step size cannot be 0.");
+    }
     else {
         if (by > 0) {
             for (double num = self; num <= to; num += by) {
@@ -894,8 +889,7 @@ LOX_METHOD(Number, toString) {
 
 LOX_METHOD(NumberClass, parse) {
     ASSERT_ARG_COUNT("Number class::parse(numberString)", 1);
-    raiseError(vm, "Not implemented, subclass responsibility.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(Object, clone) {
@@ -1129,8 +1123,7 @@ LOX_METHOD(String, trim) {
 }
 
 LOX_METHOD(TComparable, compareTo) {
-    raiseError(vm, "Not implemented, subclass responsibility.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(TComparable, equals) {
@@ -1502,8 +1495,10 @@ void registerLangPackage(VM* vm) {
 
     ObjClass* runtimeExceptionClass = defineNativeException(vm, "RuntimeException", vm->exceptionClass);
     defineNativeException(vm, "ArithmeticException", runtimeExceptionClass);
+    defineNativeException(vm, "FormatException", runtimeExceptionClass);
     defineNativeException(vm, "IllegalArgumentException", runtimeExceptionClass);
     defineNativeException(vm, "IndexOutOfBoundsException", runtimeExceptionClass);
+    defineNativeException(vm, "MethodNotFoundException", runtimeExceptionClass);
     defineNativeException(vm, "NotImplementedException", runtimeExceptionClass);
     defineNativeException(vm, "OutOfMemoryException", runtimeExceptionClass);
     defineNativeException(vm, "StackOverflowException", runtimeExceptionClass);
