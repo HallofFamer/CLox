@@ -170,6 +170,7 @@ set(Test_Files__lox
     "test/lox/date.lox"
     "test/lox/dictionary.lox"
     "test/lox/enumerate.lox"
+    "test/lox/exception.lox"
     "test/lox/fibonacci.lox"
     "test/lox/file.lox"
     "test/lox/fraction.lox"
