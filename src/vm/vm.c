@@ -475,7 +475,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
 static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) {
-        runtimeError(vm, "Undefined method '%s'.", name->chars);
+        if(klass != vm->nilClass) runtimeError(vm, "Undefined method '%s'.", name->chars);
         return false;
     }
     return callMethod(vm, method, argCount);
@@ -854,6 +854,73 @@ InterpretResult run(VM* vm) {
                 }
                 break;
             }
+            case OP_GET_PROPERTY_OPTIONAL: {
+                Value receiver = peek(vm, 0);
+                if (IS_NIL(receiver)) {
+                    ObjString* name = READ_STRING();
+                    pop(vm);
+                    push(vm, NIL_VAL);
+                }
+                else if (IS_INSTANCE(receiver)) {
+                    ObjInstance* instance = AS_INSTANCE(receiver);
+                    ObjString* name = READ_STRING();
+                    Value value;
+
+                    if (tableGet(&instance->fields, name, &value)) {
+                        pop(vm);
+                        push(vm, value);
+                        break;
+                    }
+
+                    if (!bindMethod(vm, instance->obj.klass, name)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                }
+                else if (IS_CLASS(receiver)) {
+                    ObjClass* klass = AS_CLASS(receiver);
+                    ObjString* name = READ_STRING();
+                    Value value;
+
+                    if (tableGet(&klass->fields, name, &value)) {
+                        pop(vm);
+                        push(vm, value);
+                        break;
+                    }
+
+                    if (!bindMethod(vm, klass->obj.klass, name)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                }
+                else if (IS_NAMESPACE(receiver)) {
+                    ObjNamespace* enclosing = AS_NAMESPACE(receiver);
+                    ObjString* name = READ_STRING();
+                    Value value;
+
+                    if (tableGet(&enclosing->values, name, &value)) {
+                        pop(vm);
+                        push(vm, value);
+                        break;
+                    }
+                    else {
+                        ObjString* filePath = resolveSourceFile(vm, name, enclosing);
+                        if (!sourceFileExists(filePath)) {
+                            runtimeError(vm, "Undefined class '%s.%s'.", enclosing->fullName->chars, name->chars);
+                            return INTERPRET_RUNTIME_ERROR;
+                        }
+
+                        loadModule(vm, filePath);
+                        pop(vm);
+                        pop(vm);
+                        tableGet(&enclosing->values, name, &value);
+                        push(vm, value);
+                    }
+                }
+                else {
+                    runtimeError(vm, "Only instances, classes and namespaces can get properties.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
             case OP_GET_SUBSCRIPT: {
                 if (IS_INT(peek(vm, 0))) {
                     int index = AS_INT(pop(vm));
@@ -1047,6 +1114,24 @@ InterpretResult run(VM* vm) {
 
                 if (!invokeFromClass(vm, klass, method, argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm->frames[vm->frameCount - 1];
+                break;
+            }
+            case OP_OPTIONAL_INVOKE: {
+                Value receiver = peek(vm, 0);
+                ObjString* method = READ_STRING();
+                uint8_t argCount = READ_BYTE();
+
+                if (!invoke(vm, method, argCount)) {
+                    if (IS_NIL(receiver)) {
+                        vm->stackTop -= (size_t)argCount + 1;
+                        push(vm, NIL_VAL);
+                    }
+                    else {
+                        runtimeError(vm, "Undefined method '%s'.", method->chars);
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
                 }
                 frame = &vm->frames[vm->frameCount - 1];
                 break;

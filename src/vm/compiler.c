@@ -487,6 +487,20 @@ static void dot(Compiler* compiler, bool canAssign) {
     }
 }
 
+static void qdot(Compiler* compiler, bool canAssign) {
+    consume(compiler->parser, TOKEN_IDENTIFIER, "Expect property name after '?.'.");
+    uint8_t name = identifierConstant(compiler, &compiler->parser->previous);
+
+    if (match(compiler->parser, TOKEN_LEFT_PAREN)) {
+        uint8_t argCount = argumentList(compiler);
+        emitBytes(compiler, OP_OPTIONAL_INVOKE, name);
+        emitByte(compiler, argCount);
+    }
+    else {
+        emitBytes(compiler, OP_GET_PROPERTY_OPTIONAL, name);
+    }
+}
+
 static void subscript(Compiler* compiler, bool canAssign) {
     expression(compiler);
     consume(compiler->parser, TOKEN_RIGHT_BRACKET, "Expect ']' after subscript.");
@@ -730,7 +744,7 @@ ParseRule rules[] = {
     [TOKEN_DOT]               = {NULL,       dot,         PREC_CALL},
     [TOKEN_DOT_DOT]           = {NULL,       binary,      PREC_CALL},
     [TOKEN_QUESTION_COLON]    = {NULL,       binary,      PREC_CALL},
-    [TOKEN_QUESTION_DOT]      = {NULL,       binary,      PREC_CALL},
+    [TOKEN_QUESTION_DOT]      = {NULL,       qdot,        PREC_CALL},
     [TOKEN_QUESTION_QUESTION] = {NULL,       binary,      PREC_CALL},
     [TOKEN_IDENTIFIER]        = {variable,   NULL,        PREC_NONE},
     [TOKEN_STRING]            = {string,     NULL,        PREC_NONE},
