@@ -187,6 +187,7 @@ set(Test_Files__lox
     "test/lox/namespace.lox"
     "test/lox/native.lox"
     "test/lox/network.lox"
+    "test/lox/nil.lox"
     "test/lox/object.lox"
     "test/lox/queue.lox"
     "test/lox/rand.lox"

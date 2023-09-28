@@ -1,0 +1,2 @@
+val array = [2, 3.5, true, nil, "HelloWorld"];
+println(array.getAt(3)?.toInt());
