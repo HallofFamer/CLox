@@ -162,8 +162,8 @@ ObjString* dictToString(VM* vm, ObjDictionary* dict) {
     }
 }
 
-static void linkAddBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNode* succ) {
-    if (succ == NULL) raiseError(vm, "The next element cannot be nil.");
+static bool linkAddBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNode* succ) {
+    if (succ == NULL) return false;
     else {
         ObjNode* pred = succ->prev;
         ObjNode* new = newNode(vm, element, pred, succ);
@@ -173,6 +173,7 @@ static void linkAddBefore(VM* vm, ObjInstance* linkedList, Value element, ObjNod
         else pred->next = new;
         pop(vm);
         collectionLengthIncrement(vm, linkedList);
+        return true;
     }
 }
 
@@ -227,12 +228,6 @@ static bool linkIndexIsValid(VM* vm, ObjInstance* linkedList, int index) {
     return (index >= 0 && index < length);
 }
 
-static void linkIndexValidate(VM* vm, ObjInstance* linkedList, int index) {
-    if (!linkIndexIsValid(vm, linkedList, index)) {
-        raiseError(vm, "Index out of bound for LinkedList.");
-    }
-}
-
 static ObjNode* linkNode(VM* vm, ObjInstance* linkedList, int index) {
     int length = AS_INT(getObjProperty(vm, linkedList, "length"));
     if (index < (length >> 1)) {
@@ -252,7 +247,7 @@ static ObjNode* linkNode(VM* vm, ObjInstance* linkedList, int index) {
 }
 
 static Value linkRemove(VM* vm, ObjInstance* linkedList, ObjNode* node) {
-    if (node == NULL) raiseError(vm, "Cannot unlink NULL node.");
+    if (node == NULL) return NIL_VAL;
     else {
         Value element = node->element;
         ObjNode* next = node->next;
@@ -723,8 +718,7 @@ LOX_METHOD(Collection, each) {
 }
 
 LOX_METHOD(Collection, init) {
-    raiseError(vm, "Cannot instantiate from class Collection.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Collection.");
 }
 
 LOX_METHOD(Collection, isEmpty) {
@@ -1169,8 +1163,12 @@ LOX_METHOD(LinkedList, addAt) {
     int length = AS_INT(getObjProperty(vm, self, "length"));
     if (index == length) linkAddLast(vm, self, args[1]);
     else {
-        linkIndexValidate(vm, self, index);
-        linkAddBefore(vm, self, args[1], linkNode(vm, self, index));
+        if (!linkIndexIsValid(vm, self, index)) {
+            THROW_EXCEPTION(clox.std.lang, IndexOutOfBoundsException, "Index out of bound for LinkedList.");
+        }
+        if (!linkAddBefore(vm, self, args[1], linkNode(vm, self, index))) {
+            THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "The next element cannot be nil.");
+        }
     }
     RETURN_VAL(args[1]);
 }
@@ -1301,7 +1299,10 @@ LOX_METHOD(LinkedList, putAt) {
     ASSERT_ARG_TYPE("LinkedList::putAt(index, element)", 0, Int);
     ObjInstance* self = AS_INSTANCE(receiver);
     int index = AS_INT(args[0]);
-    linkIndexValidate(vm, self, index);
+    if (!linkIndexIsValid(vm, self, index)) {
+        THROW_EXCEPTION(clox.std.lang, IndexOutOfBoundsException, "Index out of bound for LinkedList.");
+    }
+
     ObjNode* node = linkNode(vm, self, index);
     Value old = node->element;
     node->element = args[1];
@@ -1689,7 +1690,9 @@ LOX_METHOD(Range, step) {
     double by = AS_NUMBER(args[0]);
     ObjClosure* closure = AS_CLOSURE(args[1]);
 
-    if (by == 0) raiseError(vm, "Step size cannot be 0");
+    if (by == 0) { 
+        THROW_EXCEPTION(clox.std.lang, IllegalArgumentException, "Step size cannot be 0.");
+    }
     else {
         if (by > 0) {
             for (double num = from; num <= to; num += by) {

@@ -71,8 +71,7 @@ LOX_METHOD(Behavior, hasMethod) {
 }
 
 LOX_METHOD(Behavior, init) {
-    raiseError(vm, "Cannot instantiate from class Behavior.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Behavior.");
 }
 
 LOX_METHOD(Behavior, isBehavior) {
@@ -144,8 +143,7 @@ LOX_METHOD(Bool, clone) {
 }
 
 LOX_METHOD(Bool, init) {
-    raiseError(vm, "Cannot instantiate from class Bool.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Bool.");
 }
 
 LOX_METHOD(Bool, toString) {
@@ -299,8 +297,7 @@ LOX_METHOD(Float, clone) {
 }
 
 LOX_METHOD(Float, init) {
-    raiseError(vm, "Cannot instantiate from class Float.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Float.");
 }
 
 LOX_METHOD(Float, toString) {
@@ -376,8 +373,7 @@ LOX_METHOD(Function, clone) {
 }
 
 LOX_METHOD(Function, init) {
-    raiseError(vm, "Cannot instantiate from class Function.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Function.");
 }
 
 LOX_METHOD(Function, isAnonymous) {
@@ -455,8 +451,7 @@ LOX_METHOD(Int, gcd) {
 }
 
 LOX_METHOD(Int, init) {
-    raiseError(vm, "Cannot instantiate from class Int.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Int.");
 }
 
 LOX_METHOD(Int, isEven) {
@@ -625,8 +620,7 @@ LOX_METHOD(Method, clone) {
 }
 
 LOX_METHOD(Method, init) {
-    raiseError(vm, "Cannot instantiate from class Method.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Method.");
 }
 
 LOX_METHOD(Method, isNative) {
@@ -684,8 +678,7 @@ LOX_METHOD(Namespace, shortName) {
 }
 
 LOX_METHOD(Namespace, init) {
-    raiseError(vm, "Cannot instantiate from class Namespace.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Namespace.");
 }
 
 LOX_METHOD(Namespace, toString) {
@@ -700,8 +693,7 @@ LOX_METHOD(Nil, clone) {
 }
 
 LOX_METHOD(Nil, init) {
-    raiseError(vm, "Cannot instantiate from class Nil.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Nil.");
 }
 
 LOX_METHOD(Nil, toString) {
@@ -776,8 +768,7 @@ LOX_METHOD(Number, hypot) {
 }
 
 LOX_METHOD(Number, init) {
-    raiseError(vm, "Cannot instantiate from class Number.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Number.");
 }
 
 LOX_METHOD(Number, isInfinity) {
