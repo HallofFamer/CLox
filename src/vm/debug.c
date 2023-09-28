@@ -115,6 +115,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return constantInstruction("OP_GET_PROPERTY", chunk, offset);
           case OP_SET_PROPERTY:
               return constantInstruction("OP_SET_PROPERTY", chunk, offset);
+          case OP_GET_PROPERTY_OPTIONAL:
+              return constantInstruction("OP_GET_PROPERTY_OPTIONAL", chunk, offset);
           case OP_GET_SUBSCRIPT:
               return simpleInstruction("OP_GET_SUBSCRIPT", offset);
           case OP_SET_SUBSCRIPT:
@@ -153,6 +155,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return invokeInstruction("OP_INVOKE", chunk, offset);
           case OP_SUPER_INVOKE:
               return invokeInstruction("OP_SUPER_INVOKE", chunk, offset);
+          case OP_OPTIONAL_INVOKE:
+              return constantInstruction("OP_OPTIONAL_INVOKE", chunk, offset);
           case OP_CLOSURE:
               return closureInstruction("OP_CLOSURE", chunk, offset);
           case OP_CLOSE_UPVALUE:
