@@ -1,2 +1,30 @@
-val array = [2, 3.5, true, nil, "HelloWorld"];
-println(array.getAt(3)?.toInt());
+class Street { 
+    init(name, apartment, unit){ 
+        this.name = name;
+        this.apartment = apartment;
+        this.unit = unit;
+    }
+}
+
+class Area { 
+    init(city, state, country, zipcode){ 
+        this.city = city;
+        this.state = state;
+        this.country = country;
+        this.zipcode = zipcode;
+    }
+}
+ 
+class Address { 
+    init(){ 
+        this.street = nil;
+        this.area = nil;
+    }
+}
+
+val address = Address();
+address.street = Street("Broadway", 1681, nil);
+address.area = Area("New York", "NY", "United State", 10018);
+val address2 = Address();
+println(address.area?.state?.capitalize());
+println(address2.area?.state?.capitalize());
