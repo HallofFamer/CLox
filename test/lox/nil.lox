@@ -24,7 +24,9 @@ class Address {
 
 val address = Address();
 address.street = Street("Broadway", 1681, nil);
-address.area = Area("New York", "NY", "United State", 10018);
+address.area = Area("New York", "ny", "United State", 10018);
 val address2 = Address();
-println(address.area?.state?.capitalize());
-println(address2.area?.state?.capitalize());
+print("State for address: ");
+println(address.area?.state?.toUppercase());
+print("State for address 2: ");
+println(address2.area?.state?.toUppercase());

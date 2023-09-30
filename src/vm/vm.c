@@ -508,7 +508,7 @@ static bool invoke(VM* vm, ObjString* name, int argCount) {
 static bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) {
-        runtimeError(vm, "Undefined property '%s'.", name->chars);
+        runtimeError(vm, "Undefined method '%s'.", name->chars);
         return false;
     }
 
@@ -824,8 +824,9 @@ InterpretResult run(VM* vm) {
                         push(vm, value);
                     }
                 }
-                else{
-                    runtimeError(vm, "Only instances, classes and namespaces can get properties.");
+                else {
+                    if (IS_NIL(receiver)) runtimeError(vm, "Undefined property on nil.");
+                    else runtimeError(vm, "Only instances, classes and namespaces can get properties.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -1098,10 +1099,12 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_INVOKE: {
+                Value receiver = peek(vm, 0);
                 ObjString* method = READ_STRING();
                 uint8_t argCount = READ_BYTE();
 
                 if (!invoke(vm, method, argCount)) {
+                    if (IS_NIL(receiver)) runtimeError(vm, "Calling undefined method '%s' on nil.", method->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 frame = &vm->frames[vm->frameCount - 1];
