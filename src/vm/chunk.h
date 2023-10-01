@@ -32,6 +32,7 @@ typedef enum {
     OP_SUBTRACT,
     OP_MULTIPLY,
     OP_DIVIDE,
+    OP_NIL_COALESCING,
     OP_NOT,
     OP_NEGATE,
     OP_JUMP,
