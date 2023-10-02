@@ -12,6 +12,7 @@
 typedef enum {
     PREC_NONE,
     PREC_ASSIGNMENT,
+    PREC_COND,
     PREC_OR,
     PREC_AND,
     PREC_EQUALITY,
@@ -449,17 +450,18 @@ static void binary(Compiler* compiler, bool canAssign) {
     parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
 
     switch (operatorType) {
-        case TOKEN_BANG_EQUAL:    emitBytes(compiler, OP_EQUAL, OP_NOT); break;
-        case TOKEN_EQUAL_EQUAL:   emitByte(compiler, OP_EQUAL); break;
-        case TOKEN_GREATER:       emitByte(compiler, OP_GREATER); break;
-        case TOKEN_GREATER_EQUAL: emitBytes(compiler, OP_LESS, OP_NOT); break;
-        case TOKEN_LESS:          emitByte(compiler, OP_LESS); break;
-        case TOKEN_LESS_EQUAL:    emitBytes(compiler, OP_GREATER, OP_NOT); break;
-        case TOKEN_PLUS:          emitByte(compiler, OP_ADD); break;
-        case TOKEN_MINUS:         emitByte(compiler, OP_SUBTRACT); break;
-        case TOKEN_STAR:          emitByte(compiler, OP_MULTIPLY); break;
-        case TOKEN_SLASH:         emitByte(compiler, OP_DIVIDE); break;
-        case TOKEN_DOT_DOT:       emitByte(compiler, OP_RANGE); break;
+        case TOKEN_BANG_EQUAL:        emitBytes(compiler, OP_EQUAL, OP_NOT); break;
+        case TOKEN_EQUAL_EQUAL:       emitByte(compiler, OP_EQUAL); break;
+        case TOKEN_GREATER:           emitByte(compiler, OP_GREATER); break;
+        case TOKEN_GREATER_EQUAL:     emitBytes(compiler, OP_LESS, OP_NOT); break;
+        case TOKEN_LESS:              emitByte(compiler, OP_LESS); break;
+        case TOKEN_LESS_EQUAL:        emitBytes(compiler, OP_GREATER, OP_NOT); break;
+        case TOKEN_PLUS:              emitByte(compiler, OP_ADD); break;
+        case TOKEN_MINUS:             emitByte(compiler, OP_SUBTRACT); break;
+        case TOKEN_STAR:              emitByte(compiler, OP_MULTIPLY); break;
+        case TOKEN_SLASH:             emitByte(compiler, OP_DIVIDE); break;
+        case TOKEN_DOT_DOT:           emitByte(compiler, OP_RANGE); break;
+        case TOKEN_QUESTION_QUESTION: emitByte(compiler, OP_NIL_COALESCING); break;
         default: return;
     }
 }
@@ -743,9 +745,9 @@ ParseRule rules[] = {
     [TOKEN_LESS_EQUAL]        = {NULL,       binary,      PREC_COMPARISON},
     [TOKEN_DOT]               = {NULL,       dot,         PREC_CALL},
     [TOKEN_DOT_DOT]           = {NULL,       binary,      PREC_CALL},
-    [TOKEN_QUESTION_COLON]    = {NULL,       binary,      PREC_CALL},
+    [TOKEN_QUESTION_COLON]    = {NULL,       binary,      PREC_COND},
     [TOKEN_QUESTION_DOT]      = {NULL,       qdot,        PREC_CALL},
-    [TOKEN_QUESTION_QUESTION] = {NULL,       binary,      PREC_CALL},
+    [TOKEN_QUESTION_QUESTION] = {NULL,       binary,      PREC_COND},
     [TOKEN_IDENTIFIER]        = {variable,   NULL,        PREC_NONE},
     [TOKEN_STRING]            = {string,     NULL,        PREC_NONE},
     [TOKEN_NUMBER]            = {number,     NULL,        PREC_NONE},

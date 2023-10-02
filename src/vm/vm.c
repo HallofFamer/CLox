@@ -1059,6 +1059,12 @@ InterpretResult run(VM* vm) {
                 }
                 else BINARY_OP(NUMBER_VAL, /); 
                 break;
+            case OP_NIL_COALESCING: { 
+                Value b = pop(vm);
+                Value a = pop(vm);
+                push(vm, IS_NIL(a) ? b : a);
+                break;
+            }
             case OP_NOT:
                 push(vm, BOOL_VAL(isFalsey(pop(vm))));
                 break;
