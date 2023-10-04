@@ -462,6 +462,7 @@ static void binary(Compiler* compiler, bool canAssign) {
         case TOKEN_SLASH:             emitByte(compiler, OP_DIVIDE); break;
         case TOKEN_DOT_DOT:           emitByte(compiler, OP_RANGE); break;
         case TOKEN_QUESTION_QUESTION: emitByte(compiler, OP_NIL_COALESCING); break;
+        case TOKEN_QUESTION_COLON:    emitByte(compiler, OP_ELVIS); break;
         default: return;
     }
 }

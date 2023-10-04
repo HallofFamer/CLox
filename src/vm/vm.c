@@ -1065,6 +1065,12 @@ InterpretResult run(VM* vm) {
                 push(vm, IS_NIL(a) ? b : a);
                 break;
             }
+            case OP_ELVIS: { 
+                Value b = pop(vm);
+                Value a = pop(vm);
+                push(vm, isFalsey(a) ? b : a);
+                break;
+            }
             case OP_NOT:
                 push(vm, BOOL_VAL(isFalsey(pop(vm))));
                 break;
