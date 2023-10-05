@@ -291,6 +291,7 @@ Token scanToken(Scanner* scanner) {
         case ':': return makeToken(scanner, TOKEN_COLON);
         case ',': return makeToken(scanner, TOKEN_COMMA);
         case '-': return makeToken(scanner, TOKEN_MINUS);
+        case '%': return makeToken(scanner, TOKEN_MODULO);
         case '|': return makeToken(scanner, TOKEN_PIPE);
         case '+': return makeToken(scanner, TOKEN_PLUS);
         case '/': return makeToken(scanner, TOKEN_SLASH);

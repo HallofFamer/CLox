@@ -137,6 +137,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return simpleInstruction("OP_MULTIPLY", offset);
           case OP_DIVIDE:
               return simpleInstruction("OP_DIVIDE", offset);
+          case OP_MODULO:
+              return simpleInstruction("OP_MODULO", offset);
           case OP_NIL_COALESCING:
               return simpleInstruction("OP_NIL_COALESCING", offset);
           case OP_ELVIS:
