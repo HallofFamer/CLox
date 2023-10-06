@@ -595,6 +595,86 @@ static bool loadModule(VM* vm, ObjString* path) {
     return true;
 }
 
+static bool getInstanceVariable(VM* vm, Value receiver, ObjString* name) {
+    if (IS_INSTANCE(receiver)) {
+        ObjInstance* instance = AS_INSTANCE(receiver);
+        Value value;
+
+        if (tableGet(&instance->fields, name, &value)) {
+            pop(vm);
+            push(vm, value);
+            return true;
+        }
+
+        if (!bindMethod(vm, instance->obj.klass, name)) {
+            return false;
+        }
+    }
+    else if (IS_CLASS(receiver)) {
+        ObjClass* klass = AS_CLASS(receiver);
+        Value value;
+
+        if (tableGet(&klass->fields, name, &value)) {
+            pop(vm);
+            push(vm, value);
+            return true;
+        }
+
+        if (!bindMethod(vm, klass->obj.klass, name)) {
+            return false;
+        }
+    }
+    else if (IS_NAMESPACE(receiver)) {
+        ObjNamespace* enclosing = AS_NAMESPACE(receiver);
+        Value value;
+
+        if (tableGet(&enclosing->values, name, &value)) {
+            pop(vm);
+            push(vm, value);
+            return true;
+        }
+        else {
+            ObjString* filePath = resolveSourceFile(vm, name, enclosing);
+            if (!sourceFileExists(filePath)) {
+                runtimeError(vm, "Undefined class '%s.%s'.", enclosing->fullName->chars, name->chars);
+                return false;
+            }
+
+            loadModule(vm, filePath);
+            pop(vm);
+            pop(vm);
+            tableGet(&enclosing->values, name, &value);
+            push(vm, value);
+            return true;
+        }
+    }
+    else {
+        if (IS_NIL(receiver)) runtimeError(vm, "Undefined property on nil.");
+        else runtimeError(vm, "Only instances, classes and namespaces can get properties.");
+        return false;
+    }
+
+    return true;
+}
+
+static bool setInstanceField(VM* vm, Value receiver, ObjString* name, Value value) {
+    if (IS_INSTANCE(receiver)) {
+        ObjInstance* instance = AS_INSTANCE(receiver);
+        tableSet(vm, &instance->fields, name, value);
+        push(vm, value);
+    }
+    else if (IS_CLASS(receiver)) {
+        ObjClass* klass = AS_CLASS(receiver);
+        tableSet(vm, &klass->fields, name, value);
+        push(vm, value);
+    }
+    else {
+        runtimeError(vm, "Only instances and classes can set properties.");
+        return false;
+    }
+    return true;
+}
+
 static bool propagateException(VM* vm) {
     ObjInstance* exception = AS_INSTANCE(peek(vm, 0));
     while (vm->frameCount > 0) {
@@ -771,154 +851,31 @@ InterpretResult run(VM* vm) {
             }
             case OP_GET_PROPERTY: {
                 Value receiver = peek(vm, 0);
-                if (IS_INSTANCE(receiver)) {
-                    ObjInstance* instance = AS_INSTANCE(receiver);
-                    ObjString* name = READ_STRING();
-                    Value value;
-
-                    if (tableGet(&instance->fields, name, &value)) {
-                        pop(vm);
-                        push(vm, value);
-                        break;
-                    }
-
-                    if (!bindMethod(vm, instance->obj.klass, name)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                }
-                else if (IS_CLASS(receiver)) {
-                    ObjClass* klass = AS_CLASS(receiver);
-                    ObjString* name = READ_STRING();
-                    Value value;
-
-                    if (tableGet(&klass->fields, name, &value)) {
-                        pop(vm);
-                        push(vm, value);
-                        break;
-                    }
-
-                    if (!bindMethod(vm, klass->obj.klass, name)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                }
-                else if (IS_NAMESPACE(receiver)) {
-                    ObjNamespace* enclosing = AS_NAMESPACE(receiver);
-                    ObjString* name = READ_STRING();
-                    Value value;
-
-                    if (tableGet(&enclosing->values, name, &value)) {
-                        pop(vm);
-                        push(vm, value);
-                        break;
-                    }
-                    else {
-                        ObjString* filePath = resolveSourceFile(vm, name, enclosing);
-                        if (!sourceFileExists(filePath)) { 
-                            runtimeError(vm, "Undefined class '%s.%s'.", enclosing->fullName->chars, name->chars);
-                            return INTERPRET_RUNTIME_ERROR;
-                        }
-
-                        loadModule(vm, filePath);                        
-                        pop(vm);
-                        pop(vm);
-                        tableGet(&enclosing->values, name, &value);
-                        push(vm, value);
-                    }
-                }
-                else {
-                    if (IS_NIL(receiver)) runtimeError(vm, "Undefined property on nil.");
-                    else runtimeError(vm, "Only instances, classes and namespaces can get properties.");
+                ObjString* name = READ_STRING();
+                
+                if (!getInstanceVariable(vm, receiver, name)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
             }
             case OP_SET_PROPERTY: {
-                Value receiver = peek(vm, 1);
-                if (IS_INSTANCE(receiver)) {
-                    ObjInstance* instance = AS_INSTANCE(receiver);
-                    tableSet(vm, &instance->fields, READ_STRING(), peek(vm, 0));
-
-                    Value value = pop(vm);
-                    pop(vm);
-                    push(vm, value);
-                }
-                else if (IS_CLASS(receiver)) {
-                    ObjClass* klass = AS_CLASS(receiver);
-                    tableSet(vm, &klass->fields, READ_STRING(), peek(vm, 0));
-
-                    Value value = pop(vm);
-                    pop(vm);
-                    push(vm, value);
-                }
-                else{
-                    runtimeError(vm, "Only instances and classes can set properties.");
+                Value value = pop(vm);
+                Value receiver = pop(vm);
+                ObjString* name = READ_STRING();
+                if (!setInstanceField(vm, receiver, name, value)) { 
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
             }
             case OP_GET_PROPERTY_OPTIONAL: {
                 Value receiver = peek(vm, 0);
-                if (IS_NIL(receiver)) {
-                    ObjString* name = READ_STRING();
+                ObjString* name = READ_STRING();
+
+                if (IS_NIL(receiver)) { 
                     pop(vm);
                     push(vm, NIL_VAL);
                 }
-                else if (IS_INSTANCE(receiver)) {
-                    ObjInstance* instance = AS_INSTANCE(receiver);
-                    ObjString* name = READ_STRING();
-                    Value value;
-
-                    if (tableGet(&instance->fields, name, &value)) {
-                        pop(vm);
-                        push(vm, value);
-                        break;
-                    }
-
-                    if (!bindMethod(vm, instance->obj.klass, name)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                }
-                else if (IS_CLASS(receiver)) {
-                    ObjClass* klass = AS_CLASS(receiver);
-                    ObjString* name = READ_STRING();
-                    Value value;
-
-                    if (tableGet(&klass->fields, name, &value)) {
-                        pop(vm);
-                        push(vm, value);
-                        break;
-                    }
-
-                    if (!bindMethod(vm, klass->obj.klass, name)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                }
-                else if (IS_NAMESPACE(receiver)) {
-                    ObjNamespace* enclosing = AS_NAMESPACE(receiver);
-                    ObjString* name = READ_STRING();
-                    Value value;
-
-                    if (tableGet(&enclosing->values, name, &value)) {
-                        pop(vm);
-                        push(vm, value);
-                        break;
-                    }
-                    else {
-                        ObjString* filePath = resolveSourceFile(vm, name, enclosing);
-                        if (!sourceFileExists(filePath)) {
-                            runtimeError(vm, "Undefined class '%s.%s'.", enclosing->fullName->chars, name->chars);
-                            return INTERPRET_RUNTIME_ERROR;
-                        }
-
-                        loadModule(vm, filePath);
-                        pop(vm);
-                        pop(vm);
-                        tableGet(&enclosing->values, name, &value);
-                        push(vm, value);
-                    }
-                }
-                else {
-                    runtimeError(vm, "Only instances, classes and namespaces can get properties.");
+                else if (!getInstanceVariable(vm, receiver, name)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
