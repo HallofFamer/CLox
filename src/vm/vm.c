@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1055,10 +1056,27 @@ InterpretResult run(VM* vm) {
             case OP_DIVIDE: 
                 if (IS_INT(peek(vm, 0)) && AS_INT(peek(vm, 0)) == 0) {
                     ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "ArithmeticException");
-                    throwException(vm, exceptionClass, "Divide by 0 is illegal.");
+                    throwException(vm, exceptionClass, "It is illegal to divide an integer by 0.");
                 }
                 else BINARY_OP(NUMBER_VAL, /); 
                 break;
+            case OP_MODULO: {
+                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
+                    int b = AS_INT(pop(vm));
+                    int a = AS_INT(pop(vm));
+                    push(vm, INT_VAL(a % b));
+                }
+                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) {
+                    double b = AS_NUMBER(pop(vm));
+                    double a = AS_NUMBER(pop(vm));
+                    push(vm, NUMBER_VAL(fmod(a, b)));
+                }
+                else {
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    throwException(vm, exceptionClass, "Operands must be two numbers.");
+                }
+                break;
+            }
             case OP_NIL_COALESCING: { 
                 Value b = pop(vm);
                 Value a = pop(vm);
