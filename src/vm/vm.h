@@ -18,6 +18,12 @@ typedef struct {
 } ExceptionHandler;
 
 typedef struct {
+    uint64_t objectID;
+    ObjString* identifier;
+    uint8_t index;
+} InlineCache;
+
+typedef struct {
     ObjClosure* closure;
     uint8_t* ip;
     Value* slots;
