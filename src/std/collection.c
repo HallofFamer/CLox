@@ -359,7 +359,7 @@ ObjInstance* setCopy(VM* vm, ObjInstance* original) {
     dictAddAll(vm, dict, dict2);
     pop(vm);
 
-    ObjInstance* copied = newInstance(vm, getNativeClass(vm, "clox.std.collection", "Set"));
+    ObjInstance* copied = newInstance(vm, getNativeClass(vm, "clox.std.collection.Set"));
     setObjProperty(vm, copied, "dict", OBJ_VAL(dict2));
     return copied;
 }
@@ -643,12 +643,12 @@ LOX_METHOD(ArrayClass, fromElements) {
 }
 
 LOX_METHOD(Collection, add) {
-    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(Collection, addAll) {
     ASSERT_ARG_COUNT("Collection::addAll(collection)", 1);
-    ASSERT_ARG_INSTANCE_OF("Collection::addAll(collection)", 0, clox.std.collection, Collection);
+    ASSERT_ARG_INSTANCE_OF("Collection::addAll(collection)", 0, clox.std.collection.Collection);
     Value collection = args[0];
     Value addMethod = getObjMethod(vm, receiver, "add");
     Value nextMethod = getObjMethod(vm, collection, "next");
@@ -718,7 +718,7 @@ LOX_METHOD(Collection, each) {
 }
 
 LOX_METHOD(Collection, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Collection.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Collection.");
 }
 
 LOX_METHOD(Collection, isEmpty) {
@@ -927,7 +927,7 @@ LOX_METHOD(Dictionary, entrySet) {
     }
     pop(vm);
     
-    ObjInstance* entrySet = newInstance(vm, getNativeClass(vm, "clox.std.collection", "Set"));
+    ObjInstance* entrySet = newInstance(vm, getNativeClass(vm, "clox.std.collection.Set"));
     setObjProperty(vm, entrySet, "dict", OBJ_VAL(entryDict));
     RETURN_OBJ(entrySet);
 }
@@ -968,7 +968,7 @@ LOX_METHOD(Dictionary, keySet) {
     }
     pop(vm);
     
-    ObjInstance* keySet = newInstance(vm, getNativeClass(vm, "clox.std.collection", "Set"));
+    ObjInstance* keySet = newInstance(vm, getNativeClass(vm, "clox.std.collection.Set"));
     setObjProperty(vm, keySet, "dict", OBJ_VAL(keyDict));
     RETURN_OBJ(keySet);
 }
@@ -1088,7 +1088,7 @@ LOX_METHOD(Dictionary, valueSet) {
     }
     pop(vm);
     
-    ObjInstance* valueSet = newInstance(vm, getNativeClass(vm, "clox.std.collection", "Set"));
+    ObjInstance* valueSet = newInstance(vm, getNativeClass(vm, "clox.std.collection.Set"));
     setObjProperty(vm, valueSet, "dict", OBJ_VAL(valueDict));
     RETURN_OBJ(valueSet);
 }
@@ -1164,10 +1164,10 @@ LOX_METHOD(LinkedList, addAt) {
     if (index == length) linkAddLast(vm, self, args[1]);
     else {
         if (!linkIndexIsValid(vm, self, index)) {
-            THROW_EXCEPTION(clox.std.lang, IndexOutOfBoundsException, "Index out of bound for LinkedList.");
+            THROW_EXCEPTION(clox.std.lang.IndexOutOfBoundsException, "Index out of bound for LinkedList.");
         }
         if (!linkAddBefore(vm, self, args[1], linkNode(vm, self, index))) {
-            THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "The next element cannot be nil.");
+            THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "The next element cannot be nil.");
         }
     }
     RETURN_VAL(args[1]);
@@ -1300,7 +1300,7 @@ LOX_METHOD(LinkedList, putAt) {
     ObjInstance* self = AS_INSTANCE(receiver);
     int index = AS_INT(args[0]);
     if (!linkIndexIsValid(vm, self, index)) {
-        THROW_EXCEPTION(clox.std.lang, IndexOutOfBoundsException, "Index out of bound for LinkedList.");
+        THROW_EXCEPTION(clox.std.lang.IndexOutOfBoundsException, "Index out of bound for LinkedList.");
     }
 
     ObjNode* node = linkNode(vm, self, index);
@@ -1385,7 +1385,7 @@ LOX_METHOD(List, getAt) {
 }
 
 LOX_METHOD(List, putAt) {
-    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(Node, clone) {
@@ -1583,11 +1583,11 @@ LOX_METHOD(Queue, toString) {
 }
 
 LOX_METHOD(Range, add) {
-    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Cannot add an element to instance of class Range.");
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Cannot add an element to instance of class Range.");
 }
 
 LOX_METHOD(Range, addAll) {
-    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Cannot add a collection to instance of class Range.");
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Cannot add a collection to instance of class Range.");
 }
 
 LOX_METHOD(Range, clone) {
@@ -1691,7 +1691,7 @@ LOX_METHOD(Range, step) {
     ObjClosure* closure = AS_CLOSURE(args[1]);
 
     if (by == 0) { 
-        THROW_EXCEPTION(clox.std.lang, IllegalArgumentException, "Step size cannot be 0.");
+        THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Step size cannot be 0.");
     }
     else {
         if (by > 0) {
@@ -1998,11 +1998,11 @@ LOX_METHOD(Stack, toString) {
 }
 
 LOX_METHOD(TEnumerable, next) {
-    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(TEnumerable, nextValue) {
-    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 void registerCollectionPackage(VM* vm) {

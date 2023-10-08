@@ -43,8 +43,8 @@ LOX_METHOD(Behavior, clone) {
 LOX_METHOD(Behavior, fullName) {
     ASSERT_ARG_COUNT("Behavior::fullName()", 0);
     ObjClass* self = AS_CLASS(receiver);
-    if(self->namespace->isRoot) RETURN_OBJ(self->name);
-    else RETURN_STRING_FMT("%s.%s", self->namespace->fullName->chars, self->name->chars);
+    if (self->namespace->isRoot) RETURN_OBJ(self->name);
+    else RETURN_OBJ(self->fullName);
 }
 
 LOX_METHOD(Behavior, getMethod) {
@@ -56,7 +56,7 @@ LOX_METHOD(Behavior, getMethod) {
         if (IS_NATIVE_METHOD(value)) RETURN_OBJ(AS_NATIVE_METHOD(value));
         else if(IS_CLOSURE(value)) RETURN_OBJ(newMethod(vm, self, AS_CLOSURE(value)));
         else {
-            THROW_EXCEPTION(clox.std.lang, MethodNotFoundException, "Invalid method object found");
+            THROW_EXCEPTION(clox.std.lang.MethodNotFoundException, "Invalid method object found");
         }
     }
     else RETURN_NIL;
@@ -71,7 +71,7 @@ LOX_METHOD(Behavior, hasMethod) {
 }
 
 LOX_METHOD(Behavior, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Behavior.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Behavior.");
 }
 
 LOX_METHOD(Behavior, isBehavior) {
@@ -143,7 +143,7 @@ LOX_METHOD(Bool, clone) {
 }
 
 LOX_METHOD(Bool, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Bool.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Bool.");
 }
 
 LOX_METHOD(Bool, toString) {
@@ -167,7 +167,7 @@ LOX_METHOD(BoundMethod, init) {
     if (IS_METHOD(args[1])) {
         ObjMethod* method = AS_METHOD(args[1]);
         if (!isObjInstanceOf(vm, args[0], method->behavior)) {
-            THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot bound method to object.");
+            THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot bound method to object.");
         }
         RETURN_OBJ(newBoundMethod(vm, args[0], method->closure));
     }
@@ -175,12 +175,12 @@ LOX_METHOD(BoundMethod, init) {
         ObjClass* klass = getObjClass(vm, args[0]);
         Value value;
         if (!tableGet(&klass->methods, AS_STRING(args[1]), &value)) {
-            THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot bound method to object.");
+            THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot bound method to object.");
         }
         RETURN_OBJ(newBoundMethod(vm, args[0], AS_CLOSURE(value)));
     }
     else {
-        THROW_EXCEPTION(clox.std.lang, IllegalArgumentException, "method BoundMethod::init(object, method) expects argument 2 to be a method or string.");
+        THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "method BoundMethod::init(object, method) expects argument 2 to be a method or string.");
     }
 }
 
@@ -297,7 +297,7 @@ LOX_METHOD(Float, clone) {
 }
 
 LOX_METHOD(Float, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Float.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Float.");
 }
 
 LOX_METHOD(Float, toString) {
@@ -314,7 +314,7 @@ LOX_METHOD(FloatClass, parse) {
     char* endPoint = NULL;
     double floatValue = strtod(floatString->chars, &endPoint);
     if (floatValue == 0.0) {
-        THROW_EXCEPTION(clox.std.lang, FormatException, "Failed to parse float from input string.");
+        THROW_EXCEPTION(clox.std.lang.FormatException, "Failed to parse float from input string.");
     }
     RETURN_NUMBER(floatValue);
 }
@@ -373,7 +373,7 @@ LOX_METHOD(Function, clone) {
 }
 
 LOX_METHOD(Function, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Function.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Function.");
 }
 
 LOX_METHOD(Function, isAnonymous) {
@@ -451,7 +451,7 @@ LOX_METHOD(Int, gcd) {
 }
 
 LOX_METHOD(Int, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Int.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Int.");
 }
 
 LOX_METHOD(Int, isEven) {
@@ -539,7 +539,7 @@ LOX_METHOD(IntClass, parse) {
     char* endPoint = NULL;
     int intValue = (int)strtol(intString->chars, &endPoint, 10);
     if (intValue == 0) {
-        THROW_EXCEPTION(clox.std.lang, FormatException, "Failed to parse int from input string.");
+        THROW_EXCEPTION(clox.std.lang.FormatException, "Failed to parse int from input string.");
     }
     RETURN_INT(intValue);
 }
@@ -574,8 +574,8 @@ LOX_METHOD(Metaclass, memberOf) {
 LOX_METHOD(Metaclass, namedInstance) {
     ASSERT_ARG_COUNT("Metaclass::namedInstance()", 0);
     ObjClass* self = AS_CLASS(receiver);
-    ObjString* className = subString(vm, self->name, 0, self->name->length - 7);
-    RETURN_OBJ(getNativeClass(vm, self->namespace->fullName->chars, className->chars));
+    ObjString* className = subString(vm, self->fullName, 0, self->name->length - 7);
+    RETURN_OBJ(getNativeClass(vm, className->chars));
 }
 
 LOX_METHOD(Metaclass, superclass) {
@@ -609,7 +609,7 @@ LOX_METHOD(Method, behavior) {
 LOX_METHOD(Method, bind) {
     ASSERT_ARG_COUNT("Method::bind(receiver)", 1);
     if (IS_NATIVE_METHOD(receiver)) {
-        THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot bind receiver to native method.");
+        THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot bind receiver to native method.");
     }
     RETURN_OBJ(newBoundMethod(vm, args[1], AS_METHOD(receiver)->closure));
 }
@@ -620,7 +620,7 @@ LOX_METHOD(Method, clone) {
 }
 
 LOX_METHOD(Method, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Method.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Method.");
 }
 
 LOX_METHOD(Method, isNative) {
@@ -678,7 +678,7 @@ LOX_METHOD(Namespace, shortName) {
 }
 
 LOX_METHOD(Namespace, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Namespace.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Namespace.");
 }
 
 LOX_METHOD(Namespace, toString) {
@@ -693,7 +693,7 @@ LOX_METHOD(Nil, clone) {
 }
 
 LOX_METHOD(Nil, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Nil.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Nil.");
 }
 
 LOX_METHOD(Nil, toString) {
@@ -768,7 +768,7 @@ LOX_METHOD(Number, hypot) {
 }
 
 LOX_METHOD(Number, init) {
-    THROW_EXCEPTION(clox.std.lang, UnsupportedOperationException, "Cannot instantiate from class Number.");
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Number.");
 }
 
 LOX_METHOD(Number, isInfinity) {
@@ -844,7 +844,7 @@ LOX_METHOD(Number, step) {
     ObjClosure* closure = AS_CLOSURE(args[2]);
 
     if (by == 0) {
-        THROW_EXCEPTION(clox.std.lang, IllegalArgumentException, "Step size cannot be 0.");
+        THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Step size cannot be 0.");
     }
     else {
         if (by > 0) {
@@ -880,7 +880,7 @@ LOX_METHOD(Number, toString) {
 
 LOX_METHOD(NumberClass, parse) {
     ASSERT_ARG_COUNT("Number class::parse(numberString)", 1);
-    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(Object, clone) {
@@ -1114,7 +1114,7 @@ LOX_METHOD(String, trim) {
 }
 
 LOX_METHOD(TComparable, compareTo) {
-    THROW_EXCEPTION(clox.std.lang, NotImplementedException, "Not implemented, subclass responsibility.");
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(TComparable, equals) {
