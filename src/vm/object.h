@@ -196,6 +196,7 @@ typedef struct {
 struct ObjClass {
     Obj obj;
     ObjString* name;
+    ObjString* fullName;
     BehaviorType behavior;
     struct ObjNamespace* namespace;
     struct ObjClass* superclass;

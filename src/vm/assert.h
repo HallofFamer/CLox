@@ -6,13 +6,13 @@
 #include "value.h"
 
 #define ASSERT_ARG_COUNT(method, expectedCount) assertArgCount(vm, method, expectedCount, argCount)
-#define ASSERT_ARG_INSTANCE_OF(method, index, namespaceName, className) assertArgInstanceOf(vm, method, args, index, #namespaceName, #className)
-#define ASSERT_ARG_INSTANCE_OF_ANY(method, index, namespaceName, className, namespaceName2, className2) assertArgInstanceOfAny(vm, method, args, index, #namespaceName, #className, #namespaceName2, #className2)
+#define ASSERT_ARG_INSTANCE_OF(method, index, className) assertArgInstanceOf(vm, method, args, index, #className)
+#define ASSERT_ARG_INSTANCE_OF_ANY(method, index, className, className2) assertArgInstanceOfAny(vm, method, args, index, #className, #className2)
 #define ASSERT_ARG_TYPE(method, index, type) assertArgIs##type(vm, method, args, index)
 
 void assertArgCount(VM* vm, const char* method, int expectedCount, int actualCount);
-void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className);
-void assertArgInstanceOfAny(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className, const char* namespaceName2, const char* className2);
+void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, const char* className);
+void assertArgInstanceOfAny(VM* vm, const char* method, Value* args, int index, const char* className, const char* className2);
 void assertArgIsArray(VM* vm, const char* method, Value* args, int index);
 void assertArgIsBool(VM* vm, const char* method, Value* args, int index);
 void assertArgIsClass(VM* vm, const char* method, Value* args, int index);

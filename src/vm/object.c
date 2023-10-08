@@ -200,6 +200,14 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
     klass->namespace = vm->currentNamespace;
     klass->superclass = NULL;
     klass->isNative = false;
+
+    if (!klass->namespace->isRoot) {
+        char chars[UINT8_MAX];
+        int length = sprintf_s(chars, UINT8_MAX, "%s.%s", klass->namespace->fullName->chars, klass->name->chars);
+        klass->fullName = copyString(vm, chars, length);
+    }
+    else klass->fullName = klass->name;
+
     initValueArray(&klass->traits);
     initTable(&klass->fields);
     initTable(&klass->methods);
@@ -215,6 +223,14 @@ ObjClass* createTrait(VM* vm, ObjString* name) {
     trait->namespace = vm->currentNamespace;
     trait->superclass = NULL;
     trait->isNative = false;
+
+    if (!trait->namespace->isRoot) {
+        char chars[UINT8_MAX];
+        int length = sprintf_s(chars, UINT8_MAX, "%s.%s", trait->namespace->fullName->chars, trait->name->chars);
+        trait->fullName = copyString(vm, chars, length);
+    }
+    else trait->fullName = trait->name;
+
     initValueArray(&trait->traits);
     initTable(&trait->fields);
     initTable(&trait->methods);

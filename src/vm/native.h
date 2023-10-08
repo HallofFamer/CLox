@@ -22,8 +22,8 @@
 #define RETURN_OBJ(value) return OBJ_VAL(value)
 #define RETURN_STRING(chars, length) return OBJ_VAL(copyString(vm, chars, length))
 #define RETURN_STRING_FMT(...) return OBJ_VAL(formattedString(vm, __VA_ARGS__))
-#define THROW_EXCEPTION(namespace, klass, message) return OBJ_VAL(throwException(vm, getNativeClass(vm, #namespace, #klass), message))
-#define THROW_EXCEPTION_FMT(namespace, klass, message, ...) return OBJ_VAL(throwException(vm, getNativeClass(vm, #namespace, #klass), message, __VA_ARGS__))
+#define THROW_EXCEPTION(klass, message) return OBJ_VAL(throwException(vm, getNativeClass(vm, #klass), message))
+#define THROW_EXCEPTION_FMT(klass, message, ...) return OBJ_VAL(throwException(vm, getNativeClass(vm, #klass), message, __VA_ARGS__))
 
 ObjClass* defineNativeClass(VM* vm, const char* name);
 void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction function);
@@ -31,7 +31,7 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, Na
 ObjClass* defineNativeTrait(VM* vm, const char* name);
 ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* enclosing);
 ObjClass* defineNativeException(VM* vm, const char* name, ObjClass* superClass);
-ObjClass* getNativeClass(VM* vm, const char* namespaceName, const char* className);
+ObjClass* getNativeClass(VM* vm, const char* fullName);
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name);
 ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name);
 ObjNamespace* getNativeNamespace(VM* vm, const char* name);

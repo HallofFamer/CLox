@@ -80,6 +80,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     nativeClass->isNative = true;
     nativeClass->obj.klass->isNative = true;
     push(vm, OBJ_VAL(nativeClass));
+    tableSet(vm, &vm->classes, nativeClass->fullName, OBJ_VAL(nativeClass));
     tableSet(vm, &vm->currentNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
@@ -111,6 +112,7 @@ ObjClass* defineNativeTrait(VM* vm, const char* name) {
     ObjClass* nativeTrait = createTrait(vm, traitName);
     nativeTrait->isNative = true;
     push(vm, OBJ_VAL(nativeTrait));
+    tableSet(vm, &vm->classes, nativeTrait->fullName, OBJ_VAL(nativeTrait));
     tableSet(vm, &vm->currentNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
@@ -135,12 +137,11 @@ ObjClass* defineNativeException(VM* vm, const char* name, ObjClass* superClass) 
     return exceptionClass;
 }
 
-ObjClass* getNativeClass(VM* vm, const char* namespaceName, const char* className) {
-    ObjNamespace* namespace = getNativeNamespace(vm, namespaceName);
+ObjClass* getNativeClass(VM* vm, const char* fullName) {
     Value klass;
-    tableGet(&namespace->values, newString(vm, className), &klass);
+    tableGet(&vm->classes, newString(vm, fullName), &klass);
     if (!IS_CLASS(klass)) {
-        runtimeError(vm, "Class %s.%s is undefined.", namespaceName, className);
+        runtimeError(vm, "Class %s is undefined.", fullName);
         exit(70);
     }
     return AS_CLASS(klass);

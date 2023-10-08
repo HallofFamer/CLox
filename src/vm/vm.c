@@ -766,7 +766,7 @@ InterpretResult run(VM* vm) {
 #define BINARY_OP(valueType, op) \
     do { \
         if (!IS_NUMBER(peek(vm, 0)) || !IS_NUMBER(peek(vm, 1))) { \
-            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException"); \
+            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException"); \
             throwException(vm, exceptionClass, "Operands must be numbers."); \
         } \
         else { \
@@ -888,7 +888,7 @@ InterpretResult run(VM* vm) {
                     if (IS_STRING(peek(vm, 0))) {
                         ObjString* string = AS_STRING(pop(vm));
                         if (index < 0 || index > string->length) {
-                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IndexOutOfBoundsException");
+                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
                             throwException(vm, exceptionClass, "String index is out of bound: %d.", index);
                         }
                         else {
@@ -900,7 +900,7 @@ InterpretResult run(VM* vm) {
                     else if (IS_ARRAY(peek(vm, 0))) {
                         ObjArray* array = AS_ARRAY(pop(vm));
                         if (index < 0 || index > array->elements.count) {
-                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IndexOutOfBoundsException");
+                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
                             throwException(vm, exceptionClass, "Array index is out of bound: %d.", index);
                         }
                         else {
@@ -921,7 +921,7 @@ InterpretResult run(VM* vm) {
                     else push(vm, NIL_VAL);
                 }
                 else {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
                     throwException(vm, exceptionClass, "Subscript must be integer or string.");
                 }
                 break;
@@ -932,7 +932,7 @@ InterpretResult run(VM* vm) {
                     int index = AS_INT(pop(vm));
                     ObjArray* array = AS_ARRAY(pop(vm));
                     if (index < 0 || index > array->elements.count) {
-                        ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IndexOutOfBoundsException");
+                        ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
                         throwException(vm, exceptionClass, "Array index is out of bound: %d.", index);
                     }
                     else {
@@ -989,7 +989,7 @@ InterpretResult run(VM* vm) {
                     push(vm, NUMBER_VAL(a + b));
                 }
                 else {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
                     throwException(vm, exceptionClass, "Operands must be two numbers or two strings.");
                 }
                 break;
@@ -1014,7 +1014,7 @@ InterpretResult run(VM* vm) {
             }
             case OP_DIVIDE: 
                 if (IS_INT(peek(vm, 0)) && AS_INT(peek(vm, 0)) == 0) {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "ArithmeticException");
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.ArithmeticException");
                     throwException(vm, exceptionClass, "It is illegal to divide an integer by 0.");
                 }
                 else BINARY_OP(NUMBER_VAL, /); 
@@ -1031,7 +1031,7 @@ InterpretResult run(VM* vm) {
                     push(vm, NUMBER_VAL(fmod(a, b)));
                 }
                 else {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
                     throwException(vm, exceptionClass, "Operands must be two numbers.");
                 }
                 break;
@@ -1053,7 +1053,7 @@ InterpretResult run(VM* vm) {
                 break;
             case OP_NEGATE:
                 if (!IS_NUMBER(peek(vm, 0))) {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException"); 
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException"); 
                     throwException(vm, exceptionClass, "Operands must be numbers for negate operator.");
                 }
                 else if(IS_INT(peek(vm, 0))) push(vm, INT_VAL(-AS_INT(pop(vm))));
@@ -1222,7 +1222,7 @@ InterpretResult run(VM* vm) {
                     push(vm, OBJ_VAL(newRange(vm, a, b)));
                 }
                 else {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
                     throwException(vm, exceptionClass, "Operands must be two integers.");
                 }
                 break;
@@ -1231,7 +1231,7 @@ InterpretResult run(VM* vm) {
                 Value filePath = pop(vm);
                 Value value;
                 if (!IS_STRING(filePath)) {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang", "IllegalArgumentException");
+                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
                     throwException(vm, exceptionClass, "Required file path must be a string.");
                     break;
                 }
@@ -1271,7 +1271,7 @@ InterpretResult run(VM* vm) {
                     else {
                         ObjString* directoryPath = resolveSourceDirectory(vm, shortName, enclosingNamespace);
                         if (!sourceDirectoryExists(directoryPath)) {
-                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.io", "FileNotFoundException");
+                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.io.FileNotFoundException");
                             throwException(vm, exceptionClass, "Failed to load source file for %s", filePath->chars);
                         }
                         else if (!tableGet(&enclosingNamespace->values, shortName, &value)) {

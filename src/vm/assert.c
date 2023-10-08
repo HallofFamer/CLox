@@ -12,16 +12,16 @@ void assertArgCount(VM* vm, const char* method, int expectedCount, int actualCou
     }
 }
 
-void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className) {
-    if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, namespaceName, className))) {
+void assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, const char* className) {
+    if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, className))) {
         runtimeError(vm, "method %s expects argument %d to be an instance of class %s but got %s.", 
             method, index + 1, className, getObjClass(vm, args[index])->name->chars);
         exit(70);
     }
 }
 
-void assertArgInstanceOfAny(VM* vm, const char* method, Value* args, int index, const char* namespaceName, const char* className, const char* namespaceName2, const char* className2) {
-    if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, namespaceName, className)) && !isObjInstanceOf(vm, args[index], getNativeClass(vm, namespaceName2, className2))) {
+void assertArgInstanceOfAny(VM* vm, const char* method, Value* args, int index, const char* className, const char* className2) {
+    if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, className)) && !isObjInstanceOf(vm, args[index], getNativeClass(vm, className2))) {
         runtimeError(vm, "method %s expects argument %d to be an instance of class %s or %s but got %s.",
             method, index + 1, className, className2, getObjClass(vm, args[index])->name->chars);
         exit(70);
