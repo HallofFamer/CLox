@@ -5,6 +5,7 @@
 #include "common.h"
 #include "compiler.h"
 #include "object.h"
+#include "shape.h"
 #include "table.h"
 #include "value.h"
 
@@ -88,6 +89,7 @@ struct VM {
     Table namespaces;
     Table modules;
     Table strings;
+    ShapeTree shapes;
     ObjString* initString;
     ObjModule* currentModule;
     ObjUpvalue* openUpvalues;
