@@ -84,6 +84,7 @@ struct VM {
     ClassCompiler* currentClass;
 
     Table globals;
+    Table classes;
     Table namespaces;
     Table modules;
     Table strings;

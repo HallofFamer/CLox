@@ -299,6 +299,7 @@ static void markRoots(VM* vm) {
     }
 
     markTable(vm, &vm->globals);
+    markTable(vm, &vm->classes);
     markTable(vm, &vm->namespaces);
     markTable(vm, &vm->modules);
     markCompilerRoots(vm);

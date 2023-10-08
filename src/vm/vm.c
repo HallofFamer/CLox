@@ -150,6 +150,7 @@ void initVM(VM* vm) {
     vm->grayStack = NULL;
 
     initTable(&vm->globals);
+    initTable(&vm->classes);
     initTable(&vm->namespaces);
     initTable(&vm->modules);
     initTable(&vm->strings);
@@ -168,6 +169,7 @@ void freeVM(VM* vm) {
     freeTable(vm, &vm->globals);
     freeTable(vm, &vm->namespaces);
     freeTable(vm, &vm->modules);
+    freeTable(vm, &vm->classes);
     freeTable(vm, &vm->strings);
     vm->initString = NULL;
     freeObjects(vm);
