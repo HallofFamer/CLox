@@ -172,6 +172,7 @@ void freeVM(VM* vm) {
     freeTable(vm, &vm->modules);
     freeTable(vm, &vm->classes);
     freeTable(vm, &vm->strings);
+    freeShapeTree(vm, &vm->shapes);
     vm->initString = NULL;
     freeObjects(vm);
 }

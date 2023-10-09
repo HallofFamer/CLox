@@ -150,6 +150,8 @@ set(Source_Files__vm
     "src/vm/parser.h"
     "src/vm/scanner.c"
     "src/vm/scanner.h"
+    "src/vm/shape.c"
+    "src/vm/shape.h"
     "src/vm/string.c"
     "src/vm/string.h"
     "src/vm/table.c"
