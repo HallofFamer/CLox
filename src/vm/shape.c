@@ -12,5 +12,7 @@ void initShapeTree(ShapeTree* shapeTree) {
 
 void freeShapeTree(VM* vm, ShapeTree* shapeTree) {
     FREE_ARRAY(Shape, shapeTree->list, shapeTree->capacity);
-    initShapeTree(shapeTree);
+    shapeTree->list = NULL;
+    shapeTree->count = 0;
+    shapeTree->rootShape = NULL;
 }
