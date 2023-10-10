@@ -278,7 +278,8 @@ static void freeObject(VM* vm, Obj* object) {
             break;
         }
         case OBJ_STRING: {
-            FREE(ObjString, object);
+            ObjString* string = (ObjString*)object;
+            reallocate(vm, object, sizeof(ObjString) + string->length + 1, 0);
             break;
         }
         case OBJ_UPVALUE:
