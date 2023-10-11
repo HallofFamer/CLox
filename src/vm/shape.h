@@ -9,7 +9,8 @@
 typedef enum {
     SHAPE_ROOT,
     SHAPE_NORMAL,
-    SHAPE_COMPLEX
+    SHAPE_COMPLEX,
+    SHAPE_INVALID
 } ShapeType;
 
 typedef struct {
@@ -17,7 +18,7 @@ typedef struct {
     uint32_t parentID;
     ShapeType type;
     Table edges;
-    Table indexTable;
+    Table indexes;
     uint32_t nextIndex;
 } Shape;
 
@@ -28,7 +29,8 @@ typedef struct {
     Shape* rootShape;
 } ShapeTree;
 
-void initShapeTree(ShapeTree* shapeTree);
+void initShapeTree(VM* vm);
 void freeShapeTree(VM* vm, ShapeTree* shapeTree);
+void shapeTreeAppend(VM* vm, Shape shape);
 
 #endif // !clox_shape_h

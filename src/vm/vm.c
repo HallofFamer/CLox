@@ -154,7 +154,7 @@ void initVM(VM* vm) {
     initTable(&vm->namespaces);
     initTable(&vm->modules);
     initTable(&vm->strings);
-    initShapeTree(&vm->shapes);
+    initShapeTree(vm);
     vm->initString = NULL;
     vm->initString = copyString(vm, "init", 4);
 
