@@ -14,23 +14,24 @@ typedef enum {
 } ShapeType;
 
 typedef struct {
-    uint32_t id;
-    uint32_t parentID;
+    int id;
+    int parentID;
     ShapeType type;
     Table edges;
     Table indexes;
-    uint32_t nextIndex;
+    int nextIndex;
 } Shape;
 
 typedef struct {
     Shape* list;
-    uint32_t count;
-    uint32_t capacity;
+    int count;
+    int capacity;
     Shape* rootShape;
 } ShapeTree;
 
 void initShapeTree(VM* vm);
 void freeShapeTree(VM* vm, ShapeTree* shapeTree);
-void shapeTreeAppend(VM* vm, Shape shape);
+void appendToShapeTree(VM* vm, Shape* shape);
+void createShapeFromParent(VM* vm, int parentID, ObjString* edge);
 
 #endif // !clox_shape_h

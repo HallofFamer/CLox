@@ -167,6 +167,24 @@ void initVM(VM* vm) {
 }
 
 void freeVM(VM* vm) {
+    /*
+    createShapeFromParent(vm, 0, newString(vm, "name"));
+    createShapeFromParent(vm, 1, newString(vm, "age"));
+    createShapeFromParent(vm, 0, newString(vm, "color"));
+    for (int i = 0; i < vm->shapes.count; i++) {
+        Shape* shape = &vm->shapes.list[i];
+        printf("Shape ID: %d, Parent ID: %d, shape type: %d, next index: %d\n", shape->id, shape->parentID, shape->type, shape->nextIndex);
+        for (int j = 0; j < shape->indexes.capacity; j++) {
+            Entry* entry = &shape->indexes.entries[j];
+            if (entry->key != NULL) {
+                printf("Property at index %d: '%s'\n", AS_INT(entry->value), entry->key->chars);
+            }
+        }
+
+        printf("\n");
+    }
+    */
+
     freeTable(vm, &vm->globals);
     freeTable(vm, &vm->namespaces);
     freeTable(vm, &vm->modules);

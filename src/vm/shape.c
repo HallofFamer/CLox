@@ -14,16 +14,12 @@ static void initRootShape(Shape* shape) {
 }
 
 void initShapeTree(VM* vm) {
-    ShapeTree shapeTree;
-    shapeTree.list = NULL;
-    shapeTree.count = 0;
-    shapeTree.capacity = 0;
-    shapeTree.rootShape = NULL;
+    ShapeTree shapeTree = { .list = NULL, .count = 0, .capacity = 0, .rootShape = NULL };
     vm->shapes = shapeTree;
 
     Shape rootShape;
     initRootShape(&rootShape);
-    shapeTreeAppend(vm, rootShape);
+    appendToShapeTree(vm, &rootShape);
 }
 
 void freeShapeTree(VM* vm, ShapeTree* shapeTree) {
@@ -34,7 +30,7 @@ void freeShapeTree(VM* vm, ShapeTree* shapeTree) {
     shapeTree->rootShape = NULL;
 }
 
-void shapeTreeAppend(VM* vm, Shape shape) {
+void appendToShapeTree(VM* vm, Shape* shape) {
     ShapeTree* shapeTree = &vm->shapes;
     if (shapeTree->capacity < shapeTree->count + 1) {
         int oldCapacity = shapeTree->capacity;
@@ -42,6 +38,25 @@ void shapeTreeAppend(VM* vm, Shape shape) {
         shapeTree->list = GROW_ARRAY(Shape, shapeTree->list, oldCapacity, shapeTree->capacity);
     }
 
-    shapeTree->list[shapeTree->count] = shape;
+    shapeTree->list[shapeTree->count] = *shape;
     shapeTree->count++;
+}
+
+void createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
+    ShapeTree* shapeTree = &vm->shapes;
+    Shape* parentShape = &shapeTree->list[parentID];
+
+    Shape newShape = {
+        .id = shapeTree->count,
+        .parentID = parentID,
+        .type = parentShape->nextIndex <= UINT4_MAX ? SHAPE_NORMAL : SHAPE_COMPLEX,
+        .nextIndex = parentShape->nextIndex + 1
+    };
+    initTable(&newShape.edges);
+    initTable(&newShape.indexes);
+
+    tableAddAll(vm, &parentShape->indexes, &newShape.indexes);
+    tableSet(vm, &newShape.indexes, edge, INT_VAL(parentShape->nextIndex));
+    tableSet(vm, &parentShape->edges, edge, INT_VAL(newShape.id));
+    appendToShapeTree(vm, &newShape);
 }
