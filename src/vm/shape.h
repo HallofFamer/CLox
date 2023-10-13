@@ -32,6 +32,6 @@ typedef struct {
 void initShapeTree(VM* vm);
 void freeShapeTree(VM* vm, ShapeTree* shapeTree);
 void appendToShapeTree(VM* vm, Shape* shape);
-void createShapeFromParent(VM* vm, int parentID, ObjString* edge);
+bool createShapeFromParent(VM* vm, int parentID, ObjString* edge);
 
 #endif // !clox_shape_h

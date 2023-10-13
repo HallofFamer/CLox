@@ -42,8 +42,12 @@ void appendToShapeTree(VM* vm, Shape* shape) {
     shapeTree->count++;
 }
 
-void createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
+bool createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     ShapeTree* shapeTree = &vm->shapes;
+    if (shapeTree->count >= UINT32_MAX) {
+        runtimeError(vm, "Too many shapes have been created.");
+        return false;
+    }
     Shape* parentShape = &shapeTree->list[parentID];
 
     Shape newShape = {
@@ -59,4 +63,5 @@ void createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     tableSet(vm, &newShape.indexes, edge, INT_VAL(parentShape->nextIndex));
     tableSet(vm, &parentShape->edges, edge, INT_VAL(newShape.id));
     appendToShapeTree(vm, &newShape);
+    return true;
 }
