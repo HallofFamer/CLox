@@ -100,6 +100,7 @@ ObjFunction* newFunction(VM* vm) {
 
 ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
+    instance->shapeID = 0;
     initTable(&instance->fields);
     return instance;
 }

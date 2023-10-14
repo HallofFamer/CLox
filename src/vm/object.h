@@ -47,8 +47,10 @@
 #define AS_NODE(value)              ((ObjNode*)AS_OBJ(value))
 #define AS_RANGE(value)             ((ObjRange*)AS_OBJ(value))
 #define AS_RECORD(value)            ((ObjRecord*)AS_OBJ(value))
-#define AS_CRECORD(value, type)     ((type*)((ObjRecord*)AS_OBJ(value)->data))
 #define AS_STRING(value)            ((ObjString*)AS_OBJ(value))
+
+#define AS_CARRAY(value)            (((ObjArray*)AS_OBJ(value))->elements)
+#define AS_CRECORD(value, type)     ((type*)((ObjRecord*)AS_OBJ(value)->data))
 #define AS_CSTRING(value)           (((ObjString*)AS_OBJ(value))->chars)
 
 typedef enum {
@@ -102,6 +104,7 @@ typedef void (*FreeFunction)(void* data);
 
 typedef struct {
     Obj obj;
+    uint32_t shapeID;
     Table fields;
 } ObjInstance;
 
