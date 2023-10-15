@@ -42,11 +42,11 @@ void appendToShapeTree(VM* vm, Shape* shape) {
     shapeTree->count++;
 }
 
-bool createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
+int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     ShapeTree* shapeTree = &vm->shapes;
-    if (shapeTree->count >= UINT32_MAX) {
+    if (shapeTree->count >= INT32_MAX) {
         runtimeError(vm, "Too many shapes have been created.");
-        return false;
+        return -1;
     }
     Shape* parentShape = &shapeTree->list[parentID];
 
@@ -63,5 +63,28 @@ bool createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     tableSet(vm, &newShape.indexes, edge, INT_VAL(parentShape->nextIndex));
     tableSet(vm, &parentShape->edges, edge, INT_VAL(newShape.id));
     appendToShapeTree(vm, &newShape);
-    return true;
+    return newShape.id;
+}
+
+int transitionShapeForObject(VM* vm, ObjInstance* object, ObjString* edge) {
+    int parentID = object->shapeID;
+    Shape* parentShape = &vm->shapes.list[parentID];
+    Value value;
+
+    if (tableGet(&parentShape->edges, edge, &value)) object->shapeID = AS_INT(value);
+    else object->shapeID = createShapeFromParent(vm, parentID, edge);
+    return object->shapeID;
+}
+
+int getShapeFromParent(VM* vm, int parentID, ObjString* edge) {
+    ShapeTree* shapeTree = &vm->shapes;
+    if (shapeTree->count >= UINT32_MAX) {
+        runtimeError(vm, "Too many shapes have been created.");
+        return -1;
+    }
+    Shape* parentShape = &shapeTree->list[parentID];
+
+    Value value;
+    if (tableGet(&parentShape->edges, edge, &value)) return AS_INT(value);
+    else return createShapeFromParent(vm, parentID, edge);
 }
