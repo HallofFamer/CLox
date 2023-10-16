@@ -73,7 +73,7 @@ typedef enum {
     OBJ_RECORD,
     OBJ_STRING,
     OBJ_UPVALUE,
-    OBJ_VALUE
+    OBJ_VOID
 } ObjType;
 
 typedef enum {
@@ -104,7 +104,7 @@ typedef void (*FreeFunction)(void* data);
 
 typedef struct {
     Obj obj;
-    uint32_t shapeID;
+    int shapeID;
     Table fields;
 } ObjInstance;
 

@@ -168,9 +168,6 @@ void initVM(VM* vm) {
 
 void freeVM(VM* vm) {
     /*
-    createShapeFromParent(vm, 0, newString(vm, "name"));
-    createShapeFromParent(vm, 1, newString(vm, "age"));
-    createShapeFromParent(vm, 0, newString(vm, "color"));
     for (int i = 0; i < vm->shapes.count; i++) {
         Shape* shape = &vm->shapes.list[i];
         printf("Shape ID: %d, Parent ID: %d, shape type: %d, next index: %d\n", shape->id, shape->parentID, shape->type, shape->nextIndex);
@@ -682,7 +679,9 @@ static bool getInstanceVariable(VM* vm, Value receiver, ObjString* name) {
 static bool setInstanceField(VM* vm, Value receiver, ObjString* name, Value value) {
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        tableSet(vm, &instance->fields, name, value);
+        if (tableSet(vm, &instance->fields, name, value)) {
+            transitionShapeForObject(vm, instance, name);
+        }
         push(vm, value);
     }
     else if (IS_CLASS(receiver)) {

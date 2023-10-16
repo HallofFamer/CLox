@@ -9,6 +9,7 @@
 #include "native.h"
 #include "object.h"
 #include "os.h"
+#include "shape.h"
 #include "string.h"
 #include "vm.h"
 
@@ -371,7 +372,9 @@ Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
     ObjString* key = newString(vm, name);
     push(vm, OBJ_VAL(key));
-    tableSet(vm, &object->fields, key, ((void*)value == NULL) ? NIL_VAL : value);
+    if (tableSet(vm, &object->fields, key, ((void*)value == NULL) ? NIL_VAL : value)) {
+        transitionShapeForObject(vm, object, key);
+    }
     pop(vm);
 }
 
