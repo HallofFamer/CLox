@@ -15,17 +15,29 @@ class Zoo {
   mouse()  { return this.fox; }
 }
 
-var zoo = Zoo();
+val zoo = Zoo();
+zoo.aardvark = 1;
+
 var sum = 0;
-var start = clock();
-while (sum < 10000000) {
-  sum = sum + zoo.ant()
-            + zoo.banana()
-            + zoo.tuna()
-            + zoo.hay()
-            + zoo.grass()
-            + zoo.mouse();
+val start = clock();
+while (sum < 10000000) { 
+    sum = sum + zoo.aardvark + zoo.baboon + zoo.cat + zoo.donkey + zoo.elephant + zoo.fox;
 }
 
-println(clock() - start);
-println(sum);
+print("Time taken for property access: ");
+print(clock() - start);
+println(" seconds");
+println("Sum: " + sum.toString());
+println("");
+
+var sum2 = 0;
+val start2 = clock();
+while (sum2 < 10000000) {
+    sum2 = sum2 + zoo.ant() + zoo.banana() + zoo.tuna() + zoo.hay() + zoo.grass() + zoo.mouse();
+}
+
+print("Time taken for method calls: ");
+print(clock() - start2);
+println(" seconds");
+println("Sum: " + sum2.toString());
+println("");
