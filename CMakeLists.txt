@@ -138,6 +138,8 @@ set(Source_Files__vm
     "src/vm/dict.h"
     "src/vm/hash.c"
     "src/vm/hash.h"
+    "src/vm/index.c"
+    "src/vm/index.h"
     "src/vm/memory.c"
     "src/vm/memory.h"
     "src/vm/native.c"
@@ -163,68 +165,11 @@ set(Source_Files__vm
 )
 source_group("Source Files\\vm" FILES ${Source_Files__vm})
 
-set(Test_Files__lox
-    "test/lox/anonymous.lox"
-    "test/lox/array.lox"
-    "test/lox/benchmark.lox"
-    "test/lox/boundmethod.lox"
-    "test/lox/closure.lox"
-    "test/lox/date.lox"
-    "test/lox/dictionary.lox"
-    "test/lox/enumerate.lox"
-    "test/lox/exception.lox"
-    "test/lox/fibonacci.lox"
-    "test/lox/file.lox"
-    "test/lox/fraction.lox"
-    "test/lox/http.lox"
-    "test/lox/initializer.lox"
-    "test/lox/invoke.lox"
-    "test/lox/io.lox"
-    "test/lox/klass.lox"
-    "test/lox/lambda.lox"
-    "test/lox/lang.lox"
-    "test/lox/linkedlist.lox"
-    "test/lox/loop.lox"
-    "test/lox/method.lox"
-    "test/lox/namespace.lox"
-    "test/lox/native.lox"
-    "test/lox/network.lox"
-    "test/lox/nil.lox"
-    "test/lox/object.lox"
-    "test/lox/queue.lox"
-    "test/lox/rand.lox"
-    "test/lox/range.lox"
-    "test/lox/receiver.lox"
-    "test/lox/reentrancy.lox"
-    "test/lox/regex.lox"
-    "test/lox/require.lox"
-    "test/lox/set.lox"
-    "test/lox/socket.lox"
-    "test/lox/stack.lox"
-    "test/lox/string.lox"
-    "test/lox/sum.lox"
-    "test/lox/super.lox"
-    "test/lox/switch.lox"
-    "test/lox/trait.lox"
-    "test/lox/url.lox"
-    "test/lox/uuid.lox"
-    "test/lox/variable.lox"
-)
-source_group("Test Files\\lox" FILES ${Test_Files__lox})
-
-set(Test_Files__others
-    "test/others/file_input.txt"
-    "test/others/file_output.txt"
-)
-source_group("Test Files\\others" FILES ${Test_Files__others})
-
 set(ALL_FILES
     ${no_group_source_files}
     ${Source_Files__inc}
     ${Source_Files__std}
     ${Source_Files__vm}
-    ${Test_Files__lox}
-    ${Test_Files__others}
 )
 
 ################################################################################

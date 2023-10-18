@@ -53,11 +53,9 @@ uint32_t hashObject(Obj* object) {
         case OBJ_INSTANCE: { 
             ObjInstance* instance = (ObjInstance*)object;
             int hash = 7;
-            for (int i = 0; i < instance->fields.capacity; i++) {
-                Entry* fields = &instance->fields.entries[i];
-                if (fields->key == NULL) continue;
-                hash = hash * 31 + hashString(fields->key->chars, fields->key->length);
-                hash = hash * 31 + hashValue(fields->value);
+            hash = hash * 31 + hashValue(INT_VAL(instance->shapeID));
+            for (int i = 0; i < instance->properties.count; i++) {
+                hash = hash * 31 + hashValue(instance->properties.values[i]);
             }
             return hash;
         }
