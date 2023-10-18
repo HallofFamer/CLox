@@ -88,3 +88,10 @@ int getShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     if (tableGet(&parentShape->edges, edge, &value)) return AS_INT(value);
     else return createShapeFromParent(vm, parentID, edge);
 }
+
+int getIndexFromObjectShape(VM* vm, ObjInstance* object, ObjString* edge) {
+    Table* indexMap = &vm->shapes.list[object->shapeID].indexes;
+    Value value;
+    if (tableGet(indexMap, edge, &value)) return AS_INT(value);
+    return -1;
+}

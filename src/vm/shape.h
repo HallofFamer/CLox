@@ -34,5 +34,6 @@ void freeShapeTree(VM* vm, ShapeTree* shapeTree);
 void appendToShapeTree(VM* vm, Shape* shape);
 int createShapeFromParent(VM* vm, int parentID, ObjString* edge);
 int transitionShapeForObject(VM* vm, ObjInstance* object, ObjString* edge);
+int getIndexFromObjectShape(VM* vm, ObjInstance* object, ObjString* edge);
 
 #endif // !clox_shape_h
