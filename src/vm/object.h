@@ -105,6 +105,7 @@ typedef void (*FreeFunction)(void* data);
 typedef struct {
     Obj obj;
     int shapeID;
+    ValueArray properties;
     Table fields;
 } ObjInstance;
 

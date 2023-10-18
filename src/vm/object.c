@@ -102,6 +102,7 @@ ObjFunction* newFunction(VM* vm) {
 ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
     instance->shapeID = 0;
+    initValueArray(&instance->properties);
     initTable(&instance->fields);
     return instance;
 }
@@ -371,7 +372,7 @@ Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
 
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
     ObjString* key = newString(vm, name);
-    push(vm, OBJ_VAL(key));
+    push(vm, OBJ_VAL(key));   
     if (tableSet(vm, &object->fields, key, ((void*)value == NULL) ? NIL_VAL : value)) {
         transitionShapeForObject(vm, object, key);
     }
