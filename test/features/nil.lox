@@ -30,3 +30,7 @@ print("State for address: ");
 println(address.area?.state?.toUppercase());
 print("State for address 2: ");
 println(address2.area?.state?.toUppercase());
+print("Zipcode for address: ");
+println(address.area?.zipcode ?? "00000");
+print("Zipcode for address 2: ");
+println(address2.area?.zipcode ?? "00000");
