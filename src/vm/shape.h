@@ -3,8 +3,8 @@
 #define clox_shape_h
 
 #include "common.h"
+#include "index.h"
 #include "object.h"
-#include "table.h"
 
 typedef enum {
     SHAPE_ROOT,
@@ -17,8 +17,8 @@ typedef struct {
     int id;
     int parentID;
     ShapeType type;
-    Table edges;
-    Table indexes;
+    IndexMap edges;
+    IndexMap indexes;
     int nextIndex;
 } Shape;
 

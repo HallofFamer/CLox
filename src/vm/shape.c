@@ -9,8 +9,8 @@ static void initRootShape(Shape* shape) {
     shape->parentID = 0;
     shape->type = SHAPE_ROOT;
     shape->nextIndex = 0;
-    initTable(&shape->edges);
-    initTable(&shape->indexes);
+    initIndexMap(&shape->edges);
+    initIndexMap(&shape->indexes);
 }
 
 void initShapeTree(VM* vm) {
@@ -56,12 +56,12 @@ int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
         .type = parentShape->nextIndex <= UINT4_MAX ? SHAPE_NORMAL : SHAPE_COMPLEX,
         .nextIndex = parentShape->nextIndex + 1
     };
-    initTable(&newShape.edges);
-    initTable(&newShape.indexes);
+    initIndexMap(&newShape.edges);
+    initIndexMap(&newShape.indexes);
 
-    tableAddAll(vm, &parentShape->indexes, &newShape.indexes);
-    tableSet(vm, &newShape.indexes, edge, INT_VAL(parentShape->nextIndex));
-    tableSet(vm, &parentShape->edges, edge, INT_VAL(newShape.id));
+    indexMapAddAll(vm, &parentShape->indexes, &newShape.indexes);
+    indexMapSet(vm, &newShape.indexes, edge, parentShape->nextIndex);
+    indexMapSet(vm, &parentShape->edges, edge, newShape.id);
     appendToShapeTree(vm, &newShape);
     return newShape.id;
 }
@@ -69,9 +69,9 @@ int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
 int transitionShapeForObject(VM* vm, ObjInstance* object, ObjString* edge) {
     int parentID = object->shapeID;
     Shape* parentShape = &vm->shapes.list[parentID];
-    Value value;
+    int index;
 
-    if (tableGet(&parentShape->edges, edge, &value)) object->shapeID = AS_INT(value);
+    if (indexMapGet(&parentShape->edges, edge, &index)) object->shapeID = index;
     else object->shapeID = createShapeFromParent(vm, parentID, edge);
     return object->shapeID;
 }
@@ -84,14 +84,14 @@ int getShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     }
     Shape* parentShape = &shapeTree->list[parentID];
 
-    Value value;
-    if (tableGet(&parentShape->edges, edge, &value)) return AS_INT(value);
+    int index;
+    if (indexMapGet(&parentShape->edges, edge, &index)) return index;
     else return createShapeFromParent(vm, parentID, edge);
 }
 
 int getIndexFromObjectShape(VM* vm, ObjInstance* object, ObjString* edge) {
-    Table* indexMap = &vm->shapes.list[object->shapeID].indexes;
-    Value value;
-    if (tableGet(indexMap, edge, &value)) return AS_INT(value);
+    IndexMap* indexMap = &vm->shapes.list[object->shapeID].indexes;
+    int index;
+    if (indexMapGet(indexMap, edge, &index)) return index;
     return -1;
 }
