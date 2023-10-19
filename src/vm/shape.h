@@ -29,6 +29,14 @@ typedef struct {
     Shape* rootShape;
 } ShapeTree;
 
+static inline Shape* getShapeFromID(VM* vm, int id) {
+    return &vm->shapes.list[id];
+}
+
+static inline IndexMap* getShapeIndexes(VM* vm, int id) {
+    return &vm->shapes.list[id].indexes;
+}
+
 void initShapeTree(VM* vm);
 void freeShapeTree(VM* vm, ShapeTree* shapeTree);
 void appendToShapeTree(VM* vm, Shape* shape);
