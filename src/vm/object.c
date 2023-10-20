@@ -102,8 +102,7 @@ ObjFunction* newFunction(VM* vm) {
 ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
     instance->shapeID = 0;
-    initValueArray(&instance->properties);
-    initTable(&instance->fields);
+    initValueArray(&instance->fields);
     return instance;
 }
 
@@ -365,16 +364,22 @@ void bindTraits(VM* vm, int numTraits, ObjClass* klass, ...) {
 }
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
-    Value value;
-    tableGet(&object->fields, newString(vm, name), &value);
-    return value;
+    IndexMap* indexMap = getShapeIndexes(vm, object->shapeID);
+    int index;
+    indexMapGet(indexMap, newString(vm, name), &index);
+    return object->fields.values[index];
 }
 
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
+    IndexMap* indexMap = getShapeIndexes(vm, object->shapeID);
     ObjString* key = newString(vm, name);
-    push(vm, OBJ_VAL(key));   
-    if (tableSet(vm, &object->fields, key, ((void*)value == NULL) ? NIL_VAL : value)) {
+    int index;
+    push(vm, OBJ_VAL(key));
+
+    if (indexMapGet(indexMap, key, &index)) object->fields.values[index] = value;
+    else {
         transitionShapeForObject(vm, object, key);
+        valueArrayWrite(vm, &object->fields, value);
     }
     pop(vm);
 }
@@ -385,10 +390,10 @@ void copyObjProperty(VM* vm, ObjInstance* fromObject, ObjInstance* toObject, cha
 }
 
 void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
-    for (int i = 0; i < fromObject->fields.capacity; i++) {
-        Entry* entry = &fromObject->fields.entries[i];
-        if (entry->key == NULL) continue;
-        setObjProperty(vm, toObject, entry->key->chars, entry->value);
+    IndexMap* indexMap = getShapeIndexes(vm, fromObject->shapeID);
+    toObject->shapeID = fromObject->shapeID;
+    for (int i = 0; i < fromObject->fields.count; i++) {
+        valueArrayWrite(vm, &toObject->fields, fromObject->fields.values[i]);
     }
 }
 

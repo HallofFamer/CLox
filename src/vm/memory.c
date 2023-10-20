@@ -129,7 +129,7 @@ static void blackenObject(VM* vm, Obj* object) {
         case OBJ_INSTANCE: {
             ObjInstance* instance = (ObjInstance*)object;
             markObject(vm, (Obj*)object->klass);
-            markArray(vm, &instance->properties);
+            markArray(vm, &instance->fields);
             break;
         }
         case OBJ_METHOD: {
@@ -236,8 +236,7 @@ static void freeObject(VM* vm, Obj* object) {
         }
         case OBJ_INSTANCE: {
             ObjInstance* instance = (ObjInstance*)object;
-            freeValueArray(vm, &instance->properties);
-            freeTable(vm, &instance->fields);
+            freeValueArray(vm, &instance->fields);
             FREE(ObjInstance, object);
             break;
         }
