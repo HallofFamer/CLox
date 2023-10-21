@@ -42,6 +42,14 @@ void appendToShapeTree(VM* vm, Shape* shape) {
     shapeTree->count++;
 }
 
+Shape* getShapeFromID(VM* vm, int id) {
+    return &vm->shapes.list[id];
+}
+
+IndexMap* getShapeIndexes(VM* vm, int id) {
+    return &vm->shapes.list[id].indexes;
+}
+
 int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     ShapeTree* shapeTree = &vm->shapes;
     if (shapeTree->count >= INT32_MAX) {
