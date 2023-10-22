@@ -888,7 +888,7 @@ LOX_METHOD(Object, clone) {
     ObjInstance* thisObject = AS_INSTANCE(receiver);
     ObjInstance* thatObject = newInstance(vm, OBJ_KLASS(receiver));
     push(vm, OBJ_VAL(thatObject));
-    tableAddAll(vm, &thisObject->fields, &thatObject->fields);
+    copyObjProperties(vm, thisObject, thatObject);
     pop(vm);
     RETURN_OBJ(thatObject);
 }
@@ -913,8 +913,9 @@ LOX_METHOD(Object, getField) {
     ASSERT_ARG_TYPE("Object::getField(field)", 0, String);
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        Value value;
-        if (tableGet(&instance->fields, AS_STRING(args[0]), &value)) RETURN_VAL(value);
+        IndexMap* indexMap = getShapeIndexes(vm, instance->shapeID);
+        int index;
+        if (indexMapGet(indexMap, AS_STRING(args[0]), &index)) RETURN_VAL(instance->fields.values[index]);
     }
     RETURN_NIL;
 }
@@ -924,8 +925,9 @@ LOX_METHOD(Object, hasField) {
     ASSERT_ARG_TYPE("Object::hasField(field)", 0, String);
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        Value value;
-        RETURN_BOOL(tableGet(&instance->fields, AS_STRING(args[0]), &value));
+        IndexMap* indexMap = getShapeIndexes(vm, instance->shapeID);
+        int index;
+        RETURN_BOOL(indexMapGet(indexMap, AS_STRING(args[0]), &index));
     }
     RETURN_FALSE;
 }
