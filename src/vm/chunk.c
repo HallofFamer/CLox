@@ -42,56 +42,73 @@ int addConstant(VM* vm, Chunk* chunk, Value value) {
 int opCodeOffset(Chunk* chunk, int ip) {
     OpCode code = chunk->code[ip];
     switch (code) {
-        case OP_CALL:
-        case OP_GET_SUBSCRIPT:
-            return 1;
-
-        case OP_DEFINE_GLOBAL_VAL:
-        case OP_DEFINE_GLOBAL_VAR:
-        case OP_GET_GLOBAL:
-        case OP_SET_GLOBAL:
-        case OP_GET_LOCAL:
-        case OP_SET_LOCAL:
-        case OP_GET_UPVALUE:
-        case OP_SET_UPVALUE:
-        case OP_JUMP_IF_FALSE:
-        case OP_JUMP_IF_EMPTY:
-        case OP_JUMP:
-        case OP_END:
-        case OP_LOOP:
-        case OP_CONSTANT:
-        case OP_CLASS:
-        case OP_TRAIT:
-        case OP_ANONYMOUS:
-        case OP_GET_PROPERTY:
-        case OP_SET_PROPERTY:
-        case OP_GET_PROPERTY_OPTIONAL:
-        case OP_ARRAY:
-        case OP_DICTIONARY:
-        case OP_INSTANCE_METHOD:
-        case OP_CLASS_METHOD:
-        case OP_DECLARE_NAMESPACE:
-        case OP_GET_NAMESPACE:
-        case OP_USING_NAMESPACE:
-        case OP_CATCH:
-        case OP_FINALLY:
-            return 2;
-
-        case OP_INVOKE:
-        case OP_SUPER_INVOKE:
-        case OP_OPTIONAL_INVOKE:
-            return 3;
-
-        case OP_TRY:
-            return 5;
-
+        case OP_CONSTANT: return 2;
+        case OP_NIL: return 1;
+        case OP_TRUE: return 1;
+        case OP_FALSE: return 1;
+        case OP_POP: return 1;
+        case OP_DUP: return 1;
+        case OP_GET_LOCAL: return 2;
+        case OP_SET_LOCAL: return 2;
+        case OP_DEFINE_GLOBAL_VAL: return 2;
+        case OP_DEFINE_GLOBAL_VAR: return 2;
+        case OP_GET_GLOBAL: return 2;
+        case OP_SET_GLOBAL: return 2;
+        case OP_GET_UPVALUE: return 2;
+        case OP_SET_UPVALUE: return 2;
+        case OP_GET_PROPERTY: return 2;
+        case OP_SET_PROPERTY: return 2;
+        case OP_GET_PROPERTY_OPTIONAL: return 2;
+        case OP_GET_SUBSCRIPT: return 1;
+        case OP_SET_SUBSCRIPT: return 1;
+        case OP_GET_SUPER: return 2;
+        case OP_EQUAL: return 1;
+        case OP_GREATER: return 1;
+        case OP_LESS: return 1;
+        case OP_ADD: return 1;
+        case OP_SUBTRACT: return 1;
+        case OP_MULTIPLY: return 1;
+        case OP_DIVIDE: return 1;
+        case OP_MODULO: return 1;
+        case OP_NIL_COALESCING: return 1;
+        case OP_ELVIS: return 1;
+        case OP_NOT: return 1;
+        case OP_NEGATE: return 1;
+        case OP_JUMP: return 3;
+        case OP_JUMP_IF_FALSE: return 3;
+        case OP_JUMP_IF_EMPTY: return 3;
+        case OP_LOOP: return 3;
+        case OP_CALL: return 2;
+        case OP_INVOKE: return 3;
+        case OP_SUPER_INVOKE: return 3;
+        case OP_OPTIONAL_INVOKE: return 3;
         case OP_CLOSURE: {
             int constant = (chunk->code[ip + 1] << 8) | chunk->code[ip + 2];
             ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
-            return 2 + (function->upvalueCount * 3);
+            return 2 + (function->upvalueCount * 2);
         }
-
-        default:
-            return 0;
+        case OP_CLOSE_UPVALUE: return 1;
+        case OP_CLASS: return 2;
+        case OP_TRAIT: return 2;
+        case OP_ANONYMOUS: return 2;
+        case OP_INHERIT: return 1;
+        case OP_IMPLEMENT: return 2;
+        case OP_INSTANCE_METHOD: return 2;
+        case OP_CLASS_METHOD: return 2;
+        case OP_ARRAY: return 2;
+        case OP_DICTIONARY: return 2;
+        case OP_RANGE: return 1;
+        case OP_REQUIRE: return 1;
+        case OP_DECLARE_NAMESPACE: return 2;
+        case OP_GET_NAMESPACE: return 2;
+        case OP_USING_NAMESPACE: return 2;
+        case OP_THROW: return 1;
+        case OP_TRY: return 6;
+        case OP_CATCH: return 1;
+        case OP_FINALLY: return 1;
+        case OP_RETURN: return 1;
+        case OP_RETURN_NONLOCAL: return 2;
+        case OP_END: return 1;
+        default: return 0;
     }
 }
