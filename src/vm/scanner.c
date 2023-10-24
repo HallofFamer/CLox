@@ -155,6 +155,7 @@ static TokenType identifierType(Scanner* scanner) {
                             }
                         }
                     case 'l': return checkKeyword(scanner, 2, 3, "ass", TOKEN_CLASS);
+                    case 'o': return checkKeyword(scanner, 2, 6, "ntinue", TOKEN_CONTINUE);
                 }
             }
         case 'd': return checkKeyword(scanner, 1, 6, "efault", TOKEN_DEFAULT);
