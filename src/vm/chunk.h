@@ -6,6 +6,7 @@
 
 typedef enum {
     OP_CONSTANT,
+    OP_IDENTIFIER,
     OP_NIL,
     OP_TRUE,
     OP_FALSE,
@@ -76,12 +77,14 @@ typedef struct {
     uint8_t* code;
     int* lines;
     ValueArray constants;
+    ValueArray identifiers;
 } Chunk;
 
 void initChunk(Chunk* chunk);
 void freeChunk(VM* vm, Chunk* chunk);
 void writeChunk(VM* vm, Chunk* chunk, uint8_t byte, int line);
 int addConstant(VM* vm, Chunk* chunk, Value value);
+int addIdentifier(VM* vm, Chunk* chunk, Value value);
 int opCodeOffset(Chunk* chunk, int ip);
 
 #endif // !clox_chunk_h

@@ -10,12 +10,14 @@ void initChunk(Chunk* chunk) {
     chunk->code = NULL;
     chunk->lines = NULL;
     initValueArray(&chunk->constants);
+    initValueArray(&chunk->identifiers);
 }
 
 void freeChunk(VM* vm, Chunk* chunk) {
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
     FREE_ARRAY(int, chunk->lines, chunk->capacity);
     freeValueArray(vm, &chunk->constants);
+    freeValueArray(vm, &chunk->identifiers);
     initChunk(chunk);
 }
 
@@ -39,10 +41,18 @@ int addConstant(VM* vm, Chunk* chunk, Value value) {
     return chunk->constants.count - 1;
 }
 
+int addIdentifier(VM* vm, Chunk* chunk, Value value) {
+    push(vm, value);
+    valueArrayWrite(vm, &chunk->identifiers, value);
+    pop(vm);
+    return chunk->identifiers.count - 1;
+}
+
 int opCodeOffset(Chunk* chunk, int ip) {
     OpCode code = chunk->code[ip];
     switch (code) {
         case OP_CONSTANT: return 2;
+        case OP_IDENTIFIER: return 2;
         case OP_NIL: return 1;
         case OP_TRUE: return 1;
         case OP_FALSE: return 1;
