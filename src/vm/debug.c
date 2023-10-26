@@ -19,11 +19,19 @@ static int constantInstruction(const char* name, Chunk* chunk, int offset) {
     return offset + 2;
 }
 
+static int identifierInstruction(const char* name, Chunk* chunk, int offset) {
+    uint8_t identifier = chunk->code[offset + 1];
+    printf("%-16s %4d '", name, identifier);
+    printValue(chunk->identifiers.values[identifier]);
+    printf("'\n");
+    return offset + 2;
+}
+
 static int invokeInstruction(const char* name, Chunk* chunk, int offset) {
-    uint8_t constant = chunk->code[offset + 1];
+    uint8_t identifier = chunk->code[offset + 1];
     uint8_t argCount = chunk->code[offset + 2];
-    printf("%-16s (%d args) %4d '", name, argCount, constant);
-    printValue(chunk->constants.values[constant]);
+    printf("%-16s (%d args) %4d '", name, argCount, identifier);
+    printValue(chunk->identifiers.values[identifier]);
     printf("'\n");
     return offset + 3;
 }
@@ -58,12 +66,12 @@ static int exceptionHandlerInstruction(const char* name, Chunk* chunk, int offse
 
 static int closureInstruction(const char* name, Chunk* chunk, int offset) {
     offset++;
-    uint8_t constant = chunk->code[offset++];
-    printf("%-16s %4d ", name, constant);
-    printValue(chunk->constants.values[constant]);
+    uint8_t identifier = chunk->code[offset++];
+    printf("%-16s %4d ", name, identifier);
+    printValue(chunk->identifiers.values[identifier]);
     printf("\n");
 
-    ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
+    ObjFunction* function = AS_FUNCTION(chunk->identifiers.values[identifier]);
     for (int j = 0; j < function->upvalueCount; j++) {
         int isLocal = chunk->code[offset++];
         int index = chunk->code[offset++];
@@ -85,6 +93,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
     switch (instruction) {
           case OP_CONSTANT:
               return constantInstruction("OP_CONSTANT", chunk, offset);
+          case OP_IDENTIFIER:
+              return identifierInstruction("OP_IDENTIFIER", chunk, offset);
           case OP_NIL:
               return simpleInstruction("OP_NIL", offset);
           case OP_TRUE:
@@ -100,29 +110,29 @@ int disassembleInstruction(Chunk* chunk, int offset) {
           case OP_SET_LOCAL:
               return byteInstruction("OP_SET_LOCAL", chunk, offset);
           case OP_DEFINE_GLOBAL_VAL: 
-              return constantInstruction("OP_DEFINE_GLOBAL_VAL", chunk, offset);
+              return identifierInstruction("OP_DEFINE_GLOBAL_VAL", chunk, offset);
           case OP_DEFINE_GLOBAL_VAR:
-              return constantInstruction("OP_DEFINE_GLOBAL_VAR", chunk, offset);
+              return identifierInstruction("OP_DEFINE_GLOBAL_VAR", chunk, offset);
           case OP_GET_GLOBAL:
-              return constantInstruction("OP_GET_GLOBAL", chunk, offset);
+              return identifierInstruction("OP_GET_GLOBAL", chunk, offset);
           case OP_SET_GLOBAL:
-              return constantInstruction("OP_SET_GLOBAL", chunk, offset);
+              return identifierInstruction("OP_SET_GLOBAL", chunk, offset);
           case OP_GET_UPVALUE:
               return byteInstruction("OP_GET_UPVALUE", chunk, offset);
           case OP_SET_UPVALUE:
               return byteInstruction("OP_SET_UPVALUE", chunk, offset);
           case OP_GET_PROPERTY:
-              return constantInstruction("OP_GET_PROPERTY", chunk, offset);
+              return identifierInstruction("OP_GET_PROPERTY", chunk, offset);
           case OP_SET_PROPERTY:
-              return constantInstruction("OP_SET_PROPERTY", chunk, offset);
+              return identifierInstruction("OP_SET_PROPERTY", chunk, offset);
           case OP_GET_PROPERTY_OPTIONAL:
-              return constantInstruction("OP_GET_PROPERTY_OPTIONAL", chunk, offset);
+              return identifierInstruction("OP_GET_PROPERTY_OPTIONAL", chunk, offset);
           case OP_GET_SUBSCRIPT:
               return simpleInstruction("OP_GET_SUBSCRIPT", offset);
           case OP_SET_SUBSCRIPT:
               return simpleInstruction("OP_SET_SUBSCRIPT", offset);
           case OP_GET_SUPER:
-              return constantInstruction("OP_GET_SUPER", chunk, offset);
+              return identifierInstruction("OP_GET_SUPER", chunk, offset);
           case OP_EQUAL:
               return simpleInstruction("OP_EQUAL", offset);
           case OP_GREATER:
@@ -162,25 +172,25 @@ int disassembleInstruction(Chunk* chunk, int offset) {
           case OP_SUPER_INVOKE:
               return invokeInstruction("OP_SUPER_INVOKE", chunk, offset);
           case OP_OPTIONAL_INVOKE:
-              return constantInstruction("OP_OPTIONAL_INVOKE", chunk, offset);
+              return identifierInstruction("OP_OPTIONAL_INVOKE", chunk, offset);
           case OP_CLOSURE:
-              return closureInstruction("OP_CLOSURE", chunk, offset);
+              return identifierInstruction("OP_CLOSURE", chunk, offset);
           case OP_CLOSE_UPVALUE:
               return simpleInstruction("OP_CLOSE_UPVALUE", offset);
           case OP_CLASS:
-              return constantInstruction("OP_CLASS", chunk, offset);
+              return identifierInstruction("OP_CLASS", chunk, offset);
           case OP_TRAIT:
-              return constantInstruction("OP_TRAIT", chunk, offset);
+              return identifierInstruction("OP_TRAIT", chunk, offset);
           case OP_ANONYMOUS:
-              return constantInstruction("OP_ANONYMOUS", chunk, offset);
+              return identifierInstruction("OP_ANONYMOUS", chunk, offset);
           case OP_INHERIT:
               return simpleInstruction("OP_INHERIT", offset);
           case OP_IMPLEMENT:
               return byteInstruction("OP_IMPLEMENT", chunk, offset);
           case OP_INSTANCE_METHOD:
-              return constantInstruction("OP_INSTANCE_METHOD", chunk, offset);
+              return identifierInstruction("OP_INSTANCE_METHOD", chunk, offset);
           case OP_CLASS_METHOD:
-              return constantInstruction("OP_CLASS_METHOD", chunk, offset);
+              return identifierInstruction("OP_CLASS_METHOD", chunk, offset);
           case OP_ARRAY: 
               return byteInstruction("OP_ARRAY", chunk, offset);
           case OP_DICTIONARY:

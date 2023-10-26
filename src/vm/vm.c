@@ -789,7 +789,8 @@ InterpretResult run(VM* vm) {
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
-#define READ_STRING() AS_STRING(READ_CONSTANT())
+#define READ_IDENTIFIER() (frame->closure->function->chunk.identifiers.values[READ_BYTE()])
+#define READ_STRING() AS_STRING(READ_IDENTIFIER())
 #define BINARY_OP(valueType, op) \
     do { \
         if (!IS_NUMBER(peek(vm, 0)) || !IS_NUMBER(peek(vm, 1))) { \
@@ -820,6 +821,11 @@ InterpretResult run(VM* vm) {
             case OP_CONSTANT: {
                 Value constant = READ_CONSTANT();
                 push(vm, constant);
+                break;
+            }
+            case OP_IDENTIFIER: {
+                Value identifier = READ_IDENTIFIER();
+                push(vm, identifier);
                 break;
             }
             case OP_NIL: push(vm, NIL_VAL); break;
@@ -1156,7 +1162,7 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_CLOSURE: {
-                ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
+                ObjFunction* function = AS_FUNCTION(READ_IDENTIFIER());
                 ObjClosure* closure = newClosure(vm, function);
                 push(vm, OBJ_VAL(closure));
                 for (int i = 0; i < closure->upvalueCount; i++) {

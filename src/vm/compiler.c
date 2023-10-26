@@ -237,12 +237,22 @@ static void declaration(Compiler* compiler);
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
 
+static uint8_t makeIdentifier(Compiler* compiler, Value value) {
+    int identifier = addIdentifier(compiler->parser->vm, currentChunk(compiler), value);
+    if (identifier > UINT8_MAX) {
+        error(compiler->parser, "Too many identifiers in one chunk.");
+        return 0;
+    }
+
+    return (uint8_t)identifier;
+}
+
 static uint8_t identifierConstant(Compiler* compiler, Token* name) {
-    return makeConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, name->start, name->length)));
+    return makeIdentifier(compiler, OBJ_VAL(copyString(compiler->parser->vm, name->start, name->length)));
 }
 
 static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
-    return AS_STRING(currentChunk(compiler)->constants.values[arg]);
+    return AS_STRING(currentChunk(compiler)->identifiers.values[arg]);
 }
 
 static bool identifiersEqual(Token* a, Token* b) {
@@ -251,7 +261,7 @@ static bool identifiersEqual(Token* a, Token* b) {
 }
 
 static void emitIdentifier(Compiler* compiler, Token* token) {
-    emitBytes(compiler, OP_CONSTANT, identifierConstant(compiler, token));
+    emitBytes(compiler, OP_IDENTIFIER, identifierConstant(compiler, token));
 }
 
 static int resolveLocal(Compiler* compiler, Token* name) {
@@ -342,7 +352,7 @@ static int discardLocals(Compiler* compiler) {
 }
 
 static void invokeMethod(Compiler* compiler, int args, const char* name, int length) {
-    int slot = makeConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, name, length)));
+    int slot = makeIdentifier(compiler, OBJ_VAL(copyString(compiler->parser->vm, name, length)));
     emitByte(compiler, OP_INVOKE);
     emitByte(compiler, slot);
     emitByte(compiler, args);
@@ -677,7 +687,7 @@ static void trait(Compiler* compiler, bool canAssign) {
 static void namespace_(Compiler* compiler, bool canAssign) {
     consume(compiler->parser, TOKEN_IDENTIFIER, "Expect Namespace identifier.");
     ObjString* name = copyString(compiler->parser->vm, compiler->parser->previous.start, compiler->parser->previous.length);
-    emitConstant(compiler, OBJ_VAL(name));
+    emitBytes(compiler, OP_IDENTIFIER, makeIdentifier(compiler, OBJ_VAL(name)));
 }
 
 static void super_(Compiler* compiler, bool canAssign) {
@@ -863,7 +873,7 @@ static void function(Compiler* enclosing, FunctionType type) {
 
     block(&compiler);
     ObjFunction* function = endCompiler(&compiler);
-    emitBytes(enclosing, OP_CLOSURE, makeConstant(enclosing, OBJ_VAL(function)));
+    emitBytes(enclosing, OP_CLOSURE, makeIdentifier(enclosing, OBJ_VAL(function)));
 
     for (int i = 0; i < function->upvalueCount; i++) {
         emitByte(enclosing, compiler.upvalues[i].isLocal ? 1 : 0);
@@ -1285,7 +1295,7 @@ static void usingStatement(Compiler* compiler) {
     } while (match(compiler->parser, TOKEN_DOT));
 
     emitBytes(compiler, OP_GET_NAMESPACE, namespaceDepth);
-    uint8_t alias = makeConstant(compiler, OBJ_VAL(newString(compiler->parser->vm, "")));
+    uint8_t alias = makeIdentifier(compiler, OBJ_VAL(newString(compiler->parser->vm, "")));
 
     if (match(compiler->parser, TOKEN_AS)) {
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect alias after 'as'.");
