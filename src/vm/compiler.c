@@ -4,6 +4,7 @@
 
 #include "compiler.h"
 #include "debug.h"
+#include "index.h"
 #include "memory.h"
 #include "parser.h"
 #include "scanner.h"
@@ -62,6 +63,7 @@ struct Compiler {
     Local locals[UINT8_COUNT];
     int localCount;
     Upvalue upvalues[UINT8_COUNT];
+    IndexMap indexes;
 
     int scopeDepth;
     int innermostLoopStart;
@@ -174,6 +176,8 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     compiler->innermostLoopStart = -1;
     compiler->innermostLoopScopeDepth = 0;
     compiler->function = newFunction(parser->vm);
+    
+    initIndexMap(&compiler->indexes);
     parser->vm->currentCompiler = compiler;
     if (type != TYPE_SCRIPT) {
         if (parser->previous.length == 3 && memcmp(parser->previous.start, "fun", 3) == 0) {
@@ -206,6 +210,7 @@ static ObjFunction* endCompiler(Compiler* compiler) {
     }
 #endif
 
+    freeIndexMap(compiler->parser->vm, &compiler->indexes);
     compiler->parser->vm->currentCompiler = compiler->enclosing;
     return function;
 }
@@ -238,10 +243,15 @@ static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
 
 static uint8_t makeIdentifier(Compiler* compiler, Value value) {
-    int identifier = addIdentifier(compiler->parser->vm, currentChunk(compiler), value);
-    if (identifier > UINT8_MAX) {
-        error(compiler->parser, "Too many identifiers in one chunk.");
-        return 0;
+    ObjString* name = AS_STRING(value);
+    int identifier;
+    if (!indexMapGet(&compiler->indexes, name, &identifier)) {
+        identifier = addIdentifier(compiler->parser->vm, currentChunk(compiler), value);
+        if (identifier > UINT8_MAX) {
+            error(compiler->parser, "Too many identifiers in one chunk.");
+            return 0;
+        }
+        indexMapSet(compiler->parser->vm, &compiler->indexes, name, identifier);
     }
 
     return (uint8_t)identifier;
@@ -258,10 +268,6 @@ static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
 static bool identifiersEqual(Token* a, Token* b) {
     if (a->length != b->length) return false;
     return memcmp(a->start, b->start, a->length) == 0;
-}
-
-static void emitIdentifier(Compiler* compiler, Token* token) {
-    emitBytes(compiler, OP_IDENTIFIER, identifierConstant(compiler, token));
 }
 
 static int resolveLocal(Compiler* compiler, Token* name) {
@@ -1290,12 +1296,13 @@ static void usingStatement(Compiler* compiler) {
     uint8_t namespaceDepth = 0;
     do { 
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace identifier.");
-        emitIdentifier(compiler, &compiler->parser->previous);
+        uint8_t namespace = identifierConstant(compiler, &compiler->parser->previous);
+        emitBytes(compiler, OP_IDENTIFIER, namespace);
         namespaceDepth++;
     } while (match(compiler->parser, TOKEN_DOT));
 
     emitBytes(compiler, OP_GET_NAMESPACE, namespaceDepth);
-    uint8_t alias = makeIdentifier(compiler, OBJ_VAL(newString(compiler->parser->vm, "")));
+    uint8_t alias = makeIdentifier(compiler, OBJ_VAL(emptyString(compiler->parser->vm)));
 
     if (match(compiler->parser, TOKEN_AS)) {
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect alias after 'as'.");
@@ -1425,6 +1432,7 @@ void markCompilerRoots(VM* vm) {
     Compiler* compiler = vm->currentCompiler;
     while (compiler != NULL) {
         markObject(vm, (Obj*)compiler->function);
+        markTable(vm, &compiler->indexes);
         compiler = compiler->enclosing;
     }
 }
