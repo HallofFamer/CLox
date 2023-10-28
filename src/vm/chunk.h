@@ -71,6 +71,20 @@ typedef enum {
     OP_END
 } OpCode;
 
+typedef enum {
+    CACHE_NONE,
+    CACHE_IVAR,
+    CACHE_CVAR,
+    CACHE_GVAR,
+    CACHE_METHOD
+} InlineCacheType;
+
+typedef struct {
+    InlineCacheType type;
+    int id;
+    uint8_t index;
+} InlineCache;
+
 typedef struct {
     int count;
     int capacity;
@@ -78,6 +92,7 @@ typedef struct {
     int* lines;
     ValueArray constants;
     ValueArray identifiers;
+    InlineCache* inlineCaches;
 } Chunk;
 
 void initChunk(Chunk* chunk);

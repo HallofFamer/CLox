@@ -616,9 +616,24 @@ static bool loadModule(VM* vm, ObjString* path) {
     return true;
 }
 
-static bool getInstanceVariable(VM* vm, Value receiver, ObjString* name) {
+static void cacheInstanceVariable(InlineCache* inlineCache, int shapeID, uint8_t index) {
+    inlineCache->type = CACHE_IVAR;
+    inlineCache->id = shapeID;
+    inlineCache->index = index;
+}
+
+static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
+        InlineCache* inlineCache = &chunk->inlineCaches[byte];
+        if (inlineCache->type == CACHE_IVAR && inlineCache->id == instance->shapeID) {
+            Value value = instance->fields.values[inlineCache->index];
+            pop(vm);
+            push(vm, value);
+            return true;
+        }
+
+        ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         IndexMap* indexMap = getShapeIndexes(vm, instance->shapeID);
         int index;
 
@@ -626,6 +641,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, ObjString* name) {
             Value value = instance->fields.values[index];
             pop(vm);
             push(vm, value);
+            cacheInstanceVariable(inlineCache, instance->shapeID, (uint8_t)index);
             return true;
         }
 
@@ -635,6 +651,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, ObjString* name) {
     }
     else if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
+        ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         Value value;
 
         if (tableGet(&klass->fields, name, &value)) {
@@ -649,6 +666,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, ObjString* name) {
     }
     else if (IS_NAMESPACE(receiver)) {
         ObjNamespace* enclosing = AS_NAMESPACE(receiver);
+        ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         Value value;
 
         if (tableGet(&enclosing->values, name, &value)) {
@@ -680,20 +698,34 @@ static bool getInstanceVariable(VM* vm, Value receiver, ObjString* name) {
     return true;
 }
 
-static bool setInstanceField(VM* vm, Value receiver, ObjString* name, Value value) {
+static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Value value) {
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
+        InlineCache* inlineCache = &chunk->inlineCaches[byte];
+        if (inlineCache->type == CACHE_IVAR && inlineCache->id == instance->shapeID) {
+            instance->fields.values[inlineCache->index] = value;
+            push(vm, value);
+            return true;
+        }
+
+        ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         IndexMap* indexMap = getShapeIndexes(vm, instance->shapeID);
         int index;
-        if (indexMapGet(indexMap, name, &index)) instance->fields.values[index] = value;
+        if (indexMapGet(indexMap, name, &index)) {
+            instance->fields.values[index] = value;
+            cacheInstanceVariable(inlineCache, instance->shapeID, (uint8_t)index);
+        }
         else {
             transitionShapeForObject(vm, instance, name);
             valueArrayWrite(vm, &instance->fields, value);
+            cacheInstanceVariable(inlineCache, instance->shapeID, instance->fields.count);
         }
+
         push(vm, value);
     }
     else if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
+        ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         tableSet(vm, &klass->fields, name, value);
         push(vm, value);
     }
@@ -881,9 +913,9 @@ InterpretResult run(VM* vm) {
             }
             case OP_GET_PROPERTY: {
                 Value receiver = peek(vm, 0);
-                ObjString* name = READ_STRING();
-                
-                if (!getInstanceVariable(vm, receiver, name)) {
+                uint8_t index = READ_BYTE();
+
+                if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, index)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -891,21 +923,22 @@ InterpretResult run(VM* vm) {
             case OP_SET_PROPERTY: {
                 Value value = pop(vm);
                 Value receiver = pop(vm);
-                ObjString* name = READ_STRING();
-                if (!setInstanceField(vm, receiver, name, value)) { 
+
+                uint8_t index = READ_BYTE();
+                if (!setInstanceField(vm, receiver, &frame->closure->function->chunk, index, value)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
             }
             case OP_GET_PROPERTY_OPTIONAL: {
                 Value receiver = peek(vm, 0);
-                ObjString* name = READ_STRING();
+                uint8_t index = READ_BYTE();
 
                 if (IS_NIL(receiver)) { 
                     pop(vm);
                     push(vm, NIL_VAL);
                 }
-                else if (!getInstanceVariable(vm, receiver, name)) {
+                else if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, index)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;

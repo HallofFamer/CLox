@@ -9,6 +9,7 @@ void initChunk(Chunk* chunk) {
     chunk->capacity = 0;
     chunk->code = NULL;
     chunk->lines = NULL;
+    chunk->inlineCaches = NULL;
     initValueArray(&chunk->constants);
     initValueArray(&chunk->identifiers);
 }
@@ -16,6 +17,7 @@ void initChunk(Chunk* chunk) {
 void freeChunk(VM* vm, Chunk* chunk) {
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
     FREE_ARRAY(int, chunk->lines, chunk->capacity);
+    FREE_ARRAY(InlineCache, chunk->inlineCaches, chunk->identifiers.capacity);
     freeValueArray(vm, &chunk->constants);
     freeValueArray(vm, &chunk->identifiers);
     initChunk(chunk);
@@ -43,7 +45,16 @@ int addConstant(VM* vm, Chunk* chunk, Value value) {
 
 int addIdentifier(VM* vm, Chunk* chunk, Value value) {
     push(vm, value);
+    int oldCapacity = chunk->identifiers.capacity;
+    int oldCount = chunk->identifiers.count;
+
     valueArrayWrite(vm, &chunk->identifiers, value);
+    if (oldCapacity < chunk->identifiers.capacity) {
+        chunk->inlineCaches = GROW_ARRAY(InlineCache, chunk->inlineCaches, oldCapacity, chunk->identifiers.capacity);
+    }
+    InlineCache inlineCache = { .type = CACHE_NONE, .id = 0, .index = 0 };
+    chunk->inlineCaches[oldCount] = inlineCache;
+
     pop(vm);
     return chunk->identifiers.count - 1;
 }
