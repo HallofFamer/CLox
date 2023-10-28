@@ -693,7 +693,7 @@ static void trait(Compiler* compiler, bool canAssign) {
 static void namespace_(Compiler* compiler, bool canAssign) {
     consume(compiler->parser, TOKEN_IDENTIFIER, "Expect Namespace identifier.");
     ObjString* name = copyString(compiler->parser->vm, compiler->parser->previous.start, compiler->parser->previous.length);
-    emitBytes(compiler, OP_IDENTIFIER, makeIdentifier(compiler, OBJ_VAL(name)));
+    emitBytes(compiler, OP_NAMESPACE, makeIdentifier(compiler, OBJ_VAL(name)));
 }
 
 static void super_(Compiler* compiler, bool canAssign) {
@@ -1297,7 +1297,7 @@ static void usingStatement(Compiler* compiler) {
     do { 
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace identifier.");
         uint8_t namespace = identifierConstant(compiler, &compiler->parser->previous);
-        emitBytes(compiler, OP_IDENTIFIER, namespace);
+        emitBytes(compiler, OP_NAMESPACE, namespace);
         namespaceDepth++;
     } while (match(compiler->parser, TOKEN_DOT));
 

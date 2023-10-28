@@ -823,11 +823,6 @@ InterpretResult run(VM* vm) {
                 push(vm, constant);
                 break;
             }
-            case OP_IDENTIFIER: {
-                Value identifier = READ_IDENTIFIER();
-                push(vm, identifier);
-                break;
-            }
             case OP_NIL: push(vm, NIL_VAL); break;
             case OP_TRUE: push(vm, BOOL_VAL(true)); break;
             case OP_FALSE: push(vm, BOOL_VAL(false)); break;
@@ -1276,6 +1271,11 @@ InterpretResult run(VM* vm) {
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
             }
+            case OP_NAMESPACE: {
+                Value namespace = READ_IDENTIFIER();
+                push(vm, namespace);
+                break;
+            }
             case OP_DECLARE_NAMESPACE: {
                 uint8_t namespaceDepth = READ_BYTE();
                 vm->currentNamespace = declareNamespace(vm, namespaceDepth);
@@ -1421,6 +1421,7 @@ InterpretResult run(VM* vm) {
 #undef READ_BYTE
 #undef READ_SHORT
 #undef READ_CONSTANT
+#undef READ_IDENTIFIER
 #undef READ_STRING
 #undef BINARY_OP
 }

@@ -93,8 +93,6 @@ int disassembleInstruction(Chunk* chunk, int offset) {
     switch (instruction) {
           case OP_CONSTANT:
               return constantInstruction("OP_CONSTANT", chunk, offset);
-          case OP_IDENTIFIER:
-              return identifierInstruction("OP_IDENTIFIER", chunk, offset);
           case OP_NIL:
               return simpleInstruction("OP_NIL", offset);
           case OP_TRUE:
@@ -199,6 +197,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return simpleInstruction("OP_RANGE", offset);
           case OP_REQUIRE:
               return simpleInstruction("OP_REQUIRE", offset);
+          case OP_NAMESPACE:
+              return identifierInstruction("OP_NAMESPACE", chunk, offset);
           case OP_DECLARE_NAMESPACE:
               return byteInstruction("OP_DECLARE_NAMESPACE", chunk, offset);
           case OP_GET_NAMESPACE:

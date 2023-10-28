@@ -6,7 +6,6 @@
 
 typedef enum {
     OP_CONSTANT,
-    OP_IDENTIFIER,
     OP_NIL,
     OP_TRUE,
     OP_FALSE,
@@ -59,6 +58,7 @@ typedef enum {
     OP_DICTIONARY,
     OP_RANGE,
     OP_REQUIRE,
+    OP_NAMESPACE,
     OP_DECLARE_NAMESPACE,
     OP_GET_NAMESPACE,
     OP_USING_NAMESPACE,
