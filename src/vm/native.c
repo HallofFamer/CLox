@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #include "assert.h"
 #include "memory.h"
@@ -19,7 +18,7 @@ LOX_FUNCTION(assert) {
 
 LOX_FUNCTION(clock) {
     ASSERT_ARG_COUNT("clock()", 0);
-    RETURN_NUMBER((double)clock() / CLOCKS_PER_SEC);
+    RETURN_NUMBER(currentTimeInSec());
 }
 
 LOX_FUNCTION(error){
