@@ -1,5 +1,5 @@
 namespace test.lox;
-using test.lox.Fraction;
+using test.features.Fraction;
 
 println("Testing handling user defined exceptions: ");
 try {

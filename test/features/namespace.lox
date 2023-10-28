@@ -2,15 +2,15 @@ namespace clox.test;
 using clox.std.collection;
 using clox.std.util.Date;
 using clox.std.util.UUID as ID;
-using test.lox;
+using test.features;
 
 println(collection);
 println(collection.Array);
 println(Date);
 println(ID);
-println(lox.Fraction);
+println(features.Fraction);
 
-val frac = lox.Fraction(3, 6);
+val frac = features.Fraction(3, 6);
 println(frac.toString());
 val frac2 = frac.reduce();
 println(frac2.toString());

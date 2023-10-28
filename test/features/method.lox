@@ -27,6 +27,7 @@ println("");
 
 println("Getting method dict from Object: ");
 var methods = Object.methods();
+//println("");
 for(var (name, method) : methods){
    println("Method " + method.behavior().name() + "::" + name + ", arity: " + method.arity().toString());
 }

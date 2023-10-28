@@ -1,5 +1,5 @@
-namespace test.lox;
-val filePath = "test/lox/fraction.lox";
+namespace test.features;
+val filePath = "test/features/fraction.lox";
 require filePath;
 
 var frac = Fraction(3, 6);

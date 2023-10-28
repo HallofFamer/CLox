@@ -1,4 +1,4 @@
-namespace test.lox;
+namespace test.features;
 using clox.std.collection.Array;
 
 class Fraction {

@@ -1,12 +1,12 @@
 println("Looping even numbers from 0 to 10 using 'while': ");
 var i = 0;
-while(i < 10){
+while(i <= 10){
     println(i.pow(2));
 	i = i + 2;
 }
 println("");
 
-println("Loop with Break statement using 'while': ");
+println("Loop with Break statement using 'while', exiting loop if index > 5: ");
 var j = 0;
 while(true){ 
     if(j > 5) break;
@@ -15,29 +15,32 @@ while(true){
 }
 println("");
 
+println("Loop with Continue statement using 'for', skipping iteration if index % 3 = 0: ");
+for(var k : 0..10) { 
+    if(k % 3 == 0) continue;
+    println(k);
+}
+println("");
+
 println("Looping through a list of even numbers 2 to 10 using 'for-in': ");
-var list = [2, 4, 6, 8, 10];
-for(var element : list){ 
+for(var element : [2, 4, 6, 8, 10]){ 
     println("Element: " + element.toString());
 }
 println("");
 
 println("Looping through a list of values using 'for-in' with index: ");
-var list2 = [2, 3.5, true, nil, "Hello World"];
-for(var (index, value) : list2){ 
+for(var (index, value) : [2, 3.5, true, nil, "Hello World"]){ 
     println("Element" + index.toString() + ": " + value.toString());
 }
 println("");
 
 println("Looping through a string: ");
-var str = "Hello World";
-for(var char : str) { 
+for(var char : "Hello World") { 
     println("Char: " + char);
 }
 println("");
 
 println("Looping through a dictionary using 'for-in' with key: ");
-var dict = ["name": "Joe Doe", "age": 40, "isAdmin": false];
-for(var (key, value) : dict){ 
+for(var (key, value) : ["name": "Joe Doe", "age": 40, "isAdmin": false]){ 
     println(key.toString() + ": " + value.toString());
 }
