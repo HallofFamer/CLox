@@ -104,3 +104,10 @@ void indexMapAddAll(VM* vm, IndexMap* from, IndexMap* to) {
         }
     }
 }
+
+void markIndexMap(VM* vm, IndexMap* indexMap) {
+    for (int i = 0; i < indexMap->capacity; i++) {
+        IndexEntry* entry = &indexMap->entries[i];
+        markObject(vm, (Obj*)entry->key);
+    }
+}

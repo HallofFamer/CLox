@@ -23,5 +23,6 @@ bool indexMapGet(IndexMap* indexMap, ObjString* key, int* index);
 bool indexMapSet(VM* vm, IndexMap* indexMap, ObjString* key, int index);
 bool indexMapDelete(IndexMap* indexMap, ObjString* key);
 void indexMapAddAll(VM* vm, IndexMap* from, IndexMap* to);
+void markIndexMap(VM* vm, IndexMap* indexMap);
 
 #endif // !clox_index_h

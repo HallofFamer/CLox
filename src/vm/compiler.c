@@ -1432,7 +1432,7 @@ void markCompilerRoots(VM* vm) {
     Compiler* compiler = vm->currentCompiler;
     while (compiler != NULL) {
         markObject(vm, (Obj*)compiler->function);
-        markTable(vm, &compiler->indexes);
+        markIndexMap(vm, &compiler->indexes);
         compiler = compiler->enclosing;
     }
 }
