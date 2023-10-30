@@ -167,21 +167,6 @@ void initVM(VM* vm) {
 }
 
 void freeVM(VM* vm) {
-    /*
-    for (int i = 0; i < vm->shapes.count; i++) {
-        Shape* shape = &vm->shapes.list[i];
-        printf("Shape ID: %d, Parent ID: %d, shape type: %d, next index: %d\n", shape->id, shape->parentID, shape->type, shape->nextIndex);
-        for (int j = 0; j < shape->indexes.capacity; j++) {
-            IndexEntry* entry = &shape->indexes.entries[j];
-            if (entry->key != NULL) {
-                printf("Property at index %d: '%s'\n", entry->value, entry->key->chars);
-            }
-        }
-
-        printf("\n");
-    }
-    */
-
     freeTable(vm, &vm->globals);
     freeTable(vm, &vm->namespaces);
     freeTable(vm, &vm->modules);
@@ -627,11 +612,19 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
         ObjInstance* instance = AS_INSTANCE(receiver);
         InlineCache* inlineCache = &chunk->inlineCaches[byte];
         if (inlineCache->type == CACHE_IVAR && inlineCache->id == instance->shapeID) {
+#ifdef DEBUG_TRACE_CACHE
+            printf("Cache hit for getting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
+#endif 
+
             Value value = instance->fields.values[inlineCache->index];
             pop(vm);
             push(vm, value);
             return true;
         }
+
+#ifdef DEBUG_TRACE_CACHE
+        printf("Cache miss for getting instance variable: Shape ID %d.\n", inlineCache->id);
+#endif
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         IndexMap* indexMap = getShapeIndexes(vm, instance->shapeID);
@@ -703,24 +696,30 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
         ObjInstance* instance = AS_INSTANCE(receiver);
         InlineCache* inlineCache = &chunk->inlineCaches[byte];
         if (inlineCache->type == CACHE_IVAR && inlineCache->id == instance->shapeID) {
+#ifdef DEBUG_TRACE_CACHE
+            printf("Cache hit for setting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
+#endif 
+
             instance->fields.values[inlineCache->index] = value;
             push(vm, value);
             return true;
         }
 
+#ifdef DEBUG_TRACE_CACHE
+        printf("Cache miss for setting instance variable: Shape ID %d.\n", inlineCache->id);
+#endif
+
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         IndexMap* indexMap = getShapeIndexes(vm, instance->shapeID);
         int index;
-        if (indexMapGet(indexMap, name, &index)) {
-            instance->fields.values[index] = value;
-            cacheInstanceVariable(inlineCache, instance->shapeID, (uint8_t)index);
-        }
+        if (indexMapGet(indexMap, name, &index)) instance->fields.values[index] = value;
         else {
             transitionShapeForObject(vm, instance, name);
             valueArrayWrite(vm, &instance->fields, value);
-            cacheInstanceVariable(inlineCache, instance->shapeID, instance->fields.count);
+            index = instance->fields.count;
         }
 
+        cacheInstanceVariable(inlineCache, instance->shapeID, (uint8_t)index);
         push(vm, value);
     }
     else if (IS_CLASS(receiver)) {
