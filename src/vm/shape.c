@@ -6,11 +6,15 @@
 
 static void initRootShape(Shape* shape) {
     shape->id = 0;
-    shape->parentID = 0;
+    shape->parentID = -1;
     shape->type = SHAPE_ROOT;
     shape->nextIndex = 0;
     initIndexMap(&shape->edges);
     initIndexMap(&shape->indexes);
+
+#ifdef DEBUG_PRINT_SHAPE
+    printf("Shape ID: %d, Parent ID: %d, shape type: %d, next index: %d\n\n", shape->id, shape->parentID, shape->type, shape->nextIndex);
+#endif
 }
 
 void initShapeTree(VM* vm) {
@@ -71,6 +75,18 @@ int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     indexMapSet(vm, &newShape.indexes, edge, parentShape->nextIndex);
     indexMapSet(vm, &parentShape->edges, edge, newShape.id);
     appendToShapeTree(vm, &newShape);
+
+#ifdef DEBUG_PRINT_SHAPE
+    printf("Shape ID: %d, Parent ID: %d, shape type: %d, next index: %d\n", newShape.id, newShape.parentID, newShape.type, newShape.nextIndex);
+    for (int i = 0; i < newShape.indexes.capacity; i++) {
+        IndexEntry* entry = &newShape.indexes.entries[i];
+        if (entry->key != NULL) {
+            printf("Property at index %d: '%s'\n", entry->value, entry->key->chars);
+        }
+    }
+    printf("\n");
+#endif
+
     return newShape.id;
 }
 
