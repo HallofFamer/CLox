@@ -45,6 +45,11 @@ ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
 }
 
 ObjClass* newClass(VM* vm, ObjString* name) {
+    if (vm->behaviorCount == INT32_MAX) {
+        runtimeError(vm, "Cannot have more than %d classes/traits.", INT32_MAX);
+        return NULL;
+    }
+
     ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
     ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass, BEHAVIOR_METACLASS);
     push(vm, OBJ_VAL(metaclass));
@@ -197,6 +202,7 @@ static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
     push(vm, OBJ_VAL(klass));
+    klass->behaviorID = vm->behaviorCount++;
     klass->name = name != NULL ? name : newString(vm, "");
     klass->behavior = behavior;
     klass->namespace = vm->currentNamespace;
@@ -220,6 +226,7 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
 ObjClass* createTrait(VM* vm, ObjString* name) {
     ObjClass* trait = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->traitClass);
     push(vm, OBJ_VAL(trait));
+    trait->behaviorID = vm->behaviorCount++;
     trait->name = name != NULL ? name : createBehaviorName(vm, BEHAVIOR_TRAIT, NULL);
     trait->behavior = BEHAVIOR_TRAIT;
     trait->namespace = vm->currentNamespace;

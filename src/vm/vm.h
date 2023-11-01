@@ -78,6 +78,10 @@ struct VM {
     Compiler* currentCompiler;
     ClassCompiler* currentClass;
 
+    int behaviorCount;
+    int namespaceCount;
+    int moduleCount;
+
     Table globals;
     Table classes;
     Table namespaces;

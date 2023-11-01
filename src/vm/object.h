@@ -198,6 +198,7 @@ typedef struct {
 
 struct ObjClass {
     Obj obj;
+    int behaviorID;
     ObjString* name;
     ObjString* fullName;
     BehaviorType behavior;

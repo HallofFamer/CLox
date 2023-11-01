@@ -149,6 +149,10 @@ void initVM(VM* vm) {
     vm->grayCapacity = 0;
     vm->grayStack = NULL;
 
+    vm->behaviorCount = 0;
+    vm->namespaceCount = 0;
+    vm->moduleCount = 1;
+
     initTable(&vm->globals);
     initTable(&vm->classes);
     initTable(&vm->namespaces);
@@ -601,9 +605,9 @@ static bool loadModule(VM* vm, ObjString* path) {
     return true;
 }
 
-static void cacheInstanceVariable(InlineCache* inlineCache, int shapeID, uint8_t index) {
-    inlineCache->type = CACHE_IVAR;
-    inlineCache->id = shapeID;
+static void cacheInstanceVariable(InlineCache* inlineCache, InlineCacheType type, int id, uint8_t index) {
+    inlineCache->type = type;
+    inlineCache->id = id;
     inlineCache->index = index;
 }
 
@@ -634,7 +638,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
             Value value = instance->fields.values[index];
             pop(vm);
             push(vm, value);
-            cacheInstanceVariable(inlineCache, instance->shapeID, (uint8_t)index);
+            cacheInstanceVariable(inlineCache, CACHE_IVAR, instance->shapeID, (uint8_t)index);
             return true;
         }
 
@@ -719,7 +723,7 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
             index = instance->fields.count;
         }
 
-        cacheInstanceVariable(inlineCache, instance->shapeID, (uint8_t)index);
+        cacheInstanceVariable(inlineCache, CACHE_IVAR, instance->shapeID, (uint8_t)index);
         push(vm, value);
     }
     else if (IS_CLASS(receiver)) {
