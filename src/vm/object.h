@@ -7,6 +7,7 @@
 
 #include "common.h"
 #include "chunk.h"
+#include "index.h"
 #include "table.h"
 #include "value.h"
 
@@ -198,14 +199,15 @@ typedef struct {
 
 struct ObjClass {
     Obj obj;
+    BehaviorType behavior;
     int behaviorID;
     ObjString* name;
     ObjString* fullName;
-    BehaviorType behavior;
     struct ObjNamespace* namespace;
     struct ObjClass* superclass;
     ValueArray traits;
     bool isNative;
+    IndexMap indexes;
     Table fields;
     Table methods;
 };

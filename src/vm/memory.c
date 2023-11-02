@@ -87,6 +87,7 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)klass->obj.klass);
             markObject(vm, (Obj*)klass->namespace);
             markArray(vm, &klass->traits);
+            markIndexMap(vm, &klass->indexes);
             markTable(vm, &klass->fields);
             markTable(vm, &klass->methods);
             break;

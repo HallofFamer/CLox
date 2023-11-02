@@ -202,9 +202,9 @@ static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
     push(vm, OBJ_VAL(klass));
+    klass->behavior = behavior;
     klass->behaviorID = vm->behaviorCount++;
     klass->name = name != NULL ? name : newString(vm, "");
-    klass->behavior = behavior;
     klass->namespace = vm->currentNamespace;
     klass->superclass = NULL;
     klass->isNative = false;
@@ -217,6 +217,7 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
     else klass->fullName = klass->name;
 
     initValueArray(&klass->traits);
+    initIndexMap(&klass->indexes);
     initTable(&klass->fields);
     initTable(&klass->methods);
     pop(vm);
@@ -226,9 +227,9 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
 ObjClass* createTrait(VM* vm, ObjString* name) {
     ObjClass* trait = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->traitClass);
     push(vm, OBJ_VAL(trait));
+    trait->behavior = BEHAVIOR_TRAIT;
     trait->behaviorID = vm->behaviorCount++;
     trait->name = name != NULL ? name : createBehaviorName(vm, BEHAVIOR_TRAIT, NULL);
-    trait->behavior = BEHAVIOR_TRAIT;
     trait->namespace = vm->currentNamespace;
     trait->superclass = NULL;
     trait->isNative = false;
@@ -241,6 +242,7 @@ ObjClass* createTrait(VM* vm, ObjString* name) {
     else trait->fullName = trait->name;
 
     initValueArray(&trait->traits);
+    initIndexMap(&trait->indexes);
     initTable(&trait->fields);
     initTable(&trait->methods);
     pop(vm);
