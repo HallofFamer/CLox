@@ -208,7 +208,7 @@ struct ObjClass {
     ValueArray traits;
     bool isNative;
     IndexMap indexes;
-    Table fields;
+    ValueArray fields;
     Table methods;
 };
 

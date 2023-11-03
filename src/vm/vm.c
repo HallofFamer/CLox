@@ -649,9 +649,10 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
     else if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
-        Value value;
+        int index;
 
-        if (tableGet(&klass->fields, name, &value)) {
+        if (indexMapGet(&klass->indexes, name, &index)) {
+            Value value = klass->fields.values[index];
             pop(vm);
             push(vm, value);
             return true;
@@ -729,7 +730,10 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
     else if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
-        tableSet(vm, &klass->fields, name, value);
+        int index;
+
+        if (indexMapGet(&klass->indexes, name, &index)) klass->fields.values[index] = value;
+        else valueArrayWrite(vm, &klass->fields, value);
         push(vm, value);
     }
     else {

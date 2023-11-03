@@ -216,8 +216,10 @@ LOX_METHOD(Class, getField) {
     ASSERT_ARG_TYPE("Class::getField(field)", 0, String);
     if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
-        Value value;
-        if (tableGet(&klass->fields, AS_STRING(args[0]), &value)) RETURN_VAL(value);
+        int index;
+        if (indexMapGet(&klass->indexes, AS_STRING(args[0]), &index)) {
+            RETURN_VAL(klass->fields.values[index]);
+        }
     }
     RETURN_NIL;
 }
@@ -227,8 +229,8 @@ LOX_METHOD(Class, hasField) {
     ASSERT_ARG_TYPE("Class::hasField(field)", 0, String);
     if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
-        Value value;
-        RETURN_BOOL(tableGet(&klass->fields, AS_STRING(args[0]), &value));
+        int index;
+        RETURN_BOOL(indexMapGet(&klass->indexes, AS_STRING(args[0]), &index));
     }
     RETURN_FALSE;
 }

@@ -218,7 +218,7 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
 
     initValueArray(&klass->traits);
     initIndexMap(&klass->indexes);
-    initTable(&klass->fields);
+    initValueArray(&klass->fields);
     initTable(&klass->methods);
     pop(vm);
     return klass;
@@ -243,7 +243,7 @@ ObjClass* createTrait(VM* vm, ObjString* name) {
 
     initValueArray(&trait->traits);
     initIndexMap(&trait->indexes);
-    initTable(&trait->fields);
+    initValueArray(&trait->fields);
     initTable(&trait->methods);
     pop(vm);
     return trait;
@@ -407,16 +407,20 @@ void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
 }
 
 Value getClassProperty(VM* vm, ObjClass* klass, char* name) {
-    Value value;
-    tableGet(&klass->fields, newString(vm, name), &value);
-    return value;
+    int index;
+    if (!indexMapGet(&klass->indexes, newString(vm, name), &index)) {
+        runtimeError(vm, "Class property %s does not exist for class %s", name, klass->fullName->chars);
+        return NIL_VAL;
+    }
+    return klass->fields.values[index];
 }
 
 void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value) {
-    ObjString* key = newString(vm, name);
-    push(vm, OBJ_VAL(key));
-    tableSet(vm, &klass->fields, key, ((void*)value == NULL) ? NIL_VAL : value);
-    pop(vm);
+    int index;
+    if (!indexMapGet(&klass->indexes, newString(vm, name), &index)) {
+        valueArrayWrite(vm, &klass->fields, value);
+    }
+    else klass->fields.values[index] = value;
 }
 
 Value getObjMethod(VM* vm, Value object, char* name) {

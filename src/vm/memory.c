@@ -88,7 +88,7 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)klass->namespace);
             markArray(vm, &klass->traits);
             markIndexMap(vm, &klass->indexes);
-            markTable(vm, &klass->fields);
+            markArray(vm, &klass->fields);
             markTable(vm, &klass->methods);
             break;
         }
@@ -202,7 +202,8 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
             freeValueArray(vm, &klass->traits);
-            freeTable(vm, &klass->fields);
+            freeIndexMap(vm, &klass->indexes);
+            freeValueArray(vm, &klass->fields);
             freeTable(vm, &klass->methods);
             FREE(ObjClass, object);
             break;
