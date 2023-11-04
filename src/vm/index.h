@@ -3,8 +3,7 @@
 #define clox_index_h
 
 #include "common.h"
-#include "object.h"
-#include "string.h"
+#include "value.h"
 
 typedef struct {
     ObjString* key;

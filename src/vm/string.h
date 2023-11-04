@@ -4,7 +4,6 @@
 
 #include "common.h"
 #include "object.h"
-#include "value.h"
 
 ObjString* takeString(VM* vm, char* chars, int length);
 ObjString* copyString(VM* vm, const char* chars, int length);
