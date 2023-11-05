@@ -75,6 +75,9 @@ typedef enum {
     CACHE_NONE,
     CACHE_IVAR,
     CACHE_CVAR,
+    CACHE_MVAR,
+    CACHE_NVAR,
+    CACHE_RVAR,
     CACHE_GVAR,
     CACHE_METHOD
 } InlineCacheType;
@@ -82,7 +85,7 @@ typedef enum {
 typedef struct {
     InlineCacheType type;
     int id;
-    uint8_t index;
+    int index;
 } InlineCache;
 
 typedef struct {
@@ -101,5 +104,12 @@ void writeChunk(VM* vm, Chunk* chunk, uint8_t byte, int line);
 int addConstant(VM* vm, Chunk* chunk, Value value);
 int addIdentifier(VM* vm, Chunk* chunk, Value value);
 int opCodeOffset(Chunk* chunk, int ip);
+
+static inline void writeInlineCache(InlineCache* inlineCache, InlineCacheType type, int id, int index) {
+    inlineCache->type = type;
+    inlineCache->id = id;
+    inlineCache->index = index;
+}
+
 
 #endif // !clox_chunk_h

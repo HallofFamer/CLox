@@ -605,16 +605,10 @@ static bool loadModule(VM* vm, ObjString* path) {
     return true;
 }
 
-static void cacheInstanceVariable(InlineCache* inlineCache, InlineCacheType type, int id, uint8_t index) {
-    inlineCache->type = type;
-    inlineCache->id = id;
-    inlineCache->index = index;
-}
-
 static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
+    InlineCache* inlineCache = &chunk->inlineCaches[byte];
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        InlineCache* inlineCache = &chunk->inlineCaches[byte];
         if (inlineCache->type == CACHE_IVAR && inlineCache->id == instance->shapeID) {
 #ifdef DEBUG_TRACE_CACHE
             printf("Cache hit for getting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
@@ -627,7 +621,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
         }
 
 #ifdef DEBUG_TRACE_CACHE
-        printf("Cache miss for getting instance variable: Shape ID %d.\n", inlineCache->id);
+        printf("Cache miss for getting instance variable: Shape ID %d.\n", instance->shapeID);
 #endif
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
@@ -638,7 +632,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
             Value value = instance->fields.values[index];
             pop(vm);
             push(vm, value);
-            cacheInstanceVariable(inlineCache, CACHE_IVAR, instance->shapeID, (uint8_t)index);
+            writeInlineCache(inlineCache, CACHE_IVAR, instance->shapeID, index);
             return true;
         }
 
@@ -648,6 +642,21 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
     }
     else if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
+        if (inlineCache->type == CACHE_CVAR && inlineCache->id == klass->behaviorID) {
+#ifdef DEBUG_TRACE_CACHE
+            printf("Cache hit for getting class variable: Behavior ID %d at index %d.\n", inlineCache->id, inlineCache->index);
+#endif 
+
+            Value value = klass->fields.values[inlineCache->index];
+            pop(vm);
+            push(vm, value);
+            return true;
+        }
+
+#ifdef DEBUG_TRACE_CACHE
+        printf("Cache miss for getting class variable: Behavior ID %d.\n", inlineCache->id);
+#endif
+
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         int index;
 
@@ -655,6 +664,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
             Value value = klass->fields.values[index];
             pop(vm);
             push(vm, value);
+            writeInlineCache(inlineCache, CACHE_CVAR, klass->behaviorID, index);
             return true;
         }
 
@@ -697,9 +707,9 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
 }
 
 static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Value value) {
+    InlineCache* inlineCache = &chunk->inlineCaches[byte];
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        InlineCache* inlineCache = &chunk->inlineCaches[byte];
         if (inlineCache->type == CACHE_IVAR && inlineCache->id == instance->shapeID) {
 #ifdef DEBUG_TRACE_CACHE
             printf("Cache hit for setting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
@@ -711,7 +721,7 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
         }
 
 #ifdef DEBUG_TRACE_CACHE
-        printf("Cache miss for setting instance variable: Shape ID %d.\n", inlineCache->id);
+        printf("Cache miss for setting instance variable: Shape ID %d.\n", instance->shapeID);
 #endif
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
@@ -724,23 +734,42 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
             index = instance->fields.count;
         }
 
-        cacheInstanceVariable(inlineCache, CACHE_IVAR, instance->shapeID, (uint8_t)index);
+        writeInlineCache(inlineCache, CACHE_IVAR, instance->shapeID, index);
         push(vm, value);
+        return true;
     }
     else if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
+        if (inlineCache->type == CACHE_CVAR && inlineCache->id == klass->behaviorID) {
+#ifdef DEBUG_TRACE_CACHE
+            printf("Cache hit for setting class variable: Behavior ID %d at index %d.\n", inlineCache->id, inlineCache->index);
+#endif 
+
+            klass->fields.values[inlineCache->index] = value;
+            push(vm, value);
+            return true;
+        }
+
+#ifdef DEBUG_TRACE_CACHE
+        printf("Cache miss for setting class variable: Behavior ID %d.\n", klass->behaviorID);
+#endif
+
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         int index;
-
         if (indexMapGet(&klass->indexes, name, &index)) klass->fields.values[index] = value;
-        else valueArrayWrite(vm, &klass->fields, value);
+        else {
+            valueArrayWrite(vm, &klass->fields, value);
+            index = klass->fields.count;
+        }
+
+        writeInlineCache(inlineCache, CACHE_CVAR, klass->behaviorID, index);
         push(vm, value);
+        return true;
     }
     else {
         runtimeError(vm, "Only instances and classes can set properties.");
         return false;
     }
-    return true;
 }
 
 static bool propagateException(VM* vm) {
