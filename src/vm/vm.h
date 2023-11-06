@@ -82,12 +82,15 @@ struct VM {
     int namespaceCount;
     int moduleCount;
 
-    Table globals;
     Table classes;
     Table namespaces;
     Table modules;
     Table strings;
+
+    IndexMap indexes;
+    ValueArray globals;
     ShapeTree shapes;
+
     ObjString* initString;
     ObjModule* currentModule;
     ObjUpvalue* openUpvalues;
@@ -118,7 +121,6 @@ Value pop(VM* vm);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 bool callMethod(VM* vm, Value method, int argCount);
 Value callReentrant(VM* vm, Value receiver, Value callee, ...);
-bool loadGlobal(VM* vm, ObjString* name, Value* value);
 void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);
 ObjArray* getStackTrace(VM* vm);

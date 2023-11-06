@@ -303,7 +303,8 @@ static void markRoots(VM* vm) {
         markObject(vm, (Obj*)upvalue);
     }
 
-    markTable(vm, &vm->globals);
+    markIndexMap(vm, &vm->indexes);
+    markArray(vm, &vm->globals);
     markTable(vm, &vm->classes);
     markTable(vm, &vm->namespaces);
     markTable(vm, &vm->modules);

@@ -401,13 +401,14 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     }
     else {
         ObjString* name = identifierName(compiler, global);
-        Value value;
-        if (tableGet(&compiler->parser->vm->globals, name, &value)) {
+        int index;
+        if (indexMapGet(&compiler->parser->vm->indexes, name, &index)) {
             error(compiler->parser, "Cannot redeclare global variable.");
         }
 
         if (isMutable) {
-            tableSet(compiler->parser->vm, &compiler->parser->vm->globals, name, NIL_VAL);
+            valueArrayWrite(compiler->parser->vm, &compiler->parser->vm->globals, NIL_VAL);
+            indexMapSet(compiler->parser->vm, &compiler->parser->vm->indexes, name, compiler->parser->vm->globals.count);
             emitBytes(compiler, OP_DEFINE_GLOBAL_VAR, global);
         }
         else {

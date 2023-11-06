@@ -153,11 +153,13 @@ void initVM(VM* vm) {
     vm->namespaceCount = 0;
     vm->moduleCount = 1;
 
-    initTable(&vm->globals);
     initTable(&vm->classes);
     initTable(&vm->namespaces);
     initTable(&vm->modules);
     initTable(&vm->strings);
+
+    initIndexMap(&vm->indexes);
+    initValueArray(&vm->globals);
     initShapeTree(vm);
     vm->initString = NULL;
     vm->initString = copyString(vm, "init", 4);
@@ -171,11 +173,13 @@ void initVM(VM* vm) {
 }
 
 void freeVM(VM* vm) {
-    freeTable(vm, &vm->globals);
     freeTable(vm, &vm->namespaces);
     freeTable(vm, &vm->modules);
     freeTable(vm, &vm->classes);
     freeTable(vm, &vm->strings);
+
+    freeIndexMap(vm, &vm->indexes);
+    freeValueArray(vm, &vm->globals);
     freeShapeTree(vm, &vm->shapes);
     vm->initString = NULL;
     freeObjects(vm);
@@ -529,11 +533,41 @@ static bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
     return true;
 }
 
-bool loadGlobal(VM* vm, ObjString* name, Value* value) {
+static bool loadGlobalFromTable(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
+    InlineCache* inlineCache = &chunk->inlineCaches[byte];
+    ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     if (tableGet(&vm->currentModule->values, name, value)) return true;
     else if (tableGet(&vm->currentNamespace->values, name, value)) return true;
     else if (tableGet(&vm->rootNamespace->values, name, value)) return true;
-    else return tableGet(&vm->globals, name, value);
+    else {
+        int index;
+        if (indexMapGet(&vm->indexes, name, &index)) {
+            *value = vm->globals.values[index];
+            writeInlineCache(inlineCache, CACHE_GVAR, (int)byte, index);
+            return true;
+        }
+        return false;
+    }
+}
+
+static bool loadGlobalFromCache(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
+    InlineCache* inlineCache = &chunk->inlineCaches[byte];
+    if (inlineCache->id == byte) {
+        switch (inlineCache->type) {
+            case CACHE_GVAR: { 
+                *value = vm->globals.values[inlineCache->index];
+                return true;
+            }
+            default: 
+                return loadGlobalFromTable(vm, chunk, byte, value);
+        }
+    }
+    else return loadGlobalFromTable(vm, chunk, byte, value);
+}
+
+static bool loadGlobal(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
+    if (chunk->inlineCaches[byte].type != CACHE_NONE) return loadGlobalFromCache(vm, chunk, byte, value);
+    return loadGlobalFromTable(vm, chunk, byte, value);
 } 
 
 static ObjUpvalue* captureUpvalue(VM* vm, Value* local) {
@@ -914,14 +948,23 @@ InterpretResult run(VM* vm) {
             } 
             case OP_DEFINE_GLOBAL_VAR: {
                 ObjString* name = READ_STRING();
-                tableSet(vm, &vm->globals, name, peek(vm, 0));
+                Value value = peek(vm, 0);
+                int index;
+                if (indexMapGet(&vm->indexes, name, &index)) {
+                    vm->globals.values[index] = value;
+                }
+                else {
+                    valueArrayWrite(vm, &vm->globals, value);
+                    indexMapSet(vm, &vm->indexes, name, vm->globals.count);
+                }
                 pop(vm);
                 break;
             }
             case OP_GET_GLOBAL: {
-                ObjString* name = READ_STRING();
+                uint8_t byte = READ_BYTE();
                 Value value;
-                if (!loadGlobal(vm, name, &value)) {
+                if (!loadGlobal(vm, &frame->closure->function->chunk, byte, &value)) {
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     runtimeError(vm, "Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -930,8 +973,10 @@ InterpretResult run(VM* vm) {
             }
             case OP_SET_GLOBAL: {
                 ObjString* name = READ_STRING();
-                if (tableSet(vm, &vm->globals, name, peek(vm, 0))) {
-                    tableDelete(&vm->globals, name);
+                Value value = peek(vm, 0);
+                int index;
+                if (indexMapGet(&vm->indexes, name, &index)) vm->globals.values[index] = value;
+                else {
                     runtimeError(vm, "Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -949,9 +994,9 @@ InterpretResult run(VM* vm) {
             }
             case OP_GET_PROPERTY: {
                 Value receiver = peek(vm, 0);
-                uint8_t index = READ_BYTE();
+                uint8_t byte = READ_BYTE();
 
-                if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, index)) {
+                if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -960,8 +1005,8 @@ InterpretResult run(VM* vm) {
                 Value value = pop(vm);
                 Value receiver = pop(vm);
 
-                uint8_t index = READ_BYTE();
-                if (!setInstanceField(vm, receiver, &frame->closure->function->chunk, index, value)) {
+                uint8_t byte = READ_BYTE();
+                if (!setInstanceField(vm, receiver, &frame->closure->function->chunk, byte, value)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -1425,17 +1470,19 @@ InterpretResult run(VM* vm) {
                 return INTERPRET_RUNTIME_ERROR;
             }
             case OP_TRY: {
-                ObjString* exceptionClass = READ_STRING();
+                uint8_t byte = READ_BYTE();
                 uint16_t handlerAddress = READ_SHORT();
                 uint16_t finallyAddress = READ_SHORT();
                 Value value;
-                if (!loadGlobal(vm, exceptionClass, &value)){
+                if (!loadGlobal(vm, &frame->closure->function->chunk, byte, &value)){
+                    ObjString* exceptionClass = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     runtimeError(vm, "Undefined class %s specified as exception type.", exceptionClass->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
                 ObjClass* klass = AS_CLASS(value);
                 if (!isClassExtendingSuperclass(klass, vm->exceptionClass)) {
+                    ObjString* exceptionClass = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     runtimeError(vm, "Expect subclass of clox.std.lang.Exception, but got Class %s.", exceptionClass->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
