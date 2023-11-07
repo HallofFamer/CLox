@@ -647,7 +647,6 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
 #ifdef DEBUG_TRACE_CACHE
             printf("Cache hit for getting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
 #endif 
-
             Value value = instance->fields.values[inlineCache->index];
             pop(vm);
             push(vm, value);
@@ -763,9 +762,9 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
         int index;
         if (indexMapGet(indexMap, name, &index)) instance->fields.values[index] = value;
         else {
+            index = instance->fields.count;
             transitionShapeForObject(vm, instance, name);
             valueArrayWrite(vm, &instance->fields, value);
-            index = instance->fields.count;
         }
 
         writeInlineCache(inlineCache, CACHE_IVAR, instance->shapeID, index);
@@ -792,8 +791,9 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
         int index;
         if (indexMapGet(&klass->indexes, name, &index)) klass->fields.values[index] = value;
         else {
-            valueArrayWrite(vm, &klass->fields, value);
             index = klass->fields.count;
+            indexMapSet(vm, &klass->indexes, name, index);
+            valueArrayWrite(vm, &klass->fields, value);
         }
 
         writeInlineCache(inlineCache, CACHE_CVAR, klass->behaviorID, index);
