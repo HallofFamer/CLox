@@ -538,6 +538,9 @@ static bool loadGlobalValue(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     int index;
     if (indexMapGet(&vm->currentModule->indexes, name, &index)) {
+#ifdef DEBUG_TRACE_CACHE
+        printf("Cache miss for getting immutable global variable: '%s' at index %d.\n", name->chars, inlineCache->index);
+#endif 
         *value = vm->currentModule->fields.values[index];
         writeInlineCache(inlineCache, CACHE_GVAL, (int)byte, index);
         return true;
@@ -550,6 +553,9 @@ static bool loadGlobalVariable(VM* vm, Chunk* chunk, uint8_t byte, Value* value)
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     int index;
     if (indexMapGet(&vm->indexes, name, &index)) {
+#ifdef DEBUG_TRACE_CACHE
+        printf("Cache miss for getting mutable global variable: '%s' at index %d.\n", name->chars, inlineCache->index);
+#endif 
         *value = vm->globals.values[index];
         writeInlineCache(inlineCache, CACHE_GVAR, (int)byte, index);
         return true;
@@ -561,9 +567,9 @@ static bool loadGlobalFromTable(VM* vm, Chunk* chunk, uint8_t byte, Value* value
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     if (loadGlobalValue(vm, chunk, byte, value)) return true;
+    else if (loadGlobalVariable(vm, chunk, byte, value)) return true;
     else if (tableGet(&vm->currentNamespace->values, name, value)) return true;
-    else if (tableGet(&vm->rootNamespace->values, name, value)) return true;
-    else return loadGlobalVariable(vm, chunk, byte, value);
+    else return tableGet(&vm->rootNamespace->values, name, value);
 }
 
 static bool loadGlobalFromCache(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
@@ -571,10 +577,16 @@ static bool loadGlobalFromCache(VM* vm, Chunk* chunk, uint8_t byte, Value* value
     if (inlineCache->id == byte) {
         switch (inlineCache->type) {
             case CACHE_GVAL: {
+#ifdef DEBUG_TRACE_CACHE
+                printf("Cache hit for getting immutable global variable: '%s' at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->index);
+#endif 
                 *value = vm->currentModule->fields.values[inlineCache->index];
                 return true;
             }
             case CACHE_GVAR: { 
+#ifdef DEBUG_TRACE_CACHE
+                printf("Cache hit for getting mutable global variable: '%s' at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->index);
+#endif 
                 *value = vm->globals.values[inlineCache->index];
                 return true;
             }
@@ -665,7 +677,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
         ObjInstance* instance = AS_INSTANCE(receiver);
         if (inlineCache->type == CACHE_IVAR && inlineCache->id == instance->shapeID) {
 #ifdef DEBUG_TRACE_CACHE
-            printf("Cache hit for getting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
+            printf("Cache hit for getting instance variable: '%s' from Shape ID %d at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->id, inlineCache->index);
 #endif 
             Value value = instance->fields.values[inlineCache->index];
             pop(vm);
@@ -674,7 +686,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
         }
 
 #ifdef DEBUG_TRACE_CACHE
-        printf("Cache miss for getting instance variable: Shape ID %d.\n", instance->shapeID);
+        printf("Cache miss for getting instance variable: '%s' from Shape ID %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), instance->shapeID);
 #endif
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
@@ -697,7 +709,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
         ObjClass* klass = AS_CLASS(receiver);
         if (inlineCache->type == CACHE_CVAR && inlineCache->id == klass->behaviorID) {
 #ifdef DEBUG_TRACE_CACHE
-            printf("Cache hit for getting class variable: Behavior ID %d at index %d.\n", inlineCache->id, inlineCache->index);
+            printf("Cache hit for getting class variable: '%s' from Behavior ID %d at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->id, inlineCache->index);
 #endif 
 
             Value value = klass->fields.values[inlineCache->index];
@@ -707,7 +719,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
         }
 
 #ifdef DEBUG_TRACE_CACHE
-        printf("Cache miss for getting class variable: Behavior ID %d.\n", inlineCache->id);
+        printf("Cache miss for getting class variable: '%s' from Behavior ID %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->id);
 #endif
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
@@ -883,7 +895,15 @@ InterpretResult run(VM* vm) {
             }
             case OP_DEFINE_GLOBAL_VAL: { 
                 ObjString* name = READ_STRING();
-                tableSet(vm, &vm->rootNamespace->values, name, peek(vm, 0));
+                Value value = peek(vm, 0);
+                int index;
+                if (indexMapGet(&vm->currentModule->indexes, name, &index)) {
+                    vm->currentModule->fields.values[index] = value;
+                }
+                else {
+                    indexMapSet(vm, &vm->currentModule->indexes, name, vm->currentModule->fields.count);
+                    valueArrayWrite(vm, &vm->currentModule->fields, value);
+                }
                 pop(vm);
                 break;
             } 
@@ -895,8 +915,8 @@ InterpretResult run(VM* vm) {
                     vm->globals.values[index] = value;
                 }
                 else {
-                    valueArrayWrite(vm, &vm->globals, value);
                     indexMapSet(vm, &vm->indexes, name, vm->globals.count);
+                    valueArrayWrite(vm, &vm->globals, value);
                 }
                 pop(vm);
                 break;
@@ -1240,7 +1260,7 @@ InterpretResult run(VM* vm) {
             case OP_TRAIT: { 
                 ObjString* traitName = READ_STRING();
                 push(vm, OBJ_VAL(createTrait(vm, traitName)));
-                tableSet(vm, &vm->rootNamespace->values, traitName, peek(vm, 0));
+                tableSet(vm, &vm->currentNamespace->values, traitName, peek(vm, 0));
                 break;
             }
             case OP_ANONYMOUS: {

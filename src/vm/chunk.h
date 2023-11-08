@@ -76,7 +76,6 @@ typedef enum {
     CACHE_IVAR,
     CACHE_CVAR,
     CACHE_GVAL,
-    CACHE_NVAL,
     CACHE_GVAR,
     CACHE_METHOD
 } InlineCacheType;
