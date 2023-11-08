@@ -122,8 +122,16 @@ ObjModule* newModule(VM* vm, ObjString* path) {
     ObjModule* module = ALLOCATE_OBJ(ObjModule, OBJ_MODULE, NULL);
     module->path = path;
     module->isNative = false;
-    initTable(&module->values);
-    tableAddAll(vm, &vm->langNamespace->values, &module->values);
+    initIndexMap(&module->indexes);
+    initValueArray(&module->fields);
+
+    for (int i = 0; i < vm->langNamespace->values.capacity; i++) {
+        Entry* entry = &vm->langNamespace->values.entries[i];
+        if (entry->key != NULL) {
+            indexMapSet(vm, &module->indexes, entry->key, module->fields.count);
+            valueArrayWrite(vm, &module->fields, entry->value);
+        }
+    }
     tableSet(vm, &vm->modules, path, NIL_VAL);
     return module;
 }
@@ -416,9 +424,12 @@ Value getClassProperty(VM* vm, ObjClass* klass, char* name) {
 }
 
 void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value) {
+    ObjString* propertyName = newString(vm, name);
     int index;
-    if (!indexMapGet(&klass->indexes, newString(vm, name), &index)) {
+    if (!indexMapGet(&klass->indexes, propertyName, &index)) {
+        index = klass->fields.count;
         valueArrayWrite(vm, &klass->fields, value);
+        indexMapSet(vm, &klass->indexes, propertyName, index);
     }
     else klass->fields.values[index] = value;
 }

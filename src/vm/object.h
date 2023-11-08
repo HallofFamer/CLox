@@ -167,7 +167,8 @@ typedef struct {
     Obj obj;
     ObjString* path;
     bool isNative;
-    Table values;
+    IndexMap indexes;
+    ValueArray fields;
 } ObjModule;
 
 typedef struct ObjUpvalue {
