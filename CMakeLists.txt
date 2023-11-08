@@ -136,6 +136,8 @@ set(Source_Files__vm
     "src/vm/debug.h"
     "src/vm/dict.c"
     "src/vm/dict.h"
+    "src/vm/exception.c"
+    "src/vm/exception.h"
     "src/vm/hash.c"
     "src/vm/hash.h"
     "src/vm/index.c"

@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "compiler.h"
+#include "exception.h"
 #include "object.h"
 #include "shape.h"
 #include "table.h"
@@ -11,12 +12,6 @@
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
-
-typedef struct {
-    uint16_t handlerAddress;
-    uint16_t finallyAddress;
-    ObjClass* exceptionClass;
-} ExceptionHandler;
 
 typedef struct {
     ObjClosure* closure;
@@ -118,13 +113,12 @@ void initVM(VM* vm);
 void freeVM(VM* vm);
 void push(VM* vm, Value value);
 Value pop(VM* vm);
+Value peek(VM* vm, int distance);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 bool callMethod(VM* vm, Value method, int argCount);
 Value callReentrant(VM* vm, Value receiver, Value callee, ...);
 void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);
-ObjArray* getStackTrace(VM* vm);
-ObjInstance* throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...);
 InterpretResult run(VM* vm);
 InterpretResult interpret(VM* vm, const char* source);
 
