@@ -846,6 +846,7 @@ InterpretResult run(VM* vm) {
 #define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 #define READ_IDENTIFIER() (frame->closure->function->chunk.identifiers.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_IDENTIFIER())
+
 #define BINARY_OP(valueType, op) \
     do { \
         if (!IS_NUMBER(peek(vm, 0)) || !IS_NUMBER(peek(vm, 1))) { \
@@ -859,6 +860,12 @@ InterpretResult run(VM* vm) {
         } \
     } while (false)
 
+#define RUNTIME_ERROR(...) \
+    do { \
+        runtimeError(vm, __VA_ARGS__); \
+        return INTERPRET_RUNTIME_ERROR; \
+    }  while (false)
+    
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
         printf("          ");
@@ -926,8 +933,7 @@ InterpretResult run(VM* vm) {
                 Value value;
                 if (!loadGlobal(vm, &frame->closure->function->chunk, byte, &value)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
-                    runtimeError(vm, "Undefined variable '%s'.", name->chars);
-                    return INTERPRET_RUNTIME_ERROR;
+                    RUNTIME_ERROR("Undefined variable '%s'.", name->chars);
                 }
                 push(vm, value);
                 break;
@@ -937,10 +943,7 @@ InterpretResult run(VM* vm) {
                 Value value = peek(vm, 0);
                 int index;
                 if (indexMapGet(&vm->indexes, name, &index)) vm->globals.values[index] = value;
-                else {
-                    runtimeError(vm, "Undefined variable '%s'.", name->chars);
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                else RUNTIME_ERROR("Undefined variable '%s'.", name->chars);
                 break;
             }
             case OP_GET_UPVALUE: {
@@ -1011,10 +1014,7 @@ InterpretResult run(VM* vm) {
                             push(vm, element);
                         }
                     }
-                    else {
-                        runtimeError(vm, "Only String or Array can have integer subscripts.");
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
+                    else RUNTIME_ERROR("Only String or Array can have integer subscripts.");
                 }
                 else if (IS_DICTIONARY(peek(vm, 1))) {
                     Value key = pop(vm);
@@ -1050,10 +1050,7 @@ InterpretResult run(VM* vm) {
                     dictSet(vm, dictionary, key, value);
                     push(vm, OBJ_VAL(dictionary));
                 }
-                else {
-                    runtimeError(vm, "Only Array and Dictionary can have subscripts.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                else RUNTIME_ERROR("Only Array and Dictionary can have subscripts.");
                 break;
             }
             case OP_GET_SUPER: {
@@ -1223,10 +1220,7 @@ InterpretResult run(VM* vm) {
                         vm->stackTop -= (size_t)argCount + 1;
                         push(vm, NIL_VAL);
                     }
-                    else {
-                        runtimeError(vm, "Undefined method '%s'.", method->chars);
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
+                    else RUNTIME_ERROR("Undefined method '%s'.", method->chars);
                 }
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
@@ -1278,25 +1272,18 @@ InterpretResult run(VM* vm) {
                 if (klass->behavior == BEHAVIOR_CLASS) {
                     Value superclass = peek(vm, 0);
                     if (!IS_CLASS(superclass) || AS_CLASS(superclass)->behavior != BEHAVIOR_CLASS) {
-                        runtimeError(vm, "Superclass must be a class.");
-                        return INTERPRET_RUNTIME_ERROR;
+                        RUNTIME_ERROR("Superclass must be a class.");
                     }
                     bindSuperclass(vm, klass, AS_CLASS(superclass));
                 }
-                else {
-                    runtimeError(vm, "Only class can inherit from another class.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                else RUNTIME_ERROR("Only class can inherit from another class.");
                 pop(vm);
                 break;
             }
             case OP_IMPLEMENT: {
                 uint8_t behaviorCount = READ_BYTE();
                 ObjArray* traits = makeTraitArray(vm, behaviorCount);
-                if (traits == NULL) {
-                    runtimeError(vm, "Only traits can be implemented by class or another trait.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                if (traits == NULL) RUNTIME_ERROR("Only traits can be implemented by class or another trait.");
                 ObjClass* klass = AS_CLASS(peek(vm, behaviorCount));
                 implementTraits(vm, klass, &traits->elements);
                 pop(vm);
@@ -1371,10 +1358,7 @@ InterpretResult run(VM* vm) {
                             pop(vm);
                             push(vm, value);
                         }
-                        else {
-                            runtimeError(vm, "Undefined class/trait/namespace %s specified", shortName->chars);
-                            return INTERPRET_RUNTIME_ERROR;
-                        }
+                        else RUNTIME_ERROR("Undefined class/trait/namespace %s specified", shortName->chars);
                     }
                     else {
                         ObjString* directoryPath = resolveSourceDirectory(vm, shortName, enclosingNamespace);
@@ -1393,15 +1377,12 @@ InterpretResult run(VM* vm) {
             }
             case OP_USING_NAMESPACE: {
                 Value value = pop(vm);
-                if (IS_NIL(value)) {
-                    runtimeError(vm, "Undefined class/trait/namespace specified.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
-
+                if (IS_NIL(value)) RUNTIME_ERROR("Undefined class/trait/namespace specified.");
                 ObjString* alias = READ_STRING(); 
                 int index;
+
                 if (alias->length > 0) {
-                    if (indexMapGet(&vm->currentModule->indexes, alias, &index)) { 
+                    if (indexMapGet(&vm->currentModule->indexes, alias, &index)) {
                         vm->currentModule->fields.values[index] = value;
                     }
                     else {
@@ -1429,10 +1410,7 @@ InterpretResult run(VM* vm) {
                         valueArrayWrite(vm, &vm->currentModule->fields, value);
                     }
                 }
-                else {
-                    runtimeError(vm, "Only classes, traits and namespaces may be imported.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                else RUNTIME_ERROR("Only classes, traits and namespaces may be imported.");
                 break;
             }
             case OP_THROW: {
@@ -1456,15 +1434,13 @@ InterpretResult run(VM* vm) {
                 Value value;
                 if (!loadGlobal(vm, &frame->closure->function->chunk, byte, &value)){
                     ObjString* exceptionClass = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
-                    runtimeError(vm, "Undefined class %s specified as exception type.", exceptionClass->chars);
-                    return INTERPRET_RUNTIME_ERROR;
+                    RUNTIME_ERROR("Undefined class %s specified as exception type.", exceptionClass->chars);
                 }
 
                 ObjClass* klass = AS_CLASS(value);
                 if (!isClassExtendingSuperclass(klass, vm->exceptionClass)) {
                     ObjString* exceptionClass = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
-                    runtimeError(vm, "Expect subclass of clox.std.lang.Exception, but got Class %s.", exceptionClass->chars);
-                    return INTERPRET_RUNTIME_ERROR;
+                    RUNTIME_ERROR("Expect subclass of clox.std.lang.Exception, but got Class %s.", exceptionClass->chars);
                 }
                 pushExceptionHandler(vm, klass, handlerAddress, finallyAddress);
                 break;
@@ -1520,6 +1496,7 @@ InterpretResult run(VM* vm) {
 #undef READ_IDENTIFIER
 #undef READ_STRING
 #undef BINARY_OP
+#undef RUNTIME_ERROR
 }
 
 InterpretResult interpret(VM* vm, const char* source) {
