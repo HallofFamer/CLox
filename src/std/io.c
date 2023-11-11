@@ -63,8 +63,8 @@ LOX_METHOD(BinaryReadStream, next) {
 LOX_METHOD(BinaryReadStream, nextBytes) {
     ASSERT_ARG_COUNT("BinaryReadStream::nextBytes(length)", 1);
     ASSERT_ARG_TYPE("BinaryReadStream::nextBytes(length)", 0, Int);
-    assertNumberPositive(vm, "BinaryReadStream::nextBytes(length)", AS_NUMBER(args[0]), 0);
     int length = AS_INT(args[0]);
+    if (length < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method BinaryReadStream::nextBytes(length) expects argument 1 to be a positive integer but got %g.", length);
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
@@ -97,7 +97,7 @@ LOX_METHOD(BinaryWriteStream, put) {
     ASSERT_ARG_COUNT("BinaryWriteStream::put(byte)", 1);
     ASSERT_ARG_TYPE("BinaryWriteStream::put(byte)", 0, Int);
     int byte = AS_INT(args[0]);
-    assertIntWithinRange(vm, "BinaryWriteStream::put(byte)", byte, 0, 255, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("BinaryWriteStream::put(byte)", byte, 0, 255, 0);
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write byte to stream because file is already closed.");

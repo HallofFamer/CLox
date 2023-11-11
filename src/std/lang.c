@@ -442,7 +442,7 @@ LOX_METHOD(Int, downTo) {
 LOX_METHOD(Int, factorial) {
     ASSERT_ARG_COUNT("Int::factorial()", 0);
     int self = AS_INT(receiver);
-    assertNumberNonNegative(vm, "Int::factorial()", self, -1);
+    if (self < 0) THROW_EXCEPTION_FMT(clox.std.lang.ArithmeticException, "method Int::factorial() expects receiver to be a non negative integer but got %d.", self);
     RETURN_INT(factorial(self));
 }
 
@@ -782,21 +782,21 @@ LOX_METHOD(Number, isInfinity) {
 LOX_METHOD(Number, log) {
     ASSERT_ARG_COUNT("Number::log()", 0);
     double self = AS_NUMBER(receiver);
-    assertNumberPositive(vm, "Number::log2()", self, -1);
+    if (self <= 0) THROW_EXCEPTION_FMT(clox.std.lang.ArithmeticException, "method Number::log() expects receiver to be a positive number but got %g.", self);
     RETURN_NUMBER(log(self));
 }
 
 LOX_METHOD(Number, log10) {
     ASSERT_ARG_COUNT("Number::log10()", 0);
     double self = AS_NUMBER(receiver);
-    assertNumberPositive(vm, "Number::log10()", self, -1);
+    if (self < 0) THROW_EXCEPTION_FMT(clox.std.lang.ArithmeticException, "method Number::log10() expects receiver to be a positive number but got %g.", self);
     RETURN_NUMBER(log10(self));
 }
 
 LOX_METHOD(Number, log2) {
     ASSERT_ARG_COUNT("Number::log2()", 0);
     double self = AS_NUMBER(receiver);
-    assertNumberPositive(vm, "Number::log2()", self, -1);
+    if (self < 0) THROW_EXCEPTION_FMT(clox.std.lang.ArithmeticException, "method Number::log2() expects receiver to be a positive number but got %g.", self);
     RETURN_NUMBER(log2(self));
 }
 
@@ -831,7 +831,7 @@ LOX_METHOD(Number, sin) {
 LOX_METHOD(Number, sqrt) {
     ASSERT_ARG_COUNT("Number::sqrt()", 0);
     double self = AS_NUMBER(receiver);
-    assertNumberPositive(vm, "Number::sqrt()", self, -1);
+    if (self < 0) THROW_EXCEPTION_FMT(clox.std.lang.ArithmeticException, "method Number::sqrt() expects receiver to be a non-negative number but got %g.", self);
     RETURN_NUMBER(sqrt(self));
 }
 
@@ -996,7 +996,7 @@ LOX_METHOD(String, getChar) {
     
     ObjString* self = AS_STRING(receiver);
     int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "String::getChar(index)", index, 0, self->length, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("String::getChar(index)", index, 0, self->length, 0);
 
     char chars[2] = { self->chars[index], '\0' };
     RETURN_STRING(chars, 1);

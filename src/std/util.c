@@ -474,10 +474,14 @@ LOX_METHOD(Duration, init) {
     ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 2, Int);
     ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 3, Int);
 
-    assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[0]), 0);
-    assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[1]), 1);
-    assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[2]), 2);
-    assertNumberNonNegative(vm, "Duration::init(days, hours, minutes, seconds)", AS_NUMBER(args[3]), 3);
+    int days = AS_INT(args[0]);
+    int hours = AS_INT(args[1]);
+    int minutes = AS_INT(args[2]);
+    int seconds = AS_INT(args[3]);
+    if (days < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::init(days, hours, minutes, seconds) expects argument 1 to be a non negative integer but got %d.", days);
+    if (hours < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::init(days, hours, minutes, seconds) expects argument 2 to be a non negative integer but got %d.", hours);
+    if (minutes < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::init(days, hours, minutes, seconds) expects argument 3 to be a non negative integer but got %d.", minutes);
+    if (seconds < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::init(days, hours, minutes, seconds) expects argument 4 to be a non negative integer but got %d.", seconds);
 
     ObjInstance* self = AS_INSTANCE(receiver);
     int duration[4];
@@ -521,12 +525,13 @@ LOX_METHOD(Duration, toString) {
 LOX_METHOD(DurationClass, ofDays) {
     ASSERT_ARG_COUNT("Duration class::ofDays(days)", 1);
     ASSERT_ARG_TYPE("Duration class::ofDays(days)", 0, Int);
-    assertNumberNonNegative(vm, "Duration class::ofDays(days)", AS_NUMBER(args[0]), 0);
+    int days = AS_INT(args[0]);
+    if (days < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration class::ofDays(days) expects argument 1 to be a non negative integer but got %d.", days);
 
     ObjClass* self = AS_CLASS(receiver);
     ObjInstance* instance = newInstance(vm, self);
     push(vm, OBJ_VAL(instance));
-    int duration[4] = { AS_INT(args[0]), 0, 0, 0 };
+    int duration[4] = { days, 0, 0, 0 };
     durationObjInit(vm, duration, instance);
     pop(vm);
     RETURN_OBJ(instance);
@@ -535,12 +540,13 @@ LOX_METHOD(DurationClass, ofDays) {
 LOX_METHOD(DurationClass, ofHours) {
     ASSERT_ARG_COUNT("Duration class::ofHours(hours)", 1);
     ASSERT_ARG_TYPE("Duration class::ofHours(hours)", 0, Int);
-    assertNumberNonNegative(vm, "Duration class::ofHours(hours)", AS_NUMBER(args[0]), 0);
+    int hours = AS_INT(args[0]);
+    if (hours < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration class::ofHours(hours) expects argument 1 to be a non negative integer but got %d.", hours);
 
     ObjClass* self = AS_CLASS(receiver);
     ObjInstance* instance = newInstance(vm, self);
     push(vm, OBJ_VAL(instance));
-    int duration[4] = { 0, AS_INT(args[0]), 0, 0 };
+    int duration[4] = { 0, hours, 0, 0 };
     durationObjInit(vm, duration, instance);
     pop(vm);
     RETURN_OBJ(instance);
@@ -549,12 +555,13 @@ LOX_METHOD(DurationClass, ofHours) {
 LOX_METHOD(DurationClass, ofMinutes) {
     ASSERT_ARG_COUNT("Duration class::ofMinutes(minutes)", 1);
     ASSERT_ARG_TYPE("Duration class::ofMinutes(minutes)", 0, Int);
-    assertNumberNonNegative(vm, "Duration class::ofMinutes(minutes)", AS_NUMBER(args[0]), 0);
+    int minutes = AS_INT(args[0]);
+    if (minutes < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration class::ofMinutes(minutes) expects argument 1 to be a non negative integer but got %d.", minutes);
 
     ObjClass* self = AS_CLASS(receiver);
     ObjInstance* instance = newInstance(vm, self);
     push(vm, OBJ_VAL(instance));
-    int duration[4] = { 0, 0, AS_INT(args[0]), 0 };
+    int duration[4] = { 0, 0, minutes, 0 };
     durationObjInit(vm, duration, instance);
     pop(vm);
     RETURN_OBJ(instance);
@@ -563,12 +570,13 @@ LOX_METHOD(DurationClass, ofMinutes) {
 LOX_METHOD(DurationClass, ofSeconds) {
     ASSERT_ARG_COUNT("Duration class::ofSeconds(seconds)", 1);
     ASSERT_ARG_TYPE("Duration class::ofSeconds(seconds)", 0, Int);
-    assertNumberNonNegative(vm, "Duration class::ofSeconds(seconds)", AS_NUMBER(args[0]), 0);
+    int seconds = AS_INT(args[0]);
+    if (seconds < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration class::ofSeconds(seconds) expects argument 1 to be a non negative integer but got %d.", seconds);
 
     ObjClass* self = AS_CLASS(receiver);
     ObjInstance* instance = newInstance(vm, self);
     push(vm, OBJ_VAL(instance));
-    int duration[4] = { 0, 0, 0, AS_INT(args[0]) };
+    int duration[4] = { 0, 0, 0, seconds };
     durationObjInit(vm, duration, instance);
     pop(vm);
     RETURN_OBJ(instance);
@@ -610,7 +618,8 @@ LOX_METHOD(Random, nextInt) {
 LOX_METHOD(Random, nextIntBounded) {
     ASSERT_ARG_COUNT("Random::nextIntBounded(bound)", 1);
     ASSERT_ARG_TYPE("Random::nextIntBounded(bound)", 0, Int);
-    assertNumberNonNegative(vm, "Random::nextIntBounded(bound)", AS_NUMBER(args[0]), 0);
+    int bound = AS_INT(args[0]);
+    if (bound < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Random::nextIntBounded(bound) expects argument 1 to be a non negative integer but got %d.", bound);
     uint32_t value = pcg32_random_int_bounded((uint32_t)AS_INT(args[0]));
     RETURN_INT((int)value);
 }
@@ -618,7 +627,8 @@ LOX_METHOD(Random, nextIntBounded) {
 LOX_METHOD(Random, setSeed) {
     ASSERT_ARG_COUNT("Random::setSeed(seed)", 1);
     ASSERT_ARG_TYPE("Random::setSeed(seed)", 0, Int);
-    assertNumberNonNegative(vm, "Random::setSeed(seed)", AS_NUMBER(args[0]), 0);
+    int seed = AS_INT(args[0]);
+    if (seed < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Random::setSeed(seed) expects argument 1 to be a non negative integer but got %d.", seed);
     pcg32_seed((uint64_t)AS_INT(args[0]));
     setObjProperty(vm, AS_INSTANCE(receiver), "seed", args[0]);
     RETURN_NIL;

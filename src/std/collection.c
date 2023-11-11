@@ -487,7 +487,7 @@ LOX_METHOD(Array, getAt) {
     ASSERT_ARG_TYPE("Array::getAt(index)", 0, Int);
     ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "Array::getAt(index)", index, 0, self->elements.count - 1, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("Array::getAt(index)", index, 0, self->elements.count - 1, 0);
     RETURN_VAL(self->elements.values[index]);
 }
 
@@ -508,7 +508,7 @@ LOX_METHOD(Array, insertAt) {
     ASSERT_ARG_TYPE("Array::insertAt(index, element)", 0, Int);
     ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "Array::insertAt(index, element)", index, 0, self->elements.count, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("Array::insertAt(index, element)", index, 0, self->elements.count, 0);
     valueArrayInsert(vm, &self->elements, index, args[1]);
     RETURN_VAL(args[1]);
 }
@@ -558,7 +558,7 @@ LOX_METHOD(Array, putAt) {
     ASSERT_ARG_TYPE("Array::putAt(index, element)", 0, Int);
     ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "Array::putAt(index, element)", index, 0, self->elements.count, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("Array::putAt(index, element)", index, 0, self->elements.count, 0);
     self->elements.values[index] = args[1];
     if (index == self->elements.count) self->elements.count++;
     RETURN_OBJ(receiver);
@@ -594,7 +594,7 @@ LOX_METHOD(Array, removeAt) {
     ASSERT_ARG_TYPE("Array::removeAt(index)", 0, Int);
     ObjArray* self = AS_ARRAY(receiver);
     int index = AS_INT(args[0]);
-    assertIntWithinRange(vm, "Array::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("Array::removeAt(index)", AS_INT(args[0]), 0, self->elements.count - 1, 0);
     Value element = valueArrayDelete(vm, &self->elements, index);
     RETURN_VAL(element);
 }
@@ -622,8 +622,8 @@ LOX_METHOD(Array, slice) {
     ObjArray* self = AS_ARRAY(receiver);
     int fromIndex = AS_INT(args[0]);
     int toIndex = AS_INT(args[1]);
-    assertIntWithinRange(vm, "Array::slice(from, to)", fromIndex, 0, self->elements.count, 0);
-    assertIntWithinRange(vm, "Array::slice(from, to)", toIndex, fromIndex, self->elements.count, 1);
+    ASSERT_INDEX_WITHIN_BOUNDS("Array::slice(from, to)", fromIndex, 0, self->elements.count, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("Array::slice(from, to)", toIndex, fromIndex, self->elements.count, 1);
     RETURN_OBJ(arrayCopy(vm, self->elements, fromIndex, toIndex));
 }
 
@@ -1620,7 +1620,7 @@ LOX_METHOD(Range, getAt) {
 
     int min = (self->from < self->to) ? self->from : self->to;
     int max = (self->from < self->to) ? self->to : self->from;
-    assertIntWithinRange(vm, "Range::getAt(index)", index, min, max, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("Range::getAt(index)", index, min, max, 0);
     RETURN_INT(self->from + index);
 }
 
