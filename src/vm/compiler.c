@@ -412,8 +412,8 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
             emitBytes(compiler, OP_DEFINE_GLOBAL_VAR, global);
         }
         else {
-            indexMapSet(compiler->parser->vm, &compiler->parser->vm->currentModule->indexes, name, compiler->parser->vm->currentModule->fields.count);
-            valueArrayWrite(compiler->parser->vm, &compiler->parser->vm->currentModule->fields, NIL_VAL);
+            indexMapSet(compiler->parser->vm, &compiler->parser->vm->currentModule->valIndexes, name, compiler->parser->vm->currentModule->valFields.count);
+            valueArrayWrite(compiler->parser->vm, &compiler->parser->vm->currentModule->valFields, NIL_VAL);
             emitBytes(compiler, OP_DEFINE_GLOBAL_VAL, global);
         }
     }
@@ -643,7 +643,7 @@ static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
         case OP_SET_GLOBAL: { 
             ObjString* name = identifierName(compiler, arg);
             int index;
-            if (indexMapGet(&compiler->parser->vm->currentModule->indexes, name, &index)) { 
+            if (indexMapGet(&compiler->parser->vm->currentModule->valIndexes, name, &index)) { 
                 error(compiler->parser, "Cannot assign to immutable global variables.");
             }
             break;

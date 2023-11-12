@@ -142,8 +142,8 @@ static void blackenObject(VM* vm, Obj* object) {
         case OBJ_MODULE: {
             ObjModule* module = (ObjModule*)object;
             markObject(vm, (Obj*)module->path);
-            markIndexMap(vm, &module->indexes);
-            markArray(vm, &module->fields);
+            markIndexMap(vm, &module->valIndexes);
+            markArray(vm, &module->valFields);
             break;
         }
         case OBJ_NAMESPACE: {
@@ -249,8 +249,8 @@ static void freeObject(VM* vm, Obj* object) {
         }
         case OBJ_MODULE: {
             ObjModule* module = (ObjModule*)object;
-            freeIndexMap(vm, &module->indexes);
-            freeValueArray(vm, &module->fields);
+            freeIndexMap(vm, &module->valIndexes);
+            freeValueArray(vm, &module->valFields);
             FREE(ObjModule, object);
             break;
         }             

@@ -537,11 +537,11 @@ static bool loadGlobalValue(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     int index;
-    if (indexMapGet(&vm->currentModule->indexes, name, &index)) {
+    if (indexMapGet(&vm->currentModule->valIndexes, name, &index)) {
 #ifdef DEBUG_TRACE_CACHE
         printf("Cache miss for getting immutable global variable: '%s' at index %d.\n", name->chars, inlineCache->index);
 #endif 
-        *value = vm->currentModule->fields.values[index];
+        *value = vm->currentModule->valFields.values[index];
         writeInlineCache(inlineCache, CACHE_GVAL, (int)byte, index);
         return true;
     }
@@ -580,7 +580,7 @@ static bool loadGlobalFromCache(VM* vm, Chunk* chunk, uint8_t byte, Value* value
 #ifdef DEBUG_TRACE_CACHE
                 printf("Cache hit for getting immutable global variable: '%s' at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->index);
 #endif 
-                *value = vm->currentModule->fields.values[inlineCache->index];
+                *value = vm->currentModule->valFields.values[inlineCache->index];
                 return true;
             }
             case CACHE_GVAR: { 
@@ -904,12 +904,12 @@ InterpretResult run(VM* vm) {
                 ObjString* name = READ_STRING();
                 Value value = peek(vm, 0);
                 int index;
-                if (indexMapGet(&vm->currentModule->indexes, name, &index)) {
-                    vm->currentModule->fields.values[index] = value;
+                if (indexMapGet(&vm->currentModule->valIndexes, name, &index)) {
+                    vm->currentModule->valFields.values[index] = value;
                 }
                 else {
-                    indexMapSet(vm, &vm->currentModule->indexes, name, vm->currentModule->fields.count);
-                    valueArrayWrite(vm, &vm->currentModule->fields, value);
+                    indexMapSet(vm, &vm->currentModule->valIndexes, name, vm->currentModule->valFields.count);
+                    valueArrayWrite(vm, &vm->currentModule->valFields, value);
                 }
                 pop(vm);
                 break;
@@ -1382,32 +1382,32 @@ InterpretResult run(VM* vm) {
                 int index;
 
                 if (alias->length > 0) {
-                    if (indexMapGet(&vm->currentModule->indexes, alias, &index)) {
-                        vm->currentModule->fields.values[index] = value;
+                    if (indexMapGet(&vm->currentModule->valIndexes, alias, &index)) {
+                        vm->currentModule->valFields.values[index] = value;
                     }
                     else {
-                        indexMapSet(vm, &vm->currentModule->indexes, alias, vm->currentModule->fields.count);
-                        valueArrayWrite(vm, &vm->currentModule->fields, value);
+                        indexMapSet(vm, &vm->currentModule->valIndexes, alias, vm->currentModule->valFields.count);
+                        valueArrayWrite(vm, &vm->currentModule->valFields, value);
                     }
                 }
                 else if (IS_CLASS(value)) {
                     ObjClass* klass = AS_CLASS(value);
-                    if (indexMapGet(&vm->currentModule->indexes, klass->name, &index)) {
-                        vm->currentModule->fields.values[index] = value;
+                    if (indexMapGet(&vm->currentModule->valIndexes, klass->name, &index)) {
+                        vm->currentModule->valFields.values[index] = value;
                     }
                     else {
-                        indexMapSet(vm, &vm->currentModule->indexes, klass->name, vm->currentModule->fields.count);
-                        valueArrayWrite(vm, &vm->currentModule->fields, value);
+                        indexMapSet(vm, &vm->currentModule->valIndexes, klass->name, vm->currentModule->valFields.count);
+                        valueArrayWrite(vm, &vm->currentModule->valFields, value);
                     }
                 }
                 else if (IS_NAMESPACE(value)) {
                     ObjNamespace* namespace = AS_NAMESPACE(value);
-                    if (indexMapGet(&vm->currentModule->indexes, namespace->shortName, &index)) {
-                        vm->currentModule->fields.values[index] = value;
+                    if (indexMapGet(&vm->currentModule->valIndexes, namespace->shortName, &index)) {
+                        vm->currentModule->valFields.values[index] = value;
                     }
                     else {
-                        indexMapSet(vm, &vm->currentModule->indexes, namespace->shortName, vm->currentModule->fields.count);
-                        valueArrayWrite(vm, &vm->currentModule->fields, value);
+                        indexMapSet(vm, &vm->currentModule->valIndexes, namespace->shortName, vm->currentModule->valFields.count);
+                        valueArrayWrite(vm, &vm->currentModule->valFields, value);
                     }
                 }
                 else RUNTIME_ERROR("Only classes, traits and namespaces may be imported.");

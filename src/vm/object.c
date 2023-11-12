@@ -122,14 +122,14 @@ ObjModule* newModule(VM* vm, ObjString* path) {
     ObjModule* module = ALLOCATE_OBJ(ObjModule, OBJ_MODULE, NULL);
     module->path = path;
     module->isNative = false;
-    initIndexMap(&module->indexes);
-    initValueArray(&module->fields);
+    initIndexMap(&module->valIndexes);
+    initValueArray(&module->valFields);
 
     for (int i = 0; i < vm->langNamespace->values.capacity; i++) {
         Entry* entry = &vm->langNamespace->values.entries[i];
         if (entry->key != NULL) {
-            indexMapSet(vm, &module->indexes, entry->key, module->fields.count);
-            valueArrayWrite(vm, &module->fields, entry->value);
+            indexMapSet(vm, &module->valIndexes, entry->key, module->valFields.count);
+            valueArrayWrite(vm, &module->valFields, entry->value);
         }
     }
     tableSet(vm, &vm->modules, path, NIL_VAL);
