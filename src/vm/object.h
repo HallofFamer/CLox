@@ -169,6 +169,8 @@ typedef struct {
     bool isNative;
     IndexMap valIndexes;
     ValueArray valFields;
+    IndexMap varIndexes;
+    ValueArray varFields;
 } ObjModule;
 
 typedef struct ObjUpvalue {

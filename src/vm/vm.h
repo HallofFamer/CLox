@@ -81,9 +81,6 @@ struct VM {
     Table namespaces;
     Table modules;
     Table strings;
-
-    IndexMap indexes;
-    ValueArray globals;
     ShapeTree shapes;
 
     ObjString* initString;

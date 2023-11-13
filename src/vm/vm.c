@@ -157,9 +157,6 @@ void initVM(VM* vm) {
     initTable(&vm->namespaces);
     initTable(&vm->modules);
     initTable(&vm->strings);
-
-    initIndexMap(&vm->indexes);
-    initValueArray(&vm->globals);
     initShapeTree(vm);
     vm->initString = NULL;
     vm->initString = copyString(vm, "init", 4);
@@ -177,9 +174,6 @@ void freeVM(VM* vm) {
     freeTable(vm, &vm->modules);
     freeTable(vm, &vm->classes);
     freeTable(vm, &vm->strings);
-
-    freeIndexMap(vm, &vm->indexes);
-    freeValueArray(vm, &vm->globals);
     freeShapeTree(vm, &vm->shapes);
     vm->initString = NULL;
     freeObjects(vm);
@@ -552,11 +546,11 @@ static bool loadGlobalVariable(VM* vm, Chunk* chunk, uint8_t byte, Value* value)
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     int index;
-    if (indexMapGet(&vm->indexes, name, &index)) {
+    if (indexMapGet(&vm->currentModule->varIndexes, name, &index)) {
 #ifdef DEBUG_TRACE_CACHE
         printf("Cache miss for getting mutable global variable: '%s' at index %d.\n", name->chars, inlineCache->index);
 #endif 
-        *value = vm->globals.values[index];
+        *value = vm->currentModule->varFields.values[index];
         writeInlineCache(inlineCache, CACHE_GVAR, (int)byte, index);
         return true;
     }
@@ -587,7 +581,7 @@ static bool loadGlobalFromCache(VM* vm, Chunk* chunk, uint8_t byte, Value* value
 #ifdef DEBUG_TRACE_CACHE
                 printf("Cache hit for getting mutable global variable: '%s' at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->index);
 #endif 
-                *value = vm->globals.values[inlineCache->index];
+                *value = vm->currentModule->varFields.values[inlineCache->index];
                 return true;
             }
             default: 
@@ -918,12 +912,12 @@ InterpretResult run(VM* vm) {
                 ObjString* name = READ_STRING();
                 Value value = peek(vm, 0);
                 int index;
-                if (indexMapGet(&vm->indexes, name, &index)) {
-                    vm->globals.values[index] = value;
+                if (indexMapGet(&vm->currentModule->varIndexes, name, &index)) {
+                    vm->currentModule->varFields.values[index] = value;
                 }
                 else {
-                    indexMapSet(vm, &vm->indexes, name, vm->globals.count);
-                    valueArrayWrite(vm, &vm->globals, value);
+                    indexMapSet(vm, &vm->currentModule->varIndexes, name, vm->currentModule->varFields.count);
+                    valueArrayWrite(vm, &vm->currentModule->varFields, value);
                 }
                 pop(vm);
                 break;
@@ -942,7 +936,7 @@ InterpretResult run(VM* vm) {
                 ObjString* name = READ_STRING();
                 Value value = peek(vm, 0);
                 int index;
-                if (indexMapGet(&vm->indexes, name, &index)) vm->globals.values[index] = value;
+                if (indexMapGet(&vm->currentModule->varIndexes, name, &index)) vm->currentModule->varFields.values[index] = value;
                 else RUNTIME_ERROR("Undefined variable '%s'.", name->chars);
                 break;
             }

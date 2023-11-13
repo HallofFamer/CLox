@@ -124,6 +124,8 @@ ObjModule* newModule(VM* vm, ObjString* path) {
     module->isNative = false;
     initIndexMap(&module->valIndexes);
     initValueArray(&module->valFields);
+    initIndexMap(&module->varIndexes);
+    initValueArray(&module->varFields);
 
     for (int i = 0; i < vm->langNamespace->values.capacity; i++) {
         Entry* entry = &vm->langNamespace->values.entries[i];
