@@ -17,22 +17,11 @@ void freeIndexMap(VM* vm, IndexMap* indexMap) {
 
 static IndexEntry* findIndexEntry(IndexEntry* entries, int capacity, ObjString* key) {
     uint32_t index = key->hash & (capacity - 1);
-    IndexEntry* tombstone = NULL;
-
     for (;;) {
         IndexEntry* entry = &entries[index];
-        if (entry->key == NULL) {
-            if (entry->value == -1) {
-                return tombstone != NULL ? tombstone : entry;
-            }
-            else {
-                if (tombstone == NULL) tombstone = entry;
-            }
-        }
-        else if (entry->key == key) {
+        if (entry->key == key || entry->key == NULL) {
             return entry;
         }
-
         index = (index + 1) & (capacity - 1);
     }
 }
@@ -83,17 +72,6 @@ bool indexMapSet(VM* vm, IndexMap* indexMap, ObjString* key, int index) {
     entry->key = key;
     entry->value = index;
     return isNewKey;
-}
-
-bool indexMapDelete(IndexMap* indexMap, ObjString* key) {
-    if (indexMap->count == 0) return false;
-
-    IndexEntry* entry = findIndexEntry(indexMap->entries, indexMap->capacity, key);
-    if (entry->key == NULL) return false;
-
-    entry->key = NULL;
-    entry->value = -2;
-    return true;
 }
 
 void indexMapAddAll(VM* vm, IndexMap* from, IndexMap* to) {
