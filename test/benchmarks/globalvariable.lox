@@ -16,9 +16,6 @@ class Zoo {
 }
 
 val zoo = Zoo();
-//zoo.aardvark = 0;
-//zoo.aardvark = 1;
-
 var sum = 0;
 val start = clock();
 while (sum < 10000000) { 
