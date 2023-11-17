@@ -10,39 +10,49 @@ https://github.com/munificent/craftinginterpreters
 
 
 ## Features
-- Scanner, Parser and Single-Pass Compiler
-- Stacked based bytecote VM with the basic Op Code support
-- Unary and Binary Expression/Operators
-- If and Else condition Statement
-- Switch Condition Statement
-- While Loop, For Loop and Break Statement
-- Functions and Closures with automatic upvalue capture
-- Classes, Objects, Methods and `this` keyword
-- Single Inheritance and `super` keyword
-- Embeddable VM for CLox in other host applications(since version 1.1)
-- `Object` root class for every class in Lox(since version 1.1)
-- Framework for creating native functions, methods and classes(since version 1.1)
-- Print statement removed, use native function `print` and `println` instead(since version 1.1)
-- Improved Object Model - Everything is an object, and every object has a class(since version 1.2)
-- CLox Standard Library for packages `lang` and `util`(since version 1.2)
-- Customized Runtime configuration for CLox using clox.ini(since version 1.2)
-- Separated integer values and floating point values(since version 1.2)
-- Array/Dictionary Literals and square bracket notation for array/dictionary access(since version 1.3)
-- Variadic Functions, Anonymous Functions and Lambda Expressions(since version 1.3)
-- C style For Loop replaced with Kotlin style for-in Loop(since version 1.3)
-- Clox Standard Library for new packages `collection` and `io`(since version 1.3)
-- Immutable variable declaration with `val` keyword for global and local variables(since version 1.4)
-- Function/Method parameters become immutable by default, but may be mutable with `var` keyword(since version 1.4)
-- Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten(since version 1.4)
-- New class `Range` in package `util`, as well as range operator(`..`) for range literals(since version 1.4) 
-- Refined object model which is similar to Smalltalk's metaclass system(since version 1.5)
-- Class methods in class declaration, and `trait` keyword for trait declaration(since version 1.5)
-- Allow loading lox source files in lox script and another lox source file with `require` keyword(since version 1.5)
-- Anonymous classes/traits similar to anonymous functions/lambda(since version 1.5)
-- Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions(since version 1.6)
-- Refactor the existing standard library in `clox.std` namespace(since version 1.6)
-- Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible(since version 1.6)
-- Cross-platform build with Cmake and package manager with vcpkg(since version 1.6)
+
+### Original Features
+- Scanner, Parser and Single-Pass Compiler.
+- Stacked based bytecote VM with the basic Op Code support.
+- On-demand Scanner and Pratt Parser.
+- Uniform runtime representation for Lox Value. 
+- Basic Unary and Binary Expression/Operators.
+- Support for global and local variables.
+- If..Else and Switch condition Statement.
+- While Loop, Break and Continue Statement.
+- Functions and Closures with automatic upvalue capture.
+- Mark and sweep Garbage Collector.
+- Classes, Objects, Methods and `this` keyword.
+- Single Inheritance and `super` keyword.
+- Performance improvement with Faster hash table probing and Nan-Boxing.
+
+### New Features
+- Framework for creating native functions, methods and classes.
+- Array/Dictionary Literals and square bracket notation for array/dictionary access.
+- New Operators: Modulo(`%`), Range(`..`) and Nil Handling(`?.`, `??`, `?:`).
+- `Object` root class for every class in Lox, everything is an object, and every object has a class.
+- Refined object model which is similar to Smalltalk's metaclass system.
+- Class methods in class declaration, and `trait` keyword for trait declaration.
+- Anonymous classes/traits similar to anonymous functions/lambda.
+- Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
+- CLox Standard Library for packages `lang`, `util`, `collection`, `io` and `network` in bullt-in namespace `clox.std`.
+- Raise exception with `throw` keyword, and exception handling with try/catch/finally statement
+- Customized Runtime configuration for CLox using clox.ini.
+- Allow loading lox source files in lox script and another lox source file with `require` keyword.
+- Cross-platform build with Cmake and package manager with vcpkg.
+
+### Enhanced or Removed Features
+- VM is no longer a global variable, allowing CLox VM to be embedded in other host applications.
+- Parser is extended with look-ahead capability, with field next storing the next token. 
+- Print statement removed, use native function `print` and `println` instead.
+- Separated integer values and floating point values from Number.
+- C style For Loop replaced with Python/Kotlin style for-in Loop.
+- Global variables are scoped within the file it is declared, effectively becoming module variable.
+- Function/Method parameters become immutable by default, but may be mutable with `var` keyword.
+- Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten.
+- Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible.
+- Most runtime errors in VM interpreter loop replaced with Exceptions that can be caught at runtime.
+- Inline caching for VM optimization, as well as implementation of Shape(Hidden Class) for better instance variable representation.
 
 
 ## Roadmap
@@ -77,19 +87,19 @@ https://github.com/munificent/craftinginterpreters
 - Allow loading lox source files in lox script and another lox source file with `require` keyword. 
 - Anonymous classes/traits similar to anonymous functions/lambda.
 
-### CLox 1.6.0(current version)
+### CLox 1.6.0
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
 - Refactor the existing standard library with namespaces(in `clox.std` parent package), add new package `clox.std.network`.
 - Fix reentrancy problem with CLox, calling Lox closures from within C API becomes possible.
 - Cross-platform build with Cmake, as well as package manager with vcpkg(windows only).
 
-### CLox 1.7.0(upcoming version)
+### CLox 1.7.0(current version)
 - Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
 - Improved CLox standard library with addition of class `Exception` and various exception subclasses.
 - Addition of nil handling operators: Optional chaining operator(?.), Nil coalescing operator(??), and Elvis operator(?:). 
-- VM optimization for instance variable representations, and inline caching.
+- Inline caching for VM optimization, as well as implementation of Shape(Hidden Class) for better instance variable representation.
 
-### CLox 1.8.0
+### CLox 1.8.0(upcoming version)
 - Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
 - Improved string concatenation, addition of string interpolation and UTF-8 strings.
 - Method interception when an undefined method call is invoked on an object/class, similar to Smalltalk's doesNotUnderstand: message.
