@@ -1128,7 +1128,14 @@ InterpretResult run(VM* vm) {
                     int a = AS_INT(pop(vm));
                     push(vm, INT_VAL(a * b));
                 }
-                else BINARY_OP(NUMBER_VAL, *); 
+                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_OP(NUMBER_VAL, *);
+                else { 
+                    ObjString* operator = copyString(vm, "*", 1);
+                    if (!invokeOperator(vm, operator, true)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    frame = &vm->frames[vm->frameCount - 1];
+                }
                 break;
             }
             case OP_DIVIDE: 
@@ -1136,7 +1143,14 @@ InterpretResult run(VM* vm) {
                     ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.ArithmeticException");
                     throwException(vm, exceptionClass, "It is illegal to divide an integer by 0.");
                 }
-                else BINARY_OP(NUMBER_VAL, /); 
+                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_OP(NUMBER_VAL, /);
+                else { 
+                    ObjString* operator = copyString(vm, "/", 1);
+                    if (!invokeOperator(vm, operator, true)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    frame = &vm->frames[vm->frameCount - 1];
+                }
                 break;
             case OP_MODULO: {
                 if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
