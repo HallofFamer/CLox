@@ -275,6 +275,8 @@ static uint8_t SymbolConstant(Compiler* compiler, const char* message) {
         case TOKEN_IDENTIFIER:
         case TOKEN_PLUS:
         case TOKEN_MINUS:
+        case TOKEN_STAR:
+        case TOKEN_SLASH:
             advance(compiler->parser);
             return identifierConstant(compiler, &compiler->parser->previous);
         default:

@@ -215,21 +215,21 @@ struct ObjClass {
     Table methods;
 };
 
-struct ObjNamespace {
+typedef struct ObjNamespace {
     Obj obj;
     ObjString* shortName;
     ObjString* fullName;
     struct ObjNamespace* enclosing;
     bool isRoot;
     Table values;
-};
+} ObjNamespace;
 
-struct ObjNode {
+typedef struct ObjNode{
     Obj obj;
     Value element;
     struct ObjNode* prev;
     struct ObjNode* next;
-};
+} ObjNode;
 
 struct ObjString {
     Obj obj;
