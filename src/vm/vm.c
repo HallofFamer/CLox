@@ -514,6 +514,21 @@ static bool invoke(VM* vm, ObjString* name, int argCount) {
     return invokeFromClass(vm, getObjClass(vm, receiver), name, argCount);
 }
 
+static bool invokeOperator(VM* vm, ObjString* operator, bool isInfix) {
+    Value b = peek(vm, 0);
+    Value a = peek(vm, 1);
+    Value method;
+    ObjClass* aClass = getObjClass(vm, a);
+    int argCount = isInfix ? 1 : 0;
+
+    if (!tableGet(&aClass->methods, operator, &method)) {
+        ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.MethodNotFoundException");
+        throwException(vm, exceptionClass, "Undefined operator method '%s' on class %s.", operator->chars, aClass->fullName->chars);
+        return false;
+    }
+    return invoke(vm, operator, argCount);
+}
+
 static bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) {
@@ -1083,8 +1098,11 @@ InterpretResult run(VM* vm) {
                     push(vm, NUMBER_VAL(a + b));
                 }
                 else {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
-                    throwException(vm, exceptionClass, "Operands must be two numbers or two strings.");
+                    ObjString* operator = copyString(vm, "+", 1);
+                    if (!invokeOperator(vm, operator, true)) { 
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    frame = &vm->frames[vm->frameCount - 1];
                 }
                 break;
             }
@@ -1094,7 +1112,14 @@ InterpretResult run(VM* vm) {
                     int a = AS_INT(pop(vm));
                     push(vm, INT_VAL(a - b));
                 }
-                else BINARY_OP(NUMBER_VAL, -);
+                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_OP(NUMBER_VAL, -);
+                else { 
+                    ObjString* operator = copyString(vm, "-", 1);
+                    if (!invokeOperator(vm, operator, true)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    frame = &vm->frames[vm->frameCount - 1];
+                }
                 break;
             }
             case OP_MULTIPLY: {

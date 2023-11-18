@@ -1,0 +1,62 @@
+class Complex { 
+
+    init(real, imaginary){ 
+        this.real = real;
+        this.imaginary = imaginary;
+    }
+
+    isReal(){ 
+        return this.imaginary == 0;
+    }
+
+    +(that){
+        return this.getClass()(this.real + that.real, this.imaginary + that.imaginary);
+    } 
+
+    -(that){ 
+        return this.getClass()(this.real - that.real, this.imaginary - that.imaginary);
+    }
+
+    *(that){ 
+        val real = this.real * that.real - this.imaginary * that.imaginary;
+        val imaginary = this.real * that.imaginary + this.imaginary * that.real;
+        return this.getClass()(real, imaginary);
+    }
+
+    /(that){ 
+        val denominator = that.real * that.real + that.imaginary * that.imaginary;
+        val real = (this.real * that.real + this.imaginary * that.imaginary) / denominator;
+        val imaginary = (this.real * that.imaginary - this.imaginary * that.real) / denominator;
+        return this.getClass()(real, imaginary);
+    }
+
+    toString(){ 
+        if(this.real == 0){ 
+            if(this.imaginary == 0) return "0";
+            else return this.imaginary.toString() + "i";
+        }
+        else{ 
+            if(this.imaginary == 0) return this.real.toString();
+            else{ 
+                var iSign = "";
+                if(this.imaginary > 0) iSign = "+"; 
+                return this.real.toString() + iSign + this.imaginary.toString() + "i";
+            }
+        }
+    }
+}
+
+val c1 = Complex(3, 6);
+val c2 = Complex(1, 2);
+print("Creating complex number c1: ");
+println(c1.toString());
+print("Creating complex number c2: ");
+println(c2.toString());
+print("Computing c1 + c2: ");
+println((c1 + c2).toString());
+print("Computing c1 - c2: ");
+println((c1 - c2).toString());
+print("Computing c1 * c2: ");
+println((c1 * c2).toString());
+print("Computing c1 / c2: ");
+println((c1 / c2).toString());
