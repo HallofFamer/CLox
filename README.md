@@ -133,6 +133,14 @@ cmake --build ./build --config Release
 ./build/CLox
 ```
 
+#### Docker(Ubuntu)
+```
+git clone -b master https://github.com/HallofFamer/CLox.git
+cd CLox
+docker build -t clox:ubuntu -f Docker/UbuntuDockerfile .
+docker run -w /CLox-1.7.0/CLox -i -t clox:ubuntu
+```
+
 
 ## FAQ
 

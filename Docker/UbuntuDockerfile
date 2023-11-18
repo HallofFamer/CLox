@@ -1,0 +1,26 @@
+FROM ubuntu:latest
+
+WORKDIR CLox-1.7.0
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends build-essential \
+	&& apt-get update \
+	&& apt-get install -y --reinstall ca-certificates \
+	&& apt-get install -y --no-install-recommends git cmake libcurl4-gnutls-dev \
+	&& rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/HallofFamer/CLox.git
+
+RUN cd CLox \
+	&& mkdir build \
+	&& cmake -S . -B ./build \
+	&& cmake --build ./build --config Release \
+	&& ./build/CLox test/benchmarks/fibonacci.lox \
+    && cp build/CLox /usr/bin/ \
+    && rm -rf /var/lib/apt/lists/*    
+
+CMD ["CLox"]
+
+# To run the REPL from container, use this command: docker run -w /CLox-1.7.0/CLox -i -t clox:ubuntu
