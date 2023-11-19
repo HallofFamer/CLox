@@ -46,7 +46,7 @@ class Complex {
     }
 }
 
-val c1 = Complex(3, 6);
+val c1 = Complex(3, 8);
 val c2 = Complex(1, 2);
 print("Creating complex number c1: ");
 println(c1.toString());
