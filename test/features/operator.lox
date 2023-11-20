@@ -30,6 +30,18 @@ class Complex {
         return this.getClass()(real, imaginary);
     }
 
+    ==(that){ 
+        return (this.real == that.real) and (this.imaginary == that.imaginary);
+    }
+
+    >(that){ 
+        return (this.real.hypot(this.imaginary)) > (that.real.hypot(that.imaginary));
+    }
+
+    <(that){ 
+        return (this.real.hypot(this.imaginary)) < (that.real.hypot(that.imaginary));
+    }
+
     toString(){ 
         if(this.real == 0){ 
             if(this.imaginary == 0) return "0";
@@ -52,6 +64,12 @@ print("Creating complex number c1: ");
 println(c1.toString());
 print("Creating complex number c2: ");
 println(c2.toString());
+print("Comparing c1 == c2: ");
+println(c1 == c2);
+print("Comparing c1 > c2: ");
+println(c1 > c2);
+print("Comparing c1 < c2: ");
+println(c1 < c2);
 print("Computing c1 + c2: ");
 println((c1 + c2).toString());
 print("Computing c1 - c2: ");

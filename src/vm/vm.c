@@ -856,17 +856,19 @@ InterpretResult run(VM* vm) {
 #define READ_IDENTIFIER() (frame->closure->function->chunk.identifiers.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_IDENTIFIER())
 
-#define BINARY_OP(valueType, op) \
+
+#define BINARY_INT_OP(valueType, op) \
+    do {\
+        int b = AS_INT(pop(vm)); \
+        int a = AS_INT(pop(vm)); \
+        push(vm, INT_VAL(a op b)); \
+    } while (false)
+
+#define BINARY_NUMBER_OP(valueType, op) \
     do { \
-        if (!IS_NUMBER(peek(vm, 0)) || !IS_NUMBER(peek(vm, 1))) { \
-            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException"); \
-            throwException(vm, exceptionClass, "Operands must be numbers."); \
-        } \
-        else { \
-            double b = AS_NUMBER(pop(vm)); \
-            double a = AS_NUMBER(pop(vm)); \
-            push(vm, valueType(a op b)); \
-        } \
+        double b = AS_NUMBER(pop(vm)); \
+        double a = AS_NUMBER(pop(vm)); \
+        push(vm, valueType(a op b)); \
     } while (false)
 
 #define RUNTIME_ERROR(...) \
@@ -1072,31 +1074,44 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_EQUAL: {
-                Value b = pop(vm);
-                Value a = pop(vm);
-                push(vm, BOOL_VAL(valuesEqual(a, b)));
+                if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, ==);
+                else { 
+                    ObjString* operator = copyString(vm, "==", 2);
+                    if (!invokeOperator(vm, operator, true)) {
+                        Value b = pop(vm);
+                        Value a = pop(vm);
+                        push(vm, BOOL_VAL(a == b));
+                    }
+                    else frame = &vm->frames[vm->frameCount - 1];
+                }
                 break;
             }
             case OP_GREATER: 
-                BINARY_OP(BOOL_VAL, >); 
+                if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, >);
+                else { 
+                    ObjString* operator = copyString(vm, ">", 1);
+                    if (!invokeOperator(vm, operator, true)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    frame = &vm->frames[vm->frameCount - 1];
+                }
                 break;
             case OP_LESS: 
-                BINARY_OP(BOOL_VAL, <); 
+                if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, <);
+                else {
+                    ObjString* operator = copyString(vm, "<", 1);
+                    if (!invokeOperator(vm, operator, true)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    frame = &vm->frames[vm->frameCount - 1];
+                }
                 break;
             case OP_ADD: {
                 if (IS_STRING(peek(vm, 0)) && IS_STRING(peek(vm, 1))) {
-                     concatenate(vm);
+                    concatenate(vm);
                 }
-                else if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
-                    int b = AS_INT(pop(vm));
-                    int a = AS_INT(pop(vm));
-                    push(vm, INT_VAL(a + b));
-                }
-                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) {
-                    double b = AS_NUMBER(pop(vm));
-                    double a = AS_NUMBER(pop(vm));
-                    push(vm, NUMBER_VAL(a + b));
-                }
+                else if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, +);
+                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, +);
                 else {
                     ObjString* operator = copyString(vm, "+", 1);
                     if (!invokeOperator(vm, operator, true)) { 
@@ -1107,12 +1122,8 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_SUBTRACT: {
-                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
-                    int b = AS_INT(pop(vm));
-                    int a = AS_INT(pop(vm));
-                    push(vm, INT_VAL(a - b));
-                }
-                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_OP(NUMBER_VAL, -);
+                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, -);
+                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, -);
                 else { 
                     ObjString* operator = copyString(vm, "-", 1);
                     if (!invokeOperator(vm, operator, true)) {
@@ -1123,12 +1134,8 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_MULTIPLY: {
-                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
-                    int b = AS_INT(pop(vm));
-                    int a = AS_INT(pop(vm));
-                    push(vm, INT_VAL(a * b));
-                }
-                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_OP(NUMBER_VAL, *);
+                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, *);
+                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, *);
                 else { 
                     ObjString* operator = copyString(vm, "*", 1);
                     if (!invokeOperator(vm, operator, true)) {
@@ -1143,7 +1150,7 @@ InterpretResult run(VM* vm) {
                     ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.ArithmeticException");
                     throwException(vm, exceptionClass, "It is illegal to divide an integer by 0.");
                 }
-                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_OP(NUMBER_VAL, /);
+                else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, /);
                 else { 
                     ObjString* operator = copyString(vm, "/", 1);
                     if (!invokeOperator(vm, operator, true)) {
@@ -1153,19 +1160,18 @@ InterpretResult run(VM* vm) {
                 }
                 break;
             case OP_MODULO: {
-                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) {
-                    int b = AS_INT(pop(vm));
-                    int a = AS_INT(pop(vm));
-                    push(vm, INT_VAL(a % b));
-                }
+                if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, %);
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) {
                     double b = AS_NUMBER(pop(vm));
                     double a = AS_NUMBER(pop(vm));
                     push(vm, NUMBER_VAL(fmod(a, b)));
                 }
                 else {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
-                    throwException(vm, exceptionClass, "Operands must be two numbers.");
+                    ObjString* operator = copyString(vm, "%", 1);
+                    if (!invokeOperator(vm, operator, true)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    frame = &vm->frames[vm->frameCount - 1];
                 }
                 break;
             }
@@ -1528,7 +1534,8 @@ InterpretResult run(VM* vm) {
 #undef READ_CONSTANT
 #undef READ_IDENTIFIER
 #undef READ_STRING
-#undef BINARY_OP
+#undef BINARY_INT_OP
+#undef BINARY_NUMBER_OP
 #undef RUNTIME_ERROR
 }
 
