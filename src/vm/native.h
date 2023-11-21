@@ -13,6 +13,7 @@
 #define LOX_METHOD(className, name) static Value name##NativeMethodFor##className(VM* vm, Value receiver, int argCount, Value* args)
 #define DEF_FUNCTION(name, arity) defineNativeFunction(vm, #name, arity, name##NativeFunction)
 #define DEF_METHOD(klass, className, name, arity) defineNativeMethod(vm, klass, #name, arity, name##NativeMethodFor##className)
+#define DEF_OPERATOR(klass, className, symbol, name, arity) defineNativeMethod(vm, klass, #symbol, arity, name##NativeMethodFor##className)
 
 #define RETURN_VAL(value) return (value)
 #define RETURN_NIL return NIL_VAL

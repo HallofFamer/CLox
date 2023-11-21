@@ -532,6 +532,34 @@ LOX_METHOD(Int, upTo) {
     RETURN_NIL;
 }
 
+LOX_METHOD(Int, __add__) {
+    ASSERT_ARG_COUNT("Int::+(other)", 1);
+    ASSERT_ARG_TYPE("Int::+(other)", 0, Number);
+    if (IS_INT(args[0])) RETURN_INT((AS_INT(receiver) + AS_INT(args[0])));
+    else RETURN_NUMBER((AS_NUMBER(receiver) + AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Int, __subtract__) {
+    ASSERT_ARG_COUNT("Int::-(other)", 1);
+    ASSERT_ARG_TYPE("Int::-(other)", 0, Number);
+    if (IS_INT(args[0])) RETURN_INT((AS_INT(receiver) - AS_INT(args[0])));
+    else RETURN_NUMBER((AS_NUMBER(receiver) - AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Int, __multiply__) {
+    ASSERT_ARG_COUNT("Int::*(other)", 1);
+    ASSERT_ARG_TYPE("Int::*(other)", 0, Number);
+    if (IS_INT(args[0])) RETURN_INT((AS_INT(receiver) * AS_INT(args[0])));
+    else RETURN_NUMBER((AS_NUMBER(receiver) * AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Int, __modulo__) {
+    ASSERT_ARG_COUNT("Int::%(other)", 1);
+    ASSERT_ARG_TYPE("Int::%(other)", 0, Number);
+    if (IS_INT(args[0])) RETURN_INT((AS_INT(receiver) % AS_INT(args[0])));
+    else RETURN_NUMBER(fmod(AS_NUMBER(receiver), AS_NUMBER(args[0])));
+}
+
 LOX_METHOD(IntClass, parse) {
     ASSERT_ARG_COUNT("Int class::parse(intString)", 1);
     ASSERT_ARG_TYPE("Int class::parse(intString)", 0, String);
@@ -880,6 +908,54 @@ LOX_METHOD(Number, toString) {
     RETURN_STRING(chars, length);
 }
 
+LOX_METHOD(Number, __equal__) {
+    ASSERT_ARG_COUNT("Number::==(other)", 1);
+    ASSERT_ARG_TYPE("Number::==(other)", 0, Number);
+    RETURN_BOOL((AS_NUMBER(receiver) == AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Number, __greater__) {
+    ASSERT_ARG_COUNT("Number::>(other)", 1);
+    ASSERT_ARG_TYPE("Number::>(other)", 0, Number);
+    RETURN_BOOL((AS_NUMBER(receiver) > AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Number, __less__) {
+    ASSERT_ARG_COUNT("Number::<(other)", 1);
+    ASSERT_ARG_TYPE("Number::<(other)", 0, Number);
+    RETURN_BOOL((AS_NUMBER(receiver) < AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Number, __add__) { 
+    ASSERT_ARG_COUNT("Number::+(other)", 1);
+    ASSERT_ARG_TYPE("Number::+(other)", 0, Number);
+    RETURN_NUMBER((AS_NUMBER(receiver) + AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Number, __subtract__) {
+    ASSERT_ARG_COUNT("Number::-(other)", 1);
+    ASSERT_ARG_TYPE("Number::-(other)", 0, Number);
+    RETURN_NUMBER((AS_NUMBER(receiver) - AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Number, __multiply__) {
+    ASSERT_ARG_COUNT("Number::*(other)", 1);
+    ASSERT_ARG_TYPE("Number::*(other)", 0, Number);
+    RETURN_NUMBER((AS_NUMBER(receiver) * AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Number, __divide__) { 
+    ASSERT_ARG_COUNT("Number::/(other)", 1);
+    ASSERT_ARG_TYPE("Number::/(other)", 0, Number);
+    RETURN_NUMBER((AS_NUMBER(receiver) / AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Number, __modulo__) {
+    ASSERT_ARG_COUNT("Number::%(other)", 1);
+    ASSERT_ARG_TYPE("Number::%(other)", 0, Number);
+    RETURN_NUMBER(fmod(AS_NUMBER(receiver), AS_NUMBER(args[0])));
+}
+
 LOX_METHOD(NumberClass, parse) {
     ASSERT_ARG_COUNT("Number class::parse(numberString)", 1);
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
@@ -956,6 +1032,11 @@ LOX_METHOD(Object, memberOf) {
 LOX_METHOD(Object, toString) {
     ASSERT_ARG_COUNT("Object::toString()", 0);
     RETURN_STRING_FMT("<object %s>", AS_OBJ(receiver)->klass->name->chars);
+}
+
+LOX_METHOD(Object, __equal__) {
+    ASSERT_ARG_COUNT("Object::==(other)", 1);
+    RETURN_BOOL(receiver == args[0]);
 }
 
 LOX_METHOD(String, capitalize) {
@@ -1117,6 +1198,13 @@ LOX_METHOD(String, trim) {
     RETURN_OBJ(trimString(vm, AS_STRING(receiver)));
 }
 
+LOX_METHOD(String, __add__) {
+    ASSERT_ARG_COUNT("String::+(other)", 1);
+    ASSERT_ARG_TYPE("String::+(other)", 0, String);
+    RETURN_STRING_FMT("%s%s", AS_CSTRING(receiver), AS_CSTRING(args[0]));
+}
+
+
 LOX_METHOD(TComparable, compareTo) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
@@ -1247,6 +1335,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, instanceOf, 1);
     DEF_METHOD(vm->objectClass, Object, memberOf, 1);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
+    DEF_OPERATOR(vm->objectClass, Object, ==, __equal__, 1);
 
     ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
     inheritSuperclass(vm, behaviorClass, vm->objectClass);
@@ -1392,6 +1481,14 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, tan, 0);
     DEF_METHOD(vm->numberClass, Number, toInt, 0);
     DEF_METHOD(vm->numberClass, Number, toString, 0);
+    DEF_OPERATOR(vm->numberClass, Number, ==, __equal__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, >, __greater__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, <, __less__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, +, __add__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, -, __subtract__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, *, __multiply__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, /, __divide__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, %, __modulo__, 1);
 
     ObjClass* numberMetaclass = vm->numberClass->obj.klass;
     setClassProperty(vm, vm->numberClass, "infinity", NUMBER_VAL(INFINITY));
@@ -1416,6 +1513,10 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->intClass, Int, toOctal, 0);
     DEF_METHOD(vm->intClass, Int, toString, 0);
     DEF_METHOD(vm->intClass, Int, upTo, 2);
+    DEF_OPERATOR(vm->intClass, Int, +, __add__, 1);
+    DEF_OPERATOR(vm->intClass, Int, -, __subtract__, 1);
+    DEF_OPERATOR(vm->intClass, Int, *, __multiply__, 1);
+    DEF_OPERATOR(vm->intClass, Int, %, __modulo__, 1);
 
     ObjClass* intMetaclass = vm->intClass->obj.klass;
     setClassProperty(vm, vm->intClass, "max", INT_VAL(INT32_MAX));
@@ -1455,6 +1556,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->stringClass, String, toString, 0);
     DEF_METHOD(vm->stringClass, String, toUppercase, 0);
     DEF_METHOD(vm->stringClass, String, trim, 0);
+    DEF_OPERATOR(vm->stringClass, String, +, __add__, 1);
     bindStringClass(vm);
 
     vm->functionClass = defineNativeClass(vm, "Function");
