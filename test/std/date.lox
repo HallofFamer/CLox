@@ -10,14 +10,14 @@ println("");
 var birthday = Date.parse("1989-05-21");
 println("Birthday is: " + birthday.toString());
 println("Birthday's timestamp is: " + birthday.getTimestamp().toString());
-println("Birthday is before current Date: " + birthday.before(nowDate).toString());
+println("Birthday is before current Date: " + (birthday < nowDate).toString());
 println("Converting birthday to DateTime: " + birthday.toDateTime().toString());
 println("");
 
 var nowDateTime = DateTime.now;
 println("Current DateTime is: " + nowDateTime.toString());
 println("Current DateTime's timestamp is: " + nowDateTime.getTimestamp().toString());
-println("Birthday is after current DateTime: " + birthday.toDateTime().after(nowDateTime).toString());
+println("Birthday is after current DateTime: " + (birthday.toDateTime() > nowDateTime).toString());
 println("Difference in sec(s) between current DateTime and birthday: " + nowDateTime.diff(birthday.toDateTime()).toString());
 println("");
 
@@ -33,10 +33,10 @@ println("");
 
 var duration2 = Duration.ofDays(1);
 println("Creating Duration 2: " + duration2.toString());
-println("Adding two durations: " + duration.plus(duration2).toString());
-println("Subtracting two durations: " + duration.minus(duration2).toString());
+println("Adding two durations: " + (duration + duration2).toString());
+println("Subtracting two durations: " + (duration - duration2).toString());
 
-println("Tomorrow Date: " + nowDate.plus(duration2).toString());
-println("Yesterday Date: " + nowDate.minus(duration2).toString());
-println("Adding duration to current DateTime: " + nowDateTime.plus(duration).toString());
-println("Subtracting duration from current DateTime: " + nowDateTime.minus(duration).toString());
+println("Tomorrow Date: " + (nowDate + duration2).toString());
+println("Yesterday Date: " + (nowDate - duration2).toString());
+println("Adding duration to current DateTime: " + (nowDateTime + duration).toString());
+println("Subtracting duration from current DateTime: " + (nowDateTime - duration).toString());

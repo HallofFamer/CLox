@@ -201,22 +201,6 @@ static bool uuidCheckString(ObjString* uuid) {
     return true;
 }
 
-LOX_METHOD(Date, after) {
-    ASSERT_ARG_COUNT("Date::after(date)", 1);
-    ASSERT_ARG_INSTANCE_OF("Date::after(date)", 0, clox.std.util.Date);
-    double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
-    double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
-    RETURN_BOOL(timestamp > timestamp2);
-}
-
-LOX_METHOD(Date, before) {
-    ASSERT_ARG_COUNT("Date::before(date)", 1);
-    ASSERT_ARG_INSTANCE_OF("Date::before(date)", 0, clox.std.util.Date);
-    double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
-    double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
-    RETURN_BOOL(timestamp < timestamp2);
-}
-
 LOX_METHOD(Date, compareTo) {
     ASSERT_ARG_COUNT("Date::compareTo(date)", 1);
     ASSERT_ARG_INSTANCE_OF("Date::compareTo(date)", 0, clox.std.util.Date);
@@ -253,24 +237,6 @@ LOX_METHOD(Date, init) {
     RETURN_OBJ(receiver);
 }
 
-LOX_METHOD(Date, minus) {
-    ASSERT_ARG_COUNT("Date::minus(duration)", 1);
-    ASSERT_ARG_INSTANCE_OF("Date::minus(duration)", 0, clox.std.util.Duration);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    double timestamp = dateObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
-    ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
-    RETURN_OBJ(date);
-}
-
-LOX_METHOD(Date, plus) {
-    ASSERT_ARG_COUNT("Date::plus(duration)", 1);
-    ASSERT_ARG_INSTANCE_OF("Date::plus(duration)", 0, clox.std.util.Duration);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    double timestamp = dateObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
-    ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
-    RETURN_OBJ(date);
-}
-
 LOX_METHOD(Date, toDateTime) {
     ASSERT_ARG_COUNT("Date::toDateTime()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -293,6 +259,48 @@ LOX_METHOD(Date, toString) {
     Value month = getObjProperty(vm, self, "month");
     Value day = getObjProperty(vm, self, "day");
     RETURN_STRING_FMT("%d-%02d-%02d", AS_INT(year), AS_INT(month), AS_INT(day));
+}
+
+LOX_METHOD(Date, __equal__) { 
+    ASSERT_ARG_COUNT("Date::==(date)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::==(date)", 0, clox.std.util.Date);
+    double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
+    double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+    RETURN_BOOL(timestamp == timestamp2);
+}
+
+LOX_METHOD(Date, __greater__) { 
+    ASSERT_ARG_COUNT("Date::>(date)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::>(date)", 0, clox.std.util.Date);
+    double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
+    double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+    RETURN_BOOL(timestamp > timestamp2);
+}
+
+LOX_METHOD(Date, __less__) {
+    ASSERT_ARG_COUNT("Date::<(date)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::<(date)", 0, clox.std.util.Date);
+    double timestamp = dateObjGetTimestamp(vm, AS_INSTANCE(receiver));
+    double timestamp2 = dateObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+    RETURN_BOOL(timestamp < timestamp2);
+}
+
+LOX_METHOD(Date, __add__) {
+    ASSERT_ARG_COUNT("Date::+(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::+(duration)", 0, clox.std.util.Duration);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    double timestamp = dateObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
+    RETURN_OBJ(date);
+}
+
+LOX_METHOD(Date, __subtract__) {
+    ASSERT_ARG_COUNT("Date::-(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Date::-(duration)", 0, clox.std.util.Duration);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    double timestamp = dateObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    ObjInstance* date = dateObjFromTimestamp(vm, self->obj.klass, timestamp);
+    RETURN_OBJ(date);
 }
 
 LOX_METHOD(DateClass, fromTimestamp) {
@@ -320,22 +328,6 @@ LOX_METHOD(DateClass, parse) {
     else {
         THROW_EXCEPTION(clox.std.util.DateFormatException, "Failed to parse Date from input string, please make sure the date has format YYYY-MM-DD.");
     }
-}
-
-LOX_METHOD(DateTime, after) {
-    ASSERT_ARG_COUNT("DateTime::after(dateTime)", 1);
-    ASSERT_ARG_INSTANCE_OF("DateTime::after(dateTime)", 0, clox.std.util.DateTime);
-    double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
-    double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
-    RETURN_BOOL(timestamp > timestamp2);
-}
-
-LOX_METHOD(DateTime, before) {
-    ASSERT_ARG_COUNT("DateTime::before(dateTime)", 1);
-    ASSERT_ARG_INSTANCE_OF("DateTime::before(dateTime)", 0, clox.std.util.DateTime);
-    double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
-    double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
-    RETURN_BOOL(timestamp < timestamp2);
 }
 
 LOX_METHOD(DateTime, compareTo) {
@@ -380,24 +372,6 @@ LOX_METHOD(DateTime, init) {
     RETURN_OBJ(receiver);
 }
 
-LOX_METHOD(DateTime, minus) {
-    ASSERT_ARG_COUNT("DateTime::minus(duration)", 1);
-    ASSERT_ARG_INSTANCE_OF("DateTime::minus(duration)", 0, clox.std.util.Duration);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    double timestamp = dateTimeObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
-    ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
-    RETURN_OBJ(dateTime);
-}
-
-LOX_METHOD(DateTime, plus) {
-    ASSERT_ARG_COUNT("DateTime::plus(duration)", 1);
-    ASSERT_ARG_INSTANCE_OF("DateTime::plus(duration)", 0, clox.std.util.Duration);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    double timestamp = dateTimeObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
-    ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
-    RETURN_OBJ(dateTime);
-}
-
 LOX_METHOD(DateTime, toDate) {
     ASSERT_ARG_COUNT("DateTime::toDate()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -421,6 +395,49 @@ LOX_METHOD(DateTime, toString) {
     Value second = getObjProperty(vm, self, "second");
     RETURN_STRING_FMT("%d-%02d-%02d %02d:%02d:%02d", AS_INT(year), AS_INT(month), AS_INT(day), AS_INT(hour), AS_INT(minute), AS_INT(second));
 }
+
+LOX_METHOD(DateTime, __equal__) {
+    ASSERT_ARG_COUNT("DateTime::==(dateTime)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::==(dateTime)", 0, clox.std.util.DateTime);
+    double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
+    double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+    RETURN_BOOL(timestamp == timestamp2);
+}
+
+LOX_METHOD(DateTime, __greater__) {
+    ASSERT_ARG_COUNT("DateTime::>(dateTime)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::>(dateTime)", 0, clox.std.util.DateTime);
+    double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
+    double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+    RETURN_BOOL(timestamp > timestamp2);
+}
+
+LOX_METHOD(DateTime, __less__) {
+    ASSERT_ARG_COUNT("DateTime::<(dateTime)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::<(dateTime)", 0, clox.std.util.DateTime);
+    double timestamp = dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver));
+    double timestamp2 = dateTimeObjGetTimestamp(vm, AS_INSTANCE(args[0]));
+    RETURN_BOOL(timestamp < timestamp2);
+}
+
+LOX_METHOD(DateTime, __add__) {
+    ASSERT_ARG_COUNT("DateTime::+(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::+(duration)", 0, clox.std.util.Duration);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    double timestamp = dateTimeObjGetTimestamp(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
+    RETURN_OBJ(dateTime);
+}
+
+LOX_METHOD(DateTime, __subtract__) {
+    ASSERT_ARG_COUNT("DateTime::-(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("DateTime::-(duration)", 0, clox.std.util.Duration);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    double timestamp = dateTimeObjGetTimestamp(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    ObjInstance* dateTime = dateTimeObjFromTimestamp(vm, self->obj.klass, timestamp);
+    RETURN_OBJ(dateTime);
+}
+
 
 LOX_METHOD(DateTimeClass, fromTimestamp) {
     ASSERT_ARG_COUNT("DateTime class::fromTimestamp(timestamp)", 1);
@@ -490,28 +507,6 @@ LOX_METHOD(Duration, init) {
     RETURN_OBJ(receiver);
 }
 
-LOX_METHOD(Duration, minus) {
-    ASSERT_ARG_COUNT("Duration::minus(duration)", 1);
-    ASSERT_ARG_INSTANCE_OF("Duration::minus(duration)", 0, clox.std.util.Duration);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    int duration[4];
-    durationFromSeconds(duration, durationTotalSeconds(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0])));
-    ObjInstance* object = newInstance(vm, self->obj.klass);
-    durationObjInit(vm, duration, object);
-    RETURN_OBJ(object);
-}
-
-LOX_METHOD(Duration, plus) {
-    ASSERT_ARG_COUNT("Duration::plus(duration)", 1);
-    ASSERT_ARG_INSTANCE_OF("Duration::plus(duration)", 0, clox.std.util.Duration);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    int duration[4];
-    durationFromSeconds(duration, durationTotalSeconds(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0])));
-    ObjInstance* object = newInstance(vm, self->obj.klass);
-    durationObjInit(vm, duration, object);
-    RETURN_OBJ(object);
-}
-
 LOX_METHOD(Duration, toString) {
     ASSERT_ARG_COUNT("Duration::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -520,6 +515,46 @@ LOX_METHOD(Duration, toString) {
     Value minutes = getObjProperty(vm, self, "minutes");
     Value seconds = getObjProperty(vm, self, "seconds");
     RETURN_STRING_FMT("%d days, %02d hours, %02d minutes, %02d seconds", AS_INT(days), AS_INT(hours), AS_INT(minutes), AS_INT(seconds));
+}
+
+LOX_METHOD(Duration, __equal__) {
+    ASSERT_ARG_COUNT("Duration::==(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Duration::==(duration)", 0, clox.std.util.Duration);   
+    RETURN_BOOL(durationTotalSeconds(vm, AS_INSTANCE(receiver)) == durationTotalSeconds(vm, AS_INSTANCE(args[0])));
+}
+
+LOX_METHOD(Duration, __greater__) {
+    ASSERT_ARG_COUNT("Duration::>(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Duration::>(duration)", 0, clox.std.util.Duration);
+    RETURN_BOOL(durationTotalSeconds(vm, AS_INSTANCE(receiver)) > durationTotalSeconds(vm, AS_INSTANCE(args[0])));
+}
+
+LOX_METHOD(Duration, __less__) {
+    ASSERT_ARG_COUNT("Duration::<(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Duration::<(duration)", 0, clox.std.util.Duration);
+    RETURN_BOOL(durationTotalSeconds(vm, AS_INSTANCE(receiver)) < durationTotalSeconds(vm, AS_INSTANCE(args[0])));
+}
+
+LOX_METHOD(Duration, __add__) {
+    ASSERT_ARG_COUNT("Duration::+(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Duration::+(duration)", 0, clox.std.util.Duration);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int duration[4];
+    durationFromSeconds(duration, durationTotalSeconds(vm, self) + durationTotalSeconds(vm, AS_INSTANCE(args[0])));
+    ObjInstance* object = newInstance(vm, self->obj.klass);
+    durationObjInit(vm, duration, object);
+    RETURN_OBJ(object);
+}
+
+LOX_METHOD(Duration, __subtract__) {
+    ASSERT_ARG_COUNT("Duration::-(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Duration::-(duration)", 0, clox.std.util.Duration);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int duration[4];
+    durationFromSeconds(duration, durationTotalSeconds(vm, self) - durationTotalSeconds(vm, AS_INSTANCE(args[0])));
+    ObjInstance* object = newInstance(vm, self->obj.klass);
+    durationObjInit(vm, duration, object);
+    RETURN_OBJ(object);
 }
 
 LOX_METHOD(DurationClass, ofDays) {
@@ -721,16 +756,17 @@ void registerUtilPackage(VM* vm) {
     ObjClass* dateClass = defineNativeClass(vm, "Date");
     bindSuperclass(vm, dateClass, vm->objectClass);
     bindTrait(vm, dateClass, comparableTrait);
-    DEF_METHOD(dateClass, Date, after, 1);
-    DEF_METHOD(dateClass, Date, before, 1);
     DEF_METHOD(dateClass, Date, compareTo, 1);
     DEF_METHOD(dateClass, Date, diff, 1);
     DEF_METHOD(dateClass, Date, getTimestamp, 0);
     DEF_METHOD(dateClass, Date, init, 3);
-    DEF_METHOD(dateClass, Date, minus, 1);
-    DEF_METHOD(dateClass, Date, plus, 1);
     DEF_METHOD(dateClass, Date, toDateTime, 0);
 	DEF_METHOD(dateClass, Date, toString, 0);
+    DEF_OPERATOR(dateClass, Date, ==, __equal__, 1);
+    DEF_OPERATOR(dateClass, Date, >, __greater__, 1);
+    DEF_OPERATOR(dateClass, Date, <, __less__, 1);
+    DEF_OPERATOR(dateClass, Date, +, __add__, 1);
+    DEF_OPERATOR(dateClass, Date, -, __subtract__, 1);
 
     ObjClass* dateMetaclass = dateClass->obj.klass;
     setClassProperty(vm, dateClass, "now", OBJ_VAL(dateObjNow(vm, dateClass)));
@@ -740,16 +776,17 @@ void registerUtilPackage(VM* vm) {
     ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
     bindSuperclass(vm, dateTimeClass, dateClass);
     bindTrait(vm, dateTimeClass, comparableTrait);
-    DEF_METHOD(dateTimeClass, DateTime, after, 1);
-    DEF_METHOD(dateTimeClass, DateTime, before, 1);
     DEF_METHOD(dateTimeClass, DateTime, compareTo, 1);
     DEF_METHOD(dateTimeClass, DateTime, diff, 1);
     DEF_METHOD(dateTimeClass, DateTime, getTimestamp, 0);
     DEF_METHOD(dateTimeClass, DateTime, init, 6);
-    DEF_METHOD(dateTimeClass, DateTime, minus, 1);
-    DEF_METHOD(dateTimeClass, DateTime, plus, 1);
     DEF_METHOD(dateTimeClass, DateTime, toDate, 0);
     DEF_METHOD(dateTimeClass, DateTime, toString, 0);
+    DEF_OPERATOR(dateTimeClass, DateTime, ==, __equal__, 1);
+    DEF_OPERATOR(dateTimeClass, DateTime, >, __greater__, 1);
+    DEF_OPERATOR(dateTimeClass, DateTime, <, __less__, 1);
+    DEF_OPERATOR(dateTimeClass, DateTime, +, __add__, 1);
+    DEF_OPERATOR(dateTimeClass, DateTime, -, __subtract__, 1);
 
     ObjClass* dateTimeMetaClass = dateTimeClass->obj.klass;
     setClassProperty(vm, dateTimeClass, "now", OBJ_VAL(dateTimeObjNow(vm, dateTimeClass)));
@@ -762,9 +799,12 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(durationClass, Duration, compareTo, 1);
     DEF_METHOD(durationClass, Duration, getTotalSeconds, 0);
     DEF_METHOD(durationClass, Duration, init, 4);
-    DEF_METHOD(durationClass, Duration, minus, 1);
-    DEF_METHOD(durationClass, Duration, plus, 1);
     DEF_METHOD(durationClass, Duration, toString, 0);
+    DEF_OPERATOR(durationClass, Duration, ==, __equal__, 1);
+    DEF_OPERATOR(durationClass, Duration, >, __greater__, 1);
+    DEF_OPERATOR(durationClass, Duration, <, __less__, 1);
+    DEF_OPERATOR(durationClass, Duration, +, __add__, 1);
+    DEF_OPERATOR(durationClass, Duration, -, __subtract__, 1);
 
     ObjClass* durationMetaclass = durationClass->obj.klass;
     DEF_METHOD(durationMetaclass, DurationClass, ofDays, 1);
