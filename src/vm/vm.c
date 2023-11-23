@@ -514,19 +514,17 @@ static bool invoke(VM* vm, ObjString* name, int argCount) {
     return invokeFromClass(vm, getObjClass(vm, receiver), name, argCount);
 }
 
-static bool invokeOperator(VM* vm, ObjString* operator, bool isInfix) {
-    Value b = peek(vm, 0);
-    Value a = peek(vm, 1);
+static bool invokeOperator(VM* vm, ObjString* op, int arity) {
+    Value receiver = peek(vm, arity);
+    ObjClass* klass = getObjClass(vm, receiver);
     Value method;
-    ObjClass* aClass = getObjClass(vm, a);
-    int argCount = isInfix ? 1 : 0;
 
-    if (!tableGet(&aClass->methods, operator, &method)) {
+    if (!tableGet(&klass->methods, op, &method)) {
         ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.MethodNotFoundException");
-        throwException(vm, exceptionClass, "Undefined operator method '%s' on class %s.", operator->chars, aClass->fullName->chars);
+        throwException(vm, exceptionClass, "Undefined operator method '%s' on class %s.", op->chars, klass->fullName->chars);
         return false;
     }
-    return invoke(vm, operator, argCount);
+    return invoke(vm, op, arity);
 }
 
 static bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
@@ -1035,8 +1033,11 @@ InterpretResult run(VM* vm) {
                     else push(vm, NIL_VAL);
                 }
                 else {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
-                    throwException(vm, exceptionClass, "Subscript must be integer or string.");
+                    ObjString* op = copyString(vm, "[]", 2);
+                    if (!invokeOperator(vm, op, 1)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    frame = &vm->frames[vm->frameCount - 1];
                 }
                 break;
             }
@@ -1061,7 +1062,13 @@ InterpretResult run(VM* vm) {
                     dictSet(vm, dictionary, key, value);
                     push(vm, OBJ_VAL(dictionary));
                 }
-                else RUNTIME_ERROR("Only Array and Dictionary can have subscripts.");
+                else { 
+                    ObjString* op = copyString(vm, "[]=", 3);
+                    if (!invokeOperator(vm, op, 2)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    frame = &vm->frames[vm->frameCount - 1];
+                }
                 break;
             }
             case OP_GET_SUPER: {
@@ -1076,8 +1083,8 @@ InterpretResult run(VM* vm) {
             case OP_EQUAL: {
                 if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, ==);
                 else { 
-                    ObjString* operator = copyString(vm, "==", 2);
-                    if (!invokeOperator(vm, operator, true)) {
+                    ObjString* op = copyString(vm, "==", 2);
+                    if (!invokeOperator(vm, op, 1)) {
                         Value b = pop(vm);
                         Value a = pop(vm);
                         push(vm, BOOL_VAL(a == b));
@@ -1089,8 +1096,8 @@ InterpretResult run(VM* vm) {
             case OP_GREATER: 
                 if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, >);
                 else { 
-                    ObjString* operator = copyString(vm, ">", 1);
-                    if (!invokeOperator(vm, operator, true)) {
+                    ObjString* op = copyString(vm, ">", 1);
+                    if (!invokeOperator(vm, op, 1)) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     frame = &vm->frames[vm->frameCount - 1];
@@ -1099,8 +1106,8 @@ InterpretResult run(VM* vm) {
             case OP_LESS: 
                 if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, <);
                 else {
-                    ObjString* operator = copyString(vm, "<", 1);
-                    if (!invokeOperator(vm, operator, true)) {
+                    ObjString* op = copyString(vm, "<", 1);
+                    if (!invokeOperator(vm, op, 1)) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     frame = &vm->frames[vm->frameCount - 1];
@@ -1113,8 +1120,8 @@ InterpretResult run(VM* vm) {
                 else if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, +);
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, +);
                 else {
-                    ObjString* operator = copyString(vm, "+", 1);
-                    if (!invokeOperator(vm, operator, true)) { 
+                    ObjString* op = copyString(vm, "+", 1);
+                    if (!invokeOperator(vm, op, 1)) { 
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     frame = &vm->frames[vm->frameCount - 1];
@@ -1125,8 +1132,8 @@ InterpretResult run(VM* vm) {
                 if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, -);
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, -);
                 else { 
-                    ObjString* operator = copyString(vm, "-", 1);
-                    if (!invokeOperator(vm, operator, true)) {
+                    ObjString* op = copyString(vm, "-", 1);
+                    if (!invokeOperator(vm, op, 1)) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     frame = &vm->frames[vm->frameCount - 1];
@@ -1137,8 +1144,8 @@ InterpretResult run(VM* vm) {
                 if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, *);
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, *);
                 else { 
-                    ObjString* operator = copyString(vm, "*", 1);
-                    if (!invokeOperator(vm, operator, true)) {
+                    ObjString* op = copyString(vm, "*", 1);
+                    if (!invokeOperator(vm, op, 1)) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     frame = &vm->frames[vm->frameCount - 1];
@@ -1152,8 +1159,8 @@ InterpretResult run(VM* vm) {
                 }
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, /);
                 else { 
-                    ObjString* operator = copyString(vm, "/", 1);
-                    if (!invokeOperator(vm, operator, true)) {
+                    ObjString* op = copyString(vm, "/", 1);
+                    if (!invokeOperator(vm, op, 1)) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     frame = &vm->frames[vm->frameCount - 1];
@@ -1167,8 +1174,8 @@ InterpretResult run(VM* vm) {
                     push(vm, NUMBER_VAL(fmod(a, b)));
                 }
                 else {
-                    ObjString* operator = copyString(vm, "%", 1);
-                    if (!invokeOperator(vm, operator, true)) {
+                    ObjString* op = copyString(vm, "%", 1);
+                    if (!invokeOperator(vm, op, 1)) {
                         return INTERPRET_RUNTIME_ERROR;
                     }
                     frame = &vm->frames[vm->frameCount - 1];

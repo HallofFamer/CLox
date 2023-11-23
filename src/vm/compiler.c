@@ -270,19 +270,29 @@ static bool identifiersEqual(Token* a, Token* b) {
     return memcmp(a->start, b->start, a->length) == 0;
 }
 
-static uint8_t SymbolConstant(Compiler* compiler, const char* message) {
+static uint8_t propertyConstant(Compiler* compiler, const char* message) {
     switch (compiler->parser->current.type) {
         case TOKEN_IDENTIFIER:
+        case TOKEN_EQUAL_EQUAL:
+        case TOKEN_GREATER:
+        case TOKEN_LESS:
         case TOKEN_PLUS:
         case TOKEN_MINUS:
         case TOKEN_STAR:
         case TOKEN_SLASH:
         case TOKEN_MODULO:
-        case TOKEN_EQUAL_EQUAL:
-        case TOKEN_GREATER:
-        case TOKEN_LESS:
             advance(compiler->parser);
             return identifierConstant(compiler, &compiler->parser->previous);
+        case TOKEN_LEFT_BRACKET:
+            advance(compiler->parser);
+            if (match(compiler->parser, TOKEN_RIGHT_BRACKET)) {
+                Token token = syntheticToken(match(compiler->parser, TOKEN_EQUAL) ? "[]=" : "[]");
+                return identifierConstant(compiler, &token);
+            }
+            else { 
+                errorAtCurrent(compiler->parser, message);
+                return -1;
+            }
         default:
             errorAtCurrent(compiler->parser, message);
             return -1;
@@ -511,7 +521,7 @@ static void call(Compiler* compiler, bool canAssign) {
 }
 
 static void dot(Compiler* compiler, bool canAssign) {
-    uint8_t name = SymbolConstant(compiler, "Expect property name after '.'.");
+    uint8_t name = propertyConstant(compiler, "Expect property name after '.'.");
 
     if (canAssign && match(compiler->parser, TOKEN_EQUAL)) {
         expression(compiler);
@@ -528,7 +538,7 @@ static void dot(Compiler* compiler, bool canAssign) {
 }
 
 static void qdot(Compiler* compiler, bool canAssign) {
-    uint8_t name = SymbolConstant(compiler, "Expect property name after '?.'.");
+    uint8_t name = propertyConstant(compiler, "Expect property name after '?.'.");
 
     if (match(compiler->parser, TOKEN_LEFT_PAREN)) {
         uint8_t argCount = argumentList(compiler);
@@ -908,7 +918,7 @@ static void function(Compiler* enclosing, FunctionType type) {
 
 static void method(Compiler* compiler) {
     uint8_t opCode = match(compiler->parser, TOKEN_CLASS) ? OP_CLASS_METHOD : OP_INSTANCE_METHOD;
-    uint8_t constant = SymbolConstant(compiler, "Expect method name.");
+    uint8_t constant = propertyConstant(compiler, "Expect method name.");
 
     FunctionType type = TYPE_METHOD;
     if (compiler->parser->previous.length == 4 && memcmp(compiler->parser->previous.start, "init", 4) == 0) {
