@@ -475,8 +475,17 @@ static bool callValue(VM* vm, Value callee, int argCount) {
                 break;
         }
     }
-    runtimeError(vm, "Can only call functions and classes.");
-    return false;
+
+    ObjClass* klass = getObjClass(vm, callee);
+    ObjString* name = copyString(vm, "()", 2);
+    Value method;
+    if (!tableGet(&klass->methods, name, &method)) { 
+        ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.MethodNotFoundException");
+        throwException(vm, exceptionClass, "Undefined operator method '%s' on class %s.", name->chars, klass->fullName->chars);
+        return false;
+    }
+    int arity = IS_NATIVE_METHOD(method) ? AS_NATIVE_METHOD(method)->arity : AS_CLOSURE(method)->function->arity;
+    return callMethod(vm, method, arity);
 }
 
 static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCount) {

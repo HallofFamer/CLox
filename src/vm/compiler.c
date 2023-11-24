@@ -293,6 +293,16 @@ static uint8_t propertyConstant(Compiler* compiler, const char* message) {
                 errorAtCurrent(compiler->parser, message);
                 return -1;
             }
+        case TOKEN_LEFT_PAREN:
+            advance(compiler->parser);
+            if (match(compiler->parser, TOKEN_RIGHT_PAREN)) {
+                Token token = syntheticToken("()");
+                return identifierConstant(compiler, &token);
+            }
+            else {
+                errorAtCurrent(compiler->parser, message);
+                return -1;
+            }
         default:
             errorAtCurrent(compiler->parser, message);
             return -1;
