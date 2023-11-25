@@ -863,7 +863,6 @@ InterpretResult run(VM* vm) {
 #define READ_IDENTIFIER() (frame->closure->function->chunk.identifiers.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_IDENTIFIER())
 
-
 #define BINARY_INT_OP(valueType, op) \
     do {\
         int b = AS_INT(pop(vm)); \
@@ -876,6 +875,15 @@ InterpretResult run(VM* vm) {
         double b = AS_NUMBER(pop(vm)); \
         double a = AS_NUMBER(pop(vm)); \
         push(vm, valueType(a op b)); \
+    } while (false)
+
+#define OVERLOAD_OP(op, arity) \
+    do { \
+        ObjString* opName = newString(vm, #op); \
+        if (!invokeOperator(vm, opName, arity)) { \
+            return INTERPRET_RUNTIME_ERROR; \
+        } \
+        frame = &vm->frames[vm->frameCount - 1]; \
     } while (false)
 
 #define RUNTIME_ERROR(...) \
@@ -1008,8 +1016,9 @@ InterpretResult run(VM* vm) {
             }
             case OP_GET_SUBSCRIPT: {
                 if (IS_INT(peek(vm, 0))) {
-                    int index = AS_INT(pop(vm));
+                    int index = AS_INT(peek(vm, 0));
                     if (IS_STRING(peek(vm, 0))) {
+                        pop(vm);
                         ObjString* string = AS_STRING(pop(vm));
                         if (index < 0 || index > string->length) {
                             ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
@@ -1022,6 +1031,7 @@ InterpretResult run(VM* vm) {
                         }
                     }
                     else if (IS_ARRAY(peek(vm, 0))) {
+                        pop(vm);
                         ObjArray* array = AS_ARRAY(pop(vm));
                         if (index < 0 || index > array->elements.count) {
                             ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
@@ -1032,7 +1042,7 @@ InterpretResult run(VM* vm) {
                             push(vm, element);
                         }
                     }
-                    else RUNTIME_ERROR("Only String or Array can have integer subscripts.");
+                    else OVERLOAD_OP([], 1);
                 }
                 else if (IS_DICTIONARY(peek(vm, 1))) {
                     Value key = pop(vm);
@@ -1041,13 +1051,7 @@ InterpretResult run(VM* vm) {
                     if (dictGet(dictionary, key, &value)) push(vm, value);
                     else push(vm, NIL_VAL);
                 }
-                else {
-                    ObjString* op = copyString(vm, "[]", 2);
-                    if (!invokeOperator(vm, op, 1)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    frame = &vm->frames[vm->frameCount - 1];
-                }
+                else OVERLOAD_OP([], 1);
                 break;
             }
             case OP_SET_SUBSCRIPT: {
@@ -1071,13 +1075,7 @@ InterpretResult run(VM* vm) {
                     dictSet(vm, dictionary, key, value);
                     push(vm, OBJ_VAL(dictionary));
                 }
-                else { 
-                    ObjString* op = copyString(vm, "[]=", 3);
-                    if (!invokeOperator(vm, op, 2)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    frame = &vm->frames[vm->frameCount - 1];
-                }
+                else OVERLOAD_OP([]=, 2);
                 break;
             }
             case OP_GET_SUPER: {
@@ -1104,23 +1102,11 @@ InterpretResult run(VM* vm) {
             }
             case OP_GREATER: 
                 if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, >);
-                else { 
-                    ObjString* op = copyString(vm, ">", 1);
-                    if (!invokeOperator(vm, op, 1)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    frame = &vm->frames[vm->frameCount - 1];
-                }
+                else OVERLOAD_OP(>, 1);
                 break;
             case OP_LESS: 
                 if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, <);
-                else {
-                    ObjString* op = copyString(vm, "<", 1);
-                    if (!invokeOperator(vm, op, 1)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    frame = &vm->frames[vm->frameCount - 1];
-                }
+                else OVERLOAD_OP(<, 1);
                 break;
             case OP_ADD: {
                 if (IS_STRING(peek(vm, 0)) && IS_STRING(peek(vm, 1))) {
@@ -1128,37 +1114,19 @@ InterpretResult run(VM* vm) {
                 }
                 else if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, +);
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, +);
-                else {
-                    ObjString* op = copyString(vm, "+", 1);
-                    if (!invokeOperator(vm, op, 1)) { 
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    frame = &vm->frames[vm->frameCount - 1];
-                }
+                else OVERLOAD_OP(+, 1);
                 break;
             }
             case OP_SUBTRACT: {
                 if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, -);
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, -);
-                else { 
-                    ObjString* op = copyString(vm, "-", 1);
-                    if (!invokeOperator(vm, op, 1)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    frame = &vm->frames[vm->frameCount - 1];
-                }
+                else OVERLOAD_OP(-, 1);
                 break;
             }
             case OP_MULTIPLY: {
                 if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, *);
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, *);
-                else { 
-                    ObjString* op = copyString(vm, "*", 1);
-                    if (!invokeOperator(vm, op, 1)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    frame = &vm->frames[vm->frameCount - 1];
-                }
+                else OVERLOAD_OP(*, 1);
                 break;
             }
             case OP_DIVIDE: 
@@ -1167,13 +1135,7 @@ InterpretResult run(VM* vm) {
                     throwException(vm, exceptionClass, "It is illegal to divide an integer by 0.");
                 }
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, /);
-                else { 
-                    ObjString* op = copyString(vm, "/", 1);
-                    if (!invokeOperator(vm, op, 1)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    frame = &vm->frames[vm->frameCount - 1];
-                }
+                else OVERLOAD_OP(/, 1);
                 break;
             case OP_MODULO: {
                 if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, %);
@@ -1182,13 +1144,7 @@ InterpretResult run(VM* vm) {
                     double a = AS_NUMBER(pop(vm));
                     push(vm, NUMBER_VAL(fmod(a, b)));
                 }
-                else {
-                    ObjString* op = copyString(vm, "%", 1);
-                    if (!invokeOperator(vm, op, 1)) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                    frame = &vm->frames[vm->frameCount - 1];
-                }
+                else OVERLOAD_OP(%, 1);
                 break;
             }
             case OP_NIL_COALESCING: { 
@@ -1366,10 +1322,7 @@ InterpretResult run(VM* vm) {
                     int a = AS_INT(pop(vm));
                     push(vm, OBJ_VAL(newRange(vm, a, b)));
                 }
-                else {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
-                    throwException(vm, exceptionClass, "Operands must be two integers.");
-                }
+                else OVERLOAD_OP(.., 1);
                 break;
             }
             case OP_REQUIRE: {
@@ -1552,6 +1505,7 @@ InterpretResult run(VM* vm) {
 #undef READ_STRING
 #undef BINARY_INT_OP
 #undef BINARY_NUMBER_OP
+#undef OVERLOAD_OP
 #undef RUNTIME_ERROR
 }
 

@@ -281,6 +281,7 @@ static uint8_t propertyConstant(Compiler* compiler, const char* message) {
         case TOKEN_STAR:
         case TOKEN_SLASH:
         case TOKEN_MODULO:
+        case TOKEN_DOT_DOT:
             advance(compiler->parser);
             return identifierConstant(compiler, &compiler->parser->previous);
         case TOKEN_LEFT_BRACKET:
