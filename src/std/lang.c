@@ -137,6 +137,10 @@ LOX_METHOD(Behavior, traits) {
     RETURN_OBJ(traits);
 }
 
+LOX_METHOD(Behavior, __invoke__) {
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot call from class Behavior.");
+}
+
 LOX_METHOD(Bool, clone) {
     ASSERT_ARG_COUNT("Bool::clone()", 0);
     RETURN_BOOL(receiver);
@@ -211,6 +215,11 @@ LOX_METHOD(BoundMethod, upvalueCount) {
     RETURN_INT(AS_BOUND_METHOD(receiver)->method->upvalueCount);
 }
 
+LOX_METHOD(BoundMethod, __invoke__) {
+    ObjBoundMethod* self = AS_BOUND_METHOD(receiver);
+    RETURN_VAL(callClosure(vm, self->method, argCount));
+}
+
 LOX_METHOD(Class, getField) {
     ASSERT_ARG_COUNT("Class::getField(field)", 1);
     ASSERT_ARG_TYPE("Class::getField(field)", 0, String);
@@ -275,6 +284,18 @@ LOX_METHOD(Class, toString) {
     ObjClass* self = AS_CLASS(receiver);
     if (self->namespace->isRoot) RETURN_STRING_FMT("<class %s>", self->name->chars);
     else RETURN_STRING_FMT("<class %s.%s>", self->namespace->fullName->chars, self->name->chars);
+}
+
+LOX_METHOD(Class, __invoke__) { 
+    ObjClass* self = AS_CLASS(receiver);
+    ObjInstance* instance = newInstance(vm, self);
+    push(vm, OBJ_VAL(instance));
+    Value initMethod;
+    if (tableGet(&self->methods, vm->initString, &initMethod)) {
+        callReentrant(vm, receiver, initMethod, args);
+    }
+    pop(vm);
+    RETURN_OBJ(instance);
 }
 
 LOX_METHOD(Exception, init) {
@@ -413,6 +434,19 @@ LOX_METHOD(Function, toString) {
 LOX_METHOD(Function, upvalueCount) {
     ASSERT_ARG_COUNT("Function::upvalueCount()", 0);
     RETURN_INT(AS_CLOSURE(receiver)->upvalueCount);
+}
+
+LOX_METHOD(Function, __invoke__) {
+    ObjClosure* self = AS_CLOSURE(receiver);
+    if (callClosure(vm, self, argCount)) {
+        int i = 0;
+        while (i < argCount) {
+            push(vm, args[i]);
+            i++;
+        }
+        RETURN_VAL(args[argCount - 1]);
+    }
+    RETURN_NIL;
 }
 
 LOX_METHOD(Int, abs) {
@@ -558,6 +592,12 @@ LOX_METHOD(Int, __modulo__) {
     ASSERT_ARG_TYPE("Int::%(other)", 0, Number);
     if (IS_INT(args[0])) RETURN_INT((AS_INT(receiver) % AS_INT(args[0])));
     else RETURN_NUMBER(fmod(AS_NUMBER(receiver), AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Int, __range__) { 
+    ASSERT_ARG_COUNT("Int::..(other)", 1);
+    ASSERT_ARG_TYPE("Int::..(other)", 0, Int);
+    RETURN_OBJ(newRange(vm, AS_INT(receiver), AS_INT(args[0])));
 }
 
 LOX_METHOD(IntClass, parse) {
@@ -1204,6 +1244,17 @@ LOX_METHOD(String, __add__) {
     RETURN_STRING_FMT("%s%s", AS_CSTRING(receiver), AS_CSTRING(args[0]));
 }
 
+LOX_METHOD(String, __getSubscript__) {
+    ASSERT_ARG_COUNT("String::[](index)", 1);
+    ASSERT_ARG_TYPE("String::[getChar]](index)", 0, Int);
+
+    ObjString* self = AS_STRING(receiver);
+    int index = AS_INT(args[0]);
+    ASSERT_INDEX_WITHIN_BOUNDS("String::[](index)", index, 0, self->length, 0);
+
+    char chars[2] = { self->chars[index], '\0' };
+    RETURN_STRING(chars, 1);
+}
 
 LOX_METHOD(TComparable, compareTo) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
@@ -1215,6 +1266,33 @@ LOX_METHOD(TComparable, equals) {
     else {
         Value result = callReentrant(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
         RETURN_BOOL(result == 0);
+    }
+}
+
+LOX_METHOD(TComparable, __equal__) {
+    ASSERT_ARG_COUNT("TComparable::==(other)", 1);
+    if (valuesEqual(receiver, args[0])) RETURN_TRUE;
+    else {
+        Value result = callReentrant(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
+        RETURN_BOOL(result > 0);
+    }
+}
+
+LOX_METHOD(TComparable, __greater__) { 
+    ASSERT_ARG_COUNT("TComparable::>(other)", 1);
+    if (valuesEqual(receiver, args[0])) RETURN_TRUE;
+    else {
+        Value result = callReentrant(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
+        RETURN_BOOL(result == 0);
+    }
+}
+
+LOX_METHOD(TComparable, __less__) {
+    ASSERT_ARG_COUNT("TComparable::<(other)", 1);
+    if (valuesEqual(receiver, args[0])) RETURN_TRUE;
+    else {
+        Value result = callReentrant(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
+        RETURN_BOOL(result < 0);
     }
 }
 
@@ -1350,6 +1428,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(behaviorClass, Behavior, methods, 0);
     DEF_METHOD(behaviorClass, Behavior, name, 0);
     DEF_METHOD(behaviorClass, Behavior, traits, 0);
+    DEF_OPERATOR(behaviorClass, Behavior, (), __invoke__, -1);
 
     vm->classClass = defineSpecialClass(vm, "Class", BEHAVIOR_CLASS);
     inheritSuperclass(vm, vm->classClass, behaviorClass);
@@ -1361,6 +1440,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->classClass, Class, memberOf, 1);
     DEF_METHOD(vm->classClass, Class, superclass, 0);
     DEF_METHOD(vm->classClass, Class, toString, 0);
+    DEF_OPERATOR(vm->classClass, Class, (), __invoke__, -1);
 
     vm->metaclassClass = defineSpecialClass(vm, "Metaclass", BEHAVIOR_METACLASS);
     inheritSuperclass(vm, vm->metaclassClass, behaviorClass);
@@ -1450,6 +1530,9 @@ void registerLangPackage(VM* vm) {
     ObjClass* comparableTrait = defineNativeTrait(vm, "TComparable");
     DEF_METHOD(comparableTrait, TComparable, compareTo, 1);
     DEF_METHOD(comparableTrait, TComparable, equals, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, ==, __equal__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, >, __greater__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, <, __less__, 1);
 
     vm->numberClass = defineNativeClass(vm, "Number");
     bindSuperclass(vm, vm->numberClass, vm->objectClass);
@@ -1517,6 +1600,7 @@ void registerLangPackage(VM* vm) {
     DEF_OPERATOR(vm->intClass, Int, -, __subtract__, 1);
     DEF_OPERATOR(vm->intClass, Int, *, __multiply__, 1);
     DEF_OPERATOR(vm->intClass, Int, %, __modulo__, 1);
+    DEF_OPERATOR(vm->intClass, Int, .., __range__, 1);
 
     ObjClass* intMetaclass = vm->intClass->obj.klass;
     setClassProperty(vm, vm->intClass, "max", INT_VAL(INT32_MAX));
@@ -1557,6 +1641,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->stringClass, String, toUppercase, 0);
     DEF_METHOD(vm->stringClass, String, trim, 0);
     DEF_OPERATOR(vm->stringClass, String, +, __add__, 1);
+    DEF_OPERATOR(vm->stringClass, String, [], __getSubscript__, 1);
     bindStringClass(vm);
 
     vm->functionClass = defineNativeClass(vm, "Function");
@@ -1574,6 +1659,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->functionClass, Function, name, 0);
     DEF_METHOD(vm->functionClass, Function, toString, 0);
     DEF_METHOD(vm->functionClass, Function, upvalueCount, 0);
+    DEF_OPERATOR(vm->functionClass, Function, (), __invoke__, -1);
 
     vm->boundMethodClass = defineNativeClass(vm, "BoundMethod");
     bindSuperclass(vm, vm->boundMethodClass, vm->objectClass);
@@ -1584,6 +1670,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->boundMethodClass, BoundMethod, receiver, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, toString, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, upvalueCount, 0);
+    DEF_OPERATOR(vm->boundMethodClass, BoundMethod, (), __invoke__, -1);
 
     vm->exceptionClass = defineNativeClass(vm, "Exception");
     bindSuperclass(vm, vm->exceptionClass, vm->objectClass);

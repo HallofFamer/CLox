@@ -12,7 +12,7 @@
 #include "../vm/value.h"
 #include "../vm/vm.h"
 
-ObjArray* arrayCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
+static ObjArray* arrayCopy(VM* vm, ValueArray elements, int fromIndex, int toIndex) {
     ObjArray* array = newArray(vm);
     push(vm, OBJ_VAL(array));
     for (int i = fromIndex; i < toIndex; i++) {
@@ -108,7 +108,7 @@ static int dictFindIndex(ObjDictionary* dict, Value key) {
     }
 }
 
-ObjString* dictToString(VM* vm, ObjDictionary* dict) {
+static ObjString* dictToString(VM* vm, ObjDictionary* dict) {
     if (dict->count == 0) return copyString(vm, "[]", 2);
     else {
         char string[UINT8_MAX] = "";
@@ -338,7 +338,7 @@ static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
     }
 }
 
-Value newCollection(VM* vm, ObjClass* klass) {
+static Value newCollection(VM* vm, ObjClass* klass) {
     switch (klass->obj.type) {
         case OBJ_ARRAY: return OBJ_VAL(newArray(vm));
         case OBJ_DICTIONARY: return OBJ_VAL(newDictionary(vm));
@@ -352,7 +352,7 @@ Value newCollection(VM* vm, ObjClass* klass) {
     }
 }
 
-ObjInstance* setCopy(VM* vm, ObjInstance* original) {
+static ObjInstance* setCopy(VM* vm, ObjInstance* original) {
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, original, "dict"));
     ObjDictionary* dict2 = newDictionary(vm);
     push(vm, OBJ_VAL(dict2));
@@ -364,7 +364,7 @@ ObjInstance* setCopy(VM* vm, ObjInstance* original) {
     return copied;
 }
 
-ObjString* setToString(VM* vm, ObjInstance* set) {
+static ObjString* setToString(VM* vm, ObjInstance* set) {
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, set, "dict"));
     if (dict->count == 0) return copyString(vm, "[]", 2);
     else {
@@ -630,6 +630,26 @@ LOX_METHOD(Array, slice) {
 LOX_METHOD(Array, toString) {
     ASSERT_ARG_COUNT("Array::toString()", 0);
     RETURN_OBJ(valueArrayToString(vm, &AS_ARRAY(receiver)->elements));
+}
+
+LOX_METHOD(Array, __getSubscript__) {
+    ASSERT_ARG_COUNT("Array::[](index)", 1);
+    ASSERT_ARG_TYPE("Array::[](index)", 0, Int);
+    ObjArray* self = AS_ARRAY(receiver);
+    int index = AS_INT(args[0]);
+    ASSERT_INDEX_WITHIN_BOUNDS("Array::[](index)", index, 0, self->elements.count - 1, 0);
+    RETURN_VAL(self->elements.values[index]);
+}
+
+LOX_METHOD(Array, __setSubscript__) {
+    ASSERT_ARG_COUNT("Array::[]=(index, element)", 2);
+    ASSERT_ARG_TYPE("Array::[]=(index, element)", 0, Int);
+    ObjArray* self = AS_ARRAY(receiver);
+    int index = AS_INT(args[0]);
+    ASSERT_INDEX_WITHIN_BOUNDS("Array::[]=(index, element)", index, 0, self->elements.count, 0);
+    self->elements.values[index] = args[1];
+    if (index == self->elements.count) self->elements.count++;
+    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(ArrayClass, fromElements) {
@@ -1091,6 +1111,20 @@ LOX_METHOD(Dictionary, valueSet) {
     ObjInstance* valueSet = newInstance(vm, getNativeClass(vm, "clox.std.collection.Set"));
     setObjProperty(vm, valueSet, "dict", OBJ_VAL(valueDict));
     RETURN_OBJ(valueSet);
+}
+
+LOX_METHOD(Dictionary, __getSubscript__) {
+    ASSERT_ARG_COUNT("Dictionary::[](key)", 1);
+    Value value;
+    bool valueExists = dictGet(AS_DICTIONARY(receiver), args[0], &value);
+    if (!valueExists) RETURN_NIL;
+    RETURN_VAL(value);
+}
+
+LOX_METHOD(Dictionary, __setSubscript__) {
+    ASSERT_ARG_COUNT("Dictionary::[]=(key, value)", 2);
+    if (!IS_NIL(args[0])) dictSet(vm, AS_DICTIONARY(receiver), args[0], args[1]);
+    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Entry, clone) {
@@ -2061,6 +2095,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->arrayClass, Array, select, 1);
     DEF_METHOD(vm->arrayClass, Array, slice, 2);
     DEF_METHOD(vm->arrayClass, Array, toString, 0);
+    DEF_OPERATOR(vm->arrayClass, Array, [], __getSubscript__, 1);
+    DEF_OPERATOR(vm->arrayClass, Array, []=, __setSubscript__, 2);
 
     ObjClass* arrayMetaclass = vm->arrayClass->obj.klass;
     DEF_METHOD(arrayMetaclass, ArrayClass, fromElements, -1);
@@ -2128,6 +2164,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, select, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, toString, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, valueSet, 0);
+    DEF_OPERATOR(vm->dictionaryClass, Dictionary, [], __getSubscript__, 1);
+    DEF_OPERATOR(vm->dictionaryClass, Dictionary, []=, __setSubscript__, 2);
 
     vm->entryClass = defineNativeClass(vm, "Entry");
     bindSuperclass(vm, vm->entryClass, vm->objectClass);
