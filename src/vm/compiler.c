@@ -1264,6 +1264,7 @@ static void switchStatement(Compiler* compiler) {
     }
 
     if (state == 1) {
+        caseEnds[caseCount++] = emitJump(compiler, OP_JUMP);
         patchJump(compiler, previousCaseSkip);
         emitByte(compiler, OP_POP);
     }
