@@ -1077,6 +1077,50 @@ InterpretResult run(VM* vm) {
                 else OVERLOAD_OP([]=, 2);
                 break;
             }
+            case OP_GET_SUBSCRIPT_OPTIONAL: {
+                if (IS_NIL(peek(vm, 1))) {
+                    pops(vm, 2);
+                    push(vm, NIL_VAL);
+                }
+                else if (IS_INT(peek(vm, 0))) {
+                    int index = AS_INT(peek(vm, 0));
+                    if (IS_STRING(peek(vm, 0))) {
+                        pop(vm);
+                        ObjString* string = AS_STRING(pop(vm));
+                        if (index < 0 || index > string->length) {
+                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
+                            throwException(vm, exceptionClass, "String index is out of bound: %d.", index);
+                        }
+                        else {
+                            char chars[2] = { string->chars[index], '\0' };
+                            ObjString* element = copyString(vm, chars, 1);
+                            push(vm, OBJ_VAL(element));
+                        }
+                    }
+                    else if (IS_ARRAY(peek(vm, 0))) {
+                        pop(vm);
+                        ObjArray* array = AS_ARRAY(pop(vm));
+                        if (index < 0 || index > array->elements.count) {
+                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
+                            throwException(vm, exceptionClass, "Array index is out of bound: %d.", index);
+                        }
+                        else {
+                            Value element = array->elements.values[index];
+                            push(vm, element);
+                        }
+                    }
+                    else OVERLOAD_OP([], 1);
+                }
+                else if (IS_DICTIONARY(peek(vm, 1))) {
+                    Value key = pop(vm);
+                    ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
+                    Value value;
+                    if (dictGet(dictionary, key, &value)) push(vm, value);
+                    else push(vm, NIL_VAL);
+                }
+                else OVERLOAD_OP([], 1);
+                break;
+            }
             case OP_GET_SUPER: {
                 ObjString* name = READ_STRING();
                 ObjClass* klass = AS_CLASS(pop(vm));

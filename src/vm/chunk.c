@@ -82,6 +82,7 @@ int opCodeOffset(Chunk* chunk, int ip) {
         case OP_GET_PROPERTY_OPTIONAL: return 2;
         case OP_GET_SUBSCRIPT: return 1;
         case OP_SET_SUBSCRIPT: return 1;
+        case OP_GET_SUBSCRIPT_OPTIONAL: return 1;
         case OP_GET_SUPER: return 2;
         case OP_EQUAL: return 1;
         case OP_GREATER: return 1;
