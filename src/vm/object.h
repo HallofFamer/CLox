@@ -8,6 +8,7 @@
 #include "common.h"
 #include "chunk.h"
 #include "index.h"
+#include "klass.h"
 #include "table.h"
 #include "value.h"
 
@@ -54,6 +55,8 @@
 #define AS_CRECORD(value, type)     ((type*)((ObjRecord*)AS_OBJ(value)->data))
 #define AS_CSTRING(value)           (((ObjString*)AS_OBJ(value))->chars)
 
+#define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass)
+
 typedef enum {
     OBJ_ARRAY,
     OBJ_BOUND_METHOD,
@@ -76,12 +79,6 @@ typedef enum {
     OBJ_UPVALUE,
     OBJ_VOID
 } ObjType;
-
-typedef enum {
-    BEHAVIOR_CLASS,
-    BEHAVIOR_METACLASS,
-    BEHAVIOR_TRAIT
-} BehaviorType;
 
 struct Obj {
     ObjType type;
@@ -258,23 +255,10 @@ ObjRange* newRange(VM* vm, int from, int to);
 ObjRecord* newRecord(VM* vm, void* data);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 
-ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior);
-ObjClass* createTrait(VM* vm, ObjString* name);
-ObjClass* getObjClass(VM* vm, Value value);
-bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);
-bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass);
-bool isClassImplementingTrait(ObjClass* trait, ObjClass* klass);
-void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
-void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass);
-void implementTraits(VM* vm, ObjClass* klass, ValueArray* traits);
-void bindTrait(VM* vm, ObjClass* klass, ObjClass* trait);
-void bindTraits(VM* vm, int numTraits, ObjClass* klass, ...);
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
 void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* name);
 void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject);
-Value getClassProperty(VM* vm, ObjClass* klass, char* name);
-void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value);
 Value getObjMethod(VM* vm, Value object, char* name);
 void printObject(Value value);
 
