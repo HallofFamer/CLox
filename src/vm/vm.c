@@ -484,8 +484,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
         throwException(vm, exceptionClass, "Undefined operator method '%s' on class %s.", name->chars, klass->fullName->chars);
         return false;
     }
-    int arity = IS_NATIVE_METHOD(method) ? AS_NATIVE_METHOD(method)->arity : AS_CLOSURE(method)->function->arity;
-    return callMethod(vm, method, arity);
+    return callMethod(vm, method, argCount);
 }
 
 static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
