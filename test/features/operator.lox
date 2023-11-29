@@ -47,13 +47,11 @@ class Complex {
             if(this.imaginary == 0) return "0";
             else return this.imaginary.toString() + "i";
         }
+        else if(this.imaginary == 0) return this.real.toString();
         else{ 
-            if(this.imaginary == 0) return this.real.toString();
-            else{ 
-                var iSign = "";
-                if(this.imaginary > 0) iSign = "+"; 
-                return this.real.toString() + iSign + this.imaginary.toString() + "i";
-            }
+            var iSign = "";
+            if(this.imaginary > 0) iSign = "+"; 
+            return this.real.toString() + iSign + this.imaginary.toString() + "i";
         }
     }
 }
