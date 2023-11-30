@@ -571,6 +571,10 @@ static void question(Compiler* compiler, bool canAssign) {
         consume(compiler->parser, TOKEN_RIGHT_BRACKET, "Expect ']' after subscript.");
         emitByte(compiler, OP_GET_SUBSCRIPT_OPTIONAL);
     }
+    else if (match(compiler->parser, TOKEN_LEFT_PAREN)) {
+        uint8_t argCount = argumentList(compiler);
+        emitBytes(compiler, OP_OPTIONAL_CALL, argCount);
+    }
     else if (match(compiler->parser, TOKEN_QUESTION)) {
         PARSE_PRECEDENCE();
         emitByte(compiler, OP_NIL_COALESCING);

@@ -43,6 +43,7 @@ typedef enum {
     OP_JUMP_IF_EMPTY,
     OP_LOOP,
     OP_CALL,
+    OP_OPTIONAL_CALL,
     OP_INVOKE,
     OP_SUPER_INVOKE,
     OP_OPTIONAL_INVOKE,

@@ -1241,6 +1241,19 @@ InterpretResult run(VM* vm) {
                 frame = &vm->frames[vm->frameCount - 1];
                 break;
             }
+            case OP_OPTIONAL_CALL: {
+                uint8_t argCount = READ_BYTE();
+                Value callee = peek(vm, argCount);
+                if (IS_NIL(callee)) {
+                    vm->stackTop -= (size_t)argCount + 1;
+                    push(vm, NIL_VAL);
+                }
+                else if (!callValue(vm, peek(vm, argCount), argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm->frames[vm->frameCount - 1];
+                break;
+            }
             case OP_INVOKE: {
                 Value receiver = peek(vm, 0);
                 ObjString* method = READ_STRING();
