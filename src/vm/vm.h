@@ -90,6 +90,7 @@ struct VM {
     size_t bytesAllocated;
     size_t nextGC;
     Obj* objects;
+    uint64_t objectIndex;
 
     int grayCount;
     int grayCapacity;

@@ -7,6 +7,7 @@
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     Obj* object = (Obj*)reallocate(vm, NULL, 0, size);
+    object->id = 0;
     object->type = type;
     object->klass = klass;
     object->isMarked = false;

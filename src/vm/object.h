@@ -81,6 +81,7 @@ typedef enum {
 } ObjType;
 
 struct Obj {
+    uint64_t id;
     ObjType type;
     ObjClass* klass;
     bool isMarked;

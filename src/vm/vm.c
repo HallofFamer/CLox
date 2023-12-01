@@ -142,6 +142,7 @@ void initVM(VM* vm) {
     vm->currentCompiler = NULL;
     vm->currentClass = NULL;
     vm->objects = NULL;
+    vm->objectIndex = 1;
     vm->bytesAllocated = 0;
     vm->nextGC = vm->config.gcHeapSize;
 
