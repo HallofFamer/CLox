@@ -272,41 +272,41 @@ static bool identifiersEqual(Token* a, Token* b) {
 
 static uint8_t propertyConstant(Compiler* compiler, const char* message) {
     switch (compiler->parser->current.type) {
-    case TOKEN_IDENTIFIER:
-    case TOKEN_EQUAL_EQUAL:
-    case TOKEN_GREATER:
-    case TOKEN_LESS:
-    case TOKEN_PLUS:
-    case TOKEN_MINUS:
-    case TOKEN_STAR:
-    case TOKEN_SLASH:
-    case TOKEN_MODULO:
-    case TOKEN_DOT_DOT:
-        advance(compiler->parser);
-        return identifierConstant(compiler, &compiler->parser->previous);
-    case TOKEN_LEFT_BRACKET:
-        advance(compiler->parser);
-        if (match(compiler->parser, TOKEN_RIGHT_BRACKET)) {
-            Token token = syntheticToken(match(compiler->parser, TOKEN_EQUAL) ? "[]=" : "[]");
-            return identifierConstant(compiler, &token);
-        }
-        else {
+        case TOKEN_IDENTIFIER:
+        case TOKEN_EQUAL_EQUAL:
+        case TOKEN_GREATER:
+        case TOKEN_LESS:
+        case TOKEN_PLUS:
+        case TOKEN_MINUS:
+        case TOKEN_STAR:
+        case TOKEN_SLASH:
+        case TOKEN_MODULO:
+        case TOKEN_DOT_DOT:
+            advance(compiler->parser);
+            return identifierConstant(compiler, &compiler->parser->previous);
+        case TOKEN_LEFT_BRACKET:
+            advance(compiler->parser);
+            if (match(compiler->parser, TOKEN_RIGHT_BRACKET)) {
+                Token token = syntheticToken(match(compiler->parser, TOKEN_EQUAL) ? "[]=" : "[]");
+                return identifierConstant(compiler, &token);
+            }
+            else {
+                errorAtCurrent(compiler->parser, message);
+                return -1;
+            }
+        case TOKEN_LEFT_PAREN:
+            advance(compiler->parser);
+            if (match(compiler->parser, TOKEN_RIGHT_PAREN)) {
+                Token token = syntheticToken("()");
+                return identifierConstant(compiler, &token);
+            }
+            else {
+                errorAtCurrent(compiler->parser, message);
+                return -1;
+            }
+        default:
             errorAtCurrent(compiler->parser, message);
             return -1;
-        }
-    case TOKEN_LEFT_PAREN:
-        advance(compiler->parser);
-        if (match(compiler->parser, TOKEN_RIGHT_PAREN)) {
-            Token token = syntheticToken("()");
-            return identifierConstant(compiler, &token);
-        }
-        else {
-            errorAtCurrent(compiler->parser, message);
-            return -1;
-        }
-    default:
-        errorAtCurrent(compiler->parser, message);
-        return -1;
     }
 }
 
@@ -508,19 +508,19 @@ static void binary(Compiler* compiler, bool canAssign) {
     parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
 
     switch (operatorType) {
-    case TOKEN_BANG_EQUAL:        emitBytes(compiler, OP_EQUAL, OP_NOT); break;
-    case TOKEN_EQUAL_EQUAL:       emitByte(compiler, OP_EQUAL); break;
-    case TOKEN_GREATER:           emitByte(compiler, OP_GREATER); break;
-    case TOKEN_GREATER_EQUAL:     emitBytes(compiler, OP_LESS, OP_NOT); break;
-    case TOKEN_LESS:              emitByte(compiler, OP_LESS); break;
-    case TOKEN_LESS_EQUAL:        emitBytes(compiler, OP_GREATER, OP_NOT); break;
-    case TOKEN_PLUS:              emitByte(compiler, OP_ADD); break;
-    case TOKEN_MINUS:             emitByte(compiler, OP_SUBTRACT); break;
-    case TOKEN_STAR:              emitByte(compiler, OP_MULTIPLY); break;
-    case TOKEN_SLASH:             emitByte(compiler, OP_DIVIDE); break;
-    case TOKEN_MODULO:            emitByte(compiler, OP_MODULO); break;
-    case TOKEN_DOT_DOT:           emitByte(compiler, OP_RANGE); break;
-    default: return;
+        case TOKEN_BANG_EQUAL:        emitBytes(compiler, OP_EQUAL, OP_NOT); break;
+        case TOKEN_EQUAL_EQUAL:       emitByte(compiler, OP_EQUAL); break;
+        case TOKEN_GREATER:           emitByte(compiler, OP_GREATER); break;
+        case TOKEN_GREATER_EQUAL:     emitBytes(compiler, OP_LESS, OP_NOT); break;
+        case TOKEN_LESS:              emitByte(compiler, OP_LESS); break;
+        case TOKEN_LESS_EQUAL:        emitBytes(compiler, OP_GREATER, OP_NOT); break;
+        case TOKEN_PLUS:              emitByte(compiler, OP_ADD); break;
+        case TOKEN_MINUS:             emitByte(compiler, OP_SUBTRACT); break;
+        case TOKEN_STAR:              emitByte(compiler, OP_MULTIPLY); break;
+        case TOKEN_SLASH:             emitByte(compiler, OP_DIVIDE); break;
+        case TOKEN_MODULO:            emitByte(compiler, OP_MODULO); break;
+        case TOKEN_DOT_DOT:           emitByte(compiler, OP_RANGE); break;
+        default: return;
     }
 }
 
@@ -602,10 +602,10 @@ static void subscript(Compiler* compiler, bool canAssign) {
 
 static void literal(Compiler* compiler, bool canAssign) {
     switch (compiler->parser->previous.type) {
-    case TOKEN_FALSE: emitByte(compiler, OP_FALSE); break;
-    case TOKEN_NIL: emitByte(compiler, OP_NIL); break;
-    case TOKEN_TRUE: emitByte(compiler, OP_TRUE); break;
-    default: return;
+        case TOKEN_FALSE: emitByte(compiler, OP_FALSE); break;
+        case TOKEN_NIL: emitByte(compiler, OP_NIL); break;
+        case TOKEN_TRUE: emitByte(compiler, OP_TRUE); break;
+        default: return;
     }
 }
 
@@ -798,9 +798,9 @@ static void unary(Compiler* compiler, bool canAssign) {
     parsePrecedence(compiler, PREC_UNARY);
 
     switch (operatorType) {
-    case TOKEN_BANG: emitByte(compiler, OP_NOT); break;
-    case TOKEN_MINUS: emitByte(compiler, OP_NEGATE); break;
-    default: return;
+        case TOKEN_BANG: emitByte(compiler, OP_NOT); break;
+        case TOKEN_MINUS: emitByte(compiler, OP_NEGATE); break;
+        default: return;
     }
 }
 
@@ -811,7 +811,7 @@ ParseRule rules[] = {
     [TOKEN_RIGHT_BRACKET]    = {NULL,       NULL,        PREC_NONE},
     [TOKEN_LEFT_BRACE]       = {lambda,     NULL,        PREC_NONE},
     [TOKEN_RIGHT_BRACE]      = {NULL,       NULL,        PREC_NONE},
-    [TOKEN_COLON]            = {NULL,       NULL,        PREC_CALL},
+    [TOKEN_COLON]            = {NULL,       NULL,        PREC_NONE},
     [TOKEN_COMMA]            = {NULL,       NULL,        PREC_NONE},
     [TOKEN_MINUS]            = {unary,      binary,      PREC_TERM},
     [TOKEN_MODULO]           = {NULL,       binary,      PREC_FACTOR},

@@ -30,6 +30,7 @@ https://github.com/munificent/craftinginterpreters
 - Framework for creating native functions, methods and classes.
 - Array/Dictionary Literals and square bracket notation for array/dictionary access.
 - New Operators: Modulo(`%`), Range(`..`) and Nil Handling(`?.`, `??`, `?:`).
+- Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
 - `Object` root class for every class in Lox, everything is an object, and every object has a class.
 - Refined object model which is similar to Smalltalk's metaclass system.
 - Class methods in class declaration, and `trait` keyword for trait declaration.
@@ -99,7 +100,7 @@ https://github.com/munificent/craftinginterpreters
 - Addition of nil handling operators: Optional chaining operator(?.), Nil coalescing operator(??), and Elvis operator(?:). 
 - Inline caching for VM optimization, as well as implementation of Shape(Hidden Class) for better instance variable representation.
 
-### CLox 1.8.0(upcoming version)
+### CLox 1.8.0(next version)
 - Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
 - Improved string concatenation, addition of string interpolation and UTF-8 strings.
 - Method interception when an undefined method call is invoked on an object/class, similar to Smalltalk's doesNotUnderstand: message.
@@ -110,6 +111,12 @@ https://github.com/munificent/craftinginterpreters
 - Introduction of async and await keywords, which allows C#/JS style of concurrency.
 - Refactoring package `clox.std.io` and `clox.std.network` to use async non-blocking calls, add new package `clox.std.sql`.
 - First class execution context, possible to manipulate stack frames during function/method calls.
+
+### CLox 2.0.0
+- Multi-pass compiler with abstract syntax tree, type checker, and generation of IR. 
+- Optional static typing support for function/method parameters and return values, types only exist at compile time(erased at runtime). 
+- Semicolon inference as well as basic type inference for immutable local/global variables. 
+- Replace the naive mark and sweep GC with a generational GC which has multiple regions for objects of various 'ages'.  
 
 
 ## Build and Run Clox
@@ -133,12 +140,12 @@ cmake --build ./build --config Release
 ./build/CLox
 ```
 
-#### Docker(Ubuntu)
+#### Docker(linux, need to replace [$LinuxDockerfile] by actual docker file name, ie. UbuntuDockerfile)
 ```
 git clone -b master https://github.com/HallofFamer/CLox.git
 cd CLox
-docker build -t clox:ubuntu -f Docker/UbuntuDockerfile .
-docker run -w /CLox-1.7.0/CLox -i -t clox:ubuntu
+docker build -t clox:linux -f Docker/[$LinuxDockerfile] .
+docker run -w /CLox-1.8.0/CLox -i -t clox:linux
 ```
 
 
