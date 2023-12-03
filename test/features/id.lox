@@ -1,0 +1,29 @@
+namespace clox.test.features;
+using clox.std.util.Date;
+using clox.std.util.UUID;
+
+print("ID for nil: ");
+println(nil.objectID());
+print("ID for true: ");
+println(true.objectID());
+print("ID for false: ");
+println(false.objectID());
+println("");
+
+print("ID for 0: ");
+println(0.objectID());
+print("ID for 2: ");
+println(2.objectID());
+print("ID for 3.5: ");
+println(3.5.objectID());
+
+print("ID for string: ");
+println("Hello World".objectID());
+print("ID for array: ");
+println([1, 2, 3, 4, 5].objectID());
+println("");
+
+print("ID for object Date: ");
+println(Date.now.objectID());
+print("ID for object UUID: ");
+println(UUID.generate().objectID());

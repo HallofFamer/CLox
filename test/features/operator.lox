@@ -1,3 +1,5 @@
+namespace clox.test.features;
+
 class Complex { 
 
     init(real, imaginary){ 
