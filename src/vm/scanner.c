@@ -8,6 +8,7 @@ void initScanner(Scanner* scanner, const char* source) {
     scanner->start = source;
     scanner->current = source;
     scanner->line = 1;
+    scanner->interpolationDepth = 0;
 }
 
 static bool isAlpha(char c) {
@@ -34,6 +35,10 @@ static char peek(Scanner* scanner) {
 static char peekNext(Scanner* scanner) {
     if (isAtEnd(scanner)) return '\0';
     return scanner->current[1];
+}
+
+static char peekPrevious(Scanner* scanner) {
+    return scanner->current[-1];
 }
 
 static bool match(Scanner* scanner, char expected) {
@@ -254,6 +259,16 @@ static Token number(Scanner* scanner) {
 static Token string(Scanner* scanner) {
     while (peek(scanner) != '"' && !isAtEnd(scanner)) {
         if (peek(scanner) == '\n') scanner->line++;
+        else if (peek(scanner) == '$' && peekNext(scanner) == '{') {
+            if (scanner->interpolationDepth >= UINT4_MAX) {
+                return errorToken(scanner, "Interpolation may only nest 15 levels deep.");
+            }
+            scanner->interpolationDepth++;
+            advance(scanner);
+            Token token = makeToken(scanner, TOKEN_INTERPOLATION);
+            advance(scanner);
+            return token;
+        }
         advance(scanner);
     }
 
@@ -287,7 +302,12 @@ Token scanToken(Scanner* scanner) {
         case '[': return makeToken(scanner, TOKEN_LEFT_BRACKET);
         case ']': return makeToken(scanner, TOKEN_RIGHT_BRACKET);
         case '{': return makeToken(scanner, TOKEN_LEFT_BRACE);
-        case '}': return makeToken(scanner, TOKEN_RIGHT_BRACE);
+        case '}': 
+            if (scanner->interpolationDepth > 0) {
+                scanner->interpolationDepth--;
+                return string(scanner);
+            }
+            return makeToken(scanner, TOKEN_RIGHT_BRACE);
         case ';': return makeToken(scanner, TOKEN_SEMICOLON);
         case ':': return makeToken(scanner, TOKEN_COLON);
         case ',': return makeToken(scanner, TOKEN_COMMA);

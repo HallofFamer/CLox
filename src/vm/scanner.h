@@ -21,7 +21,7 @@ typedef enum {
     TOKEN_LESS, TOKEN_LESS_EQUAL,
     TOKEN_DOT, TOKEN_DOT_DOT,
     
-    TOKEN_IDENTIFIER, TOKEN_STRING, TOKEN_NUMBER, TOKEN_INT,
+    TOKEN_IDENTIFIER, TOKEN_STRING, TOKEN_INTERPOLATION, TOKEN_NUMBER, TOKEN_INT,
     
     TOKEN_AND, TOKEN_AS, TOKEN_BREAK, TOKEN_CASE, TOKEN_CATCH, TOKEN_CLASS,
     TOKEN_CONTINUE, TOKEN_DEFAULT, TOKEN_ELSE, TOKEN_FALSE, TOKEN_FINALLY, 
@@ -44,6 +44,7 @@ typedef struct {
     const char* start;
     const char* current;
     int line;
+    int interpolationDepth;
 } Scanner;
 
 void initScanner(Scanner* scanner, const char* source);
