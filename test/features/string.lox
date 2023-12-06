@@ -1,11 +1,20 @@
 namespace clox.test.features;
 using clox.std.util.DateTime;
 
-println("Testing string concatenation: ");
+println("Testing string concatenation...");
 println("Current time is: " + DateTime.now.toString());
-println("Testing simple string interpolation: ");
+println("Testing simple string interpolation...");
 val steep = 2;
 val cool = 3;
 println("Tea will be ready in ${steep + cool} minutes.");
-println("Testing nested string interpolation: ");
+println("Testing nested string interpolation...");
 println("Nested ${"interpolation?! Are you ${"mad?!"}"}");
+println("");
+
+println("Testing escaping characters...");
+println("Escaping new line: ");
+println("Line 1,\nLine 2.");
+println("Escaping backslash: ");
+println("8 \\ 2 = 4");
+println("Escaping double quote: ");
+println("She says \"Nice to meet you!\"");

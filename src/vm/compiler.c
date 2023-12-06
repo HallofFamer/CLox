@@ -635,8 +635,77 @@ static void or_(Compiler* compiler, bool canAssign) {
     patchJump(compiler, endJump);
 }
 
+static ObjString* parseString(Compiler* compiler) {
+    int maxLength = compiler->parser->previous.length - 2;
+    int length = 0;
+    const char* source = compiler->parser->previous.start + 1;
+    char* target = (char*)malloc(maxLength + 1);
+    if (target == NULL) {
+        fprintf(stderr, "Not enough memory to allocate string in compiler. \n");
+        exit(74);
+    }
+
+    int i = 0;
+    for (int i = 0; i < maxLength; i++) {
+        if (source[i] == '\\') {
+            switch (source[i + 1]) {
+                case 'a': {
+                    target[length++] = '\a';
+                    i++;
+                    break;
+                }
+                case 'b': {
+                    target[length++] = '\b';
+                    i++;
+                    break;
+                }
+                case 'f': {
+                    target[length++] = '\f';
+                    i++;
+                    break;
+                }
+                case 'n': {
+                    target[length++] = '\n';
+                    i++;
+                    break;
+                }
+                case 'r': {
+                    target[length++] = '\r';
+                    i++;
+                    break;
+                }
+                case 't': {
+                    target[length++] = '\t';
+                    i++;
+                    break;
+                }
+                case 'v': {
+                    target[length++] = '\v';
+                    i++;
+                    break;
+                }
+                case '"': {
+                    target[length++] = '"';
+                    i++;
+                    break;
+                }
+                case '\\': {
+                    target[length++] = '\\';
+                    i++;
+                    break;
+                }
+                default: target[length++] = source[i];
+            }
+        }
+        else target[length++] = source[i];
+    }
+    target = (char*)reallocate(compiler->parser->vm, target, (size_t)maxLength + 1, (size_t)length + 1);
+    target[length] = '\0';
+    return takeString(compiler->parser->vm, target, length);
+}
+
 static void string(Compiler* compiler, bool canAssign) {
-    emitConstant(compiler, OBJ_VAL(copyString(compiler->parser->vm, compiler->parser->previous.start + 1, compiler->parser->previous.length - 2)));
+    emitConstant(compiler, OBJ_VAL(parseString(compiler)));
 }
 
 static void interpolation(Compiler* compiler, bool canAssign) {
