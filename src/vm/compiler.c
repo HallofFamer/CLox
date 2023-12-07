@@ -635,11 +635,36 @@ static void or_(Compiler* compiler, bool canAssign) {
     patchJump(compiler, endJump);
 }
 
-static ObjString* parseString(Compiler* compiler) {
-    int maxLength = compiler->parser->previous.length - 2;
+static int parseHexDigit(Parser* parser, char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    
+    error(parser, "Invalid hex escape sequence.");
+    return -1;
+}
+
+static int parseHexEscape(Parser* parser, const char* source, int startIndex, int length) {
+    int value = 0;
+    for (int i = 0; i < length; i++) {
+        int index = startIndex + i;
+        if (source[index] == '"' || source[index] == '\0') {
+            error(parser, "Incomplete hex escape sequence.");
+            break;
+        }
+
+        int digit = parseHexDigit(parser, source[index]);
+        if (digit == -1) break;
+        value = (value * 16) | digit;
+    }
+    return value;
+}
+
+static ObjString* parseString(Parser* parser) {
+    int maxLength = parser->previous.length - 2;
     int length = 0;
-    const char* source = compiler->parser->previous.start + 1;
-    char* target = (char*)malloc(maxLength + 1);
+    const char* source = parser->previous.start + 1;
+    char* target = (char*)malloc((size_t)maxLength + 1);
     if (target == NULL) {
         fprintf(stderr, "Not enough memory to allocate string in compiler. \n");
         exit(74);
@@ -684,6 +709,12 @@ static ObjString* parseString(Compiler* compiler) {
                     i++;
                     break;
                 }
+                case 'x': {
+                    i += 2;
+                    target[length++] = parseHexEscape(parser, source, i, 2);
+                    i++;
+                    break;
+                }
                 case '"': {
                     target[length++] = '"';
                     i++;
@@ -699,13 +730,14 @@ static ObjString* parseString(Compiler* compiler) {
         }
         else target[length++] = source[i];
     }
-    target = (char*)reallocate(compiler->parser->vm, target, (size_t)maxLength + 1, (size_t)length + 1);
+    target = (char*)reallocate(parser->vm, target, (size_t)maxLength + 1, (size_t)length + 1);
     target[length] = '\0';
-    return takeString(compiler->parser->vm, target, length);
+    return takeString(parser->vm, target, length);
 }
 
 static void string(Compiler* compiler, bool canAssign) {
-    emitConstant(compiler, OBJ_VAL(parseString(compiler)));
+    ObjString* string = parseString(compiler->parser);
+    emitConstant(compiler, OBJ_VAL(string));
 }
 
 static void interpolation(Compiler* compiler, bool canAssign) {
