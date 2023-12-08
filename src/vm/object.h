@@ -81,7 +81,8 @@ typedef enum {
 } ObjType;
 
 struct Obj {
-    uint64_t id;
+    uint64_t objectID;
+    int shapeID;
     ObjType type;
     ObjClass* klass;
     bool isMarked;
@@ -103,7 +104,6 @@ typedef void (*FreeFunction)(void* data);
 
 typedef struct {
     Obj obj;
-    int shapeID;
     ValueArray fields;
 } ObjInstance;
 

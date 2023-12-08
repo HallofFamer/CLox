@@ -90,7 +90,7 @@ int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     return newShape.id;
 }
 
-int transitionShapeForObject(VM* vm, ObjInstance* object, ObjString* edge) {
+int transitionShapeForObject(VM* vm, Obj* object, ObjString* edge) {
     int parentID = object->shapeID;
     Shape* parentShape = &vm->shapes.list[parentID];
     int index;
@@ -113,7 +113,7 @@ int getShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     else return createShapeFromParent(vm, parentID, edge);
 }
 
-int getIndexFromObjectShape(VM* vm, ObjInstance* object, ObjString* edge) {
+int getIndexFromObjectShape(VM* vm, Obj* object, ObjString* edge) {
     IndexMap* indexMap = &vm->shapes.list[object->shapeID].indexes;
     int index;
     if (indexMapGet(indexMap, edge, &index)) return index;

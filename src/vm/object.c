@@ -7,7 +7,8 @@
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     Obj* object = (Obj*)reallocate(vm, NULL, 0, size);
-    object->id = 0;
+    object->objectID = 0;
+    object->shapeID = 0;
     object->type = type;
     object->klass = klass;
     object->isMarked = false;
@@ -97,7 +98,6 @@ ObjFunction* newFunction(VM* vm) {
 
 ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
-    instance->shapeID = 0;
     initValueArray(&instance->fields);
     return instance;
 }
@@ -195,21 +195,21 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
 }
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
-    IndexMap* indexMap = getShapeIndexes(vm, object->shapeID);
+    IndexMap* indexMap = getShapeIndexes(vm, object->obj.shapeID);
     int index;
     indexMapGet(indexMap, newString(vm, name), &index);
     return object->fields.values[index];
 }
 
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
-    IndexMap* indexMap = getShapeIndexes(vm, object->shapeID);
+    IndexMap* indexMap = getShapeIndexes(vm, object->obj.shapeID);
     ObjString* key = newString(vm, name);
     int index;
     push(vm, OBJ_VAL(key));
 
     if (indexMapGet(indexMap, key, &index)) object->fields.values[index] = value;
     else {
-        transitionShapeForObject(vm, object, key);
+        transitionShapeForObject(vm, &object->obj, key);
         valueArrayWrite(vm, &object->fields, value);
     }
     pop(vm);
@@ -221,8 +221,8 @@ void copyObjProperty(VM* vm, ObjInstance* fromObject, ObjInstance* toObject, cha
 }
 
 void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
-    IndexMap* indexMap = getShapeIndexes(vm, fromObject->shapeID);
-    toObject->shapeID = fromObject->shapeID;
+    IndexMap* indexMap = getShapeIndexes(vm, fromObject->obj.shapeID);
+    toObject->obj.shapeID = fromObject->obj.shapeID;
     for (int i = 0; i < fromObject->fields.count; i++) {
         valueArrayWrite(vm, &toObject->fields, fromObject->fields.values[i]);
     }
