@@ -82,9 +82,9 @@ static int hexDigit(Parser* parser, char c) {
     return -1;
 }
 
-static int hexEscape(Parser* parser, const char* source, int startIndex, int length) {
+static int hexEscape(Parser* parser, const char* source, int base, int startIndex) {
     int value = 0;
-    for (int i = 0; i < length; i++) {
+    for (int i = 0; i < base; i++) {
         int index = startIndex + i + 2;
         if (source[index] == '"' || source[index] == '\0') {
             error(parser, "Incomplete hex escape sequence.");
@@ -99,7 +99,7 @@ static int hexEscape(Parser* parser, const char* source, int startIndex, int len
 }
 
 static int unicodeEscape(Parser* parser, const char* source, char* target, int base, int startIndex, int currentLength) {
-    int value = hexEscape(parser, source, startIndex, 4);
+    int value = hexEscape(parser, source, base, startIndex);
     int numBytes = utf8NumBytes(value);
     if (numBytes < 0) error(parser, "Negative unicode character specified.");
     if (value > 0xffff) numBytes++;
@@ -115,9 +115,8 @@ static int unicodeEscape(Parser* parser, const char* source, char* target, int b
     return numBytes;
 }
 
-char* parseString(Parser* parser) {
+char* parseString(Parser* parser, int* length) {
     int maxLength = parser->previous.length - 2;
-    int length = 0;
     const char* source = parser->previous.start + 1;
     char* target = (char*)malloc((size_t)maxLength + 1);
     if (target == NULL) {
@@ -125,80 +124,83 @@ char* parseString(Parser* parser) {
         exit(74);
     }
 
-    int i = 0;
-    for (int i = 0; i < maxLength; i++, length++) {
+    int i = 0, j = 0;
+    while (i < maxLength) {
         if (source[i] == '\\') {
             switch (source[i + 1]) {
                 case 'a': {
-                    target[length] = '\a';
+                    target[j] = '\a';
                     i++;
                     break;
                 }
                 case 'b': {
-                    target[length] = '\b';
+                    target[j] = '\b';
                     i++;
                     break;
                 }
                 case 'f': {
-                    target[length] = '\f';
+                    target[j] = '\f';
                     i++;
                     break;
                 }
                 case 'n': {
-                    target[length] = '\n';
+                    target[j] = '\n';
                     i++;
                     break;
                 }
                 case 'r': {
-                    target[length] = '\r';
+                    target[j] = '\r';
                     i++;
                     break;
                 }
                 case 't': {
-                    target[length] = '\t';
+                    target[j] = '\t';
                     i++;
-                    break;
-                }
-                case 'v': {
-                    target[length] = '\v';
-                    i++;
-                    break;
-                }
-                case 'x': {
-                    target[length] = hexEscape(parser, source, i, 2);
-                    i += 3;
                     break;
                 }
                 case 'u': {
-                    int numBytes = unicodeEscape(parser, source, target, 4, i, length);  
-                    length += numBytes > 4 ? numBytes - 2 : numBytes - 1;
+                    int numBytes = unicodeEscape(parser, source, target, 4, i, j);  
+                    j += numBytes > 4 ? numBytes - 2 : numBytes - 1;
                     i += numBytes > 4 ? 6 : 5;
                     break;
                 }
                 case 'U': {
-                    int numBytes = unicodeEscape(parser, source, target, 8, i, length);
-                    length += numBytes > 4 ? numBytes - 2 : numBytes - 1;
+                    int numBytes = unicodeEscape(parser, source, target, 8, i, j);
+                    j += numBytes > 4 ? numBytes - 2 : numBytes - 1;
                     i += 9;
                     break;
                 }
+                case 'v': {
+                    target[j] = '\v';
+                    i++;
+                    break;
+                }
+                case 'x': {
+                    target[j] = hexEscape(parser, source, 2, i);
+                    i += 3;
+                    break;
+                }
                 case '"': {
-                    target[length] = '"';
+                    target[j] = '"';
                     i++;
                     break;
                 }
                 case '\\': {
-                    target[length] = '\\';
+                    target[j] = '\\';
                     i++;
                     break;
                 }
-                default: target[length] = source[i];
+                default: target[j] = source[i];
             }
         }
-        else target[length] = source[i];
+        else target[j] = source[i];
+        i++; 
+        j++;
     }
     
-    target = (char*)reallocate(parser->vm, target, (size_t)maxLength + 1, (size_t)length + 1);
-    target[length] = '\0';
+    target = (char*)reallocate(parser->vm, target, (size_t)maxLength + 1, (size_t)j + 1);
+    target[j] = '\0';
+    *length = j;
     return target;
 }
 

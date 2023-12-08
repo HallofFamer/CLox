@@ -636,8 +636,8 @@ static void or_(Compiler* compiler, bool canAssign) {
 }
 
 static void string(Compiler* compiler, bool canAssign) {
-    char* string = parseString(compiler->parser);
-    int length = (int)strlen(string);
+    int length = 0;
+    char* string = parseString(compiler->parser, &length);
     emitConstant(compiler, OBJ_VAL(takeString(compiler->parser->vm, string, length)));
 }
 
