@@ -635,109 +635,10 @@ static void or_(Compiler* compiler, bool canAssign) {
     patchJump(compiler, endJump);
 }
 
-static int parseHexDigit(Parser* parser, char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    
-    error(parser, "Invalid hex escape sequence.");
-    return -1;
-}
-
-static int parseHexEscape(Parser* parser, const char* source, int startIndex, int length) {
-    int value = 0;
-    for (int i = 0; i < length; i++) {
-        int index = startIndex + i;
-        if (source[index] == '"' || source[index] == '\0') {
-            error(parser, "Incomplete hex escape sequence.");
-            break;
-        }
-
-        int digit = parseHexDigit(parser, source[index]);
-        if (digit == -1) break;
-        value = (value * 16) | digit;
-    }
-    return value;
-}
-
-static ObjString* parseString(Parser* parser) {
-    int maxLength = parser->previous.length - 2;
-    int length = 0;
-    const char* source = parser->previous.start + 1;
-    char* target = (char*)malloc((size_t)maxLength + 1);
-    if (target == NULL) {
-        fprintf(stderr, "Not enough memory to allocate string in compiler. \n");
-        exit(74);
-    }
-
-    int i = 0;
-    for (int i = 0; i < maxLength; i++) {
-        if (source[i] == '\\') {
-            switch (source[i + 1]) {
-                case 'a': {
-                    target[length++] = '\a';
-                    i++;
-                    break;
-                }
-                case 'b': {
-                    target[length++] = '\b';
-                    i++;
-                    break;
-                }
-                case 'f': {
-                    target[length++] = '\f';
-                    i++;
-                    break;
-                }
-                case 'n': {
-                    target[length++] = '\n';
-                    i++;
-                    break;
-                }
-                case 'r': {
-                    target[length++] = '\r';
-                    i++;
-                    break;
-                }
-                case 't': {
-                    target[length++] = '\t';
-                    i++;
-                    break;
-                }
-                case 'v': {
-                    target[length++] = '\v';
-                    i++;
-                    break;
-                }
-                case 'x': {
-                    i += 2;
-                    target[length++] = parseHexEscape(parser, source, i, 2);
-                    i++;
-                    break;
-                }
-                case '"': {
-                    target[length++] = '"';
-                    i++;
-                    break;
-                }
-                case '\\': {
-                    target[length++] = '\\';
-                    i++;
-                    break;
-                }
-                default: target[length++] = source[i];
-            }
-        }
-        else target[length++] = source[i];
-    }
-    target = (char*)reallocate(parser->vm, target, (size_t)maxLength + 1, (size_t)length + 1);
-    target[length] = '\0';
-    return takeString(parser->vm, target, length);
-}
-
 static void string(Compiler* compiler, bool canAssign) {
-    ObjString* string = parseString(compiler->parser);
-    emitConstant(compiler, OBJ_VAL(string));
+    char* string = parseString(compiler->parser);
+    int length = (int)strlen(string);
+    emitConstant(compiler, OBJ_VAL(takeString(compiler->parser->vm, string, length)));
 }
 
 static void interpolation(Compiler* compiler, bool canAssign) {
@@ -823,26 +724,26 @@ static void lambda(Compiler* compiler, bool canAssign) {
 
 static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
     switch (opCode) {
-    case OP_SET_LOCAL:
-        if (!compiler->locals[arg].isMutable) {
-            error(compiler->parser, "Cannot assign to immutable local variable.");
+        case OP_SET_LOCAL:
+            if (!compiler->locals[arg].isMutable) {
+                error(compiler->parser, "Cannot assign to immutable local variable.");
+            }
+            break;
+        case OP_SET_UPVALUE:
+            if (!compiler->upvalues[arg].isMutable) {
+                error(compiler->parser, "Cannot assign to immutable captured upvalue.");
+            }
+            break;
+        case OP_SET_GLOBAL: {
+            ObjString* name = identifierName(compiler, arg);
+            int index;
+            if (indexMapGet(&compiler->parser->vm->currentModule->valIndexes, name, &index)) {
+                error(compiler->parser, "Cannot assign to immutable global variables.");
+            }
+            break;
         }
-        break;
-    case OP_SET_UPVALUE:
-        if (!compiler->upvalues[arg].isMutable) {
-            error(compiler->parser, "Cannot assign to immutable captured upvalue.");
-        }
-        break;
-    case OP_SET_GLOBAL: {
-        ObjString* name = identifierName(compiler, arg);
-        int index;
-        if (indexMapGet(&compiler->parser->vm->currentModule->valIndexes, name, &index)) {
-            error(compiler->parser, "Cannot assign to immutable global variables.");
-        }
-        break;
-    }
-    default:
-        break;
+        default:
+            break;
     }
 }
 

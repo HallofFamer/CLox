@@ -18,3 +18,25 @@ println("Escaping backslash: ");
 println("8 \\ 2 = 4");
 println("Escaping double quote: ");
 println("She says \"Nice to meet you!\"");
+println("");
+
+println("Testing escaping unicode...");
+println("2 digit hex string: \x48\x69\x2e");
+println("4 digit unicode string: \u0041\u0b83\u00DE");
+println("8 digit unicode string: \U0001F64A\U0001F680");
+println("");
+
+println("Testing creating unicode string from char: ");
+println("Creating unicode string from byte 255: " + String.fromByte(255));
+println("Creating unicode string from codepoint 8225: " + String.fromCodePoint(8225));
+println("");
+
+val utf8String = "Fäcëhämmër";
+println("Testing unicode string with german letters: " + utf8String);
+print("Unicode string contains letter ä: ");
+println(utf8String.contains("ä"));
+print("First index of letter ë in Unicode String: ");
+println(utf8String.indexOf("ë"));
+
+val utf8String2 = "🙊🚀";
+println("Testing unicode string with emojis: " + utf8String2);

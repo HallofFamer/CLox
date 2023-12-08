@@ -24,6 +24,7 @@ void consume(Parser* parser, TokenType type, const char* message);
 bool check(Parser* parser, TokenType type);
 bool checkNext(Parser* parser, TokenType type);
 bool match(Parser* parser, TokenType type);
+char* parseString(Parser* parser);
 void synchronize(Parser* parser);
 
 #endif // !clox_parser_h
