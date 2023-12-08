@@ -1051,7 +1051,7 @@ LOX_METHOD(Object, getField) {
     ASSERT_ARG_TYPE("Object::getField(field)", 0, String);
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        IndexMap* indexMap = getShapeIndexes(vm, instance->shapeID);
+        IndexMap* indexMap = getShapeIndexes(vm, instance->obj.shapeID);
         int index;
         if (indexMapGet(indexMap, AS_STRING(args[0]), &index)) RETURN_VAL(instance->fields.values[index]);
     }
@@ -1063,7 +1063,7 @@ LOX_METHOD(Object, hasField) {
     ASSERT_ARG_TYPE("Object::hasField(field)", 0, String);
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        IndexMap* indexMap = getShapeIndexes(vm, instance->shapeID);
+        IndexMap* indexMap = getShapeIndexes(vm, instance->obj.shapeID);
         int index;
         RETURN_BOOL(indexMapGet(indexMap, AS_STRING(args[0]), &index));
     }
@@ -1092,8 +1092,8 @@ LOX_METHOD(Object, memberOf) {
 LOX_METHOD(Object, objectID) {
     ASSERT_ARG_COUNT("Object::objectID()", 0);
     Obj* object = AS_OBJ(receiver);
-    if (object->id == 0) object->id = vm->objectIndex++ * 8;
-    RETURN_NUMBER((double)object->id);
+    if (object->objectID == 0) object->objectID = vm->objectIndex++ * 8;
+    RETURN_NUMBER((double)object->objectID);
 }
 
 LOX_METHOD(Object, toString) {
@@ -1283,6 +1283,20 @@ LOX_METHOD(String, __getSubscript__) {
     RETURN_STRING(chars, 1);
 }
 
+LOX_METHOD(StringClass, fromByte) {
+    ASSERT_ARG_COUNT("String class::fromByte(byte)", 1);
+    ASSERT_ARG_TYPE("String class::fromByte(byte)", 0, Int);
+    int byte = AS_INT(args[0]);
+    ASSERT_INDEX_WITHIN_BOUNDS("String class::fromByte(byte)", byte, 0, 255, 0);
+    RETURN_OBJ(utf8StringFromByte(vm, (uint8_t)byte));
+}
+
+LOX_METHOD(StringClass, fromCodePoint) {
+    ASSERT_ARG_COUNT("String class::fromCodePoint(codePoint)", 1);
+    ASSERT_ARG_TYPE("String class::fromCodePoint(codePoint)", 0, Int);
+    RETURN_OBJ(utf8StringFromCodePoint(vm, AS_INT(args[0])));
+}
+
 LOX_METHOD(TComparable, compareTo) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
@@ -1441,7 +1455,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, memberOf, 1);
     DEF_METHOD(vm->objectClass, Object, objectID, 0);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
-    DEF_OPERATOR(vm->objectClass, Object, == , __equal__, 1);
+    DEF_OPERATOR(vm->objectClass, Object, ==, __equal__, 1);
 
     ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
     inheritSuperclass(vm, behaviorClass, vm->objectClass);
@@ -1560,9 +1574,9 @@ void registerLangPackage(VM* vm) {
     ObjClass* comparableTrait = defineNativeTrait(vm, "TComparable");
     DEF_METHOD(comparableTrait, TComparable, compareTo, 1);
     DEF_METHOD(comparableTrait, TComparable, equals, 1);
-    DEF_OPERATOR(comparableTrait, TComparable, == , __equal__, 1);
-    DEF_OPERATOR(comparableTrait, TComparable, > , __greater__, 1);
-    DEF_OPERATOR(comparableTrait, TComparable, < , __less__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, ==, __equal__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, >, __greater__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, <, __less__, 1);
 
     vm->numberClass = defineNativeClass(vm, "Number");
     bindSuperclass(vm, vm->numberClass, vm->objectClass);
@@ -1595,13 +1609,13 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, tan, 0);
     DEF_METHOD(vm->numberClass, Number, toInt, 0);
     DEF_METHOD(vm->numberClass, Number, toString, 0);
-    DEF_OPERATOR(vm->numberClass, Number, == , __equal__, 1);
-    DEF_OPERATOR(vm->numberClass, Number, > , __greater__, 1);
-    DEF_OPERATOR(vm->numberClass, Number, < , __less__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, ==, __equal__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, >, __greater__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, <, __less__, 1);
     DEF_OPERATOR(vm->numberClass, Number, +, __add__, 1);
     DEF_OPERATOR(vm->numberClass, Number, -, __subtract__, 1);
     DEF_OPERATOR(vm->numberClass, Number, *, __multiply__, 1);
-    DEF_OPERATOR(vm->numberClass, Number, / , __divide__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, /, __divide__, 1);
     DEF_OPERATOR(vm->numberClass, Number, %, __modulo__, 1);
 
     ObjClass* numberMetaclass = vm->numberClass->obj.klass;
@@ -1675,6 +1689,10 @@ void registerLangPackage(VM* vm) {
     DEF_OPERATOR(vm->stringClass, String, +, __add__, 1);
     DEF_OPERATOR(vm->stringClass, String, [], __getSubscript__, 1);
     bindStringClass(vm);
+
+    ObjClass* stringMetaclass = vm->stringClass->obj.klass;
+    DEF_METHOD(stringMetaclass, StringClass, fromByte, 1);
+    DEF_METHOD(stringMetaclass, StringClass, fromCodePoint, 1);
 
     vm->functionClass = defineNativeClass(vm, "Function");
     bindSuperclass(vm, vm->functionClass, vm->objectClass);

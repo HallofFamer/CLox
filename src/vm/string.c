@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "hash.h"
@@ -205,4 +206,88 @@ ObjString* trimString(VM* vm, ObjString* string) {
     }
     heapChars[newLength] = '\n';
     return takeString(vm, heapChars, (int)newLength);
+}
+
+int utf8NumBytes(int value) {
+    if (value < 0) return -1;
+    if (value <= 0x7f) return 1;
+    if (value <= 0x7ff) return 2;
+    if (value <= 0xffff) return 3;
+    if (value <= 0x10ffff) return 4;
+    return 0;
+}
+
+char* utf8Encode(int value) {
+    int length = utf8NumBytes(value);
+    if (value == -1) return NULL;
+
+    char* utfChar = (char*)calloc((size_t)length + 1, sizeof(char));
+    if (utfChar != NULL) {
+        if (value <= 0x7f) {
+            utfChar[0] = (char)(value & 0x7f);
+            utfChar[1] = '\0';
+        }
+        else if (value <= 0x7ff) {
+            utfChar[0] = 0xc0 | ((value & 0x7c0) >> 6);
+            utfChar[1] = 0x80 | (value & 0x3f);
+        }
+        else if (value <= 0xffff) {
+            utfChar[0] = 0xe0 | ((value & 0xf000) >> 12);
+            utfChar[1] = 0x80 | ((value & 0xfc0) >> 6);
+            utfChar[2] = 0x80 | (value & 0x3f);
+        }
+        else if (value <= 0x10ffff) {
+            utfChar[0] = 0xf0 | ((value & 0x1c0000) >> 18);
+            utfChar[1] = 0x80 | ((value & 0x3f000) >> 12);
+            utfChar[2] = 0x80 | ((value & 0xfc0) >> 6);
+            utfChar[3] = 0x80 | (value & 0x3f);
+        }
+        else {
+            utfChar[0] = 0xbd;
+            utfChar[1] = 0xbf;
+            utfChar[2] = 0xef;
+        }
+    }
+    return utfChar;
+}
+
+int utf8Decode(const uint8_t* bytes, uint32_t length) {
+    if (*bytes <= 0x7f) return *bytes;
+    int value;
+    uint32_t remainingBytes;
+
+    if ((*bytes & 0xe0) == 0xc0) {
+        value = *bytes & 0x1f;
+        remainingBytes = 1;
+    }
+    else if ((*bytes & 0xf0) == 0xe0) {
+        value = *bytes & 0x0f;
+        remainingBytes = 2;
+    }
+    else if ((*bytes & 0xf8) == 0xf0) {
+        value = *bytes & 0x07;
+        remainingBytes = 3;
+    }
+    else return -1;
+
+    if (remainingBytes > length - 1) return -1;
+    while (remainingBytes > 0) {
+        bytes++;
+        remainingBytes--;
+        if ((*bytes & 0xc0) != 0x80) return -1;
+        value = value << 6 | (*bytes & 0x3f);
+    }
+    return value;
+}
+
+ObjString* utf8StringFromByte(VM* vm, uint8_t byte) {
+    char chars[2] = { byte, '\0' };
+    return copyString(vm, chars, 1);
+}
+
+ObjString* utf8StringFromCodePoint(VM* vm, int codePoint) {
+    int length = utf8NumBytes(codePoint);
+    if (length <= 0) return NULL;
+    char* utfChars = utf8Encode(codePoint);
+    return takeString(vm, utfChars, length);
 }

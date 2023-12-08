@@ -20,4 +20,10 @@ ObjString* toLowerString(VM* vm, ObjString* string);
 ObjString* toUpperString(VM* vm, ObjString* string);
 ObjString* trimString(VM* vm, ObjString* string);
 
+int utf8NumBytes(int value);
+char* utf8Encode(int value);
+int utf8Decode(const uint8_t* bytes, uint32_t length);
+ObjString* utf8StringFromByte(VM* vm, uint8_t byte);
+ObjString* utf8StringFromCodePoint(VM* vm, int codePoint);
+
 #endif // !clox_string_h
