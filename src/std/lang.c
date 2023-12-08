@@ -150,6 +150,11 @@ LOX_METHOD(Bool, init) {
     THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Bool.");
 }
 
+LOX_METHOD(Bool, objectID) {
+    ASSERT_ARG_COUNT("Bool::objectID()", 0);
+    RETURN_NUMBER(AS_BOOL(receiver) ? 2 : 3);
+}
+
 LOX_METHOD(Bool, toString) {
     ASSERT_ARG_COUNT("Bool::toString()", 0);
     if (AS_BOOL(receiver)) RETURN_STRING("true", 4);
@@ -506,6 +511,11 @@ LOX_METHOD(Int, lcm) {
     RETURN_INT(lcm(abs(AS_INT(receiver)), abs(AS_INT(args[0]))));
 }
 
+LOX_METHOD(Int, objectID) {
+    ASSERT_ARG_COUNT("Int::objectID()", 0);
+    RETURN_NUMBER((double)(8 * (uint64_t)AS_INT(receiver) + 4));
+}
+
 LOX_METHOD(Int, timesRepeat) {
     ASSERT_ARG_COUNT("Int::timesRepeat(closure)", 1);
     ASSERT_ARG_TYPE("Int::timesRepeat(closure)", 0, Closure);
@@ -766,6 +776,11 @@ LOX_METHOD(Nil, init) {
     THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Nil.");
 }
 
+LOX_METHOD(Nil, objectID) {
+    ASSERT_ARG_COUNT("Nil::objectID()", 0);
+    RETURN_NUMBER(1);
+}
+
 LOX_METHOD(Nil, toString) {
     ASSERT_ARG_COUNT("Nil::toString()", 0);
     RETURN_STRING("nil", 3);
@@ -878,6 +893,11 @@ LOX_METHOD(Number, min) {
     ASSERT_ARG_COUNT("Number::min(other)", 1);
     ASSERT_ARG_TYPE("Number::min(other)", 0, Number);
     RETURN_NUMBER(fmin(AS_NUMBER(receiver), AS_NUMBER(args[0])));
+}
+
+LOX_METHOD(Number, objectID) {
+    ASSERT_ARG_COUNT("Number::objectID()", 0);
+    RETURN_NUMBER((double)receiver);
 }
 
 LOX_METHOD(Number, pow) {
@@ -1067,6 +1087,13 @@ LOX_METHOD(Object, memberOf) {
     ObjClass* thisClass = getObjClass(vm, receiver);
     ObjClass* thatClass = AS_CLASS(args[0]);
     RETURN_BOOL(thisClass == thatClass);
+}
+
+LOX_METHOD(Object, objectID) {
+    ASSERT_ARG_COUNT("Object::objectID()", 0);
+    Obj* object = AS_OBJ(receiver);
+    if (object->id == 0) object->id = vm->objectIndex++ * 8;
+    RETURN_NUMBER((double)object->id);
 }
 
 LOX_METHOD(Object, toString) {
@@ -1412,8 +1439,9 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, hashCode, 0);
     DEF_METHOD(vm->objectClass, Object, instanceOf, 1);
     DEF_METHOD(vm->objectClass, Object, memberOf, 1);
+    DEF_METHOD(vm->objectClass, Object, objectID, 0);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
-    DEF_OPERATOR(vm->objectClass, Object, ==, __equal__, 1);
+    DEF_OPERATOR(vm->objectClass, Object, == , __equal__, 1);
 
     ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
     inheritSuperclass(vm, behaviorClass, vm->objectClass);
@@ -1519,20 +1547,22 @@ void registerLangPackage(VM* vm) {
     bindSuperclass(vm, vm->nilClass, vm->objectClass);
     DEF_METHOD(vm->nilClass, Nil, clone, 0);
     DEF_METHOD(vm->nilClass, Nil, init, 0);
+    DEF_METHOD(vm->nilClass, Nil, objectID, 0);
     DEF_METHOD(vm->nilClass, Nil, toString, 0);
 
     vm->boolClass = defineNativeClass(vm, "Bool");
     bindSuperclass(vm, vm->boolClass, vm->objectClass);
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
     DEF_METHOD(vm->boolClass, Bool, init, 1);
+    DEF_METHOD(vm->boolClass, Bool, objectID, 0);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
 
     ObjClass* comparableTrait = defineNativeTrait(vm, "TComparable");
     DEF_METHOD(comparableTrait, TComparable, compareTo, 1);
     DEF_METHOD(comparableTrait, TComparable, equals, 1);
-    DEF_OPERATOR(comparableTrait, TComparable, ==, __equal__, 1);
-    DEF_OPERATOR(comparableTrait, TComparable, >, __greater__, 1);
-    DEF_OPERATOR(comparableTrait, TComparable, <, __less__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, == , __equal__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, > , __greater__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, < , __less__, 1);
 
     vm->numberClass = defineNativeClass(vm, "Number");
     bindSuperclass(vm, vm->numberClass, vm->objectClass);
@@ -1556,6 +1586,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, log10, 0);
     DEF_METHOD(vm->numberClass, Number, max, 1);
     DEF_METHOD(vm->numberClass, Number, min, 1);
+    DEF_METHOD(vm->numberClass, Number, objectID, 0);
     DEF_METHOD(vm->numberClass, Number, pow, 1);
     DEF_METHOD(vm->numberClass, Number, round, 0);
     DEF_METHOD(vm->numberClass, Number, sin, 0);
@@ -1564,13 +1595,13 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, tan, 0);
     DEF_METHOD(vm->numberClass, Number, toInt, 0);
     DEF_METHOD(vm->numberClass, Number, toString, 0);
-    DEF_OPERATOR(vm->numberClass, Number, ==, __equal__, 1);
-    DEF_OPERATOR(vm->numberClass, Number, >, __greater__, 1);
-    DEF_OPERATOR(vm->numberClass, Number, <, __less__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, == , __equal__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, > , __greater__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, < , __less__, 1);
     DEF_OPERATOR(vm->numberClass, Number, +, __add__, 1);
     DEF_OPERATOR(vm->numberClass, Number, -, __subtract__, 1);
     DEF_OPERATOR(vm->numberClass, Number, *, __multiply__, 1);
-    DEF_OPERATOR(vm->numberClass, Number, /, __divide__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, / , __divide__, 1);
     DEF_OPERATOR(vm->numberClass, Number, %, __modulo__, 1);
 
     ObjClass* numberMetaclass = vm->numberClass->obj.klass;
@@ -1589,6 +1620,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->intClass, Int, isEven, 0);
     DEF_METHOD(vm->intClass, Int, isOdd, 0);
     DEF_METHOD(vm->intClass, Int, lcm, 1);
+    DEF_METHOD(vm->intClass, Int, objectID, 0);
     DEF_METHOD(vm->intClass, Int, timesRepeat, 1);
     DEF_METHOD(vm->intClass, Int, toBinary, 0);
     DEF_METHOD(vm->intClass, Int, toFloat, 0);

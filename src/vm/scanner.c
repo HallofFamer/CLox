@@ -257,7 +257,7 @@ static Token number(Scanner* scanner) {
 }
 
 static Token string(Scanner* scanner) {
-    while (peek(scanner) != '"' && !isAtEnd(scanner)) {
+    while ((peek(scanner) != '"' || peekPrevious(scanner) == '\\') && !isAtEnd(scanner)) {
         if (peek(scanner) == '\n') scanner->line++;
         else if (peek(scanner) == '$' && peekNext(scanner) == '{') {
             if (scanner->interpolationDepth >= UINT4_MAX) {
@@ -273,7 +273,6 @@ static Token string(Scanner* scanner) {
     }
 
     if (isAtEnd(scanner)) return errorToken(scanner, "Unterminated string.");
-
     advance(scanner);
     return makeToken(scanner, TOKEN_STRING);
 }
