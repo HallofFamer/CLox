@@ -45,3 +45,10 @@ print("Unicode string contains code point 🐇: ");
 println(utf8String2.contains("🐇"));
 print("First index of code point ❄️ in unicode string: ");
 println(utf8String2.indexOf("❄️"));
+println("");
+
+val utf8String3 = "abcäë🐇❄️DEF";
+println("Testing combined unicode string: " + utf8String3);
+println("Unicode string length: " + utf8String3.length().toString());
+println("Convert Unicode string to upper case: " + utf8String3.toUppercase());
+println("Convert Unicode string to lower case: " + utf8String3.toLowercase());
