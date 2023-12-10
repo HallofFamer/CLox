@@ -291,3 +291,22 @@ ObjString* utf8StringFromCodePoint(VM* vm, int codePoint) {
     char* utfChars = utf8Encode(codePoint);
     return takeString(vm, utfChars, length);
 }
+
+int utf8CodePointOffset(VM* vm, char* string, int index) {
+    int offset = 0;
+    do {
+        offset++;
+    } while ((string[index + offset] & 0xc0) == 0x80);
+    return offset;
+}
+
+ObjString* utf8CodePointAtIndex(VM* vm, char* string, int index) {
+    int length = utf8CodePointOffset(vm, string, index);
+    switch (length) {
+        case 1: return copyString(vm, (char[]) { string[index], '\0' }, 1);
+        case 2: return copyString(vm, (char[]) { string[index], string[index + 1], '\0' }, 2);
+        case 3: return copyString(vm, (char[]) { string[index], string[index + 1], string[index + 2], '\0' }, 3);
+        case 4: return copyString(vm, (char[]) { string[index], string[index + 1], string[index + 2], string[index + 3], '\0' }, 4);
+        default: return emptyString(vm);
+    }
+}

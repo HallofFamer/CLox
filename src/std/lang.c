@@ -1124,6 +1124,16 @@ LOX_METHOD(String, contains) {
     RETURN_BOOL(searchString(vm, haystack, needle, 0) != -1);
 }
 
+LOX_METHOD(String, count) {
+    ASSERT_ARG_COUNT("String::count()", 0);
+    ObjString* self = AS_STRING(receiver);
+    int length = 0;
+    for (int i = 0; i < self->length; i++) {
+        if ((self->chars[i] & 0xc0) != 0x80) length++;
+    }
+    RETURN_INT(length);
+}
+
 LOX_METHOD(String, decapitalize) {
     ASSERT_ARG_COUNT("String::decapitalize()", 0);
     RETURN_OBJ(decapitalizeString(vm, AS_STRING(receiver)));
@@ -1179,7 +1189,9 @@ LOX_METHOD(String, next) {
 
     ASSERT_ARG_TYPE("String::next(index)", 0, Int);
     int index = AS_INT(args[0]);
-    if (index < 0 || index < self->length - 1) RETURN_INT(index + 1);
+    if (index < 0 || index < self->length - 1) {
+        RETURN_INT(index + utf8CodePointOffset(vm, self->chars, index));
+    }
     RETURN_NIL;
 }
 
@@ -1189,8 +1201,7 @@ LOX_METHOD(String, nextValue) {
     ObjString* self = AS_STRING(receiver);
     int index = AS_INT(args[0]);
     if (index > -1 && index < self->length) {
-        char chars[2] = { self->chars[index], '\0' };
-        RETURN_STRING(chars, 1);
+        RETURN_OBJ(utf8CodePointAtIndex(vm, self->chars, index));
     }
     RETURN_NIL;
 }
@@ -1669,6 +1680,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->stringClass, String, capitalize, 0);
     DEF_METHOD(vm->stringClass, String, clone, 0);
     DEF_METHOD(vm->stringClass, String, contains, 1);
+    DEF_METHOD(vm->stringClass, String, count, 0);
     DEF_METHOD(vm->stringClass, String, decapitalize, 0);
     DEF_METHOD(vm->stringClass, String, endsWith, 1);
     DEF_METHOD(vm->stringClass, String, getChar, 1);

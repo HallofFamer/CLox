@@ -25,5 +25,7 @@ char* utf8Encode(int value);
 int utf8Decode(const uint8_t* bytes, uint32_t length);
 ObjString* utf8StringFromByte(VM* vm, uint8_t byte);
 ObjString* utf8StringFromCodePoint(VM* vm, int codePoint);
+int utf8CodePointOffset(VM* vm, char* string, int index);
+ObjString* utf8CodePointAtIndex(VM* vm, char* string, int index);
 
 #endif // !clox_string_h
