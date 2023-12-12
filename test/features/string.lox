@@ -27,28 +27,36 @@ println("8 digit unicode string: \U0001F64A\U0001F680");
 println("");
 
 println("Testing creating unicode string from char: ");
-println("Creating unicode string from byte 255: " + String.fromByte(255));
-println("Creating unicode string from code point 8225: " + String.fromCodePoint(8225));
+println("Creating unicode string from byte 255: ${String.fromByte(255)}");
+println("Creating unicode string from code point 8225: ${String.fromCodePoint(8225)}");
 println("");
 
 val utf8String = "Fäcëhämmër";
-println("Testing unicode string with german letters: " + utf8String);
-print("Unicode string contains code point ä: ");
-println(utf8String.contains("ä"));
-print("First index of code point ë in unicode String: ");
-println(utf8String.indexOf("ë"));
+println("Testing unicode string with german letters: ${utf8String}");
+println("Unicode string contains code point ä: ${utf8String.contains("ä")}");
+println("First index of code point ë in unicode String: ${utf8String.indexOf("ë")}");
 println("");
 
-val utf8String2 = "👏🐇❄️";
-println("Testing unicode string with emojis: " + utf8String2);
-print("Unicode string contains code point 🐇: ");
-println(utf8String2.contains("🐇"));
-print("First index of code point ❄️ in unicode string: ");
-println(utf8String2.indexOf("❄️"));
+val utf8String2 = "👏🐇🏡";
+println("Testing unicode string with emojis: ${utf8String2}");
+println("Unicode string contains code point 🐇: ${utf8String2.contains("🐇")}");
+println("First index of code point 🏡 in unicode string: ${utf8String2.indexOf("🏡")}");
 println("");
 
-val utf8String3 = "abcäë🐇❄️DEF";
-println("Testing combined unicode string: " + utf8String3);
-println("Unicode string length: " + utf8String3.length().toString());
-println("Convert Unicode string to upper case: " + utf8String3.toUppercase());
-println("Convert Unicode string to lower case: " + utf8String3.toLowercase());
+val utf8String3 = "abcäË🐇⚡🚗дЯDEF";
+println("Testing combined unicode string: ${utf8String3}");
+println("Number of bytes in unicode string: ${utf8String3.length()}");
+println("Number of code points in unicode string: ${utf8String3.count()}");
+println("Get byte at index 5 in unicode string: ${utf8String3.getByte(5)}");
+println("Get code point at index 7 in unicode string: ${utf8String3.getCodePoint(11)}");
+println("Convert Unicode string to upper case: ${utf8String3.toUppercase()}");
+println("Convert Unicode string to lower case: ${utf8String3.toLowercase()}");
+println("Replace unicode string character \"äË\" with \"Öü\": ${utf8String3.replace("äË", "Öü")}");
+println("Substring of unicode string from index 7 to 17: ${utf8String3.subString(7, 17)}");
+println("");
+
+println("Iterate over combined unicode string: ");
+for(var codePoint : utf8String3) {
+    println(codePoint);
+}
+println("");

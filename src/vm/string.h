@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "object.h"
+#include "../inc/utf8.h"
 
 ObjString* takeString(VM* vm, char* chars, int length);
 ObjString* copyString(VM* vm, const char* chars, int length);

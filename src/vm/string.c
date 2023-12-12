@@ -165,22 +165,16 @@ ObjString* subString(VM* vm, ObjString* original, int fromIndex, int toIndex) {
 ObjString* toLowerString(VM* vm, ObjString* string) {
     if (string->length == 0) return string;
     char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
-
-    for (int offset = 0; offset < string->length; offset++) {
-        heapChars[offset] = (char)tolower(string->chars[offset]);
-    }
-    heapChars[string->length] = '\0';
+    memcpy(heapChars, string->chars, (size_t)string->length + 1);
+    utf8lwr(heapChars);
     return takeString(vm, heapChars, (int)string->length);
 }
 
 ObjString* toUpperString(VM* vm, ObjString* string) {
     if (string->length == 0) return string;
     char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
-
-    for (int offset = 0; offset < string->length; offset++) {
-        heapChars[offset] = (char)toupper(string->chars[offset]);
-    }
-    heapChars[string->length] = '\0';
+    memcpy(heapChars, string->chars, (size_t)string->length + 1);
+    utf8upr(heapChars);
     return takeString(vm, heapChars, (int)string->length);
 }
 
@@ -221,7 +215,7 @@ char* utf8Encode(int value) {
     int length = utf8NumBytes(value);
     if (value == -1) return NULL;
 
-    char* utfChar = (char*)calloc((size_t)length + 1, sizeof(char));
+    char* utfChar = (char*)malloc((size_t)length + 1);
     if (utfChar != NULL) {
         if (value <= 0x7f) {
             utfChar[0] = (char)(value & 0x7f);
