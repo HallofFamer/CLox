@@ -1127,11 +1127,7 @@ LOX_METHOD(String, contains) {
 LOX_METHOD(String, count) {
     ASSERT_ARG_COUNT("String::count()", 0);
     ObjString* self = AS_STRING(receiver);
-    int length = 0;
-    for (int i = 0; i < self->length; i++) {
-        if ((self->chars[i] & 0xc0) != 0x80) length++;
-    }
-    RETURN_INT(length);
+    RETURN_INT((int)utf8len(self->chars));
 }
 
 LOX_METHOD(String, decapitalize) {
@@ -1148,16 +1144,24 @@ LOX_METHOD(String, endsWith) {
     RETURN_BOOL(memcmp(haystack->chars + haystack->length - needle->length, needle->chars, needle->length) == 0);
 }
 
-LOX_METHOD(String, getChar) {
-    ASSERT_ARG_COUNT("String::getChar(index)", 1);
-    ASSERT_ARG_TYPE("String::getChar(index)", 0, Int);
+LOX_METHOD(String, getByte) {
+    ASSERT_ARG_COUNT("String::getByte(index)", 1);
+    ASSERT_ARG_TYPE("String::getByte(index)", 0, Int);
+
+    ObjString* self = AS_STRING(receiver);
+    int index = AS_INT(args[0]);
+    ASSERT_INDEX_WITHIN_BOUNDS("String::getByte(index)", index, 0, self->length, 0);
+    RETURN_INT((int)self->chars[index]);
+}
+
+LOX_METHOD(String, getCodePoint) {
+    ASSERT_ARG_COUNT("String::getCodePoint(index)", 1);
+    ASSERT_ARG_TYPE("String::getCodePoint(index)", 0, Int);
     
     ObjString* self = AS_STRING(receiver);
     int index = AS_INT(args[0]);
-    ASSERT_INDEX_WITHIN_BOUNDS("String::getChar(index)", index, 0, self->length, 0);
-
-    char chars[2] = { self->chars[index], '\0' };
-    RETURN_STRING(chars, 1);
+    ASSERT_INDEX_WITHIN_BOUNDS("String::getCodePoint(index)", index, 0, self->length, 0);
+    RETURN_OBJ(utf8CodePointAtIndex(vm, self->chars, index));
 }
 
 LOX_METHOD(String, indexOf) {
@@ -1683,7 +1687,8 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->stringClass, String, count, 0);
     DEF_METHOD(vm->stringClass, String, decapitalize, 0);
     DEF_METHOD(vm->stringClass, String, endsWith, 1);
-    DEF_METHOD(vm->stringClass, String, getChar, 1);
+    DEF_METHOD(vm->stringClass, String, getByte, 1);
+    DEF_METHOD(vm->stringClass, String, getCodePoint, 1);
     DEF_METHOD(vm->stringClass, String, indexOf, 1);
     DEF_METHOD(vm->stringClass, String, init, 1);
     DEF_METHOD(vm->stringClass, String, length, 0);

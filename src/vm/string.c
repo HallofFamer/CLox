@@ -93,24 +93,52 @@ int searchString(VM* vm, ObjString* haystack, ObjString* needle, uint32_t start)
     return -1;
 }
 
+static void capitalizeFirstIndex(VM* vm, char* source, char* target, int length) {
+    if (length == 1) target[0] = (char)toupper(source[0]);
+    else {
+        int codePoint = utf8Decode(source, length);
+        char* utfChar = utf8Encode(utf8uprcodepoint(codePoint));
+        if (utfChar == NULL) return;
+        for (int i = 0; i < length; i++) {
+            target[i] = utfChar[i];
+        }
+        free(utfChar);
+    }
+}
+
 ObjString* capitalizeString(VM* vm, ObjString* string) {
     if (string->length == 0) return string;
     char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
+    int offset = utf8CodePointOffset(vm, string->chars, 0);
+    capitalizeFirstIndex(vm, string->chars, heapChars, offset);
 
-    heapChars[0] = (char)toupper(string->chars[0]);
-    for (int offset = 1; offset < string->length; offset++) {
+    for (; offset < string->length; offset++) {
         heapChars[offset] = string->chars[offset];
     }
     heapChars[string->length] = '\0';
     return takeString(vm, heapChars, (int)string->length);
 }
 
+static void decapitalizeFirstIndex(VM* vm, char* source, char* target, int length) {
+    if (length == 1) target[0] = (char)tolower(source[0]);
+    else {
+        int codePoint = utf8Decode(source, length);
+        char* utfChar = utf8Encode(utf8lwrcodepoint(codePoint));
+        if (utfChar == NULL) return;
+        for (int i = 0; i < length; i++) {
+            target[i] = utfChar[i];
+        }
+        free(utfChar);
+    }
+}
+
 ObjString* decapitalizeString(VM* vm, ObjString* string) {
     if (string->length == 0) return string;
     char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
+    int offset = utf8CodePointOffset(vm, string->chars, 0);
+    decapitalizeFirstIndex(vm, string->chars, heapChars, offset);
 
-    heapChars[0] = (char)tolower(string->chars[0]);
-    for (int offset = 1; offset < string->length; offset++) {
+    for (; offset < string->length; offset++) {
         heapChars[offset] = string->chars[offset];
     }
     heapChars[string->length] = '\0';
@@ -143,7 +171,7 @@ ObjString* replaceString(VM* vm, ObjString* original, ObjString* target, ObjStri
         offset++;
     }
 
-    heapChars[newLength] = '\n';
+    heapChars[newLength] = '\0';
     return takeString(vm, heapChars, (int)newLength);
 }
 
@@ -158,7 +186,7 @@ ObjString* subString(VM* vm, ObjString* original, int fromIndex, int toIndex) {
         heapChars[i] = original->chars[fromIndex + i];
     }
 
-    heapChars[newLength] = '\n';
+    heapChars[newLength] = '\0';
     return takeString(vm, heapChars, (int)newLength);
 }
 
@@ -198,7 +226,7 @@ ObjString* trimString(VM* vm, ObjString* string) {
     for (int i = 0; i < newLength; i++) {
         heapChars[i] = string->chars[i + ltLen];
     }
-    heapChars[newLength] = '\n';
+    heapChars[newLength] = '\0';
     return takeString(vm, heapChars, (int)newLength);
 }
 

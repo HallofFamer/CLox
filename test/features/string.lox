@@ -52,7 +52,10 @@ println("Get code point at index 7 in unicode string: ${utf8String3.getCodePoint
 println("Convert Unicode string to upper case: ${utf8String3.toUppercase()}");
 println("Convert Unicode string to lower case: ${utf8String3.toLowercase()}");
 println("Replace unicode string character \"äË\" with \"Öü\": ${utf8String3.replace("äË", "Öü")}");
-println("Substring of unicode string from index 7 to 17: ${utf8String3.subString(7, 17)}");
+
+val utf8SubString = utf8String3.subString(3, 21);
+println("Substring of unicode string from index 3 to 21: ${utf8SubString}");
+println("Capitalize substring from the unicode string: ${utf8SubString.capitalize()}");
 println("");
 
 println("Iterate over combined unicode string: ");
