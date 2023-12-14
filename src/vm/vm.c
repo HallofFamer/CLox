@@ -65,27 +65,17 @@ void runtimeError(VM* vm, const char* format, ...) {
 char* readFile(const char* path) {
     FILE* file;
     fopen_s(&file, path, "rb");
-
-    if (file == NULL) {
-        fprintf(stderr, "Could not open file \"%s\".\n", path);
-        exit(74);
-    }
+    ABORT_IFNULL(file, "Could not open file \"%s\".\n", path);
 
     fseek(file, 0L, SEEK_END);
     size_t fileSize = ftell(file);
     rewind(file);
 
     char* buffer = (char*)malloc(fileSize + 1);
-    if (buffer == NULL) {
-        fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
-        exit(74);
-    }
+    ABORT_IFNULL(buffer, "Not enough memory to read \"%s\".\n", path);
 
     size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
-    if (bytesRead < fileSize) {
-        fprintf(stderr, "Could not read file \"%s\".\n", path);
-        exit(74);
-    }
+    ABORT_IFTRUE(bytesRead < fileSize, "Could not read file \"%s\".\n", path);
 
     buffer[bytesRead] = '\0';
     fclose(file);
@@ -128,10 +118,8 @@ static int parseConfiguration(void* data, const char* section, const char* name,
 
 void initConfiguration(VM* vm) {
     Configuration config;
-    if (ini_parse("clox.ini", parseConfiguration, &config) < 0) {
-        printf("Can't load 'clox.ini' configuration file...\n");
-        exit(70);
-    }
+    int iniParsed = ini_parse("clox.ini", parseConfiguration, &config);
+    ABORT_IFTRUE(iniParsed < 0, "Can't load 'clox.ini' configuration file...\n");
     vm->config = config;
 }
 
@@ -691,7 +679,8 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        if (inlineCache->type == CACHE_IVAR && inlineCache->id == instance->obj.shapeID) {
+        int shapeID = instance->obj.shapeID;
+        if (inlineCache->type == CACHE_IVAR && inlineCache->id == shapeID) {
 #ifdef DEBUG_TRACE_CACHE
             printf("Cache hit for getting instance variable: '%s' from Shape ID %d at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->id, inlineCache->index);
 #endif 
@@ -702,18 +691,18 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
         }
 
 #ifdef DEBUG_TRACE_CACHE
-        printf("Cache miss for getting instance variable: '%s' from Shape ID %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), instance->shapeID);
+        printf("Cache miss for getting instance variable: '%s' from Shape ID %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), shapeID);
 #endif
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
-        IndexMap* indexMap = getShapeIndexes(vm, instance->obj.shapeID);
+        IndexMap* indexMap = getShapeIndexes(vm, shapeID);
         int index;
 
         if (indexMapGet(indexMap, name, &index)) {
             Value value = instance->fields.values[index];
             pop(vm);
             push(vm, value);
-            writeInlineCache(inlineCache, CACHE_IVAR, instance->obj.shapeID, index);
+            writeInlineCache(inlineCache, CACHE_IVAR, shapeID, index);
             return true;
         }
 
@@ -791,7 +780,8 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        if (inlineCache->type == CACHE_IVAR && inlineCache->id == instance->obj.shapeID) {
+        int shapeID = instance->obj.shapeID;
+        if (inlineCache->type == CACHE_IVAR && inlineCache->id == shapeID) {
 #ifdef DEBUG_TRACE_CACHE
             printf("Cache hit for setting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
 #endif 
@@ -802,11 +792,11 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
         }
 
 #ifdef DEBUG_TRACE_CACHE
-        printf("Cache miss for setting instance variable: Shape ID %d.\n", instance->shapeID);
+        printf("Cache miss for setting instance variable: Shape ID %d.\n", shapeID);
 #endif
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
-        IndexMap* indexMap = getShapeIndexes(vm, instance->obj.shapeID);
+        IndexMap* indexMap = getShapeIndexes(vm, shapeID);
         int index;
         if (indexMapGet(indexMap, name, &index)) instance->fields.values[index] = value;
         else {
@@ -815,7 +805,7 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
             valueArrayWrite(vm, &instance->fields, value);
         }
 
-        writeInlineCache(inlineCache, CACHE_IVAR, instance->obj.shapeID, index);
+        writeInlineCache(inlineCache, CACHE_IVAR, shapeID, index);
         push(vm, value);
         return true;
     }
@@ -864,7 +854,7 @@ InterpretResult run(VM* vm) {
 #define READ_STRING() AS_STRING(READ_IDENTIFIER())
 
 #define BINARY_INT_OP(valueType, op) \
-    do {\
+    do { \
         int b = AS_INT(pop(vm)); \
         int a = AS_INT(pop(vm)); \
         push(vm, INT_VAL(a op b)); \

@@ -13,6 +13,22 @@
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
+#define ABORT_IFNULL(pointer, message, ...) \
+    do {\
+        if (pointer == NULL) { \
+            fprintf(stderr, message, __VA_ARGS__); \
+            exit(74); \
+        } \
+    } while (false)
+
+#define ABORT_IFTRUE(condition, message, ...) \
+    do {\
+        if (condition) { \
+            fprintf(stderr, message, __VA_ARGS__); \
+            exit(74); \
+        } \
+    } while (false)
+
 typedef struct {
     ObjClosure* closure;
     uint8_t* ip;

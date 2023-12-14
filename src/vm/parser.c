@@ -119,10 +119,7 @@ char* parseString(Parser* parser, int* length) {
     int maxLength = parser->previous.length - 2;
     const char* source = parser->previous.start + 1;
     char* target = (char*)malloc((size_t)maxLength + 1);
-    if (target == NULL) {
-        fprintf(stderr, "Not enough memory to allocate string in compiler. \n");
-        exit(74);
-    }
+    ABORT_IFNULL(target, "Not enough memory to allocate string in compiler. \n");
 
     int i = 0, j = 0;
     while (i < maxLength) {
