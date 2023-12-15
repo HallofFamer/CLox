@@ -1260,6 +1260,35 @@ LOX_METHOD(String, subString) {
     RETURN_OBJ(subString(vm, AS_STRING(receiver), AS_INT(args[0]), AS_INT(args[1])));
 }
 
+LOX_METHOD(String, toBytes) {
+    ASSERT_ARG_COUNT("String::toBytes()", 0);
+    ObjString* self = AS_STRING(receiver);
+    ObjArray* bytes = newArray(vm);
+    push(vm, OBJ_VAL(bytes));
+
+    for (int i = 0; i < self->length; i++) {
+        valueArrayWrite(vm, &bytes->elements, INT_VAL(self->chars[i]));
+    }
+    pop(vm);
+    RETURN_OBJ(bytes);
+}
+
+LOX_METHOD(String, toCodePoints) {
+    ASSERT_ARG_COUNT("String::toCodePoints()", 0);
+    ObjString* self = AS_STRING(receiver);
+    ObjArray* codePoints = newArray(vm);
+    push(vm, OBJ_VAL(codePoints));
+
+    int i = 0;
+    while (i < self->length) {
+        ObjString* codePoint = utf8CodePointAtIndex(vm, self->chars, i);
+        valueArrayWrite(vm, &codePoints->elements, OBJ_VAL(codePoint));
+        i += codePoint->length;
+    }
+    pop(vm);
+    RETURN_OBJ(codePoints);
+}
+
 LOX_METHOD(String, toLowercase) {
     ASSERT_ARG_COUNT("String::toLowercase()", 0);
     RETURN_OBJ(toLowerString(vm, AS_STRING(receiver)));
@@ -1699,6 +1728,8 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->stringClass, String, split, 1);
     DEF_METHOD(vm->stringClass, String, startsWith, 1);
     DEF_METHOD(vm->stringClass, String, subString, 2);
+    DEF_METHOD(vm->stringClass, String, toBytes, 0);
+    DEF_METHOD(vm->stringClass, String, toCodePoints, 0);
     DEF_METHOD(vm->stringClass, String, toLowercase, 0);
     DEF_METHOD(vm->stringClass, String, toString, 0);
     DEF_METHOD(vm->stringClass, String, toUppercase, 0);

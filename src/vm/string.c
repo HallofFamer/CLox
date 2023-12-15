@@ -99,6 +99,7 @@ static void capitalizeFirstIndex(VM* vm, char* source, char* target, int length)
         int codePoint = utf8Decode(source, length);
         char* utfChar = utf8Encode(utf8uprcodepoint(codePoint));
         if (utfChar == NULL) return;
+
         for (int i = 0; i < length; i++) {
             target[i] = utfChar[i];
         }
@@ -125,6 +126,7 @@ static void decapitalizeFirstIndex(VM* vm, char* source, char* target, int lengt
         int codePoint = utf8Decode(source, length);
         char* utfChar = utf8Encode(utf8lwrcodepoint(codePoint));
         if (utfChar == NULL) return;
+
         for (int i = 0; i < length; i++) {
             target[i] = utfChar[i];
         }
@@ -242,8 +244,8 @@ int utf8NumBytes(int value) {
 char* utf8Encode(int value) {
     int length = utf8NumBytes(value);
     if (value == -1) return NULL;
-
     char* utfChar = (char*)malloc((size_t)length + 1);
+
     if (utfChar != NULL) {
         if (value <= 0x7f) {
             utfChar[0] = (char)(value & 0x7f);

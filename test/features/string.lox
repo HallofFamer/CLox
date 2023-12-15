@@ -57,6 +57,9 @@ val utf8SubString = utf8String3.subString(3, 21);
 println("Substring of unicode string from index 3 to 21: ${utf8SubString}");
 println("Capitalize substring from the unicode string: ${utf8SubString.capitalize()}");
 println("");
+println("Convert Unicode string to byte array: \n${utf8String3.toBytes()}");
+println("Convert Unicode string to code point array: \n${utf8String3.toCodePoints()}");
+println("");
 
 println("Iterate over combined unicode string: ");
 for(var codePoint : utf8String3) {
