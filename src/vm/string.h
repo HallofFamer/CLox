@@ -16,6 +16,7 @@ int searchString(VM* vm, ObjString* haystack, ObjString* needle, uint32_t start)
 ObjString* capitalizeString(VM* vm, ObjString* string);
 ObjString* decapitalizeString(VM* vm, ObjString* string);
 ObjString* replaceString(VM* vm, ObjString* original, ObjString* target, ObjString* replace);
+ObjString* reverseString(VM* vm, ObjString* original);
 ObjString* subString(VM* vm, ObjString* original, int fromIndex, int toIndex);
 ObjString* toLowerString(VM* vm, ObjString* string);
 ObjString* toUpperString(VM* vm, ObjString* string);
@@ -26,7 +27,7 @@ char* utf8Encode(int value);
 int utf8Decode(const uint8_t* bytes, uint32_t length);
 ObjString* utf8StringFromByte(VM* vm, uint8_t byte);
 ObjString* utf8StringFromCodePoint(VM* vm, int codePoint);
-int utf8CodePointOffset(VM* vm, char* string, int index);
-ObjString* utf8CodePointAtIndex(VM* vm, char* string, int index);
+int utf8CodePointOffset(VM* vm, const char* string, int index);
+ObjString* utf8CodePointAtIndex(VM* vm, const char* string, int index);
 
 #endif // !clox_string_h

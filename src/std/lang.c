@@ -1221,7 +1221,7 @@ LOX_METHOD(String, reverse) {
     ASSERT_ARG_COUNT("String::reverse()", 0);
     ObjString* self = AS_STRING(receiver);
     if (self->length <= 1) RETURN_OBJ(receiver);
-    RETURN_STRING(_strrev(self->chars), self->length);
+    RETURN_OBJ(reverseString(vm, self));
 }
 
 LOX_METHOD(String, split) {

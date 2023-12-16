@@ -177,6 +177,20 @@ ObjString* replaceString(VM* vm, ObjString* original, ObjString* target, ObjStri
     return takeString(vm, heapChars, (int)newLength);
 }
 
+ObjString* reverseString(VM* vm, ObjString* original) {
+    char* heapChars = ALLOCATE(char, (size_t)original->length + 1);
+    int i = 0;
+    while (i < original->length) {
+        int offset = utf8CodePointOffset(vm, original->chars, i);
+        for (int j = 0; j < offset; j++) {
+            heapChars[original->length - i - (offset - j)] = original->chars[i + j];
+        }
+        i += offset;
+    }
+    return takeString(vm, heapChars, original->length);
+}
+
+
 ObjString* subString(VM* vm, ObjString* original, int fromIndex, int toIndex) {
     if (fromIndex >= original->length || toIndex > original->length || fromIndex > toIndex) {
         return copyString(vm, "", 0);
@@ -316,7 +330,7 @@ ObjString* utf8StringFromCodePoint(VM* vm, int codePoint) {
     return takeString(vm, utfChars, length);
 }
 
-int utf8CodePointOffset(VM* vm, char* string, int index) {
+int utf8CodePointOffset(VM* vm, const char* string, int index) {
     int offset = 0;
     do {
         offset++;
@@ -324,7 +338,7 @@ int utf8CodePointOffset(VM* vm, char* string, int index) {
     return offset;
 }
 
-ObjString* utf8CodePointAtIndex(VM* vm, char* string, int index) {
+ObjString* utf8CodePointAtIndex(VM* vm, const char* string, int index) {
     int length = utf8CodePointOffset(vm, string, index);
     switch (length) {
         case 1: return copyString(vm, (char[]) { string[index], '\0' }, 1);
