@@ -3,7 +3,7 @@
 #define clox_shape_h
 
 #include "common.h"
-#include "index.h"
+#include "id.h"
 #include "object.h"
 
 typedef enum {
@@ -17,8 +17,8 @@ typedef struct {
     int id;
     int parentID;
     ShapeType type;
-    IndexMap edges;
-    IndexMap indexes;
+    IDMap edges;
+    IDMap indexes;
     int nextIndex;
 } Shape;
 
@@ -33,7 +33,7 @@ void initShapeTree(VM* vm);
 void freeShapeTree(VM* vm, ShapeTree* shapeTree);
 void appendToShapeTree(VM* vm, Shape* shape);
 Shape* getShapeFromID(VM* vm, int id);
-IndexMap* getShapeIndexes(VM* vm, int id);
+IDMap* getShapeIndexes(VM* vm, int id);
 int createShapeFromParent(VM* vm, int parentID, ObjString* edge);
 int transitionShapeForObject(VM* vm, Obj* object, ObjString* edge);
 int getIndexFromObjectShape(VM* vm, Obj* object, ObjString* edge);

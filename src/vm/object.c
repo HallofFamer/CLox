@@ -113,15 +113,15 @@ ObjModule* newModule(VM* vm, ObjString* path) {
     ObjModule* module = ALLOCATE_OBJ(ObjModule, OBJ_MODULE, NULL);
     module->path = path;
     module->isNative = false;
-    initIndexMap(&module->valIndexes);
+    initIDMap(&module->valIndexes);
     initValueArray(&module->valFields);
-    initIndexMap(&module->varIndexes);
+    initIDMap(&module->varIndexes);
     initValueArray(&module->varFields);
 
     for (int i = 0; i < vm->langNamespace->values.capacity; i++) {
         Entry* entry = &vm->langNamespace->values.entries[i];
         if (entry->key != NULL) {
-            indexMapSet(vm, &module->valIndexes, entry->key, module->valFields.count);
+            idMapSet(vm, &module->valIndexes, entry->key, module->valFields.count);
             valueArrayWrite(vm, &module->valFields, entry->value);
         }
     }
@@ -195,19 +195,19 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
 }
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
-    IndexMap* indexMap = getShapeIndexes(vm, object->obj.shapeID);
+    IDMap* idMap = getShapeIndexes(vm, object->obj.shapeID);
     int index;
-    indexMapGet(indexMap, newString(vm, name), &index);
+    idMapGet(idMap, newString(vm, name), &index);
     return object->fields.values[index];
 }
 
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
-    IndexMap* indexMap = getShapeIndexes(vm, object->obj.shapeID);
+    IDMap* idMap = getShapeIndexes(vm, object->obj.shapeID);
     ObjString* key = newString(vm, name);
     int index;
     push(vm, OBJ_VAL(key));
 
-    if (indexMapGet(indexMap, key, &index)) object->fields.values[index] = value;
+    if (idMapGet(idMap, key, &index)) object->fields.values[index] = value;
     else {
         transitionShapeForObject(vm, &object->obj, key);
         valueArrayWrite(vm, &object->fields, value);
@@ -221,7 +221,6 @@ void copyObjProperty(VM* vm, ObjInstance* fromObject, ObjInstance* toObject, cha
 }
 
 void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
-    IndexMap* indexMap = getShapeIndexes(vm, fromObject->obj.shapeID);
     toObject->obj.shapeID = fromObject->obj.shapeID;
     for (int i = 0; i < fromObject->fields.count; i++) {
         valueArrayWrite(vm, &toObject->fields, fromObject->fields.values[i]);
@@ -230,7 +229,7 @@ void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
 
 Value getClassProperty(VM* vm, ObjClass* klass, char* name) {
     int index;
-    if (!indexMapGet(&klass->indexes, newString(vm, name), &index)) {
+    if (!idMapGet(&klass->indexes, newString(vm, name), &index)) {
         runtimeError(vm, "Class property %s does not exist for class %s", name, klass->fullName->chars);
         return NIL_VAL;
     }

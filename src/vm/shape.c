@@ -9,8 +9,8 @@ static void initRootShape(Shape* shape) {
     shape->parentID = -1;
     shape->type = SHAPE_ROOT;
     shape->nextIndex = 0;
-    initIndexMap(&shape->edges);
-    initIndexMap(&shape->indexes);
+    initIDMap(&shape->edges);
+    initIDMap(&shape->indexes);
 
 #ifdef DEBUG_PRINT_SHAPE
     printf("Shape ID: %d, Parent ID: %d, shape type: %d, next index: %d\n\n", shape->id, shape->parentID, shape->type, shape->nextIndex);
@@ -50,7 +50,7 @@ Shape* getShapeFromID(VM* vm, int id) {
     return &vm->shapes.list[id];
 }
 
-IndexMap* getShapeIndexes(VM* vm, int id) {
+IDMap* getShapeIndexes(VM* vm, int id) {
     return &vm->shapes.list[id].indexes;
 }
 
@@ -68,12 +68,12 @@ int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
         .type = parentShape->nextIndex <= UINT4_MAX ? SHAPE_NORMAL : SHAPE_COMPLEX,
         .nextIndex = parentShape->nextIndex + 1
     };
-    initIndexMap(&newShape.edges);
-    initIndexMap(&newShape.indexes);
+    initIDMap(&newShape.edges);
+    initIDMap(&newShape.indexes);
 
-    indexMapAddAll(vm, &parentShape->indexes, &newShape.indexes);
-    indexMapSet(vm, &newShape.indexes, edge, parentShape->nextIndex);
-    indexMapSet(vm, &parentShape->edges, edge, newShape.id);
+    idMapAddAll(vm, &parentShape->indexes, &newShape.indexes);
+    idMapSet(vm, &newShape.indexes, edge, parentShape->nextIndex);
+    idMapSet(vm, &parentShape->edges, edge, newShape.id);
     appendToShapeTree(vm, &newShape);
 
 #ifdef DEBUG_PRINT_SHAPE
@@ -95,7 +95,7 @@ int transitionShapeForObject(VM* vm, Obj* object, ObjString* edge) {
     Shape* parentShape = &vm->shapes.list[parentID];
     int index;
 
-    if (indexMapGet(&parentShape->edges, edge, &index)) object->shapeID = index;
+    if (idMapGet(&parentShape->edges, edge, &index)) object->shapeID = index;
     else object->shapeID = createShapeFromParent(vm, parentID, edge);
     return object->shapeID;
 }
@@ -109,13 +109,13 @@ int getShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     Shape* parentShape = &shapeTree->list[parentID];
 
     int index;
-    if (indexMapGet(&parentShape->edges, edge, &index)) return index;
+    if (idMapGet(&parentShape->edges, edge, &index)) return index;
     else return createShapeFromParent(vm, parentID, edge);
 }
 
 int getIndexFromObjectShape(VM* vm, Obj* object, ObjString* edge) {
-    IndexMap* indexMap = &vm->shapes.list[object->shapeID].indexes;
+    IDMap* idMap = &vm->shapes.list[object->shapeID].indexes;
     int index;
-    if (indexMapGet(indexMap, edge, &index)) return index;
+    if (idMapGet(idMap, edge, &index)) return index;
     return -1;
 }

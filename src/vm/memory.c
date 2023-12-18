@@ -87,7 +87,7 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)klass->obj.klass);
             markObject(vm, (Obj*)klass->namespace);
             markArray(vm, &klass->traits);
-            markIndexMap(vm, &klass->indexes);
+            markIDMap(vm, &klass->indexes);
             markArray(vm, &klass->fields);
             markTable(vm, &klass->methods);
             break;
@@ -143,9 +143,9 @@ static void blackenObject(VM* vm, Obj* object) {
         case OBJ_MODULE: {
             ObjModule* module = (ObjModule*)object;
             markObject(vm, (Obj*)module->path);
-            markIndexMap(vm, &module->valIndexes);
+            markIDMap(vm, &module->valIndexes);
             markArray(vm, &module->valFields);
-            markIndexMap(vm, &module->varIndexes);
+            markIDMap(vm, &module->varIndexes);
             markArray(vm, &module->varFields);
             break;
         }
@@ -206,7 +206,7 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
             freeValueArray(vm, &klass->traits);
-            freeIndexMap(vm, &klass->indexes);
+            freeIDMap(vm, &klass->indexes);
             freeValueArray(vm, &klass->fields);
             freeTable(vm, &klass->methods);
             FREE(ObjClass, object);
@@ -252,9 +252,9 @@ static void freeObject(VM* vm, Obj* object) {
         }
         case OBJ_MODULE: {
             ObjModule* module = (ObjModule*)object;
-            freeIndexMap(vm, &module->valIndexes);
+            freeIDMap(vm, &module->valIndexes);
             freeValueArray(vm, &module->valFields);
-            freeIndexMap(vm, &module->varIndexes);
+            freeIDMap(vm, &module->varIndexes);
             freeValueArray(vm, &module->varFields);
             FREE(ObjModule, object);
             break;

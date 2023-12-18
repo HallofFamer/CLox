@@ -7,7 +7,7 @@
 
 #include "common.h"
 #include "chunk.h"
-#include "index.h"
+#include "id.h"
 #include "klass.h"
 #include "table.h"
 #include "value.h"
@@ -165,9 +165,9 @@ typedef struct {
     Obj obj;
     ObjString* path;
     bool isNative;
-    IndexMap valIndexes;
+    IDMap valIndexes;
     ValueArray valFields;
-    IndexMap varIndexes;
+    IDMap varIndexes;
     ValueArray varFields;
 } ObjModule;
 
@@ -208,7 +208,7 @@ struct ObjClass {
     struct ObjClass* superclass;
     ValueArray traits;
     bool isNative;
-    IndexMap indexes;
+    IDMap indexes;
     ValueArray fields;
     Table methods;
 };

@@ -4,7 +4,7 @@
 
 #include "compiler.h"
 #include "debug.h"
-#include "index.h"
+#include "id.h"
 #include "memory.h"
 #include "parser.h"
 #include "scanner.h"
@@ -63,7 +63,7 @@ struct Compiler {
     Local locals[UINT8_COUNT];
     int localCount;
     Upvalue upvalues[UINT8_COUNT];
-    IndexMap indexes;
+    IDMap indexes;
 
     int scopeDepth;
     int innermostLoopStart;
@@ -177,7 +177,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     compiler->innermostLoopScopeDepth = 0;
     compiler->function = newFunction(parser->vm);
 
-    initIndexMap(&compiler->indexes);
+    initIDMap(&compiler->indexes);
     parser->vm->currentCompiler = compiler;
     if (type != TYPE_SCRIPT) {
         if (parser->previous.length == 3 && memcmp(parser->previous.start, "fun", 3) == 0) {
@@ -210,7 +210,7 @@ static ObjFunction* endCompiler(Compiler* compiler) {
     }
 #endif
 
-    freeIndexMap(compiler->parser->vm, &compiler->indexes);
+    freeIDMap(compiler->parser->vm, &compiler->indexes);
     compiler->parser->vm->currentCompiler = compiler->enclosing;
     return function;
 }
@@ -245,13 +245,13 @@ static void parsePrecedence(Compiler* compiler, Precedence precedence);
 static uint8_t makeIdentifier(Compiler* compiler, Value value) {
     ObjString* name = AS_STRING(value);
     int identifier;
-    if (!indexMapGet(&compiler->indexes, name, &identifier)) {
+    if (!idMapGet(&compiler->indexes, name, &identifier)) {
         identifier = addIdentifier(compiler->parser->vm, currentChunk(compiler), value);
         if (identifier > UINT8_MAX) {
             error(compiler->parser, "Too many identifiers in one chunk.");
             return 0;
         }
-        indexMapSet(compiler->parser->vm, &compiler->indexes, name, identifier);
+        idMapSet(compiler->parser->vm, &compiler->indexes, name, identifier);
     }
 
     return (uint8_t)identifier;
@@ -442,17 +442,17 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     else {
         ObjString* name = identifierName(compiler, global);
         int index;
-        if (indexMapGet(&compiler->parser->vm->currentModule->varIndexes, name, &index)) {
+        if (idMapGet(&compiler->parser->vm->currentModule->varIndexes, name, &index)) {
             error(compiler->parser, "Cannot redeclare global variable.");
         }
 
         if (isMutable) {
-            indexMapSet(compiler->parser->vm, &compiler->parser->vm->currentModule->varIndexes, name, compiler->parser->vm->currentModule->varFields.count);
+            idMapSet(compiler->parser->vm, &compiler->parser->vm->currentModule->varIndexes, name, compiler->parser->vm->currentModule->varFields.count);
             valueArrayWrite(compiler->parser->vm, &compiler->parser->vm->currentModule->varFields, NIL_VAL);
             emitBytes(compiler, OP_DEFINE_GLOBAL_VAR, global);
         }
         else {
-            indexMapSet(compiler->parser->vm, &compiler->parser->vm->currentModule->valIndexes, name, compiler->parser->vm->currentModule->valFields.count);
+            idMapSet(compiler->parser->vm, &compiler->parser->vm->currentModule->valIndexes, name, compiler->parser->vm->currentModule->valFields.count);
             valueArrayWrite(compiler->parser->vm, &compiler->parser->vm->currentModule->valFields, NIL_VAL);
             emitBytes(compiler, OP_DEFINE_GLOBAL_VAL, global);
         }
@@ -737,7 +737,7 @@ static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
         case OP_SET_GLOBAL: {
             ObjString* name = identifierName(compiler, arg);
             int index;
-            if (indexMapGet(&compiler->parser->vm->currentModule->valIndexes, name, &index)) {
+            if (idMapGet(&compiler->parser->vm->currentModule->valIndexes, name, &index)) {
                 error(compiler->parser, "Cannot assign to immutable global variables.");
             }
             break;
@@ -835,32 +835,32 @@ static void unary(Compiler* compiler, bool canAssign) {
 }
 
 ParseRule rules[] = {
-    [TOKEN_LEFT_PAREN]       = {grouping,     call,        PREC_CALL},
-    [TOKEN_RIGHT_PAREN]      = {NULL,         NULL,        PREC_NONE},
-    [TOKEN_LEFT_BRACKET]     = {collection,   subscript,   PREC_CALL},
-    [TOKEN_RIGHT_BRACKET]    = {NULL,         NULL,        PREC_NONE},
-    [TOKEN_LEFT_BRACE]       = {lambda,       NULL,        PREC_NONE},
-    [TOKEN_RIGHT_BRACE]      = {NULL,         NULL,        PREC_NONE},
-    [TOKEN_COLON]            = {NULL,         NULL,        PREC_NONE},
-    [TOKEN_COMMA]            = {NULL,         NULL,        PREC_NONE},
-    [TOKEN_MINUS]            = {unary,        binary,      PREC_TERM},
-    [TOKEN_MODULO]           = {NULL,         binary,      PREC_FACTOR},
-    [TOKEN_PIPE]             = {NULL,         NULL,        PREC_NONE},
-    [TOKEN_PLUS]             = {NULL,         binary,      PREC_TERM},
-    [TOKEN_QUESTION]         = {NULL,         question,    PREC_CALL},
-    [TOKEN_SEMICOLON]        = {NULL,         NULL,        PREC_NONE},
-    [TOKEN_SLASH]            = {NULL,         binary,      PREC_FACTOR},
-    [TOKEN_STAR]             = {NULL,         binary,      PREC_FACTOR},
-    [TOKEN_BANG]             = {unary,        NULL,        PREC_NONE},
-    [TOKEN_BANG_EQUAL]       = {NULL,         binary,      PREC_EQUALITY},
-    [TOKEN_EQUAL]            = {NULL,         NULL,        PREC_NONE},
-    [TOKEN_EQUAL_EQUAL]      = {NULL,         binary,      PREC_EQUALITY},
-    [TOKEN_GREATER]          = {NULL,         binary,      PREC_COMPARISON},
-    [TOKEN_GREATER_EQUAL]    = {NULL,         binary,      PREC_COMPARISON},
-    [TOKEN_LESS]             = {NULL,         binary,      PREC_COMPARISON},
-    [TOKEN_LESS_EQUAL]       = {NULL,         binary,      PREC_COMPARISON},
-    [TOKEN_DOT]              = {NULL,         dot,         PREC_CALL},
-    [TOKEN_DOT_DOT]          = {NULL,         binary,      PREC_CALL},
+    [TOKEN_LEFT_PAREN]       = {grouping,      call,        PREC_CALL},
+    [TOKEN_RIGHT_PAREN]      = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_LEFT_BRACKET]     = {collection,    subscript,   PREC_CALL},
+    [TOKEN_RIGHT_BRACKET]    = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_LEFT_BRACE]       = {lambda,        NULL,        PREC_NONE},
+    [TOKEN_RIGHT_BRACE]      = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_COLON]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_COMMA]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_MINUS]            = {unary,         binary,      PREC_TERM},
+    [TOKEN_MODULO]           = {NULL,          binary,      PREC_FACTOR},
+    [TOKEN_PIPE]             = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_PLUS]             = {NULL,          binary,      PREC_TERM},
+    [TOKEN_QUESTION]         = {NULL,          question,    PREC_CALL},
+    [TOKEN_SEMICOLON]        = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_SLASH]            = {NULL,          binary,      PREC_FACTOR},
+    [TOKEN_STAR]             = {NULL,          binary,      PREC_FACTOR},
+    [TOKEN_BANG]             = {unary,         NULL,        PREC_NONE},
+    [TOKEN_BANG_EQUAL]       = {NULL,          binary,      PREC_EQUALITY},
+    [TOKEN_EQUAL]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_EQUAL_EQUAL]      = {NULL,          binary,      PREC_EQUALITY},
+    [TOKEN_GREATER]          = {NULL,          binary,      PREC_COMPARISON},
+    [TOKEN_GREATER_EQUAL]    = {NULL,          binary,      PREC_COMPARISON},
+    [TOKEN_LESS]             = {NULL,          binary,      PREC_COMPARISON},
+    [TOKEN_LESS_EQUAL]       = {NULL,          binary,      PREC_COMPARISON},
+    [TOKEN_DOT]              = {NULL,          dot,         PREC_CALL},
+    [TOKEN_DOT_DOT]          = {NULL,          binary,      PREC_CALL},
     [TOKEN_IDENTIFIER]       = {variable,      NULL,        PREC_NONE},
     [TOKEN_STRING]           = {string,        NULL,        PREC_NONE},
     [TOKEN_INTERPOLATION]    = {interpolation, NULL,        PREC_NONE},
@@ -1528,7 +1528,7 @@ void markCompilerRoots(VM* vm) {
     Compiler* compiler = vm->currentCompiler;
     while (compiler != NULL) {
         markObject(vm, (Obj*)compiler->function);
-        markIndexMap(vm, &compiler->indexes);
+        markIDMap(vm, &compiler->indexes);
         compiler = compiler->enclosing;
     }
 }

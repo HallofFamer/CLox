@@ -1092,7 +1092,7 @@ LOX_METHOD(Object, memberOf) {
 LOX_METHOD(Object, objectID) {
     ASSERT_ARG_COUNT("Object::objectID()", 0);
     Obj* object = AS_OBJ(receiver);
-    ENSURE_OBJECY_ID(object);
+    ENSURE_OBJECT_ID(object);
     RETURN_NUMBER((double)object->objectID);
 }
 

@@ -31,7 +31,7 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
     else klass->fullName = klass->name;
 
     initValueArray(&klass->traits);
-    initIndexMap(&klass->indexes);
+    initIDMap(&klass->indexes);
     initValueArray(&klass->fields);
     initTable(&klass->methods);
     pop(vm);
@@ -56,7 +56,7 @@ ObjClass* createTrait(VM* vm, ObjString* name) {
     else trait->fullName = trait->name;
 
     initValueArray(&trait->traits);
-    initIndexMap(&trait->indexes);
+    initIDMap(&trait->indexes);
     initValueArray(&trait->fields);
     initTable(&trait->methods);
     pop(vm);
@@ -189,10 +189,10 @@ void bindTraits(VM* vm, int numTraits, ObjClass* klass, ...) {
 void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value) {
     ObjString* propertyName = newString(vm, name);
     int index;
-    if (!indexMapGet(&klass->indexes, propertyName, &index)) {
+    if (!idMapGet(&klass->indexes, propertyName, &index)) {
         index = klass->fields.count;
         valueArrayWrite(vm, &klass->fields, value);
-        indexMapSet(vm, &klass->indexes, propertyName, index);
+        idMapSet(vm, &klass->indexes, propertyName, index);
     }
     else klass->fields.values[index] = value;
 }

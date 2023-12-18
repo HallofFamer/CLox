@@ -493,9 +493,9 @@ static bool invoke(VM* vm, ObjString* name, int argCount) {
 
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        IndexMap* indexMap = getShapeIndexes(vm, instance->obj.shapeID);
+        IDMap* idMap = getShapeIndexes(vm, instance->obj.shapeID);
         int index;
-        if (indexMapGet(indexMap, name, &index)) {
+        if (idMapGet(idMap, name, &index)) {
             Value value = instance->fields.values[index];
             vm->stackTop[-argCount - 1] = value;
             return callValue(vm, value, argCount);
@@ -541,7 +541,7 @@ static bool loadGlobalValue(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     int index;
-    if (indexMapGet(&vm->currentModule->valIndexes, name, &index)) {
+    if (idMapGet(&vm->currentModule->valIndexes, name, &index)) {
 #ifdef DEBUG_TRACE_CACHE
         printf("Cache miss for getting immutable global variable: '%s' at index %d.\n", name->chars, inlineCache->index);
 #endif 
@@ -556,7 +556,7 @@ static bool loadGlobalVariable(VM* vm, Chunk* chunk, uint8_t byte, Value* value)
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     int index;
-    if (indexMapGet(&vm->currentModule->varIndexes, name, &index)) {
+    if (idMapGet(&vm->currentModule->varIndexes, name, &index)) {
 #ifdef DEBUG_TRACE_CACHE
         printf("Cache miss for getting mutable global variable: '%s' at index %d.\n", name->chars, inlineCache->index);
 #endif 
@@ -695,10 +695,10 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
 #endif
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
-        IndexMap* indexMap = getShapeIndexes(vm, shapeID);
+        IDMap* idMap = getShapeIndexes(vm, shapeID);
         int index;
 
-        if (indexMapGet(indexMap, name, &index)) {
+        if (idMapGet(idMap, name, &index)) {
             Value value = instance->fields.values[index];
             pop(vm);
             push(vm, value);
@@ -730,7 +730,7 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         int index;
 
-        if (indexMapGet(&klass->indexes, name, &index)) {
+        if (idMapGet(&klass->indexes, name, &index)) {
             Value value = klass->fields.values[index];
             pop(vm);
             push(vm, value);
@@ -785,7 +785,6 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
 #ifdef DEBUG_TRACE_CACHE
             printf("Cache hit for setting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
 #endif 
-
             instance->fields.values[inlineCache->index] = value;
             push(vm, value);
             return true;
@@ -796,9 +795,9 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
 #endif
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
-        IndexMap* indexMap = getShapeIndexes(vm, shapeID);
+        IDMap* idMap = getShapeIndexes(vm, shapeID);
         int index;
-        if (indexMapGet(indexMap, name, &index)) instance->fields.values[index] = value;
+        if (idMapGet(idMap, name, &index)) instance->fields.values[index] = value;
         else {
             index = instance->fields.count;
             transitionShapeForObject(vm, &instance->obj, name);
@@ -827,10 +826,10 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
 
         ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
         int index;
-        if (indexMapGet(&klass->indexes, name, &index)) klass->fields.values[index] = value;
+        if (idMapGet(&klass->indexes, name, &index)) klass->fields.values[index] = value;
         else {
             index = klass->fields.count;
-            indexMapSet(vm, &klass->indexes, name, index);
+            idMapSet(vm, &klass->indexes, name, index);
             valueArrayWrite(vm, &klass->fields, value);
         }
 
@@ -920,11 +919,11 @@ InterpretResult run(VM* vm) {
                 ObjString* name = READ_STRING();
                 Value value = peek(vm, 0);
                 int index;
-                if (indexMapGet(&vm->currentModule->valIndexes, name, &index)) {
+                if (idMapGet(&vm->currentModule->valIndexes, name, &index)) {
                     vm->currentModule->valFields.values[index] = value;
                 }
                 else {
-                    indexMapSet(vm, &vm->currentModule->valIndexes, name, vm->currentModule->valFields.count);
+                    idMapSet(vm, &vm->currentModule->valIndexes, name, vm->currentModule->valFields.count);
                     valueArrayWrite(vm, &vm->currentModule->valFields, value);
                 }
                 pop(vm);
@@ -934,11 +933,11 @@ InterpretResult run(VM* vm) {
                 ObjString* name = READ_STRING();
                 Value value = peek(vm, 0);
                 int index;
-                if (indexMapGet(&vm->currentModule->varIndexes, name, &index)) {
+                if (idMapGet(&vm->currentModule->varIndexes, name, &index)) {
                     vm->currentModule->varFields.values[index] = value;
                 }
                 else {
-                    indexMapSet(vm, &vm->currentModule->varIndexes, name, vm->currentModule->varFields.count);
+                    idMapSet(vm, &vm->currentModule->varIndexes, name, vm->currentModule->varFields.count);
                     valueArrayWrite(vm, &vm->currentModule->varFields, value);
                 }
                 pop(vm);
@@ -958,7 +957,7 @@ InterpretResult run(VM* vm) {
                 ObjString* name = READ_STRING();
                 Value value = peek(vm, 0);
                 int index;
-                if (indexMapGet(&vm->currentModule->varIndexes, name, &index)) vm->currentModule->varFields.values[index] = value;
+                if (idMapGet(&vm->currentModule->varIndexes, name, &index)) vm->currentModule->varFields.values[index] = value;
                 else RUNTIME_ERROR("Undefined variable '%s'.", name->chars);
                 break;
             }
@@ -1437,31 +1436,31 @@ InterpretResult run(VM* vm) {
                 int index;
 
                 if (alias->length > 0) {
-                    if (indexMapGet(&vm->currentModule->valIndexes, alias, &index)) {
+                    if (idMapGet(&vm->currentModule->valIndexes, alias, &index)) {
                         vm->currentModule->valFields.values[index] = value;
                     }
                     else {
-                        indexMapSet(vm, &vm->currentModule->valIndexes, alias, vm->currentModule->valFields.count);
+                        idMapSet(vm, &vm->currentModule->valIndexes, alias, vm->currentModule->valFields.count);
                         valueArrayWrite(vm, &vm->currentModule->valFields, value);
                     }
                 }
                 else if (IS_CLASS(value)) {
                     ObjClass* klass = AS_CLASS(value);
-                    if (indexMapGet(&vm->currentModule->valIndexes, klass->name, &index)) {
+                    if (idMapGet(&vm->currentModule->valIndexes, klass->name, &index)) {
                         vm->currentModule->valFields.values[index] = value;
                     }
                     else {
-                        indexMapSet(vm, &vm->currentModule->valIndexes, klass->name, vm->currentModule->valFields.count);
+                        idMapSet(vm, &vm->currentModule->valIndexes, klass->name, vm->currentModule->valFields.count);
                         valueArrayWrite(vm, &vm->currentModule->valFields, value);
                     }
                 }
                 else if (IS_NAMESPACE(value)) {
                     ObjNamespace* namespace = AS_NAMESPACE(value);
-                    if (indexMapGet(&vm->currentModule->valIndexes, namespace->shortName, &index)) {
+                    if (idMapGet(&vm->currentModule->valIndexes, namespace->shortName, &index)) {
                         vm->currentModule->valFields.values[index] = value;
                     }
                     else {
-                        indexMapSet(vm, &vm->currentModule->valIndexes, namespace->shortName, vm->currentModule->valFields.count);
+                        idMapSet(vm, &vm->currentModule->valIndexes, namespace->shortName, vm->currentModule->valFields.count);
                         valueArrayWrite(vm, &vm->currentModule->valFields, value);
                     }
                 }
