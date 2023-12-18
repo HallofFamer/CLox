@@ -30,8 +30,6 @@
 #define SOCKET int
 #define INVALID_SOCKET (SOCKET)(~0)
 
-void strrev(char str[]);
-char* _strrev(char* str);
 void _itoa_s(int value, char buffer[], size_t bufsz, int radix);
 #endif
 

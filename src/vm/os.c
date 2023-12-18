@@ -8,7 +8,7 @@
     #pragma comment(lib,"WS2_32")
 #else
     // define non-windows functions.
-void strrev(char str[]) {
+static void strrev(char str[]) {
     int len = strlen(str);
     int start = 0;
     int end = len - 1;
@@ -19,20 +19,6 @@ void strrev(char str[]) {
         end--;
         start++;
     }
-}
-
-char* _strrev(char* str) {
-    int len = strlen(str);
-    char* ret = malloc(len + 1);
-    if (ret != NULL)
-    {
-        for (int i = 0; i < len; ++i)
-        {
-            ret[len - 1 - i] = str[i];
-        }
-        ret[len] = '\0';
-    }
-    return ret;
 }
 
 void _itoa_s(int value, char buffer[], size_t bufsz, int radix) {

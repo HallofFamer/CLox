@@ -231,7 +231,7 @@ LOX_METHOD(Class, getField) {
     if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
         int index;
-        if (indexMapGet(&klass->indexes, AS_STRING(args[0]), &index)) {
+        if (idMapGet(&klass->indexes, AS_STRING(args[0]), &index)) {
             RETURN_VAL(klass->fields.values[index]);
         }
     }
@@ -244,7 +244,7 @@ LOX_METHOD(Class, hasField) {
     if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
         int index;
-        RETURN_BOOL(indexMapGet(&klass->indexes, AS_STRING(args[0]), &index));
+        RETURN_BOOL(idMapGet(&klass->indexes, AS_STRING(args[0]), &index));
     }
     RETURN_FALSE;
 }
@@ -1051,9 +1051,9 @@ LOX_METHOD(Object, getField) {
     ASSERT_ARG_TYPE("Object::getField(field)", 0, String);
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        IndexMap* indexMap = getShapeIndexes(vm, instance->obj.shapeID);
+        IDMap* idMap = getShapeIndexes(vm, instance->obj.shapeID);
         int index;
-        if (indexMapGet(indexMap, AS_STRING(args[0]), &index)) RETURN_VAL(instance->fields.values[index]);
+        if (idMapGet(idMap, AS_STRING(args[0]), &index)) RETURN_VAL(instance->fields.values[index]);
     }
     RETURN_NIL;
 }
@@ -1063,9 +1063,9 @@ LOX_METHOD(Object, hasField) {
     ASSERT_ARG_TYPE("Object::hasField(field)", 0, String);
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
-        IndexMap* indexMap = getShapeIndexes(vm, instance->obj.shapeID);
+        IDMap* indexMap = getShapeIndexes(vm, instance->obj.shapeID);
         int index;
-        RETURN_BOOL(indexMapGet(indexMap, AS_STRING(args[0]), &index));
+        RETURN_BOOL(idMapGet(indexMap, AS_STRING(args[0]), &index));
     }
     RETURN_FALSE;
 }
@@ -1092,7 +1092,7 @@ LOX_METHOD(Object, memberOf) {
 LOX_METHOD(Object, objectID) {
     ASSERT_ARG_COUNT("Object::objectID()", 0);
     Obj* object = AS_OBJ(receiver);
-    if (object->objectID == 0) object->objectID = vm->objectIndex++ * 8;
+    ENSURE_OBJECY_ID(object);
     RETURN_NUMBER((double)object->objectID);
 }
 
