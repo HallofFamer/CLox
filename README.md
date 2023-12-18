@@ -12,9 +12,8 @@ https://github.com/munificent/craftinginterpreters
 ## Features
 
 ### Original Features
-- Scanner, Parser and Single-Pass Compiler.
 - Stacked based bytecote VM with the basic Op Code support.
-- On-demand Scanner and Pratt Parser.
+- On-demand Scanner, Pratt Parser and Single-Pass Compiler.
 - Uniform runtime representation for Lox Value. 
 - Basic Unary and Binary Expression/Operators.
 - Support for global and local variables.
@@ -31,9 +30,9 @@ https://github.com/munificent/craftinginterpreters
 - Array/Dictionary Literals and square bracket notation for array/dictionary access.
 - New Operators: Modulo(`%`), Range(`..`) and Nil Handling(`?.`, `??`, `?:`).
 - Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
+- Variadic Functions, Anonymous Functions(local return) and Lambda Expressions(nonlocal return). 
 - `Object` root class for every class in Lox, everything is an object, and every object has a class.
-- Refined object model which is similar to Smalltalk's metaclass system.
-- Class methods in class declaration, and `trait` keyword for trait declaration.
+- Class methods in class declaration using `class` keyword, and trait declaration using `trait` keyword.
 - Anonymous classes/traits similar to anonymous functions/lambda.
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
 - CLox Standard Library for packages `lang`, `util`, `collection`, `io` and `network` in bullt-in namespace `clox.std`.
@@ -47,6 +46,7 @@ https://github.com/munificent/craftinginterpreters
 - Parser is extended with look-ahead capability, with field next storing the next token. 
 - Print statement removed, use native function `print` and `println` instead.
 - Separated integer values and floating point values from Number.
+- Improved string concatenation, addition of string interpolation and UTF-8 strings.
 - C style For Loop replaced with Python/Kotlin style for-in Loop.
 - Global variables are scoped within the file it is declared, effectively becoming module variable.
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword.

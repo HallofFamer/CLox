@@ -802,6 +802,7 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
             index = instance->fields.count;
             transitionShapeForObject(vm, &instance->obj, name);
             valueArrayWrite(vm, &instance->fields, value);
+            shapeID = instance->obj.shapeID;
         }
 
         writeInlineCache(inlineCache, CACHE_IVAR, shapeID, index);
