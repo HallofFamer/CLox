@@ -1,3 +1,5 @@
+namespace test.lang;
+
 class Oops { 
     init(){ 
         fun f(){ 

@@ -1,3 +1,5 @@
+namespace test.features;
+
 class Brioche { }
 print("Class Brioche: ");
 println(Brioche);

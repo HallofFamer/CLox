@@ -1,3 +1,5 @@
+namespace test.features;
+
 val s = "Hello World";
 print("Create string object s: ");
 println(s);

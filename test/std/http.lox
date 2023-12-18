@@ -1,4 +1,4 @@
-namespace clox.test;
+namespace test.lang;
 using clox.std.network.HTTPClient;
 using clox.std.network.HTTPRequest;
 using clox.std.network.URL;

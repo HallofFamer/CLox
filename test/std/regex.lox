@@ -1,3 +1,4 @@
+namespace test.std;
 using clox.std.util.Regex;
 
 var regex = Regex("[Hh]ello [Ww]orld[!]?");

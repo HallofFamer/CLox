@@ -1,4 +1,4 @@
-namespace clox.test.features;
+namespace test.features;
 
 class Complex { 
 

@@ -1,3 +1,4 @@
+namespace test.std;
 using clox.std.io.File;
 
 var file = File("test/others/file_input.txt");

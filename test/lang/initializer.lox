@@ -1,3 +1,5 @@
+namespace test.lang;
+
 class CoffeeMaker {
     init(coffee){ 
         this.coffee = coffee;

@@ -1,3 +1,4 @@
+namespace test.std;
 using clox.std.network;
 using clox.std.network;
 

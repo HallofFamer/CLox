@@ -1,4 +1,4 @@
-namespace clox.test.features;
+namespace test.features;
 using clox.std.util.Date;
 using clox.std.util.UUID;
 

@@ -1,3 +1,4 @@
+namespace test.features;
 using clox.std.util.Random;
 
 var rand = Random();

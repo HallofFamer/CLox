@@ -1,3 +1,4 @@
+namespace test.std;
 using clox.std.collection.Queue;
 
 var queue = Queue();

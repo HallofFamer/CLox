@@ -1,4 +1,4 @@
-namespace test.lox;
+namespace test.features;
 using test.features.Fraction;
 
 println("Testing handling user defined exceptions: ");

@@ -1,3 +1,4 @@
+namespace test.std;
 using clox.std.network.IPAddress;
 using clox.std.network.Socket;
 using clox.std.network.SocketAddress;

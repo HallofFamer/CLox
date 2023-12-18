@@ -1,3 +1,5 @@
+namespace test.lang;
+
 var x = 2;
 switch(x) {
     case 1:

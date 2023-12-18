@@ -1,3 +1,5 @@
+namespace test.lang;
+
 class A { 
     method(){ 
         println("A method");

@@ -1,3 +1,5 @@
+namespace test.lang;
+
 class Scone { 
     topping(first, second){ 
         println("Scone with " + first + " and " + second);

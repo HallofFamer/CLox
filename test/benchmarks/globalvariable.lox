@@ -1,3 +1,5 @@
+namespace test.benchmarks;
+
 class Zoo {
   init() {
     this.aardvark = 1;

@@ -1,3 +1,5 @@
+namespace test.lang;
+
 fun outer() {
   var x = "value";
   fun middle() {

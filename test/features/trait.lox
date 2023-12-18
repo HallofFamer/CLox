@@ -1,3 +1,5 @@
+namespace test.features;
+
 trait TVehicle { 
     isMoving(){ 
         return this.speed > 0;

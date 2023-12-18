@@ -1,3 +1,5 @@
+namespace test.lang;
+
 fun sum(a, b, c) {
     return a + b + c;
 }

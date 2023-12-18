@@ -1,3 +1,4 @@
+namespace test.std;
 /*
 var obj = Object();
 /* more comments */

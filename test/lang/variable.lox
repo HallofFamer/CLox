@@ -1,3 +1,5 @@
+namespace test.lang;
+
 val x = 0;
 println("Creating global immutable variable x: " + x.toString());
 // val x = 1;

@@ -1,3 +1,4 @@
+namespace test.std;
 using clox.std.util.UUID;
 
 val uuid = UUID();

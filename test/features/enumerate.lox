@@ -1,3 +1,5 @@
+namespace test.features;
+
 println("Iterating over Int 5: ");
 5.timesRepeat({|i| print(i.toString() + " "); });
 println("");

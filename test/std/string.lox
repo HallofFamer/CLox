@@ -1,4 +1,4 @@
-namespace clox.test.std;
+namespace test.std;
 
 var str = "Hello World";
 print("printing string 'Hello World': ");
@@ -21,8 +21,8 @@ print("String starts with 'Hello': ");
 println(str.startsWith("Hello"));
 print("String ends with World: ");
 println(str.endsWith("World"));
-print("String char at position 4: ");
-println(str.getChar(4));
+print("String character at position 4: ");
+println(str.getCodePoint(4));
 print("String subscript at position 2: ");
 println(str[2]);
 println("");
