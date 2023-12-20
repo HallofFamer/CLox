@@ -2,22 +2,27 @@ namespace test.features;
 using clox.std.util.Date;
 using clox.std.util.UUID;
 
+println("Testing Object ID for special values: ");
 println("ID for nil: ${nil.objectID()}");
 println("ID for true: ${true.objectID()}");
 println("ID for false: ${false.objectID()}");
 println("");
 
+println("Testing Object ID for numbers: ");
 println("ID for 0: ${0.objectID()}");
 println("ID for 1: ${1.objectID()}");
 println("ID for 2: ${2.objectID()}");
 println("ID for 3.5: ${3.5.objectID()}");
 println("");
 
+println("Testing Object ID for generic objects: ");
 println("ID for string: ${"Hello world".objectID()}");
 println("ID for array: ${[1, 2, 3, 4, 5].objectID()}");
 println("ID for dictionary: ${["US": "United States", "EU": "Europe", "JP": "Japan"].objectID()}");
 println("ID for range: ${(1..5).objectID()}");
+println("ID for class: ${Class.objectID()}");
 println("");
 
+println("Testing Object ID for instance objects: ");
 println("ID for object Date: ${Date.now.objectID()}");
 println("ID for object UUID: ${UUID.generate().objectID()}");

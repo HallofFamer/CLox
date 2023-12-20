@@ -21,6 +21,17 @@ typedef struct {
     IDEntry* entries;
 } IDMap;
 
+typedef struct {
+    IDMap indexes;
+    ValueArray slots;
+} IDAssociation;
+
+typedef struct {
+    int count;
+    int capacity;
+    IDAssociation* associations;
+} GenericIDMap;
+
 void initIDMap(IDMap* idMap);
 void freeIDMap(VM* vm, IDMap* idMap);
 bool idMapGet(IDMap* idMap, ObjString* key, int* index);

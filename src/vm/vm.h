@@ -107,6 +107,7 @@ struct VM {
     size_t nextGC;
     Obj* objects;
     uint64_t objectIndex;
+    GenericIDMap genericIDMap;
 
     int grayCount;
     int grayCapacity;
