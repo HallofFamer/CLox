@@ -1,6 +1,7 @@
 namespace test.features;
 using clox.std.util.Date;
 using clox.std.util.UUID;
+using test.features.Fraction;
 
 println("Testing Object ID for special values: ");
 println("ID for nil: ${nil.objectID()}");
@@ -25,4 +26,5 @@ println("");
 
 println("Testing Object ID for instance objects: ");
 println("ID for object Date: ${Date.now.objectID()}");
-println("ID for object UUID: ${UUID.generate().objectID()}");
+println("ID for object UUID: ${UUID().objectID()}");
+println("ID for object Fraction: ${Fraction(2, 3).objectID()}");
