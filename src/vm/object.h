@@ -12,6 +12,8 @@
 #include "table.h"
 #include "value.h"
 
+#define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass)
+
 #define OBJ_TYPE(value)             (AS_OBJ(value)->type)
 #define OBJ_KLASS(value)            (AS_OBJ(value)->klass)
 
@@ -23,6 +25,7 @@
 #define IS_ENTRY(value)             isObjType(value, OBJ_ENTRY)
 #define IS_FILE(value)              isObjType(value, OBJ_FILE)
 #define IS_FUNCTION(value)          isObjType(value, OBJ_FUNCTION)
+#define IS_GENERIC(value)           IS_OBJ(value) && !isObjType(value, OBJ_INSTANCE)
 #define IS_INSTANCE(value)          isObjType(value, OBJ_INSTANCE)
 #define IS_METHOD(value)            isObjType(value, OBJ_METHOD)
 #define IS_NAMESPACE(value)         isObjType(value, OBJ_NAMESPACE)
@@ -54,8 +57,6 @@
 #define AS_CARRAY(value)            (((ObjArray*)AS_OBJ(value))->elements)
 #define AS_CRECORD(value, type)     ((type*)((ObjRecord*)AS_OBJ(value)->data))
 #define AS_CSTRING(value)           (((ObjString*)AS_OBJ(value))->chars)
-
-#define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass)
 
 typedef enum {
     OBJ_ARRAY,

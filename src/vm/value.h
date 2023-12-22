@@ -19,7 +19,7 @@ typedef struct ObjString ObjString;
 #define TAG_TRUE      3
 #define TAG_INT       4
 #define TAG_CHAR      5
-#define TAG_RESERVED  6
+#define TAG_GENERIC   6
 #define TAG_UNDEFINED 7
 
 typedef uint64_t Value;

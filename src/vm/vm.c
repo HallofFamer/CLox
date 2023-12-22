@@ -147,6 +147,7 @@ void initVM(VM* vm) {
     initTable(&vm->modules);
     initTable(&vm->strings);
     initShapeTree(vm);
+    initGenericIDMap(vm);
     vm->initString = NULL;
     vm->initString = copyString(vm, "init", 4);
 
@@ -164,6 +165,7 @@ void freeVM(VM* vm) {
     freeTable(vm, &vm->classes);
     freeTable(vm, &vm->strings);
     freeShapeTree(vm, &vm->shapes);
+    freeGenericIDMap(vm, &vm->genericIDMap);
     vm->initString = NULL;
     freeObjects(vm);
 }
