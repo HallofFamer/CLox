@@ -16,7 +16,7 @@ static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
     push(vm, OBJ_VAL(klass));
-    klass->behavior = behavior;
+    klass->behaviorType = behavior;
     klass->behaviorID = vm->behaviorCount++;
     klass->name = name != NULL ? name : newString(vm, "");
     klass->namespace = vm->currentNamespace;
@@ -41,7 +41,7 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
 ObjClass* createTrait(VM* vm, ObjString* name) {
     ObjClass* trait = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->traitClass);
     push(vm, OBJ_VAL(trait));
-    trait->behavior = BEHAVIOR_TRAIT;
+    trait->behaviorType = BEHAVIOR_TRAIT;
     trait->behaviorID = vm->behaviorCount++;
     trait->name = name != NULL ? name : createBehaviorName(vm, BEHAVIOR_TRAIT, NULL);
     trait->namespace = vm->currentNamespace;
@@ -81,7 +81,7 @@ bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass) {
 
 bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass) {
     if (klass == superclass) return true;
-    if (klass->behavior == BEHAVIOR_TRAIT) return false;
+    if (klass->behaviorType == BEHAVIOR_TRAIT) return false;
 
     ObjClass* currentClass = klass->superclass;
     while (currentClass != NULL) {
@@ -92,7 +92,7 @@ bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass) {
 }
 
 bool isClassImplementingTrait(ObjClass* klass, ObjClass* trait) {
-    if (klass->behavior == BEHAVIOR_METACLASS || klass->traits.count == 0) return false;
+    if (klass->behaviorType == BEHAVIOR_METACLASS || klass->traits.count == 0) return false;
     ValueArray* traits = &klass->traits;
 
     for (int i = 0; i < traits->count; i++) {
@@ -103,7 +103,8 @@ bool isClassImplementingTrait(ObjClass* klass, ObjClass* trait) {
 
 void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     subclass->superclass = superclass;
-    if (superclass->behavior == BEHAVIOR_CLASS) {
+    subclass->classType = superclass->classType;
+    if (superclass->behaviorType == BEHAVIOR_CLASS) {
         for (int i = 0; i < superclass->traits.count; i++) {
             valueArrayWrite(vm, &subclass->traits, superclass->traits.values[i]);
         }

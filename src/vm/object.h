@@ -201,7 +201,8 @@ typedef struct {
 
 struct ObjClass {
     Obj obj;
-    BehaviorType behavior;
+    ObjType classType;
+    BehaviorType behaviorType;
     int behaviorID;
     ObjString* name;
     ObjString* fullName;
@@ -240,7 +241,7 @@ struct ObjString {
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
 ObjArray* newArray(VM* vm);
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method);
-ObjClass* newClass(VM* vm, ObjString* name);
+ObjClass* newClass(VM* vm, ObjString* name, ObjType classType);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
 ObjDictionary* newDictionary(VM* vm);
 ObjEntry* newEntry(VM* vm, Value key, Value value);

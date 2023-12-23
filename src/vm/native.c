@@ -75,7 +75,7 @@ LOX_FUNCTION(read) {
 ObjClass* defineNativeClass(VM* vm, const char* name) {
     ObjString* className = newString(vm, name);
     push(vm, OBJ_VAL(className));
-    ObjClass* nativeClass = newClass(vm, className);
+    ObjClass* nativeClass = newClass(vm, className, OBJ_INSTANCE);
     nativeClass->isNative = true;
     nativeClass->obj.klass->isNative = true;
     push(vm, OBJ_VAL(nativeClass));

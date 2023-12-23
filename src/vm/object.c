@@ -36,7 +36,7 @@ ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
     return bound;
 }
 
-ObjClass* newClass(VM* vm, ObjString* name) {
+ObjClass* newClass(VM* vm, ObjString* name, ObjType classType) {
     if (vm->behaviorCount == INT32_MAX) {
         runtimeError(vm, "Cannot have more than %d classes/traits.", INT32_MAX);
         return NULL;
@@ -255,7 +255,7 @@ static void printArray(ObjArray* array) {
 }
 
 static void printClass(ObjClass* klass) {
-    switch (klass->behavior) {
+    switch (klass->behaviorType) {
         case BEHAVIOR_METACLASS:
             printf("<metaclass %s>", klass->name->chars);
             break;

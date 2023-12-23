@@ -255,7 +255,7 @@ static ObjArray* makeTraitArray(VM* vm, uint8_t behaviorCount) {
     push(vm, OBJ_VAL(traits));
     for (int i = 0; i < behaviorCount; i++) {
         Value trait = peek(vm, i + 1);
-        if (!IS_CLASS(trait) || AS_CLASS(trait)->behavior != BEHAVIOR_TRAIT) {
+        if (!IS_CLASS(trait) || AS_CLASS(trait)->behaviorType != BEHAVIOR_TRAIT) {
             return NULL;
         }
         valueArrayWrite(vm, &traits->elements, trait);
@@ -645,7 +645,7 @@ static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     ObjClass* klass = AS_CLASS(peek(vm, 1));
 
     if (isClassMethod) {
-        if (klass->behavior != BEHAVIOR_CLASS) {
+        if (klass->behaviorType != BEHAVIOR_CLASS) {
             runtimeError(vm, "Class method '%s' can only be defined in class body.", name->chars);
         }
         klass = klass->obj.klass;
@@ -1307,7 +1307,7 @@ InterpretResult run(VM* vm) {
                 break;
             case OP_CLASS: { 
                 ObjString* className = READ_STRING();
-                push(vm, OBJ_VAL(newClass(vm, className)));
+                push(vm, OBJ_VAL(newClass(vm, className, OBJ_INSTANCE)));
                 tableSet(vm, &vm->currentNamespace->values, className, peek(vm, 0));
                 break;
             }
@@ -1329,9 +1329,9 @@ InterpretResult run(VM* vm) {
             }
             case OP_INHERIT: {
                 ObjClass* klass = AS_CLASS(peek(vm, 1));
-                if (klass->behavior == BEHAVIOR_CLASS) {
+                if (klass->behaviorType == BEHAVIOR_CLASS) {
                     Value superclass = peek(vm, 0);
-                    if (!IS_CLASS(superclass) || AS_CLASS(superclass)->behavior != BEHAVIOR_CLASS) {
+                    if (!IS_CLASS(superclass) || AS_CLASS(superclass)->behaviorType != BEHAVIOR_CLASS) {
                         RUNTIME_ERROR("Superclass must be a class.");
                     }
                     bindSuperclass(vm, klass, AS_CLASS(superclass));
