@@ -81,12 +81,12 @@ LOX_METHOD(Behavior, isBehavior) {
 
 LOX_METHOD(Behavior, isClass) {
     ASSERT_ARG_COUNT("Behavior::isClass()", 0);
-    RETURN_BOOL(AS_CLASS(receiver)->behavior == BEHAVIOR_CLASS || AS_CLASS(receiver)->behavior == BEHAVIOR_METACLASS);
+    RETURN_BOOL(AS_CLASS(receiver)->behaviorType == BEHAVIOR_CLASS || AS_CLASS(receiver)->behaviorType == BEHAVIOR_METACLASS);
 }
 
 LOX_METHOD(Behavior, isMetaclass) {
     ASSERT_ARG_COUNT("Behavior::isMetaclass()", 0);
-    RETURN_BOOL(AS_CLASS(receiver)->behavior == BEHAVIOR_METACLASS);
+    RETURN_BOOL(AS_CLASS(receiver)->behaviorType == BEHAVIOR_METACLASS);
 }
 
 LOX_METHOD(Behavior, isNative) {
@@ -96,7 +96,7 @@ LOX_METHOD(Behavior, isNative) {
 
 LOX_METHOD(Behavior, isTrait) {
     ASSERT_ARG_COUNT("Behavior::isTrait()", 0);
-    RETURN_BOOL(AS_CLASS(receiver)->behavior == BEHAVIOR_TRAIT);
+    RETURN_BOOL(AS_CLASS(receiver)->behaviorType == BEHAVIOR_TRAIT);
 }
 
 LOX_METHOD(Behavior, methods) {
@@ -254,8 +254,9 @@ LOX_METHOD(Class, init) {
     ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 0, String);
     ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 1, Class);
     ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 2, Array);
-    ObjClass* klass = newClass(vm, AS_STRING(args[0]));
-    bindSuperclass(vm, klass, AS_CLASS(args[1]));
+    ObjClass* superClass = AS_CLASS(args[1]);
+    ObjClass* klass = newClass(vm, AS_STRING(args[0]), superClass->classType);
+    bindSuperclass(vm, klass, superClass);
     implementTraits(vm, klass, &AS_ARRAY(args[2])->elements);
     RETURN_OBJ(klass);
 }
@@ -1488,6 +1489,7 @@ void registerLangPackage(VM* vm) {
     vm->currentNamespace = vm->langNamespace;
 
     vm->objectClass = defineSpecialClass(vm, "Object", BEHAVIOR_CLASS);
+    vm->objectClass->classType = OBJ_INSTANCE;
     DEF_METHOD(vm->objectClass, Object, clone, 0);
     DEF_METHOD(vm->objectClass, Object, equals, 1);
     DEF_METHOD(vm->objectClass, Object, getClass, 0);
@@ -1503,6 +1505,7 @@ void registerLangPackage(VM* vm) {
 
     ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
     inheritSuperclass(vm, behaviorClass, vm->objectClass);
+    behaviorClass->classType = OBJ_CLASS;
     DEF_METHOD(behaviorClass, Behavior, clone, 0);
     DEF_METHOD(behaviorClass, Behavior, getMethod, 1);
     DEF_METHOD(behaviorClass, Behavior, hasMethod, 1);
@@ -1561,6 +1564,7 @@ void registerLangPackage(VM* vm) {
 
     vm->methodClass = defineNativeClass(vm, "Method");
     bindSuperclass(vm, vm->methodClass, vm->objectClass);
+    vm->methodClass->classType = OBJ_METHOD;
     DEF_METHOD(vm->methodClass, Method, arity, 0);
     DEF_METHOD(vm->methodClass, Method, behavior, 0);
     DEF_METHOD(vm->methodClass, Method, bind, 1);
@@ -1582,6 +1586,7 @@ void registerLangPackage(VM* vm) {
 
     vm->namespaceClass = defineNativeClass(vm, "Namespace");
     bindSuperclass(vm, vm->namespaceClass, vm->objectClass);
+    vm->namespaceClass->classType = OBJ_NAMESPACE;
     DEF_METHOD(vm->namespaceClass, Namespace, clone, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, enclosing, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, fullName, 0);
@@ -1710,6 +1715,7 @@ void registerLangPackage(VM* vm) {
 
     vm->stringClass = defineNativeClass(vm, "String");
     bindSuperclass(vm, vm->stringClass, vm->objectClass);
+    vm->stringClass->classType = OBJ_STRING;
     DEF_METHOD(vm->stringClass, String, capitalize, 0);
     DEF_METHOD(vm->stringClass, String, clone, 0);
     DEF_METHOD(vm->stringClass, String, contains, 1);
@@ -1744,6 +1750,7 @@ void registerLangPackage(VM* vm) {
 
     vm->functionClass = defineNativeClass(vm, "Function");
     bindSuperclass(vm, vm->functionClass, vm->objectClass);
+    vm->functionClass->classType = OBJ_CLOSURE;
     DEF_METHOD(vm->functionClass, Function, arity, 0);
     DEF_METHOD(vm->functionClass, Function, call, -1);
     DEF_METHOD(vm->functionClass, Function, call0, 0);
@@ -1761,6 +1768,7 @@ void registerLangPackage(VM* vm) {
 
     vm->boundMethodClass = defineNativeClass(vm, "BoundMethod");
     bindSuperclass(vm, vm->boundMethodClass, vm->objectClass);
+    vm->boundMethodClass->classType = OBJ_BOUND_METHOD;
     DEF_METHOD(vm->boundMethodClass, BoundMethod, arity, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, clone, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, init, 2);

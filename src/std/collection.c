@@ -2070,6 +2070,7 @@ void registerCollectionPackage(VM* vm) {
 
     vm->arrayClass = defineNativeClass(vm, "Array");
     bindSuperclass(vm, vm->arrayClass, listClass);
+    vm->arrayClass->classType = OBJ_ARRAY;
     DEF_METHOD(vm->arrayClass, Array, add, 1);
     DEF_METHOD(vm->arrayClass, Array, addAll, 1);
     DEF_METHOD(vm->arrayClass, Array, clear, 0);
@@ -2130,6 +2131,7 @@ void registerCollectionPackage(VM* vm) {
 
     vm->nodeClass = defineNativeClass(vm, "Node");
     bindSuperclass(vm, vm->nodeClass, vm->objectClass);
+    vm->nodeClass->classType = OBJ_NODE;
     DEF_METHOD(vm->nodeClass, Node, clone, 0);
     DEF_METHOD(vm->nodeClass, Node, element, 0);
     DEF_METHOD(vm->nodeClass, Node, init, 3);
@@ -2139,6 +2141,7 @@ void registerCollectionPackage(VM* vm) {
 
     vm->dictionaryClass = defineNativeClass(vm, "Dictionary");
     bindSuperclass(vm, vm->dictionaryClass, collectionClass);
+    vm->dictionaryClass->classType = OBJ_DICTIONARY;
     DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, collect, 1);
@@ -2169,6 +2172,7 @@ void registerCollectionPackage(VM* vm) {
 
     vm->entryClass = defineNativeClass(vm, "Entry");
     bindSuperclass(vm, vm->entryClass, vm->objectClass);
+    vm->entryClass->classType = OBJ_ENTRY;
     DEF_METHOD(vm->entryClass, Entry, clone, 0);
     DEF_METHOD(vm->entryClass, Entry, getKey, 0);
     DEF_METHOD(vm->entryClass, Entry, getValue, 0);
@@ -2194,6 +2198,7 @@ void registerCollectionPackage(VM* vm) {
 
     vm->rangeClass = defineNativeClass(vm, "Range");
     bindSuperclass(vm, vm->rangeClass, listClass);
+    vm->rangeClass->classType = OBJ_RANGE;
     DEF_METHOD(vm->rangeClass, Range, add, 1);
     DEF_METHOD(vm->rangeClass, Range, addAll, 1);
     DEF_METHOD(vm->rangeClass, Range, clone, 0);

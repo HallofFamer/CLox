@@ -531,6 +531,7 @@ void registerIOPackage(VM* vm) {
 
     vm->fileClass = defineNativeClass(vm, "File");
     bindSuperclass(vm, vm->fileClass, vm->objectClass);
+    vm->fileClass->classType = OBJ_FILE;
     DEF_METHOD(vm->fileClass, File, create, 0);
     DEF_METHOD(vm->fileClass, File, delete, 0);
     DEF_METHOD(vm->fileClass, File, exists, 0);

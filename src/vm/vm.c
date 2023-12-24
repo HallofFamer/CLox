@@ -391,6 +391,29 @@ bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
     return true;
 }
 
+static Value createObject(VM* vm, ObjClass* klass) {
+    switch (klass->classType) {
+        case OBJ_ARRAY: return OBJ_VAL(newArray(vm));
+        case OBJ_BOUND_METHOD: return OBJ_VAL(newBoundMethod(vm, NIL_VAL, NULL));
+        case OBJ_CLASS: return OBJ_VAL(newClass(vm, NULL, OBJ_INSTANCE));
+        case OBJ_CLOSURE: return OBJ_VAL(newClosure(vm, NULL));
+        case OBJ_DICTIONARY: return OBJ_VAL(newDictionary(vm));
+        case OBJ_ENTRY: return OBJ_VAL(newEntry(vm, NIL_VAL, NIL_VAL));
+        case OBJ_FILE: return OBJ_VAL(newFile(vm, NULL));
+        case OBJ_INSTANCE: return OBJ_VAL(newInstance(vm, klass));
+        case OBJ_METHOD: return OBJ_VAL(newMethod(vm, NULL, NULL));
+        case OBJ_NAMESPACE: return OBJ_VAL(newNamespace(vm, NULL, NULL));
+        case OBJ_NODE: return OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL));
+        case OBJ_RANGE: return OBJ_VAL(newRange(vm, 0, 1));
+        case OBJ_RECORD: return OBJ_VAL(newRecord(vm, NULL));
+        case OBJ_STRING: {
+            // handle creation of string.
+            return OBJ_VAL(emptyString(vm));
+        }
+        default: return NIL_VAL;
+    }
+}
+
 static bool callNativeFunction(VM* vm, NativeFunction function, int argCount) {
     Value result = function(vm, argCount, vm->stackTop - argCount);
     vm->stackTop -= (size_t)argCount + 1;
@@ -444,7 +467,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
             }
             case OBJ_CLASS: {
                 ObjClass* klass = AS_CLASS(callee);
-                vm->stackTop[-argCount - 1] = OBJ_VAL(newInstance(vm, klass));
+                vm->stackTop[-argCount - 1] = createObject(vm, klass);
 
                 Value initializer;
                 if (tableGet(&klass->methods, vm->initString, &initializer)) {
