@@ -11,7 +11,9 @@ typedef enum {
     BEHAVIOR_TRAIT
 } BehaviorType;
 
-ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior);
+void initClass(VM* vm, ObjClass* klass, ObjString* name, ObjClass* metaclass, BehaviorType behaviorType);
+ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behaviorType);
+void initTrait(VM* vm, ObjClass* trait, ObjString* name);
 ObjClass* createTrait(VM* vm, ObjString* name);
 ObjClass* getObjClass(VM* vm, Value value);
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);

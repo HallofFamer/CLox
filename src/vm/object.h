@@ -13,6 +13,9 @@
 #include "value.h"
 
 #define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass)
+#define ALLOCATE_CLASS(classClass) ALLOCATE_OBJ(ObjClass, OBJ_CLASS, classClass)
+#define ALLOCATE_CLOSURE(closureClass) ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE, closureClass)
+#define ALLOCATE_NAMESPACE(namespaceClass) ALLOCATE_OBJ(ObjNamespace, OBJ_NAMESPACE, namespaceClass)
 
 #define OBJ_TYPE(value)             (AS_OBJ(value)->type)
 #define OBJ_KLASS(value)            (AS_OBJ(value)->klass)
@@ -242,6 +245,7 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
 ObjArray* newArray(VM* vm);
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method);
 ObjClass* newClass(VM* vm, ObjString* name, ObjType classType);
+void initClosure(VM* vm, ObjClosure* closure, ObjFunction* function);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
 ObjDictionary* newDictionary(VM* vm);
 ObjEntry* newEntry(VM* vm, Value key, Value value);
@@ -250,6 +254,7 @@ ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure);
 ObjModule* newModule(VM* vm, ObjString* path);
+void initNamespace(VM* vm, ObjNamespace* namespace, ObjString* shortName, ObjNamespace* enclosing);
 ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing);
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);

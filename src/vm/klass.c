@@ -13,12 +13,12 @@ static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass
     else return formattedString(vm, "%s@%x", superclass->name->chars, currentTimeStamp);
 }
 
-ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behavior) {
-    ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, metaclass);
+void initClass(VM* vm, ObjClass* klass, ObjString* name, ObjClass* metaclass, BehaviorType behaviorType) {
     push(vm, OBJ_VAL(klass));
-    klass->behaviorType = behavior;
     klass->behaviorID = vm->behaviorCount++;
-    klass->name = name != NULL ? name : newString(vm, "");
+    klass->behaviorType = behaviorType;
+    klass->classType = OBJ_INSTANCE;
+    klass->name = name != NULL ? name : emptyString(vm);
     klass->namespace = vm->currentNamespace;
     klass->superclass = NULL;
     klass->isNative = false;
@@ -35,11 +35,15 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
     initValueArray(&klass->fields);
     initTable(&klass->methods);
     pop(vm);
+}
+
+ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behaviorType) {
+    ObjClass* klass = ALLOCATE_CLASS(metaclass);
+    initClass(vm, klass, name, metaclass, behaviorType);
     return klass;
 }
 
-ObjClass* createTrait(VM* vm, ObjString* name) {
-    ObjClass* trait = ALLOCATE_OBJ(ObjClass, OBJ_CLASS, vm->traitClass);
+void initTrait(VM* vm, ObjClass* trait, ObjString* name) {
     push(vm, OBJ_VAL(trait));
     trait->behaviorType = BEHAVIOR_TRAIT;
     trait->behaviorID = vm->behaviorCount++;
@@ -60,6 +64,11 @@ ObjClass* createTrait(VM* vm, ObjString* name) {
     initValueArray(&trait->fields);
     initTable(&trait->methods);
     pop(vm);
+}
+
+ObjClass* createTrait(VM* vm, ObjString* name) {
+    ObjClass* trait = ALLOCATE_CLASS(vm->traitClass);
+    initTrait(vm, trait, name);
     return trait;
 }
 

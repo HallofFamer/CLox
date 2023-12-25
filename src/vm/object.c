@@ -44,23 +44,31 @@ ObjClass* newClass(VM* vm, ObjString* name, ObjType classType) {
 
     ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
     ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass, BEHAVIOR_METACLASS);
+    metaclass->classType = OBJ_CLASS;
     push(vm, OBJ_VAL(metaclass));
     ObjClass* klass = createClass(vm, name, metaclass, BEHAVIOR_CLASS);
+    klass->classType = classType;
     pop(vm);
     return klass;
 }
 
-ObjClosure* newClosure(VM* vm, ObjFunction* function) {
+void initClosure(VM* vm, ObjClosure* closure, ObjFunction* function) {
+    push(vm, OBJ_VAL(closure));
     ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
     for (int i = 0; i < function->upvalueCount; i++) {
         upvalues[i] = NULL;
     }
 
-    ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE, vm->functionClass);
     closure->function = function;
     closure->module = vm->currentModule;
     closure->upvalues = upvalues;
     closure->upvalueCount = function->upvalueCount;
+    pop(vm);
+}
+
+ObjClosure* newClosure(VM* vm, ObjFunction* function) {
+    ObjClosure* closure = ALLOCATE_CLOSURE(vm->functionClass);
+    initClosure(vm, closure, function);
     return closure;
 }
 
@@ -129,20 +137,26 @@ ObjModule* newModule(VM* vm, ObjString* path) {
     return module;
 }
 
-ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing) {
-    ObjNamespace* namespace = ALLOCATE_OBJ(ObjNamespace, OBJ_NAMESPACE, vm->namespaceClass);
+void initNamespace(VM* vm, ObjNamespace* namespace, ObjString* shortName, ObjNamespace* enclosing) {
+    push(vm, OBJ_VAL(namespace));
     namespace->shortName = shortName;
     namespace->enclosing = enclosing;
     namespace->isRoot = false;
 
-    if (namespace->enclosing != NULL && !namespace->enclosing->isRoot) { 
+    if (namespace->enclosing != NULL && !namespace->enclosing->isRoot) {
         char chars[UINT8_MAX];
         int length = sprintf_s(chars, UINT8_MAX, "%s.%s", namespace->enclosing->fullName->chars, shortName->chars);
         namespace->fullName = copyString(vm, chars, length);
-    } 
+    }
     else namespace->fullName = namespace->shortName;
 
     initTable(&namespace->values);
+    pop(vm);
+}
+
+ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing) {
+    ObjNamespace* namespace = ALLOCATE_NAMESPACE(vm->namespaceClass);
+    initNamespace(vm, namespace, shortName, enclosing);
     return namespace;
 }
 
