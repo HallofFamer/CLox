@@ -500,7 +500,7 @@ LOX_METHOD(Array, indexOf) {
 
 LOX_METHOD(Array, init) {
     ASSERT_ARG_COUNT("Array::init()", 0);
-    RETURN_OBJ(newArray(vm));
+    RETURN_VAL(receiver);
 }
 
 LOX_METHOD(Array, insertAt) {
@@ -968,7 +968,7 @@ LOX_METHOD(Dictionary, getAt) {
 
 LOX_METHOD(Dictionary, init) {
     ASSERT_ARG_COUNT("Dictionary::init()", 0);
-    RETURN_OBJ(newDictionary(vm));
+    RETURN_VAL(receiver);
 }
 
 LOX_METHOD(Dictionary, isEmpty) {

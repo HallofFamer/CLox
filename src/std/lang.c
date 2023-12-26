@@ -178,7 +178,11 @@ LOX_METHOD(BoundMethod, init) {
         if (!isObjInstanceOf(vm, args[0], method->behavior)) {
             THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot bound method to object.");
         }
-        RETURN_OBJ(newBoundMethod(vm, args[0], method->closure));
+
+        ObjBoundMethod* boundMethod = AS_BOUND_METHOD(receiver);
+        boundMethod->receiver = args[0];
+        boundMethod->method = method->closure;
+        RETURN_OBJ(boundMethod);
     }
     else if (IS_STRING(args[1])) {
         ObjClass* klass = getObjClass(vm, args[0]);
@@ -186,7 +190,11 @@ LOX_METHOD(BoundMethod, init) {
         if (!tableGet(&klass->methods, AS_STRING(args[1]), &value)) {
             THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot bound method to object.");
         }
-        RETURN_OBJ(newBoundMethod(vm, args[0], AS_CLOSURE(value)));
+
+        ObjBoundMethod* boundMethod = AS_BOUND_METHOD(receiver);
+        boundMethod->receiver = args[0];
+        boundMethod->method = AS_CLOSURE(value);
+        RETURN_OBJ(boundMethod);
     }
     else {
         THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "method BoundMethod::init(object, method) expects argument 2 to be a method or string.");
@@ -254,9 +262,14 @@ LOX_METHOD(Class, init) {
     ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 0, String);
     ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 1, Class);
     ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 2, Array);
-    ObjClass* superClass = AS_CLASS(args[1]);
-    ObjClass* klass = newClass(vm, AS_STRING(args[0]), superClass->classType);
-    bindSuperclass(vm, klass, superClass);
+
+    ObjClass* klass = AS_CLASS(receiver);
+    ObjString* name = AS_STRING(args[0]);
+    ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
+    ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass, BEHAVIOR_METACLASS);  
+
+    initClass(vm, klass, name, metaclass, BEHAVIOR_CLASS);
+    bindSuperclass(vm, klass, AS_CLASS(args[1]));
     implementTraits(vm, klass, &AS_ARRAY(args[2])->elements);
     RETURN_OBJ(klass);
 }
@@ -402,7 +415,24 @@ LOX_METHOD(Function, clone) {
 }
 
 LOX_METHOD(Function, init) {
-    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Function.");
+    ASSERT_ARG_COUNT("Function::init(name, closure)", 2);
+    ASSERT_ARG_TYPE("Function::init(name, closure)", 0, String);
+    ASSERT_ARG_TYPE("Function::init(name, closure)", 1, Closure);
+
+    ObjClosure* self = AS_CLOSURE(receiver);
+    ObjString* name = AS_STRING(args[0]);
+    ObjClosure* closure = AS_CLOSURE(args[1]);
+
+    int index;
+    if (idMapGet(&vm->currentModule->valIndexes, name, &index)) {
+        THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Function %s already exists.", name->chars);
+    }
+    idMapSet(vm, &vm->currentModule->valIndexes, name, vm->currentModule->valFields.count);
+    valueArrayWrite(vm, &vm->currentModule->valFields, OBJ_VAL(self));
+
+    initClosure(vm, self, closure->function);
+    closure->function->name = name;
+    RETURN_OBJ(self);
 }
 
 LOX_METHOD(Function, isAnonymous) {
@@ -432,9 +462,9 @@ LOX_METHOD(Function, name) {
 LOX_METHOD(Function, toString) {
     ASSERT_ARG_COUNT("Function::toString()", 0);
     if (IS_NATIVE_FUNCTION(receiver)) {
-        RETURN_STRING_FMT("<fn %s>", AS_NATIVE_FUNCTION(receiver)->name->chars);
+        RETURN_STRING_FMT("<function %s>", AS_NATIVE_FUNCTION(receiver)->name->chars);
     }
-    RETURN_STRING_FMT("<fn %s>", AS_CLOSURE(receiver)->function->name->chars);
+    RETURN_STRING_FMT("<function %s>", AS_CLOSURE(receiver)->function->name->chars);
 }
 
 LOX_METHOD(Function, upvalueCount) {
@@ -701,7 +731,26 @@ LOX_METHOD(Method, clone) {
 }
 
 LOX_METHOD(Method, init) {
-    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Method.");
+    ASSERT_ARG_COUNT("Method::init(behavior, name, closure)", 3);
+    ASSERT_ARG_TYPE("Method::init(behavior, name, closure)", 0, Class);
+    ASSERT_ARG_TYPE("Method::init(behavior, name, closure)", 1, String);
+    ASSERT_ARG_TYPE("Method::init(behavior, name, closure)", 2, Closure);
+
+    ObjMethod* self = AS_METHOD(receiver);
+    ObjClass* behavior = AS_CLASS(args[0]);
+    ObjString* name = AS_STRING(args[1]);
+    ObjClosure* closure = AS_CLOSURE(args[2]);
+
+    Value value;
+    if (tableGet(&behavior->methods, name, &value)) {
+        THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Method %s already exists in behavior %s.", name->chars, behavior->fullName->chars);
+    }
+    tableSet(vm, &behavior->methods, name, OBJ_VAL(closure));
+
+    self->behavior = behavior;
+    self->closure = closure;
+    self->closure->function->name = name;
+    RETURN_OBJ(self);
 }
 
 LOX_METHOD(Method, isNative) {
@@ -759,7 +808,20 @@ LOX_METHOD(Namespace, shortName) {
 }
 
 LOX_METHOD(Namespace, init) {
-    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Namespace.");
+    ASSERT_ARG_COUNT("Namespace::init(shortName, enclosing)", 2);
+    ASSERT_ARG_TYPE("Namespace::init(shortName, enclosing)", 0, String);
+    ASSERT_ARG_TYPE("Namespace::init(shortName, enclosing)", 1, Namespace);
+    
+    ObjNamespace* self = AS_NAMESPACE(receiver);
+    ObjString* shortName = AS_STRING(args[0]);
+    ObjNamespace* enclosing = AS_NAMESPACE(args[1]);
+
+    Value value;
+    if (tableGet(&enclosing->values, shortName, &value)) {
+        THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Namespace %s already exists in enclosing namespace %s.", shortName->chars, enclosing->fullName->chars);
+    }
+    initNamespace(vm, self, shortName, enclosing);
+    RETURN_OBJ(self);
 }
 
 LOX_METHOD(Namespace, toString) {
@@ -1176,7 +1238,8 @@ LOX_METHOD(String, indexOf) {
 LOX_METHOD(String, init) {
     ASSERT_ARG_COUNT("String::init(chars)", 1);
     ASSERT_ARG_TYPE("String::init(chars)", 0, String);
-    RETURN_OBJ(args[0]);
+    ObjString* string = AS_STRING(args[0]);
+    RETURN_OBJ(createString(vm, string->chars, string->length, string->hash, AS_OBJ(receiver)->klass));
 }
 
 LOX_METHOD(String, length) {

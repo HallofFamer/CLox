@@ -175,7 +175,10 @@ LOX_METHOD(File, getAbsolutePath) {
 LOX_METHOD(File, init) {
     ASSERT_ARG_COUNT("File::init(pathname)", 1);
     ASSERT_ARG_TYPE("File::init(pathname)", 0, String);
-    ObjFile* self = newFile(vm, AS_STRING(args[0]));
+    ObjFile* self = AS_FILE(receiver);
+    self->name = AS_STRING(args[0]);
+    self->mode = emptyString(vm);
+    self->isOpen = false;
     RETURN_OBJ(self);
 }
 
