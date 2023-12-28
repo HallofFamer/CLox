@@ -320,17 +320,21 @@ LOX_METHOD(Class, __invoke__) {
 LOX_METHOD(Exception, init) {
     ASSERT_ARG_COUNT("Exception::init(message)", 1);
     ASSERT_ARG_TYPE("Exception::init(message)", 0, String);
-    ObjInstance* exception = AS_INSTANCE(receiver);
-    setObjProperty(vm, exception, "message", args[0]);
-    setObjProperty(vm, exception, "stacktrace", NIL_VAL);
-    RETURN_OBJ(exception);
+    ObjException* self = AS_EXCEPTION(receiver);
+    self->message = AS_STRING(args[0]);
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Exception, message) {
+    ASSERT_ARG_COUNT("Exception::message()", 0);
+    ObjException* self = AS_EXCEPTION(receiver);
+    RETURN_OBJ(self->message);
 }
 
 LOX_METHOD(Exception, toString) {
     ASSERT_ARG_COUNT("Exception::toString()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    Value message = getObjProperty(vm, self, "message");
-    RETURN_STRING_FMT("<Exception %s - %s>", self->obj.klass->name->chars, AS_CSTRING(message));
+    ObjException* self = AS_EXCEPTION(receiver);
+    RETURN_STRING_FMT("<Exception %s - %s>", self->obj.klass->name->chars, self->message->chars);
 }
 
 LOX_METHOD(Float, clone) {
@@ -1843,7 +1847,9 @@ void registerLangPackage(VM* vm) {
 
     vm->exceptionClass = defineNativeClass(vm, "Exception");
     bindSuperclass(vm, vm->exceptionClass, vm->objectClass);
+    vm->exceptionClass->classType = OBJ_EXCEPTION;
     DEF_METHOD(vm->exceptionClass, Exception, init, 1);
+    DEF_METHOD(vm->exceptionClass, Exception, message, 0);
     DEF_METHOD(vm->exceptionClass, Exception, toString, 0);
 
     ObjClass* runtimeExceptionClass = defineNativeException(vm, "RuntimeException", vm->exceptionClass);

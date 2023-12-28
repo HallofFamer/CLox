@@ -9,10 +9,8 @@
 #include "string.h"
 #include "vm.h"
 
-#define ALLOCATE_STRING(length) (ObjString*)allocateObject(vm, sizeof(ObjString) + length + 1, OBJ_STRING, vm->stringClass)
-
 static ObjString* allocateString(VM* vm, char* chars, int length, uint32_t hash) {
-    ObjString* string = ALLOCATE_STRING(length);
+    ObjString* string = ALLOCATE_STRING(length, vm->stringClass);
     string->length = length;
     string->hash = hash;
 
@@ -21,6 +19,15 @@ static ObjString* allocateString(VM* vm, char* chars, int length, uint32_t hash)
     string->chars[length] = '\0';
     tableSet(vm, &vm->strings, string, NIL_VAL);
     pop(vm);
+    return string;
+}
+
+ObjString* createString(VM* vm, char* chars, int length, uint32_t hash, ObjClass* klass) {
+    ObjString* string = ALLOCATE_STRING(length, klass);
+    memcpy(string->chars, chars, length);
+    string->chars[length] = '\0';
+    string->length = length;
+    string->hash = hash;
     return string;
 }
 

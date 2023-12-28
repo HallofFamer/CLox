@@ -6,6 +6,9 @@
 #include "object.h"
 #include "../inc/utf8.h"
 
+#define ALLOCATE_STRING(length, stringClass) (ObjString*)allocateObject(vm, sizeof(ObjString) + length + 1, OBJ_STRING, stringClass)
+
+ObjString* createString(VM* vm, char* chars, int length, uint32_t hash, ObjClass* klass);
 ObjString* takeString(VM* vm, char* chars, int length);
 ObjString* copyString(VM* vm, const char* chars, int length);
 ObjString* newString(VM* vm, const char* chars);
