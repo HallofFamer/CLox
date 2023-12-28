@@ -6,7 +6,7 @@
 #include "vm.h"
 
 bool propagateException(VM* vm) {
-    ObjInstance* exception = AS_INSTANCE(peek(vm, 0));
+    ObjException* exception = AS_EXCEPTION(peek(vm, 0));
     while (vm->frameCount > 0) {
         CallFrame* frame = &vm->frames[vm->frameCount - 1];
         for (int i = frame->handlerCount; i > 0; i--) {
@@ -24,9 +24,8 @@ bool propagateException(VM* vm) {
         vm->frameCount--;
     }
 
-    ObjString* message = AS_STRING(getObjProperty(vm, exception, "message"));
-    fprintf(stderr, "Unhandled %s.%s: %s\n", exception->obj.klass->namespace->fullName->chars, exception->obj.klass->name->chars, message->chars);
-    ObjArray* stackTrace = AS_ARRAY(getObjProperty(vm, exception, "stacktrace"));
+    fprintf(stderr, "Unhandled %s.%s: %s\n", exception->obj.klass->namespace->fullName->chars, exception->obj.klass->name->chars, exception->message->chars);
+    ObjArray* stackTrace = exception->stacktrace;
     for (int i = 0; i < stackTrace->elements.count; i++) {
         Value item = stackTrace->elements.values[i];
         fprintf(stderr, "    %s.\n", AS_CSTRING(item));
@@ -67,19 +66,18 @@ ObjArray* getStackTrace(VM* vm) {
     return stackTrace;
 }
 
-ObjInstance* throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...) {
+ObjException* throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...) {
     char chars[UINT8_MAX];
     va_list args;
     va_start(args, format);
     int length = vsnprintf(chars, UINT8_MAX, format, args);
     va_end(args);
     ObjString* message = copyString(vm, chars, length);
-
     ObjArray* stacktrace = getStackTrace(vm);
-    ObjInstance* exception = newInstance(vm, exceptionClass);
+
+    ObjException* exception = newException(vm, message, exceptionClass);
+    exception->stacktrace = stacktrace;
     push(vm, OBJ_VAL(exception));
-    setObjProperty(vm, exception, "message", OBJ_VAL(message));
-    setObjProperty(vm, exception, "stacktrace", OBJ_VAL(stacktrace));
     if (!propagateException(vm)) exit(70);
     else return exception;
 }

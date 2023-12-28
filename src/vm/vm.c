@@ -130,7 +130,7 @@ void initVM(VM* vm) {
     vm->currentCompiler = NULL;
     vm->currentClass = NULL;
     vm->objects = NULL;
-    vm->objectIndex = 1;
+    vm->objectIndex = 0;
     vm->bytesAllocated = 0;
     vm->nextGC = vm->config.gcHeapSize;
 
@@ -395,21 +395,19 @@ static Value createObject(VM* vm, ObjClass* klass) {
     switch (klass->classType) {
         case OBJ_ARRAY: return OBJ_VAL(newArray(vm));
         case OBJ_BOUND_METHOD: return OBJ_VAL(newBoundMethod(vm, NIL_VAL, NULL));
-        case OBJ_CLASS: return OBJ_VAL(newClass(vm, NULL, OBJ_INSTANCE));
-        case OBJ_CLOSURE: return OBJ_VAL(newClosure(vm, NULL));
+        case OBJ_CLASS: return OBJ_VAL(ALLOCATE_CLASS(klass));
+        case OBJ_CLOSURE: return OBJ_VAL(ALLOCATE_CLOSURE(klass));
         case OBJ_DICTIONARY: return OBJ_VAL(newDictionary(vm));
         case OBJ_ENTRY: return OBJ_VAL(newEntry(vm, NIL_VAL, NIL_VAL));
+        case OBJ_EXCEPTION: return OBJ_VAL(newException(vm, emptyString(vm), klass));
         case OBJ_FILE: return OBJ_VAL(newFile(vm, NULL));
         case OBJ_INSTANCE: return OBJ_VAL(newInstance(vm, klass));
         case OBJ_METHOD: return OBJ_VAL(newMethod(vm, NULL, NULL));
-        case OBJ_NAMESPACE: return OBJ_VAL(newNamespace(vm, NULL, NULL));
+        case OBJ_NAMESPACE: return OBJ_VAL(ALLOCATE_NAMESPACE(klass));
         case OBJ_NODE: return OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL));
         case OBJ_RANGE: return OBJ_VAL(newRange(vm, 0, 1));
         case OBJ_RECORD: return OBJ_VAL(newRecord(vm, NULL));
-        case OBJ_STRING: {
-            // handle creation of string.
-            return OBJ_VAL(emptyString(vm));
-        }
+        case OBJ_STRING: return OBJ_VAL(ALLOCATE_STRING(0, klass));
         default: return NIL_VAL;
     }
 }
@@ -700,6 +698,26 @@ static bool loadModule(VM* vm, ObjString* path) {
     return true;
 }
 
+static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) {
+    ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
+    switch (object->type) {
+        case OBJ_EXCEPTION: {
+            ObjException* exception = (ObjException*)object;
+            pop(vm);
+            if (strcmp(name->chars, "message") == 0) push(vm, OBJ_VAL(exception->message));
+            else if (strcmp(name->chars, "stacktrace") == 0) push(vm, OBJ_VAL(exception->stacktrace));
+            else { 
+                runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        default:
+            runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
+            return false;
+    }
+}
+
 static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     if (IS_INSTANCE(receiver)) {
@@ -791,6 +809,9 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
             push(vm, value);
             return true;
         }
+    }
+    else if (IS_OBJ(receiver)) {
+        return getGenericVariable(vm, AS_OBJ(receiver), chunk, byte);
     }
     else {
         if (IS_NIL(receiver)) runtimeError(vm, "Undefined property on nil.");
@@ -1495,12 +1516,14 @@ InterpretResult run(VM* vm) {
             }
             case OP_THROW: {
                 ObjArray* stackTrace = getStackTrace(vm);
-                Value exception = peek(vm, 0);
-                if (!isObjInstanceOf(vm, exception, vm->exceptionClass)) {
+                Value value = peek(vm, 0);
+                if (!isObjInstanceOf(vm, value, vm->exceptionClass)) {
                     runtimeError(vm, "Only instances of class clox.std.lang.Exception may be thrown.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                setObjProperty(vm, AS_INSTANCE(exception), "stacktrace", OBJ_VAL(stackTrace));
+
+                ObjException* exception = AS_EXCEPTION(value);
+                exception->stacktrace = stackTrace;
                 if (propagateException(vm)) {
                     frame = &vm->frames[vm->frameCount - 1];
                     break;

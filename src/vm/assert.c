@@ -71,7 +71,7 @@ Value assertArgIsEntry(VM* vm, const char* method, Value* args, int index) {
 }
 
 Value assertArgIsException(VM* vm, const char* method, Value* args, int index) {
-    if (!IS_INSTANCE(args[index]) && !isObjInstanceOf(vm, args[index], vm->exceptionClass)) {
+    if (!IS_EXCEPTION(args[index]) && !isObjInstanceOf(vm, args[index], vm->exceptionClass)) {
         RETURN_STRING_FMT("method %s expects argument %d to be an exception.", method, index + 1);
     }
     RETURN_NIL;
