@@ -26,6 +26,7 @@
 #define IS_CLOSURE(value)           isObjType(value, OBJ_CLOSURE)
 #define IS_DICTIONARY(value)        isObjType(value, OBJ_DICTIONARY)
 #define IS_ENTRY(value)             isObjType(value, OBJ_ENTRY)
+#define IS_EXCEPTION(value)         isObjType(value, OBJ_EXCEPTION)
 #define IS_FILE(value)              isObjType(value, OBJ_FILE)
 #define IS_FUNCTION(value)          isObjType(value, OBJ_FUNCTION)
 #define IS_GENERIC(value)           IS_OBJ(value) && !isObjType(value, OBJ_INSTANCE)
@@ -45,6 +46,7 @@
 #define AS_CLOSURE(value)           ((ObjClosure*)AS_OBJ(value))
 #define AS_DICTIONARY(value)        ((ObjDictionary*)AS_OBJ(value))
 #define AS_ENTRY(value)             ((ObjEntry*)AS_OBJ(value))
+#define AS_EXCEPTION(value)         ((ObjException*)AS_OBJ(value))
 #define AS_FILE(value)              ((ObjFile*)AS_OBJ(value))
 #define AS_FUNCTION(value)          ((ObjFunction*)AS_OBJ(value))
 #define AS_INSTANCE(value)          ((ObjInstance*)AS_OBJ(value))
@@ -68,8 +70,10 @@ typedef enum {
     OBJ_CLOSURE,
     OBJ_DICTIONARY,
     OBJ_ENTRY,
+    OBJ_EXCEPTION,
     OBJ_FILE,
     OBJ_FUNCTION,
+    OBJ_GENERIC,
     OBJ_INSTANCE,
     OBJ_METHOD,
     OBJ_MODULE,
@@ -143,6 +147,12 @@ typedef struct {
     int count;
     ObjEntry* entries;
 } ObjDictionary;
+
+typedef struct {
+    Obj obj;
+    ObjString* message;
+    ObjArray* stacktrace;
+} ObjException;
 
 typedef struct {
     Obj obj;
@@ -249,6 +259,7 @@ void initClosure(VM* vm, ObjClosure* closure, ObjFunction* function);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
 ObjDictionary* newDictionary(VM* vm);
 ObjEntry* newEntry(VM* vm, Value key, Value value);
+ObjException* newException(VM* vm, ObjString* message, ObjClass* klass);
 ObjFile* newFile(VM* vm, ObjString* name);
 ObjFunction* newFunction(VM* vm);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);

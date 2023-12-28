@@ -7,11 +7,11 @@
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     Obj* object = (Obj*)reallocate(vm, NULL, 0, size);
-    object->objectID = 0;
-    object->shapeID = 0;
     object->type = type;
     object->klass = klass;
     object->isMarked = false;
+    object->objectID = 0;
+    object->shapeID = getDefaultShapeIDForObject(object);
 
     object->next = vm->objects;
     vm->objects = object;
@@ -48,6 +48,7 @@ ObjClass* newClass(VM* vm, ObjString* name, ObjType classType) {
     push(vm, OBJ_VAL(metaclass));
     ObjClass* klass = createClass(vm, name, metaclass, BEHAVIOR_CLASS);
     klass->classType = classType;
+
     pop(vm);
     return klass;
 }
@@ -85,6 +86,13 @@ ObjEntry* newEntry(VM* vm, Value key, Value value) {
     entry->key = key;
     entry->value = value;
     return entry;
+}
+
+ObjException* newException(VM* vm, ObjString* message, ObjClass* klass) {
+    ObjException* exception = ALLOCATE_OBJ(ObjException, OBJ_EXCEPTION, klass);
+    exception->message = message;
+    exception->stacktrace = newArray(vm);
+    return exception;
 }
 
 ObjFile* newFile(VM* vm, ObjString* name) {

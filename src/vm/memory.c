@@ -115,6 +115,12 @@ static void blackenObject(VM* vm, Obj* object) {
             markValue(vm, entry->value);
             break;
         }
+        case OBJ_EXCEPTION: { 
+            ObjException* exception = (ObjException*)object;
+            markObject(vm, (Obj*)exception->message);
+            markObject(vm, (Obj*)exception->stacktrace);
+            break;
+        }
         case OBJ_FILE: {
             ObjFile* file = (ObjFile*)object;
             markObject(vm, (Obj*)file->name);
@@ -226,6 +232,10 @@ static void freeObject(VM* vm, Obj* object) {
         }
         case OBJ_ENTRY: {
             FREE(ObjEntry, object);
+            break;
+        }
+        case OBJ_EXCEPTION: { 
+            FREE(ObjException, object);
             break;
         }
         case OBJ_FILE: {
