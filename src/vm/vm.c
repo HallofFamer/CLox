@@ -778,6 +778,64 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             }
             return true;
         }
+        case OBJ_FILE: { 
+            ObjFile* file = (ObjFile*)object;
+            pop(vm);
+            if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(file->name));
+            else if (strcmp(name->chars, "mode") == 0) push(vm, OBJ_VAL(file->mode));
+            else {
+                runtimeError(vm, "Undefined property %s on Object File.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_METHOD: { 
+            ObjMethod* method = (ObjMethod*)object;
+            pop(vm);
+            if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(method->closure->function->name));
+            else if (strcmp(name->chars, "arity") == 0) push(vm, INT_VAL(method->closure->function->arity));
+            else if (strcmp(name->chars, "behavior") == 0) push(vm, OBJ_VAL(method->behavior));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Method.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_NAMESPACE: {
+            ObjNamespace* namespace = (ObjNamespace*)object;
+            pop(vm);
+            if (strcmp(name->chars, "shortName") == 0) push(vm, OBJ_VAL(namespace->shortName));
+            else if (strcmp(name->chars, "fullName") == 0) push(vm, OBJ_VAL(namespace->fullName));
+            else if (strcmp(name->chars, "enclosing") == 0) push(vm, OBJ_VAL(namespace->enclosing));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Namespace.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_NODE: { 
+            ObjNode* node = (ObjNode*)object;
+            pop(vm);
+            if (strcmp(name->chars, "element") == 0) push(vm, node->element);
+            else if (strcmp(name->chars, "prev") == 0) push(vm, OBJ_VAL(node->prev));
+            else if (strcmp(name->chars, "next") == 0) push(vm, OBJ_VAL(node->next));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Node.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_RANGE: { 
+            ObjRange* range = (ObjRange*)object;
+            pop(vm);
+            if (strcmp(name->chars, "from") == 0) push(vm, INT_VAL(range->from));
+            else if (strcmp(name->chars, "to") == 0) push(vm, INT_VAL(range->to));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Range.", name->chars);
+                return false;
+            }
+            return true;
+        }
         case OBJ_STRING: { 
             ObjString* string = (ObjString*)object;
             pop(vm);
