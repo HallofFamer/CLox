@@ -34,6 +34,7 @@ void freeShapeTree(VM* vm, ShapeTree* shapeTree);
 void appendToShapeTree(VM* vm, Shape* shape);
 Shape* getShapeFromID(VM* vm, int id);
 IDMap* getShapeIndexes(VM* vm, int id);
+int getDefaultShapeIDForObject(Obj* object);
 int createShapeFromParent(VM* vm, int parentID, ObjString* edge);
 int transitionShapeForObject(VM* vm, Obj* object, ObjString* edge);
 int getIndexFromObjectShape(VM* vm, Obj* object, ObjString* edge);

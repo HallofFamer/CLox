@@ -701,6 +701,72 @@ static bool loadModule(VM* vm, ObjString* path) {
 static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) {
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     switch (object->type) {
+        case OBJ_ARRAY: { 
+            ObjArray* array = (ObjArray*)object;
+            pop(vm);
+            if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(array->elements.count));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_BOUND_METHOD: { 
+            ObjBoundMethod* bound = (ObjBoundMethod*)object;
+            pop(vm);
+            if (strcmp(name->chars, "receiver") == 0) push(vm, OBJ_VAL(bound->receiver));
+            else if (strcmp(name->chars, "method") == 0) push(vm, OBJ_VAL(bound->method));
+            else {
+                runtimeError(vm, "Undefined property %s on Object BoundMethod.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_CLASS: { 
+            ObjClass* klass = (ObjClass*)object;
+            pop(vm);
+            if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(klass->name));
+            else if (strcmp(name->chars, "namespace") == 0) push(vm, OBJ_VAL(klass->namespace));
+            else if (strcmp(name->chars, "superclass") == 0) push(vm, OBJ_VAL(klass->superclass));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Class.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_CLOSURE: {
+            ObjClosure* closure = (ObjClosure*)object;
+            pop(vm);
+            if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(closure->function->name));
+            else if (strcmp(name->chars, "arity") == 0) push(vm, INT_VAL(closure->function->arity));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Function.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_DICTIONARY: { 
+            ObjDictionary* dictionary = (ObjDictionary*)object;
+            pop(vm);
+            if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(dictionary->count));
+            else if (strcmp(name->chars, "entries") == 0) push(vm, OBJ_VAL(dictionary->entries));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_ENTRY: { 
+            ObjEntry* entry = (ObjEntry*)object;
+            pop(vm);
+            if (strcmp(name->chars, "key") == 0) push(vm, entry->key);
+            else if (strcmp(name->chars, "value") == 0) push(vm, entry->value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object Entry.", name->chars);
+                return false;
+            }
+            return true;
+        }
         case OBJ_EXCEPTION: {
             ObjException* exception = (ObjException*)object;
             pop(vm);
@@ -708,6 +774,16 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             else if (strcmp(name->chars, "stacktrace") == 0) push(vm, OBJ_VAL(exception->stacktrace));
             else { 
                 runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
+                return false;
+            }
+            return true;
+        }
+        case OBJ_STRING: { 
+            ObjString* string = (ObjString*)object;
+            pop(vm);
+            if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(string->length));
+            else {
+                runtimeError(vm, "Undefined property %s on Object String.", name->chars);
                 return false;
             }
             return true;

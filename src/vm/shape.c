@@ -4,6 +4,8 @@
 #include "memory.h"
 #include "shape.h"
 
+int defaultShapeIDs[OBJ_VOID];
+
 static void initRootShape(Shape* shape) {
     shape->id = 0;
     shape->parentID = -1;
@@ -17,6 +19,66 @@ static void initRootShape(Shape* shape) {
 #endif
 }
 
+static void createDefaultShapes(VM* vm) {
+    int shapeIDLength = createShapeFromParent(vm, 0, newString(vm, "length"));
+    defaultShapeIDs[OBJ_ARRAY] = shapeIDLength;
+
+    int shapeIDReceiver = createShapeFromParent(vm, 0, newString(vm, "receiver"));
+    int shapeIDBoundMethod = createShapeFromParent(vm, shapeIDReceiver, newString(vm, "method"));
+    defaultShapeIDs[OBJ_BOUND_METHOD] = shapeIDBoundMethod;
+
+    int shapeIDName = createShapeFromParent(vm, 0, newString(vm, "name"));
+    int shapeIDClass1 = createShapeFromParent(vm, shapeIDName, newString(vm, "namespace"));
+    int shapeIDClass2 = createShapeFromParent(vm, shapeIDClass1, newString(vm, "superclass"));
+    defaultShapeIDs[OBJ_CLASS] = shapeIDClass2;
+
+    int shapeIDClosure = createShapeFromParent(vm, shapeIDName, newString(vm, "arity"));
+    defaultShapeIDs[OBJ_CLOSURE] = shapeIDClosure;
+
+    int shapeIDDictionary = createShapeFromParent(vm, shapeIDLength, newString(vm, "entries"));
+    defaultShapeIDs[OBJ_DICTIONARY] = shapeIDDictionary;
+
+    int shapeIDKey = createShapeFromParent(vm, 0, newString(vm, "key"));
+    int shapeIDEntry = createShapeFromParent(vm, shapeIDKey, newString(vm, "value"));
+    defaultShapeIDs[OBJ_ENTRY] = shapeIDEntry;
+
+    int shapeIDMessage = createShapeFromParent(vm, 0, newString(vm, "message"));
+    int shapeIDException = createShapeFromParent(vm, shapeIDMessage, newString(vm, "stacktrace"));
+    defaultShapeIDs[OBJ_EXCEPTION] = shapeIDException;
+
+    int shapeIDFile = createShapeFromParent(vm, shapeIDName, newString(vm, "mode"));
+    defaultShapeIDs[OBJ_FILE] = shapeIDFile;
+
+    defaultShapeIDs[OBJ_FUNCTION] = -1;
+    defaultShapeIDs[OBJ_GENERIC] = -1;
+    defaultShapeIDs[OBJ_INSTANCE] = 0;
+
+    int shapeIDMethod = createShapeFromParent(vm, shapeIDClosure, newString(vm, "behavior"));
+    defaultShapeIDs[OBJ_METHOD] = shapeIDMethod;
+    defaultShapeIDs[OBJ_MODULE] = -1;
+    
+    int shapeIDShortName = createShapeFromParent(vm, 0, newString(vm, "shortName"));
+    int shapeIDNamespace1 = createShapeFromParent(vm, shapeIDShortName, newString(vm, "fullName"));
+    int shapeIDNamespace2 = createShapeFromParent(vm, shapeIDNamespace1, newString(vm, "enclosing"));
+    defaultShapeIDs[OBJ_NAMESPACE] = shapeIDNamespace2;
+
+    defaultShapeIDs[OBJ_NATIVE_FUNCTION] = -1;
+    defaultShapeIDs[OBJ_NATIVE_METHOD] = -1;
+
+    int shapeIDElement = createShapeFromParent(vm, 0, newString(vm, "element"));
+    int shapeIDNode1 = createShapeFromParent(vm, shapeIDElement, newString(vm, "prev"));
+    int shapeIDNode2 = createShapeFromParent(vm, shapeIDNode1, newString(vm, "next"));
+    defaultShapeIDs[OBJ_NODE] = shapeIDNode2;
+
+    int shapeIDFrom = createShapeFromParent(vm, 0, newString(vm, "from"));
+    int shapeIDRange = createShapeFromParent(vm, shapeIDFrom, newString(vm, "to"));
+    defaultShapeIDs[OBJ_RANGE] = shapeIDRange;
+
+    defaultShapeIDs[OBJ_RECORD] = -1;
+    defaultShapeIDs[OBJ_STRING] = shapeIDLength;
+    defaultShapeIDs[OBJ_UPVALUE] = -1;
+}
+
 void initShapeTree(VM* vm) {
     ShapeTree shapeTree = { .list = NULL, .count = 0, .capacity = 0, .rootShape = NULL };
     vm->shapes = shapeTree;
@@ -24,6 +86,7 @@ void initShapeTree(VM* vm) {
     Shape rootShape;
     initRootShape(&rootShape);
     appendToShapeTree(vm, &rootShape);
+    createDefaultShapes(vm);
 }
 
 void freeShapeTree(VM* vm, ShapeTree* shapeTree) {
@@ -52,6 +115,10 @@ Shape* getShapeFromID(VM* vm, int id) {
 
 IDMap* getShapeIndexes(VM* vm, int id) {
     return &vm->shapes.list[id].indexes;
+}
+
+int getDefaultShapeIDForObject(Obj* object) {
+    return defaultShapeIDs[object->type];
 }
 
 int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
