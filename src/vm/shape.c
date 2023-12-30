@@ -35,8 +35,7 @@ static void createDefaultShapes(VM* vm) {
     int shapeIDClosure = createShapeFromParent(vm, shapeIDName, newString(vm, "arity"));
     defaultShapeIDs[OBJ_CLOSURE] = shapeIDClosure;
 
-    int shapeIDDictionary = createShapeFromParent(vm, shapeIDLength, newString(vm, "entries"));
-    defaultShapeIDs[OBJ_DICTIONARY] = shapeIDDictionary;
+    defaultShapeIDs[OBJ_DICTIONARY] = shapeIDLength;
 
     int shapeIDKey = createShapeFromParent(vm, 0, newString(vm, "key"));
     int shapeIDEntry = createShapeFromParent(vm, shapeIDKey, newString(vm, "value"));

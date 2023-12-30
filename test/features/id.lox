@@ -1,4 +1,5 @@
 namespace test.features;
+using clox.std.collection.LinkedList;
 using clox.std.util.Date;
 using clox.std.util.UUID;
 using test.features.Fraction;
@@ -13,6 +14,7 @@ println("Testing Object ID for numbers: ");
 println("ID for 0: ${0.objectID()}");
 println("ID for 1: ${1.objectID()}");
 println("ID for 2: ${2.objectID()}");
+println("ID for -5: ${(-5).objectID()}");
 println("ID for 3.5: ${3.5.objectID()}");
 println("");
 
@@ -25,6 +27,7 @@ println("ID for class: ${Class.objectID()}");
 println("");
 
 println("Testing Object ID for instance objects: ");
+println("ID for object LinkedList: ${LinkedList().objectID()}");
 println("ID for object Date: ${Date.now.objectID()}");
 println("ID for object UUID: ${UUID().objectID()}");
 println("ID for object Fraction: ${Fraction(2, 3).objectID()}");

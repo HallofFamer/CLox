@@ -749,7 +749,6 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             ObjDictionary* dictionary = (ObjDictionary*)object;
             pop(vm);
             if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(dictionary->count));
-            else if (strcmp(name->chars, "entries") == 0) push(vm, OBJ_VAL(dictionary->entries));
             else {
                 runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
                 return false;
@@ -956,6 +955,176 @@ static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t by
     return true;
 }
 
+static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, Value value) { 
+    ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
+    switch (object->type) {
+        case OBJ_ARRAY: { 
+            ObjArray* array = (ObjArray*)object;
+            if (strcmp(name->chars, "length") == 0) { 
+                runtimeError(vm, "Cannot set property length on Object Array.");
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_BOUND_METHOD: { 
+            ObjBoundMethod* bound = (ObjBoundMethod*)object;
+            if (strcmp(name->chars, "receiver") == 0) bound->receiver = value;
+            else if (strcmp(name->chars, "method") == 0) bound->method = AS_CLOSURE(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object BoundMethod.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_CLASS: { 
+            ObjClass* klass = (ObjClass*)object;
+            if (strcmp(name->chars, "name") == 0 || strcmp(name->chars, "namespace") || strcmp(name->chars, "superclass")) {
+                runtimeError(vm, "Cannot set property %s on Object Class.", name->chars);
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Class.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_CLOSURE: { 
+            ObjClosure* closure = (ObjClosure*)object;
+            if (strcmp(name->chars, "name") == 0 || strcmp(name->chars, "arity")) {
+                runtimeError(vm, "Cannot set property %s on Object Function.", name->chars);
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Function.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_DICTIONARY: { 
+            ObjDictionary* dictionary = (ObjDictionary*)object;
+            if (strcmp(name->chars, "length") == 0) {
+                runtimeError(vm, "Cannot set property length on Object Dictionary.");
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_ENTRY: { 
+            ObjEntry* entry = (ObjEntry*)object;
+            if (strcmp(name->chars, "key") == 0) {
+                runtimeError(vm, "Cannot set property key on Object Entry.");
+                return false;
+            }
+            else if (strcmp(name->chars, "value") == 0) entry->value = value;
+            else {
+                runtimeError(vm, "Undefined property %s on Object Entry.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_EXCEPTION: { 
+            ObjException* exception = (ObjException*)object;
+            if (strcmp(name->chars, "message") == 0 && IS_STRING(value)) exception->message = AS_STRING(value);
+            else if (strcmp(name->chars, "stacktrace") == 0 && IS_ARRAY(value)) exception->stacktrace = AS_ARRAY(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_FILE: { 
+            ObjFile* file = (ObjFile*)object;
+            if (strcmp(name->chars, "name") == 0 && IS_STRING(value)) file->name = AS_STRING(value);
+            else if (strcmp(name->chars, "mode") == 0 && IS_STRING(value)) file->mode = AS_STRING(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object File.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_METHOD: { 
+            ObjMethod* method = (ObjMethod*)object;
+            if (strcmp(name->chars, "name") == 0 || strcmp(name->chars, "arity") || strcmp(name->chars, "behavior")) {
+                runtimeError(vm, "Cannot set property %s on Object Method.", name->chars);
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Method.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_NAMESPACE: { 
+            ObjNamespace* namespace = (ObjNamespace*)object;
+            if (strcmp(name->chars, "shortName") == 0 || strcmp(name->chars, "fullName") || strcmp(name->chars, "enclosing")) {
+                runtimeError(vm, "Cannot set property %s on Object Namespace.", name->chars);
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Namespace.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_NODE: { 
+            ObjNode* node = (ObjNode*)object;
+            if (strcmp(name->chars, "element") == 0) node->element = value;
+            else if (strcmp(name->chars, "prev") == 0 && IS_NODE(value)) node->prev = AS_NODE(value);
+            else if (strcmp(name->chars, "next") == 0 && IS_NODE(value)) node->next = AS_NODE(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object Node.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_RANGE: { 
+            ObjRange* range = (ObjRange*)object;
+            if (strcmp(name->chars, "from") == 0 && IS_INT(value)) range->from = AS_INT(value);
+            else if (strcmp(name->chars, "to") == 0 && IS_INT(value)) range->to = AS_INT(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object Range.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        case OBJ_STRING: {
+            ObjString* string = (ObjString*)object;
+            if (strcmp(name->chars, "length") == 0) {
+                runtimeError(vm, "Cannot set property length on Object String.");
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object String.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
+        }
+        default: 
+            runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
+            return false;
+    }
+}
+
 static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Value value) {
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     if (IS_INSTANCE(receiver)) {
@@ -1017,6 +1186,9 @@ static bool setInstanceField(VM* vm, Value receiver, Chunk* chunk, uint8_t byte,
         writeInlineCache(inlineCache, CACHE_CVAR, klass->behaviorID, index);
         push(vm, value);
         return true;
+    }
+    else if (IS_OBJ(receiver)) {
+        return setGenericVariable(vm, AS_OBJ(receiver), chunk, byte, value);
     }
     else {
         runtimeError(vm, "Only instances and classes can set properties.");
