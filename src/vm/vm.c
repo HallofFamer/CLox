@@ -698,12 +698,27 @@ static bool loadModule(VM* vm, ObjString* path) {
     return true;
 }
 
-static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) {
-    ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
+static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
     switch (object->type) {
-        case OBJ_ARRAY: { 
+        case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
-            pop(vm);
+            if (index == 0) push(vm, array->elements.count);
+            else { 
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        default: 
+            runtimeError(vm, "Undefined property at index %d on Object type %d.", index, object->type);
+            return false;
+    }
+}
+
+static bool getGenericVariableFromName(VM* vm, Obj* object, ObjString* name) { 
+    switch (object->type) {
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*)object;
             if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(array->elements.count));
             else {
                 runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
@@ -711,9 +726,8 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             }
             return true;
         }
-        case OBJ_BOUND_METHOD: { 
+        case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
-            pop(vm);
             if (strcmp(name->chars, "receiver") == 0) push(vm, OBJ_VAL(bound->receiver));
             else if (strcmp(name->chars, "method") == 0) push(vm, OBJ_VAL(bound->method));
             else {
@@ -722,9 +736,8 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             }
             return true;
         }
-        case OBJ_CLASS: { 
+        case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
-            pop(vm);
             if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(klass->name));
             else if (strcmp(name->chars, "namespace") == 0) push(vm, OBJ_VAL(klass->namespace));
             else if (strcmp(name->chars, "superclass") == 0) push(vm, OBJ_VAL(klass->superclass));
@@ -736,7 +749,6 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
-            pop(vm);
             if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(closure->function->name));
             else if (strcmp(name->chars, "arity") == 0) push(vm, INT_VAL(closure->function->arity));
             else {
@@ -745,9 +757,8 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             }
             return true;
         }
-        case OBJ_DICTIONARY: { 
+        case OBJ_DICTIONARY: {
             ObjDictionary* dictionary = (ObjDictionary*)object;
-            pop(vm);
             if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(dictionary->count));
             else {
                 runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
@@ -755,9 +766,8 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             }
             return true;
         }
-        case OBJ_ENTRY: { 
+        case OBJ_ENTRY: {
             ObjEntry* entry = (ObjEntry*)object;
-            pop(vm);
             if (strcmp(name->chars, "key") == 0) push(vm, entry->key);
             else if (strcmp(name->chars, "value") == 0) push(vm, entry->value);
             else {
@@ -768,18 +778,16 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
         }
         case OBJ_EXCEPTION: {
             ObjException* exception = (ObjException*)object;
-            pop(vm);
             if (strcmp(name->chars, "message") == 0) push(vm, OBJ_VAL(exception->message));
             else if (strcmp(name->chars, "stacktrace") == 0) push(vm, OBJ_VAL(exception->stacktrace));
-            else { 
+            else {
                 runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
                 return false;
             }
             return true;
         }
-        case OBJ_FILE: { 
+        case OBJ_FILE: {
             ObjFile* file = (ObjFile*)object;
-            pop(vm);
             if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(file->name));
             else if (strcmp(name->chars, "mode") == 0) push(vm, OBJ_VAL(file->mode));
             else {
@@ -788,9 +796,8 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             }
             return true;
         }
-        case OBJ_METHOD: { 
+        case OBJ_METHOD: {
             ObjMethod* method = (ObjMethod*)object;
-            pop(vm);
             if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(method->closure->function->name));
             else if (strcmp(name->chars, "arity") == 0) push(vm, INT_VAL(method->closure->function->arity));
             else if (strcmp(name->chars, "behavior") == 0) push(vm, OBJ_VAL(method->behavior));
@@ -799,10 +806,9 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
                 return false;
             }
             return true;
-        }
+        }   
         case OBJ_NAMESPACE: {
             ObjNamespace* namespace = (ObjNamespace*)object;
-            pop(vm);
             if (strcmp(name->chars, "shortName") == 0) push(vm, OBJ_VAL(namespace->shortName));
             else if (strcmp(name->chars, "fullName") == 0) push(vm, OBJ_VAL(namespace->fullName));
             else if (strcmp(name->chars, "enclosing") == 0) push(vm, OBJ_VAL(namespace->enclosing));
@@ -812,9 +818,8 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             }
             return true;
         }
-        case OBJ_NODE: { 
+        case OBJ_NODE: {
             ObjNode* node = (ObjNode*)object;
-            pop(vm);
             if (strcmp(name->chars, "element") == 0) push(vm, node->element);
             else if (strcmp(name->chars, "prev") == 0) push(vm, OBJ_VAL(node->prev));
             else if (strcmp(name->chars, "next") == 0) push(vm, OBJ_VAL(node->next));
@@ -824,9 +829,8 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             }
             return true;
         }
-        case OBJ_RANGE: { 
+        case OBJ_RANGE: {
             ObjRange* range = (ObjRange*)object;
-            pop(vm);
             if (strcmp(name->chars, "from") == 0) push(vm, INT_VAL(range->from));
             else if (strcmp(name->chars, "to") == 0) push(vm, INT_VAL(range->to));
             else {
@@ -835,9 +839,8 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             }
             return true;
         }
-        case OBJ_STRING: { 
+        case OBJ_STRING: {
             ObjString* string = (ObjString*)object;
-            pop(vm);
             if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(string->length));
             else {
                 runtimeError(vm, "Undefined property %s on Object String.", name->chars);
@@ -849,6 +852,24 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
             runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
             return false;
     }
+}
+
+static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) {
+    InlineCache* inlineCache = &chunk->inlineCaches[byte];
+    int shapeID = object->shapeID;
+    pop(vm);
+    if (inlineCache->type == CACHE_IVAR && inlineCache->id == shapeID) { 
+#ifdef DEBUG_TRACE_CACHE
+        printf("Cache hit for getting instance variable: '%s' from Shape ID %d at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->id, inlineCache->index);
+#endif  
+        return getGenericVariableFromCache(vm, object, inlineCache->index);
+    }
+
+#ifdef DEBUG_TRACE_CACHE
+    printf("Cache miss for getting instance variable: '%s' from Shape ID %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), shapeID);
+#endif
+
+    return getGenericVariableFromName(vm, object, AS_STRING(chunk->identifiers.values[byte]));
 }
 
 static bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
