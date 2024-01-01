@@ -702,8 +702,121 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
     switch (object->type) {
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
-            if (index == 0) push(vm, array->elements.count);
+            if (index == 0) push(vm, INT_VAL(array->elements.count));
             else { 
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_BOUND_METHOD: {
+            ObjBoundMethod* bound = (ObjBoundMethod*)object;
+            if (index == 0) push(vm, bound->receiver);
+            else if (index == 1) push(vm, OBJ_VAL(bound->method));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_CLASS: { 
+            ObjClass* klass = (ObjClass*)object;
+            if (index == 0) push(vm, OBJ_VAL(klass->name));
+            else if (index == 1) push(vm, OBJ_VAL(klass->namespace));
+            else if (index == 2) push(vm, OBJ_VAL(klass->superclass));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_CLOSURE: { 
+            ObjClosure* closure = (ObjClosure*)object;
+            if (index == 0) push(vm, OBJ_VAL(closure->function->name));
+            else if (index == 1) push(vm, INT_VAL(closure->function->arity));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_DICTIONARY: { 
+            ObjDictionary* dictionary = (ObjDictionary*)object;
+            if (index == 0) push(vm, INT_VAL(dictionary->count));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_ENTRY: { 
+            ObjEntry* entry = (ObjEntry*)object;
+            if (index == 0) push(vm, entry->key);
+            else if (index == 1) push(vm, entry->value);
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_EXCEPTION: {
+            ObjException* exception = (ObjException*)object;
+            if (index == 0) push(vm, OBJ_VAL(exception->message));
+            else if (index == 1) push(vm, OBJ_VAL(exception->stacktrace));
+            else { 
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_FILE: { 
+            ObjFile* file = (ObjFile*)object;
+            if (index == 0) push(vm, OBJ_VAL(file->name));
+            else if (index == 1) push(vm, OBJ_VAL(file->mode));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_METHOD: { 
+            ObjMethod* method = (ObjMethod*)object;
+            if (index == 0) push(vm, OBJ_VAL(method->closure->function->name));
+            else if (index == 1) push(vm, INT_VAL(method->closure->function->arity));
+            else if (index == 2) push(vm, OBJ_VAL(method->behavior));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_NAMESPACE: { 
+            ObjNamespace* namespace = (ObjNamespace*)object;
+            if (index == 0) push(vm, OBJ_VAL(namespace->shortName));
+            else if (index == 1) push(vm, OBJ_VAL(namespace->fullName));
+            else if (index == 2) push(vm, OBJ_VAL(namespace->enclosing));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_NODE: {
+            ObjNode* node = (ObjNode*)object;
+            if (index == 0) push(vm, node->element);
+            else if (index == 1) push(vm, OBJ_VAL(node->prev));
+            else if (index == 2) push(vm, OBJ_VAL(node->next));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        case OBJ_RANGE: { 
+            ObjRange* range = (ObjRange*)object;
+            if (index == 0) push(vm, INT_VAL(range->from));
+            else if (index == 1) push(vm, INT_VAL(range->to));
+            else {
                 ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
