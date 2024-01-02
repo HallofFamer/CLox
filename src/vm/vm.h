@@ -134,6 +134,10 @@ bool callMethod(VM* vm, Value method, int argCount);
 Value callReentrant(VM* vm, Value receiver, Value callee, ...);
 void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);
+bool sourceFileExists(ObjString* filePath);
+ObjString* resolveSourceFile(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace);
+bool bindMethod(VM* vm, ObjClass* klass, ObjString* name);
+bool loadModule(VM* vm, ObjString* path);
 InterpretResult run(VM* vm);
 InterpretResult interpret(VM* vm, const char* source);
 
