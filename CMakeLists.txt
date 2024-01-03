@@ -166,6 +166,8 @@ set(Source_Files__vm
     "src/vm/table.h"
     "src/vm/value.c"
     "src/vm/value.h"
+    "src/vm/variable.c"
+    "src/vm/variable.h"
     "src/vm/vm.c"
     "src/vm/vm.h"
 )

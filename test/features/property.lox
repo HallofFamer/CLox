@@ -1,5 +1,6 @@
 namespace test.features;
 
+println("Testing getting properties: ");
 val array = [1, 2, 3, 4, 5];
 println("Length of array: ${array.length}");
 
@@ -15,3 +16,7 @@ try {
 catch (Exception e) { 
     println("Caught exception with message: ${e.message}");
 }
+
+println("");
+
+println("Testing setting properties: ");

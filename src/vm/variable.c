@@ -48,22 +48,21 @@ static bool loadGlobalFromCache(VM* vm, Chunk* chunk, uint8_t byte, Value* value
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     if (inlineCache->id == byte) {
         switch (inlineCache->type) {
-        case CACHE_GVAL: {
+            case CACHE_GVAL: {
 #ifdef DEBUG_TRACE_CACHE
-            printf("Cache hit for getting immutable global variable: '%s' at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->index);
+                printf("Cache hit for getting immutable global variable: '%s' at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->index);
 #endif 
-            * value = vm->currentModule->valFields.values[inlineCache->index];
-            return true;
-        }
-        case CACHE_GVAR: {
+                *value = vm->currentModule->valFields.values[inlineCache->index];
+                return true;
+            }
+            case CACHE_GVAR: {
 #ifdef DEBUG_TRACE_CACHE
-            printf("Cache hit for getting mutable global variable: '%s' at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->index);
+                printf("Cache hit for getting mutable global variable: '%s' at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->index);
 #endif 
-            * value = vm->currentModule->varFields.values[inlineCache->index];
-            return true;
-        }
-        default:
-            return loadGlobalFromTable(vm, chunk, byte, value);
+                *value = vm->currentModule->varFields.values[inlineCache->index];
+                return true;
+            }
+            default: return loadGlobalFromTable(vm, chunk, byte, value);
         }
     }
     else return loadGlobalFromTable(vm, chunk, byte, value);
@@ -76,270 +75,279 @@ bool loadGlobal(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
 
 static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
     switch (object->type) {
-    case OBJ_ARRAY: {
-        ObjArray* array = (ObjArray*)object;
-        if (index == 0) push(vm, INT_VAL(array->elements.count));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*)object;
+            if (index == 0) push(vm, INT_VAL(array->elements.count));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_BOUND_METHOD: {
-        ObjBoundMethod* bound = (ObjBoundMethod*)object;
-        if (index == 0) push(vm, bound->receiver);
-        else if (index == 1) push(vm, OBJ_VAL(bound->method));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_BOUND_METHOD: {
+            ObjBoundMethod* bound = (ObjBoundMethod*)object;
+            if (index == 0) push(vm, bound->receiver);
+            else if (index == 1) push(vm, OBJ_VAL(bound->method));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_CLASS: {
-        ObjClass* klass = (ObjClass*)object;
-        if (index == 0) push(vm, OBJ_VAL(klass->name));
-        else if (index == 1) push(vm, OBJ_VAL(klass->namespace));
-        else if (index == 2) push(vm, OBJ_VAL(klass->superclass));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_CLASS: {
+            ObjClass* klass = (ObjClass*)object;
+            if (index == 0) push(vm, OBJ_VAL(klass->name));
+            else if (index == 1) push(vm, OBJ_VAL(klass->namespace));
+            else if (index == 2) push(vm, OBJ_VAL(klass->superclass));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_CLOSURE: {
-        ObjClosure* closure = (ObjClosure*)object;
-        if (index == 0) push(vm, OBJ_VAL(closure->function->name));
-        else if (index == 1) push(vm, INT_VAL(closure->function->arity));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_CLOSURE: {
+            ObjClosure* closure = (ObjClosure*)object;
+            if (index == 0) push(vm, OBJ_VAL(closure->function->name));
+            else if (index == 1) push(vm, INT_VAL(closure->function->arity));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_DICTIONARY: {
-        ObjDictionary* dictionary = (ObjDictionary*)object;
-        if (index == 0) push(vm, INT_VAL(dictionary->count));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_DICTIONARY: {
+            ObjDictionary* dictionary = (ObjDictionary*)object;
+            if (index == 0) push(vm, INT_VAL(dictionary->count));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            } 
+            return true;
         }
-        return true;
-    }
-    case OBJ_ENTRY: {
-        ObjEntry* entry = (ObjEntry*)object;
-        if (index == 0) push(vm, entry->key);
-        else if (index == 1) push(vm, entry->value);
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_ENTRY: {
+            ObjEntry* entry = (ObjEntry*)object;
+            if (index == 0) push(vm, entry->key);
+            else if (index == 1) push(vm, entry->value);
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_EXCEPTION: {
-        ObjException* exception = (ObjException*)object;
-        if (index == 0) push(vm, OBJ_VAL(exception->message));
-        else if (index == 1) push(vm, OBJ_VAL(exception->stacktrace));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_EXCEPTION: {
+            ObjException* exception = (ObjException*)object;
+            if (index == 0) push(vm, OBJ_VAL(exception->message));
+            else if (index == 1) push(vm, OBJ_VAL(exception->stacktrace));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_FILE: {
-        ObjFile* file = (ObjFile*)object;
-        if (index == 0) push(vm, OBJ_VAL(file->name));
-        else if (index == 1) push(vm, OBJ_VAL(file->mode));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_FILE: {
+            ObjFile* file = (ObjFile*)object;
+            if (index == 0) push(vm, OBJ_VAL(file->name));
+            else if (index == 1) push(vm, OBJ_VAL(file->mode));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_METHOD: {
-        ObjMethod* method = (ObjMethod*)object;
-        if (index == 0) push(vm, OBJ_VAL(method->closure->function->name));
-        else if (index == 1) push(vm, INT_VAL(method->closure->function->arity));
-        else if (index == 2) push(vm, OBJ_VAL(method->behavior));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_METHOD: {
+            ObjMethod* method = (ObjMethod*)object;
+            if (index == 0) push(vm, OBJ_VAL(method->closure->function->name));
+            else if (index == 1) push(vm, INT_VAL(method->closure->function->arity));
+            else if (index == 2) push(vm, OBJ_VAL(method->behavior));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_NAMESPACE: {
-        ObjNamespace* namespace = (ObjNamespace*)object;
-        if (index == 0) push(vm, OBJ_VAL(namespace->shortName));
-        else if (index == 1) push(vm, OBJ_VAL(namespace->fullName));
-        else if (index == 2) push(vm, OBJ_VAL(namespace->enclosing));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_NAMESPACE: {
+            ObjNamespace* namespace = (ObjNamespace*)object;
+            if (index == 0) push(vm, OBJ_VAL(namespace->shortName));
+            else if (index == 1) push(vm, OBJ_VAL(namespace->fullName));
+            else if (index == 2) push(vm, OBJ_VAL(namespace->enclosing));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_NODE: {
-        ObjNode* node = (ObjNode*)object;
-        if (index == 0) push(vm, node->element);
-        else if (index == 1) push(vm, OBJ_VAL(node->prev));
-        else if (index == 2) push(vm, OBJ_VAL(node->next));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_NODE: {
+            ObjNode* node = (ObjNode*)object;
+            if (index == 0) push(vm, node->element);
+            else if (index == 1) push(vm, OBJ_VAL(node->prev));
+            else if (index == 2) push(vm, OBJ_VAL(node->next));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_RANGE: {
-        ObjRange* range = (ObjRange*)object;
-        if (index == 0) push(vm, INT_VAL(range->from));
-        else if (index == 1) push(vm, INT_VAL(range->to));
-        else {
-            ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
-            push(vm, slots->values[index]);
+        case OBJ_RANGE: {
+            ObjRange* range = (ObjRange*)object;
+            if (index == 0) push(vm, INT_VAL(range->from));
+            else if (index == 1) push(vm, INT_VAL(range->to));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
         }
-        return true;
-    }
-    default:
-        runtimeError(vm, "Undefined property at index %d on Object type %d.", index, object->type);
-        return false;
+        case OBJ_STRING: { 
+            ObjString* string = (ObjString*)object;
+            if (index == 0) push(vm, INT_VAL(string->length));
+            else {
+                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                push(vm, slots->values[index]);
+            }
+            return true;
+        }
+        default:
+            runtimeError(vm, "Undefined property at index %d on Object type %d.", index, object->type);
+            return false;
     }
 }
 
 static bool getGenericVariableFromName(VM* vm, Obj* object, ObjString* name) {
     switch (object->type) {
-    case OBJ_ARRAY: {
-        ObjArray* array = (ObjArray*)object;
-        if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(array->elements.count));
-        else {
-            runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
-            return false;
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*)object;
+            if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(array->elements.count));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_BOUND_METHOD: {
-        ObjBoundMethod* bound = (ObjBoundMethod*)object;
-        if (strcmp(name->chars, "receiver") == 0) push(vm, OBJ_VAL(bound->receiver));
-        else if (strcmp(name->chars, "method") == 0) push(vm, OBJ_VAL(bound->method));
-        else {
-            runtimeError(vm, "Undefined property %s on Object BoundMethod.", name->chars);
-            return false;
+        case OBJ_BOUND_METHOD: {
+           ObjBoundMethod* bound = (ObjBoundMethod*)object;
+            if (strcmp(name->chars, "receiver") == 0) push(vm, OBJ_VAL(bound->receiver));
+            else if (strcmp(name->chars, "method") == 0) push(vm, OBJ_VAL(bound->method));
+            else {
+                runtimeError(vm, "Undefined property %s on Object BoundMethod.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_CLASS: {
-        ObjClass* klass = (ObjClass*)object;
-        if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(klass->name));
-        else if (strcmp(name->chars, "namespace") == 0) push(vm, OBJ_VAL(klass->namespace));
-        else if (strcmp(name->chars, "superclass") == 0) push(vm, OBJ_VAL(klass->superclass));
-        else {
-            runtimeError(vm, "Undefined property %s on Object Class.", name->chars);
-            return false;
+        case OBJ_CLASS: {
+            ObjClass* klass = (ObjClass*)object;
+            if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(klass->name));
+            else if (strcmp(name->chars, "namespace") == 0) push(vm, OBJ_VAL(klass->namespace));
+            else if (strcmp(name->chars, "superclass") == 0) push(vm, OBJ_VAL(klass->superclass));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Class.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_CLOSURE: {
-        ObjClosure* closure = (ObjClosure*)object;
-        if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(closure->function->name));
-        else if (strcmp(name->chars, "arity") == 0) push(vm, INT_VAL(closure->function->arity));
-        else {
-            runtimeError(vm, "Undefined property %s on Object Function.", name->chars);
-            return false;
+        case OBJ_CLOSURE: {
+            ObjClosure* closure = (ObjClosure*)object;
+            if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(closure->function->name));
+            else if (strcmp(name->chars, "arity") == 0) push(vm, INT_VAL(closure->function->arity));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Function.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_DICTIONARY: {
-        ObjDictionary* dictionary = (ObjDictionary*)object;
-        if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(dictionary->count));
-        else {
-            runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
-            return false;
+        case OBJ_DICTIONARY: {
+            ObjDictionary* dictionary = (ObjDictionary*)object;
+            if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(dictionary->count));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_ENTRY: {
-        ObjEntry* entry = (ObjEntry*)object;
-        if (strcmp(name->chars, "key") == 0) push(vm, entry->key);
-        else if (strcmp(name->chars, "value") == 0) push(vm, entry->value);
-        else {
-            runtimeError(vm, "Undefined property %s on Object Entry.", name->chars);
-            return false;
+        case OBJ_ENTRY: {
+            ObjEntry* entry = (ObjEntry*)object;
+            if (strcmp(name->chars, "key") == 0) push(vm, entry->key);
+            else if (strcmp(name->chars, "value") == 0) push(vm, entry->value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object Entry.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_EXCEPTION: {
-        ObjException* exception = (ObjException*)object;
-        if (strcmp(name->chars, "message") == 0) push(vm, OBJ_VAL(exception->message));
-        else if (strcmp(name->chars, "stacktrace") == 0) push(vm, OBJ_VAL(exception->stacktrace));
-        else {
-            runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
-            return false;
+        case OBJ_EXCEPTION: {
+            ObjException* exception = (ObjException*)object;
+            if (strcmp(name->chars, "message") == 0) push(vm, OBJ_VAL(exception->message));
+            else if (strcmp(name->chars, "stacktrace") == 0) push(vm, OBJ_VAL(exception->stacktrace));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_FILE: {
-        ObjFile* file = (ObjFile*)object;
-        if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(file->name));
-        else if (strcmp(name->chars, "mode") == 0) push(vm, OBJ_VAL(file->mode));
-        else {
-            runtimeError(vm, "Undefined property %s on Object File.", name->chars);
-            return false;
+        case OBJ_FILE: {
+            ObjFile* file = (ObjFile*)object;
+            if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(file->name));
+            else if (strcmp(name->chars, "mode") == 0) push(vm, OBJ_VAL(file->mode));
+            else {
+                runtimeError(vm, "Undefined property %s on Object File.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_METHOD: {
-        ObjMethod* method = (ObjMethod*)object;
-        if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(method->closure->function->name));
-        else if (strcmp(name->chars, "arity") == 0) push(vm, INT_VAL(method->closure->function->arity));
-        else if (strcmp(name->chars, "behavior") == 0) push(vm, OBJ_VAL(method->behavior));
-        else {
-            runtimeError(vm, "Undefined property %s on Object Method.", name->chars);
-            return false;
+        case OBJ_METHOD: {
+            ObjMethod* method = (ObjMethod*)object;
+            if (strcmp(name->chars, "name") == 0) push(vm, OBJ_VAL(method->closure->function->name));
+            else if (strcmp(name->chars, "arity") == 0) push(vm, INT_VAL(method->closure->function->arity));
+            else if (strcmp(name->chars, "behavior") == 0) push(vm, OBJ_VAL(method->behavior));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Method.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_NAMESPACE: {
-        ObjNamespace* namespace = (ObjNamespace*)object;
-        if (strcmp(name->chars, "shortName") == 0) push(vm, OBJ_VAL(namespace->shortName));
-        else if (strcmp(name->chars, "fullName") == 0) push(vm, OBJ_VAL(namespace->fullName));
-        else if (strcmp(name->chars, "enclosing") == 0) push(vm, OBJ_VAL(namespace->enclosing));
-        else {
-            runtimeError(vm, "Undefined property %s on Object Namespace.", name->chars);
-            return false;
+        case OBJ_NAMESPACE: {
+            ObjNamespace* namespace = (ObjNamespace*)object;
+            if (strcmp(name->chars, "shortName") == 0) push(vm, OBJ_VAL(namespace->shortName));
+            else if (strcmp(name->chars, "fullName") == 0) push(vm, OBJ_VAL(namespace->fullName));
+            else if (strcmp(name->chars, "enclosing") == 0) push(vm, OBJ_VAL(namespace->enclosing));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Namespace.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_NODE: {
-        ObjNode* node = (ObjNode*)object;
-        if (strcmp(name->chars, "element") == 0) push(vm, node->element);
-        else if (strcmp(name->chars, "prev") == 0) push(vm, OBJ_VAL(node->prev));
-        else if (strcmp(name->chars, "next") == 0) push(vm, OBJ_VAL(node->next));
-        else {
-            runtimeError(vm, "Undefined property %s on Object Node.", name->chars);
-            return false;
+        case OBJ_NODE: {
+            ObjNode* node = (ObjNode*)object;
+            if (strcmp(name->chars, "element") == 0) push(vm, node->element);
+            else if (strcmp(name->chars, "prev") == 0) push(vm, OBJ_VAL(node->prev));
+            else if (strcmp(name->chars, "next") == 0) push(vm, OBJ_VAL(node->next));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Node.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_RANGE: {
-        ObjRange* range = (ObjRange*)object;
-        if (strcmp(name->chars, "from") == 0) push(vm, INT_VAL(range->from));
-        else if (strcmp(name->chars, "to") == 0) push(vm, INT_VAL(range->to));
-        else {
-            runtimeError(vm, "Undefined property %s on Object Range.", name->chars);
-            return false;
+        case OBJ_RANGE: {
+            ObjRange* range = (ObjRange*)object;
+            if (strcmp(name->chars, "from") == 0) push(vm, INT_VAL(range->from));
+            else if (strcmp(name->chars, "to") == 0) push(vm, INT_VAL(range->to));
+            else {
+                runtimeError(vm, "Undefined property %s on Object Range.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    case OBJ_STRING: {
-        ObjString* string = (ObjString*)object;
-        if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(string->length));
-        else {
-            runtimeError(vm, "Undefined property %s on Object String.", name->chars);
-            return false;
+        case OBJ_STRING: {
+            ObjString* string = (ObjString*)object;
+            if (strcmp(name->chars, "length") == 0) push(vm, INT_VAL(string->length));
+            else {
+                runtimeError(vm, "Undefined property %s on Object String.", name->chars);
+                return false;
+            }
+            return true;
         }
-        return true;
-    }
-    default:
-        runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
-        return false;
+        default:
+            runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
+            return false;
     }
 }
 
@@ -468,170 +476,170 @@ bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
 static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, Value value) {
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     switch (object->type) {
-    case OBJ_ARRAY: {
-        ObjArray* array = (ObjArray*)object;
-        if (strcmp(name->chars, "length") == 0) {
-            runtimeError(vm, "Cannot set property length on Object Array.");
-            return false;
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*)object;
+            if (strcmp(name->chars, "length") == 0) {
+                runtimeError(vm, "Cannot set property length on Object Array.");
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        else {
-            runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
-            return false;
+        case OBJ_BOUND_METHOD: {
+            ObjBoundMethod* bound = (ObjBoundMethod*)object;
+            if (strcmp(name->chars, "receiver") == 0) bound->receiver = value;
+            else if (strcmp(name->chars, "method") == 0) bound->method = AS_CLOSURE(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object BoundMethod.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_BOUND_METHOD: {
-        ObjBoundMethod* bound = (ObjBoundMethod*)object;
-        if (strcmp(name->chars, "receiver") == 0) bound->receiver = value;
-        else if (strcmp(name->chars, "method") == 0) bound->method = AS_CLOSURE(value);
-        else {
-            runtimeError(vm, "Undefined property %s on Object BoundMethod.", name->chars);
-            return false;
+        case OBJ_CLASS: {
+            ObjClass* klass = (ObjClass*)object;
+            if (strcmp(name->chars, "name") == 0 || strcmp(name->chars, "namespace") || strcmp(name->chars, "superclass")) {
+                runtimeError(vm, "Cannot set property %s on Object Class.", name->chars);
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Class.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_CLASS: {
-        ObjClass* klass = (ObjClass*)object;
-        if (strcmp(name->chars, "name") == 0 || strcmp(name->chars, "namespace") || strcmp(name->chars, "superclass")) {
-            runtimeError(vm, "Cannot set property %s on Object Class.", name->chars);
-            return false;
+        case OBJ_CLOSURE: {
+            ObjClosure* closure = (ObjClosure*)object;
+            if (strcmp(name->chars, "name") == 0 || strcmp(name->chars, "arity")) {
+                runtimeError(vm, "Cannot set property %s on Object Function.", name->chars);
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Function.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        else {
-            runtimeError(vm, "Undefined property %s on Object Class.", name->chars);
-            return false;
+        case OBJ_DICTIONARY: {
+            ObjDictionary* dictionary = (ObjDictionary*)object;
+            if (strcmp(name->chars, "length") == 0) {
+                runtimeError(vm, "Cannot set property length on Object Dictionary.");
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_CLOSURE: {
-        ObjClosure* closure = (ObjClosure*)object;
-        if (strcmp(name->chars, "name") == 0 || strcmp(name->chars, "arity")) {
-            runtimeError(vm, "Cannot set property %s on Object Function.", name->chars);
-            return false;
+        case OBJ_ENTRY: {
+            ObjEntry* entry = (ObjEntry*)object;
+            if (strcmp(name->chars, "key") == 0) {
+                runtimeError(vm, "Cannot set property key on Object Entry.");
+                return false;
+            }
+            else if (strcmp(name->chars, "value") == 0) entry->value = value;
+            else {
+                runtimeError(vm, "Undefined property %s on Object Entry.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        else {
-            runtimeError(vm, "Undefined property %s on Object Function.", name->chars);
-            return false;
+        case OBJ_EXCEPTION: {
+            ObjException* exception = (ObjException*)object;
+            if (strcmp(name->chars, "message") == 0 && IS_STRING(value)) exception->message = AS_STRING(value);
+            else if (strcmp(name->chars, "stacktrace") == 0 && IS_ARRAY(value)) exception->stacktrace = AS_ARRAY(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_DICTIONARY: {
-        ObjDictionary* dictionary = (ObjDictionary*)object;
-        if (strcmp(name->chars, "length") == 0) {
-            runtimeError(vm, "Cannot set property length on Object Dictionary.");
-            return false;
+        case OBJ_FILE: {
+            ObjFile* file = (ObjFile*)object;
+            if (strcmp(name->chars, "name") == 0 && IS_STRING(value)) file->name = AS_STRING(value);
+            else if (strcmp(name->chars, "mode") == 0 && IS_STRING(value)) file->mode = AS_STRING(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object File.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        else {
-            runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
-            return false;
+        case OBJ_METHOD: {
+            ObjMethod* method = (ObjMethod*)object;
+            if (strcmp(name->chars, "name") == 0 || strcmp(name->chars, "arity") || strcmp(name->chars, "behavior")) {
+                runtimeError(vm, "Cannot set property %s on Object Method.", name->chars);
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Method.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_ENTRY: {
-        ObjEntry* entry = (ObjEntry*)object;
-        if (strcmp(name->chars, "key") == 0) {
-            runtimeError(vm, "Cannot set property key on Object Entry.");
-            return false;
+        case OBJ_NAMESPACE: {
+            ObjNamespace* namespace = (ObjNamespace*)object;
+            if (strcmp(name->chars, "shortName") == 0 || strcmp(name->chars, "fullName") || strcmp(name->chars, "enclosing")) {
+                runtimeError(vm, "Cannot set property %s on Object Namespace.", name->chars);
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object Namespace.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        else if (strcmp(name->chars, "value") == 0) entry->value = value;
-        else {
-            runtimeError(vm, "Undefined property %s on Object Entry.", name->chars);
-            return false;
+        case OBJ_NODE: {
+            ObjNode* node = (ObjNode*)object;
+            if (strcmp(name->chars, "element") == 0) node->element = value;
+            else if (strcmp(name->chars, "prev") == 0 && IS_NODE(value)) node->prev = AS_NODE(value);
+            else if (strcmp(name->chars, "next") == 0 && IS_NODE(value)) node->next = AS_NODE(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object Node.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_EXCEPTION: {
-        ObjException* exception = (ObjException*)object;
-        if (strcmp(name->chars, "message") == 0 && IS_STRING(value)) exception->message = AS_STRING(value);
-        else if (strcmp(name->chars, "stacktrace") == 0 && IS_ARRAY(value)) exception->stacktrace = AS_ARRAY(value);
-        else {
-            runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
-            return false;
+        case OBJ_RANGE: {
+            ObjRange* range = (ObjRange*)object;
+            if (strcmp(name->chars, "from") == 0 && IS_INT(value)) range->from = AS_INT(value);
+            else if (strcmp(name->chars, "to") == 0 && IS_INT(value)) range->to = AS_INT(value);
+            else {
+                runtimeError(vm, "Undefined property %s on Object Range.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_FILE: {
-        ObjFile* file = (ObjFile*)object;
-        if (strcmp(name->chars, "name") == 0 && IS_STRING(value)) file->name = AS_STRING(value);
-        else if (strcmp(name->chars, "mode") == 0 && IS_STRING(value)) file->mode = AS_STRING(value);
-        else {
-            runtimeError(vm, "Undefined property %s on Object File.", name->chars);
-            return false;
+        case OBJ_STRING: {
+            ObjString* string = (ObjString*)object;
+            if (strcmp(name->chars, "length") == 0) {
+                runtimeError(vm, "Cannot set property length on Object String.");
+                return false;
+            }
+            else {
+                runtimeError(vm, "Undefined property %s on Object String.", name->chars);
+                return false;
+            }
+            push(vm, value);
+            return true;
         }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_METHOD: {
-        ObjMethod* method = (ObjMethod*)object;
-        if (strcmp(name->chars, "name") == 0 || strcmp(name->chars, "arity") || strcmp(name->chars, "behavior")) {
-            runtimeError(vm, "Cannot set property %s on Object Method.", name->chars);
+        default:
+            runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
             return false;
-        }
-        else {
-            runtimeError(vm, "Undefined property %s on Object Method.", name->chars);
-            return false;
-        }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_NAMESPACE: {
-        ObjNamespace* namespace = (ObjNamespace*)object;
-        if (strcmp(name->chars, "shortName") == 0 || strcmp(name->chars, "fullName") || strcmp(name->chars, "enclosing")) {
-            runtimeError(vm, "Cannot set property %s on Object Namespace.", name->chars);
-            return false;
-        }
-        else {
-            runtimeError(vm, "Undefined property %s on Object Namespace.", name->chars);
-            return false;
-        }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_NODE: {
-        ObjNode* node = (ObjNode*)object;
-        if (strcmp(name->chars, "element") == 0) node->element = value;
-        else if (strcmp(name->chars, "prev") == 0 && IS_NODE(value)) node->prev = AS_NODE(value);
-        else if (strcmp(name->chars, "next") == 0 && IS_NODE(value)) node->next = AS_NODE(value);
-        else {
-            runtimeError(vm, "Undefined property %s on Object Node.", name->chars);
-            return false;
-        }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_RANGE: {
-        ObjRange* range = (ObjRange*)object;
-        if (strcmp(name->chars, "from") == 0 && IS_INT(value)) range->from = AS_INT(value);
-        else if (strcmp(name->chars, "to") == 0 && IS_INT(value)) range->to = AS_INT(value);
-        else {
-            runtimeError(vm, "Undefined property %s on Object Range.", name->chars);
-            return false;
-        }
-        push(vm, value);
-        return true;
-    }
-    case OBJ_STRING: {
-        ObjString* string = (ObjString*)object;
-        if (strcmp(name->chars, "length") == 0) {
-            runtimeError(vm, "Cannot set property length on Object String.");
-            return false;
-        }
-        else {
-            runtimeError(vm, "Undefined property %s on Object String.", name->chars);
-            return false;
-        }
-        push(vm, value);
-        return true;
-    }
-    default:
-        runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
-        return false;
     }
 }
 
