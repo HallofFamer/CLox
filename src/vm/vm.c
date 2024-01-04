@@ -772,7 +772,7 @@ InterpretResult run(VM* vm) {
                 Value receiver = pop(vm);
 
                 uint8_t byte = READ_BYTE();
-                if (!setInstanceField(vm, receiver, &frame->closure->function->chunk, byte, value)) {
+                if (!setInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte, value)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
