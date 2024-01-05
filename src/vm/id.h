@@ -10,6 +10,7 @@
         if (object->objectID == 0){ \
             if(object->type == OBJ_INSTANCE) object->objectID = ++vm->objectIndex * 8; \
             else object->objectID = ++vm->genericIDMap.count * 8 - 2; \
+            appendToGenericIDMap(vm, object); \
         } \
     } while (false);
 
@@ -52,4 +53,4 @@ static inline uint64_t getIndexFromObjectID(uint64_t id, bool isGeneric) {
     return isGeneric ? (id - 6) >> 3 : id >> 3;
 }
 
-#endif // !clox_index_h
+#endif // !clox_id_h

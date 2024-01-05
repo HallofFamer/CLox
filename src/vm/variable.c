@@ -488,6 +488,7 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
                 return false;
             }
             else {
+                transitionShapeForObject(vm, object, name);
                 runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
                 return false;
             }
@@ -716,5 +717,25 @@ bool setInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Val
     else {
         runtimeError(vm, "Only instances and classes can set properties.");
         return false;
+    }
+}
+
+int getOffsetForGenericObject(Obj* object) {
+    switch (object->type) { 
+        case OBJ_ARRAY: return 1; 
+        case OBJ_BOUND_METHOD: return 2;
+        case OBJ_CLASS: return 3;
+        case OBJ_CLOSURE: return 2;
+        case OBJ_DICTIONARY: return 1;
+        case OBJ_ENTRY: return 2;
+        case OBJ_EXCEPTION: return 2;
+        case OBJ_FILE: return 2;
+        case OBJ_INSTANCE: return 0;
+        case OBJ_METHOD: return 3;
+        case OBJ_NAMESPACE: return 3;
+        case OBJ_NODE: return 3;
+        case OBJ_RANGE: return 2;
+        case OBJ_STRING: return 1;
+        default: return 0;
     }
 }
