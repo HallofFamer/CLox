@@ -9,8 +9,10 @@
     do { \
         if (object->objectID == 0){ \
             if(object->type == OBJ_INSTANCE) object->objectID = ++vm->objectIndex * 8; \
-            else object->objectID = ++vm->genericIDMap.count * 8 - 2; \
-            appendToGenericIDMap(vm, object); \
+            else { \
+                object->objectID = vm->genericIDMap.count * 8 + 6; \
+                appendToGenericIDMap(vm, object); \
+            } \
         } \
     } while (false);
 
@@ -28,8 +30,7 @@ typedef struct {
 typedef struct {
     uint64_t count;
     uint64_t capacity;
-    IDMap* idMaps;
-    ValueArray* idSlots;
+    ValueArray* slots;
 } GenericIDMap;
 
 void initIDMap(IDMap* idMap);
@@ -42,7 +43,7 @@ void markIDMap(VM* vm, IDMap* idMap);
 void initGenericIDMap(VM* vm);
 void freeGenericIDMap(VM* vm, GenericIDMap* genericIDMap);
 IDMap* getIDMapFromGenericObject(VM* vm, Obj* object);
-ValueArray* getIDSlotsFromGenericObject(VM* vm, Obj* object);
+ValueArray* getSlotsFromGenericObject(VM* vm, Obj* object);
 void appendToGenericIDMap(VM* vm, Obj* object);
 
 static inline uint64_t getObjectIDFromIndex(uint64_t index, bool isGeneric) {

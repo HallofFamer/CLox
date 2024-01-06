@@ -84,7 +84,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             ObjArray* array = (ObjArray*)object;
             if (index == 0) push(vm, INT_VAL(array->elements.count));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -94,7 +94,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, bound->receiver);
             else if (index == 1) push(vm, OBJ_VAL(bound->method));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -105,7 +105,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             else if (index == 1) push(vm, OBJ_VAL(klass->namespace));
             else if (index == 2) push(vm, OBJ_VAL(klass->superclass));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -115,7 +115,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, OBJ_VAL(closure->function->name));
             else if (index == 1) push(vm, INT_VAL(closure->function->arity));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -124,7 +124,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             ObjDictionary* dictionary = (ObjDictionary*)object;
             if (index == 0) push(vm, INT_VAL(dictionary->count));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             } 
             return true;
@@ -134,7 +134,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, entry->key);
             else if (index == 1) push(vm, entry->value);
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -144,7 +144,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, OBJ_VAL(exception->message));
             else if (index == 1) push(vm, OBJ_VAL(exception->stacktrace));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -154,7 +154,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, OBJ_VAL(file->name));
             else if (index == 1) push(vm, OBJ_VAL(file->mode));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -165,7 +165,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             else if (index == 1) push(vm, INT_VAL(method->closure->function->arity));
             else if (index == 2) push(vm, OBJ_VAL(method->behavior));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -176,7 +176,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             else if (index == 1) push(vm, OBJ_VAL(namespace->fullName));
             else if (index == 2) push(vm, OBJ_VAL(namespace->enclosing));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -187,7 +187,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             else if (index == 1) push(vm, OBJ_VAL(node->prev));
             else if (index == 2) push(vm, OBJ_VAL(node->next));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -197,7 +197,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, INT_VAL(range->from));
             else if (index == 1) push(vm, INT_VAL(range->to));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -206,7 +206,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             ObjString* string = (ObjString*)object;
             if (index == 0) push(vm, INT_VAL(string->length));
             else {
-                ValueArray* slots = getIDSlotsFromGenericObject(vm, object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
                 push(vm, slots->values[index]);
             }
             return true;
@@ -489,8 +489,22 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
             }
             else {
                 transitionShapeForObject(vm, object, name);
-                runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
-                return false;
+                IDMap* idMap = getIDMapFromGenericObject(vm, object);
+                int index;
+                if (!idMapGet(idMap, name, &index)) { 
+                    runtimeError(vm, "Undefined property %s on Object %s", name->chars, object->klass->fullName->chars);
+                    return false;
+                }
+
+                ENSURE_OBJECT_ID(object);
+                ValueArray* slots = getSlotsFromGenericObject(vm, object);
+                if (slots == NULL) { 
+                    runtimeError(vm, "Generic object has no ID assigned.");
+                    return false;
+                }
+
+                if (index < slots->count) slots->values[index] = value;
+                else valueArrayWrite(vm, slots, value);
             }
             push(vm, value);
             return true;

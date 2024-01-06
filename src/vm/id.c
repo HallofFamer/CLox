@@ -91,33 +91,28 @@ void markIDMap(VM* vm, IDMap* idMap) {
 }
 
 void initGenericIDMap(VM* vm) {
-    GenericIDMap genericIDMap = { .capacity = 0, .count = 0, .idMaps = NULL, .idSlots = NULL };
+    GenericIDMap genericIDMap = { .capacity = 0, .count = 0, .slots = NULL };
     vm->genericIDMap = genericIDMap;
 }
 
 void freeGenericIDMap(VM* vm, GenericIDMap* genericIDMap) {
-    FREE_ARRAY(IDMap, genericIDMap->idMaps, genericIDMap->capacity);
-    FREE_ARRAY(ValueArray, genericIDMap->idSlots, genericIDMap->capacity);
+    FREE_ARRAY(ValueArray, genericIDMap->slots, genericIDMap->capacity);
     genericIDMap->capacity = 0;
     genericIDMap->count = 0;
-    genericIDMap->idMaps = NULL;
-    genericIDMap->idSlots = NULL;
+    genericIDMap->slots = NULL;
 }
 
 IDMap* getIDMapFromGenericObject(VM* vm, Obj* object) {
-    if (object->objectID == 0) {
-        runtimeError(vm, "Generic object has no ID assigned.");
+    if (object->shapeID > vm->shapes.count) {
+        runtimeError(vm, "Generic object has invalid shape ID assigned.");
         return NULL;
     }
-    return &vm->genericIDMap.idMaps[getIndexFromObjectID(object->objectID, true)];
+    return &vm->shapes.list[object->shapeID].indexes;
 }
 
-ValueArray* getIDSlotsFromGenericObject(VM* vm, Obj* object) {
-    if (object->objectID == 0) {
-        runtimeError(vm, "Generic object has no ID assigned.");
-        return NULL;
-    }
-    return &vm->genericIDMap.idSlots[getIndexFromObjectID(object->objectID, true)];
+ValueArray* getSlotsFromGenericObject(VM* vm, Obj* object) {
+    if (object->objectID == 0) return NULL;
+    return &vm->genericIDMap.slots[getIndexFromObjectID(object->objectID, true)];
 }
 
 void appendToGenericIDMap(VM* vm, Obj* object) {
@@ -125,16 +120,10 @@ void appendToGenericIDMap(VM* vm, Obj* object) {
     if (genericIDMap->capacity < genericIDMap->count + 1) {
         uint64_t oldCapacity = genericIDMap->capacity;
         genericIDMap->capacity = GROW_CAPACITY(oldCapacity);
-        genericIDMap->idMaps = GROW_ARRAY(IDMap, genericIDMap->idMaps, oldCapacity, genericIDMap->capacity);
-        genericIDMap->idSlots = GROW_ARRAY(ValueArray, genericIDMap->idSlots, oldCapacity, genericIDMap->capacity);
+        genericIDMap->slots = GROW_ARRAY(ValueArray, genericIDMap->slots, oldCapacity, genericIDMap->capacity);
     }
-    ENSURE_OBJECT_ID(object);
 
-    IDMap idMap;
-    initIDMap(&idMap);
-    genericIDMap->idMaps[genericIDMap->count] = idMap;
-
-    ValueArray idSlot;
-    initValueArray(&idSlot);
-    genericIDMap->idSlots[genericIDMap->count] = idSlot;
+    ValueArray slots;
+    initValueArray(&slots);
+    genericIDMap->slots[genericIDMap->count++] = slots;
 }
