@@ -4,8 +4,8 @@ println("Testing getting properties: ");
 val array = [1, 2, 3, 4, 5];
 println("Length of array: ${array.length}");
 
-val dictionary = ["US": "United States", "EU": "Europe"];
-println("Length of dictionary: ${dictionary.length}");
+val dict = ["US": "United States", "EU": "Europe"];
+println("Length of dictionary: ${dict.length}");
 
 val string = "Hello World";
 println("Length of string: ${string.length}");
@@ -20,3 +20,14 @@ catch (Exception e) {
 println("");
 
 println("Testing setting properties: ");
+array.name = "Number Array";
+array.capacity = 8;
+println("Array Name: ${array.name}, Capacity: ${array.capacity}");
+
+dict.name = "Country Dictionary";
+dict.loadFactor = 0.5;
+dict.capacity = dict.length / dict.loadFactor;
+println("Dictionary Name: ${dict.name}, Load Factor: ${dict.loadFactor}, Capacity: ${dict.capacity}");
+
+string.isASCII = true;
+println("String is ASCII: ${string.isASCII}");
