@@ -228,14 +228,14 @@ struct ObjClass {
     Table methods;
 };
 
-typedef struct ObjNamespace {
+struct ObjNamespace {
     Obj obj;
     ObjString* shortName;
     ObjString* fullName;
     struct ObjNamespace* enclosing;
     bool isRoot;
     Table values;
-} ObjNamespace;
+};
 
 typedef struct ObjNode{
     Obj obj;

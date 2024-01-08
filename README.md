@@ -32,6 +32,7 @@ https://github.com/munificent/craftinginterpreters
 - Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
 - Variadic Functions, Anonymous Functions(local return) and Lambda Expressions(nonlocal return). 
 - `Object` root class for every class in Lox, everything is an object, and every object has a class.
+- Object ID and generic object map which enable inheritance for special build-in classes such as `String` and `Array`.
 - Class methods in class declaration using `class` keyword, and trait declaration using `trait` keyword.
 - Anonymous classes/traits similar to anonymous functions/lambda.
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
@@ -104,7 +105,7 @@ https://github.com/munificent/craftinginterpreters
 - Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
 - Improved string concatenation, addition of string interpolation and UTF-8 strings.
 - Method interception when an undefined method call is invoked on an object/class, similar to Smalltalk's doesNotUnderstand: message.
-- Object ID and generic object table which enable inheritance for special build-in classes such as `String` and `Array`.
+- Object ID and generic object map which enable inheritance for special build-in classes such as `String` and `Array`.
 
 ### CLox 1.9.0
 - Add class `Promise` to the standard library(`clox.std.util`), which uses libuv to handle async tasks that completes in future. 

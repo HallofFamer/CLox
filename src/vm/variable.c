@@ -352,7 +352,11 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
     printf("Cache miss for getting instance variable: '%s' from Shape ID %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), shapeID);
 #endif
 
-    return getGenericVariableFromName(vm, object, AS_STRING(chunk->identifiers.values[byte]));
+    ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
+    IDMap* idMap = getShapeIndexes(vm, shapeID);
+    int index;
+    if (idMapGet(idMap, name, &index)) writeInlineCache(inlineCache, CACHE_IVAR, shapeID, index);
+    return getGenericVariableFromName(vm, object, name);
 }
 
 bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
