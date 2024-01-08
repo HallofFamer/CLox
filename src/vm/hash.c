@@ -15,14 +15,16 @@ uint32_t hashObject(Obj* object) {
     switch (object->type) {
         case OBJ_STRING:
             return ((ObjString*)object)->hash;
-        case OBJ_CLASS:
-            return ((ObjClass*)object)->name->hash;    
+        case OBJ_CLASS: { 
+            ObjClass* klass = (ObjClass*)object;
+            int hash = 7;
+            hash = hash * 31 + hashValue(OBJ_VAL(klass->namespace->fullName));
+            hash = hash * 31 + hashValue(OBJ_VAL(klass->name));
+            return hash;
+        }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*)object;
-            int hash = 7;
-            hash = hash * 31 + hashNumber(function->arity);
-            hash = hash * 31 + hashNumber(function->chunk.count);
-            return hash;
+            return hashNumber((double)function->arity) ^ hashNumber((double)function->chunk.count);
         }
         case OBJ_ARRAY: { 
             ObjArray* array = (ObjArray*)object;
@@ -58,6 +60,10 @@ uint32_t hashObject(Obj* object) {
                 hash = hash * 31 + hashValue(instance->fields.values[i]);
             }
             return hash;
+        }
+        case OBJ_RANGE: { 
+            ObjRange* range = (ObjRange*)object;
+            return hashNumber((double)range->from) ^ hashNumber((double)range->to);
         }
         default: {
             uint64_t hash = (uint64_t)(&object);

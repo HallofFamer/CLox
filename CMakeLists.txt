@@ -148,6 +148,8 @@ set(Source_Files__vm
     "src/vm/klass.h"
     "src/vm/memory.c"
     "src/vm/memory.h"
+    "src/vm/namespace.c"
+    "src/vm/namespace.h"
     "src/vm/native.c"
     "src/vm/native.h"
     "src/vm/object.c"
