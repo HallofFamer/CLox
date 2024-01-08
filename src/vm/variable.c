@@ -79,25 +79,25 @@ bool loadGlobal(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
     return loadGlobalFromTable(vm, chunk, byte, value);
 }
 
-static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
+static void pushGenericVariable(VM* vm, Obj* object, int index) {
+    ValueArray* slots = getSlotsFromGenericObject(vm, object);
+    int offset = getOffsetForGenericObject(object);
+    push(vm, slots->values[index - offset]);
+}
+
+static bool getGenericVariableFromIndex(VM* vm, Obj* object, int index) {
     switch (object->type) {
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
             if (index == 0) push(vm, INT_VAL(array->elements.count));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (index == 0) push(vm, bound->receiver);
             else if (index == 1) push(vm, OBJ_VAL(bound->method));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_CLASS: {
@@ -105,59 +105,41 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, OBJ_VAL(klass->name));
             else if (index == 1) push(vm, OBJ_VAL(klass->namespace));
             else if (index == 2) push(vm, OBJ_VAL(klass->superclass));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
             if (index == 0) push(vm, OBJ_VAL(closure->function->name));
             else if (index == 1) push(vm, INT_VAL(closure->function->arity));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dictionary = (ObjDictionary*)object;
             if (index == 0) push(vm, INT_VAL(dictionary->count));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            } 
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_ENTRY: {
             ObjEntry* entry = (ObjEntry*)object;
             if (index == 0) push(vm, entry->key);
             else if (index == 1) push(vm, entry->value);
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_EXCEPTION: {
             ObjException* exception = (ObjException*)object;
             if (index == 0) push(vm, OBJ_VAL(exception->message));
             else if (index == 1) push(vm, OBJ_VAL(exception->stacktrace));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_FILE: {
             ObjFile* file = (ObjFile*)object;
             if (index == 0) push(vm, OBJ_VAL(file->name));
             else if (index == 1) push(vm, OBJ_VAL(file->mode));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_METHOD: {
@@ -165,10 +147,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, OBJ_VAL(method->closure->function->name));
             else if (index == 1) push(vm, INT_VAL(method->closure->function->arity));
             else if (index == 2) push(vm, OBJ_VAL(method->behavior));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_NAMESPACE: {
@@ -176,10 +155,7 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, OBJ_VAL(namespace->shortName));
             else if (index == 1) push(vm, OBJ_VAL(namespace->fullName));
             else if (index == 2) push(vm, OBJ_VAL(namespace->enclosing));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_NODE: {
@@ -187,29 +163,20 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, node->element);
             else if (index == 1) push(vm, OBJ_VAL(node->prev));
             else if (index == 2) push(vm, OBJ_VAL(node->next));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_RANGE: {
             ObjRange* range = (ObjRange*)object;
             if (index == 0) push(vm, INT_VAL(range->from));
             else if (index == 1) push(vm, INT_VAL(range->to));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         case OBJ_STRING: { 
             ObjString* string = (ObjString*)object;
             if (index == 0) push(vm, INT_VAL(string->length));
-            else {
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                push(vm, slots->values[index]);
-            }
+            else pushGenericVariable(vm, object, index);
             return true;
         }
         default:
@@ -345,7 +312,7 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
 #ifdef DEBUG_TRACE_CACHE
         printf("Cache hit for getting instance variable: '%s' from Shape ID %d at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->id, inlineCache->index);
 #endif  
-        return getGenericVariableFromCache(vm, object, inlineCache->index);
+        return getGenericVariableFromIndex(vm, object, inlineCache->index);
     }
 
 #ifdef DEBUG_TRACE_CACHE
@@ -355,7 +322,10 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     IDMap* idMap = getShapeIndexes(vm, shapeID);
     int index;
-    if (idMapGet(idMap, name, &index)) writeInlineCache(inlineCache, CACHE_IVAR, shapeID, index);
+    if (idMapGet(idMap, name, &index)) {
+        writeInlineCache(inlineCache, CACHE_IVAR, shapeID, index);
+        return getGenericVariableFromIndex(vm, object, index);
+    }
     return getGenericVariableFromName(vm, object, name);
 }
 

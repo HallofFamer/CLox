@@ -27,7 +27,19 @@ println("Array Name: ${array.name}, Capacity: ${array.capacity}");
 dict.name = "Country Dictionary";
 dict.loadFactor = 0.5;
 dict.capacity = dict.length / dict.loadFactor;
+if (dict.capacity < 8) dict.capacity = 8;
 println("Dictionary Name: ${dict.name}, Load Factor: ${dict.loadFactor}, Capacity: ${dict.capacity}");
 
 string.isASCII = true;
 println("String is ASCII: ${string.isASCII}");
+
+println("Testing handling native exception: ");
+try { 
+    val range = 3.."abc";
+}
+catch(IllegalArgumentException e){ 
+    e.file = "property.lox";
+    e.line = 37;
+    println("Caught ${e.getClassName()} with message: ${e.message} \nat line ${e.line} in file ${e.file}");
+}
+println("");
