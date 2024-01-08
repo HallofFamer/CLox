@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "namespace.h"
 #include "variable.h"
 #include "vm.h"
 
@@ -217,25 +218,38 @@ static bool getGenericVariableFromCache(VM* vm, Obj* object, int index) {
     }
 }
 
+static bool getGenericInstanceVariable(VM* vm, Obj* object, ObjString* name) {
+    ENSURE_OBJECT_ID(object);
+    ValueArray* slots = getSlotsFromGenericObject(vm, object);
+    if (slots == NULL) {
+        runtimeError(vm, "Generic object has no ID assigned.");
+        return false;
+    }
+
+    int index = getIndexFromObjectShape(vm, object, name);
+    if (index == -1) {
+        runtimeError(vm, "Undefined property %s on Object %s", name->chars, object->klass->fullName->chars);
+        return false;
+    }
+
+    int offset = getOffsetForGenericObject(object);
+    push(vm, slots->values[index - offset]);
+    return true;
+}
+
 static bool getGenericVariableFromName(VM* vm, Obj* object, ObjString* name) {
     switch (object->type) {
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
             if (matchVariableName(name, "length", 6)) push(vm, INT_VAL(array->elements.count));
-            else {
-                runtimeError(vm, "Undefined property %s on Object Array.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_BOUND_METHOD: {
            ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (matchVariableName(name, "receiver", 8) == 0) push(vm, OBJ_VAL(bound->receiver));
             else if (matchVariableName(name, "method", 6)) push(vm, OBJ_VAL(bound->method));
-            else {
-                runtimeError(vm, "Undefined property %s on Object BoundMethod.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_CLASS: {
@@ -243,59 +257,41 @@ static bool getGenericVariableFromName(VM* vm, Obj* object, ObjString* name) {
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(klass->name));
             else if (matchVariableName(name, "namespace", 9)) push(vm, OBJ_VAL(klass->namespace));
             else if (matchVariableName(name, "superclass", 10)) push(vm, OBJ_VAL(klass->superclass));
-            else {
-                runtimeError(vm, "Undefined property %s on Object Class.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(closure->function->name));
             else if (matchVariableName(name, "arity", 5)) push(vm, INT_VAL(closure->function->arity));
-            else {
-                runtimeError(vm, "Undefined property %s on Object Function.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dictionary = (ObjDictionary*)object;
             if (matchVariableName(name, "length", 6)) push(vm, INT_VAL(dictionary->count));
-            else {
-                runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_ENTRY: {
             ObjEntry* entry = (ObjEntry*)object;
             if (matchVariableName(name, "key", 3)) push(vm, entry->key);
             else if (matchVariableName(name, "value", 5)) push(vm, entry->value);
-            else {
-                runtimeError(vm, "Undefined property %s on Object Entry.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_EXCEPTION: {
             ObjException* exception = (ObjException*)object;
             if (matchVariableName(name, "message", 7)) push(vm, OBJ_VAL(exception->message));
             else if (matchVariableName(name, "stacktrace", 10)) push(vm, OBJ_VAL(exception->stacktrace));
-            else {
-                runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_FILE: {
             ObjFile* file = (ObjFile*)object;
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(file->name));
             else if (matchVariableName(name, "mode", 4)) push(vm, OBJ_VAL(file->mode));
-            else {
-                runtimeError(vm, "Undefined property %s on Object File.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_METHOD: {
@@ -303,10 +299,7 @@ static bool getGenericVariableFromName(VM* vm, Obj* object, ObjString* name) {
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(method->closure->function->name));
             else if (matchVariableName(name, "arity", 5)) push(vm, INT_VAL(method->closure->function->arity));
             else if (matchVariableName(name, "behavior", 8)) push(vm, OBJ_VAL(method->behavior));
-            else {
-                runtimeError(vm, "Undefined property %s on Object Method.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_NAMESPACE: {
@@ -314,10 +307,7 @@ static bool getGenericVariableFromName(VM* vm, Obj* object, ObjString* name) {
             if (matchVariableName(name, "shortName", 9)) push(vm, OBJ_VAL(namespace->shortName));
             else if (matchVariableName(name, "fullName", 8)) push(vm, OBJ_VAL(namespace->fullName));
             else if (matchVariableName(name, "enclosing", 9)) push(vm, OBJ_VAL(namespace->enclosing));
-            else {
-                runtimeError(vm, "Undefined property %s on Object Namespace.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_NODE: {
@@ -325,29 +315,20 @@ static bool getGenericVariableFromName(VM* vm, Obj* object, ObjString* name) {
             if (matchVariableName(name, "element", 7)) push(vm, node->element);
             else if (matchVariableName(name, "prev", 4)) push(vm, OBJ_VAL(node->prev));
             else if (matchVariableName(name, "next", 4)) push(vm, OBJ_VAL(node->next));
-            else {
-                runtimeError(vm, "Undefined property %s on Object Node.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_RANGE: {
             ObjRange* range = (ObjRange*)object;
             if (matchVariableName(name, "from", 4)) push(vm, INT_VAL(range->from));
             else if (matchVariableName(name, "to", 2)) push(vm, INT_VAL(range->to));
-            else {
-                runtimeError(vm, "Undefined property %s on Object Range.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         case OBJ_STRING: {
             ObjString* string = (ObjString*)object;
             if (matchVariableName(name, "length", 6)) push(vm, INT_VAL(string->length));
-            else {
-                runtimeError(vm, "Undefined property %s on Object String.", name->chars);
-                return false;
-            }
+            else return getGenericInstanceVariable(vm, object, name);
             return true;
         }
         default:
@@ -478,6 +459,25 @@ bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
     return true;
 }
 
+static bool setGenericInstanceVariable(VM* vm, Obj* object, ObjString* name, Value value) { 
+    ENSURE_OBJECT_ID(object);
+    ValueArray* slots = getSlotsFromGenericObject(vm, object);
+    if (slots == NULL) {
+        runtimeError(vm, "Generic object has no ID assigned.");
+        return false;
+    }
+
+    int index = getIndexFromObjectShape(vm, object, name);
+    if (index == -1) {
+        transitionShapeForObject(vm, object, name);
+        valueArrayWrite(vm, slots, value);
+    }
+    else slots->values[index] = value;
+
+    push(vm, value);
+    return true;
+}
+
 static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, Value value) {
     ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
     switch (object->type) {
@@ -487,36 +487,14 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
                 runtimeError(vm, "Cannot set property length on Object Array.");
                 return false;
             }
-            else {
-                transitionShapeForObject(vm, object, name);
-                IDMap* idMap = getIDMapFromGenericObject(vm, object);
-                int index;
-                if (!idMapGet(idMap, name, &index)) { 
-                    runtimeError(vm, "Undefined property %s on Object %s", name->chars, object->klass->fullName->chars);
-                    return false;
-                }
-
-                ENSURE_OBJECT_ID(object);
-                ValueArray* slots = getSlotsFromGenericObject(vm, object);
-                if (slots == NULL) { 
-                    runtimeError(vm, "Generic object has no ID assigned.");
-                    return false;
-                }
-
-                if (index < slots->count) slots->values[index] = value;
-                else valueArrayWrite(vm, slots, value);
-            }
-            push(vm, value);
-            return true;
+            else return setGenericInstanceVariable(vm, object, name, value);
         }
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (matchVariableName(name, "receiver", 8)) bound->receiver = value;
             else if (matchVariableName(name, "method", 6) && IS_CLOSURE(value)) bound->method = AS_CLOSURE(value);
-            else {
-                runtimeError(vm, "Undefined property %s on Object BoundMethod.", name->chars);
-                return false;
-            }
+            else return setGenericInstanceVariable(vm, object, name, value);
+
             push(vm, value);
             return true;
         }
@@ -539,12 +517,7 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
                 runtimeError(vm, "Cannot set property %s on Object Function.", name->chars);
                 return false;
             }
-            else {
-                runtimeError(vm, "Undefined property %s on Object Function.", name->chars);
-                return false;
-            }
-            push(vm, value);
-            return true;
+            else return setGenericInstanceVariable(vm, object, name, value);
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dictionary = (ObjDictionary*)object;
@@ -552,12 +525,7 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
                 runtimeError(vm, "Cannot set property length on Object Dictionary.");
                 return false;
             }
-            else {
-                runtimeError(vm, "Undefined property %s on Object Dictionary.", name->chars);
-                return false;
-            }
-            push(vm, value);
-            return true;
+            else return setGenericInstanceVariable(vm, object, name, value);
         }
         case OBJ_ENTRY: {
             ObjEntry* entry = (ObjEntry*)object;
@@ -565,22 +533,19 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
                 runtimeError(vm, "Cannot set property key on Object Entry.");
                 return false;
             }
-            else if (matchVariableName(name, "value", 5)) entry->value = value;
-            else {
-                runtimeError(vm, "Undefined property %s on Object Entry.", name->chars);
-                return false;
+            else if (matchVariableName(name, "value", 5)) {
+                entry->value = value;
+                push(vm, value);
+                return true;
             }
-            push(vm, value);
-            return true;
+            else return setGenericInstanceVariable(vm, object, name, value);
         }
         case OBJ_EXCEPTION: {
             ObjException* exception = (ObjException*)object;
             if (matchVariableName(name, "message", 7) && IS_STRING(value)) exception->message = AS_STRING(value);
             else if (matchVariableName(name, "stacktrace", 10) && IS_ARRAY(value)) exception->stacktrace = AS_ARRAY(value);
-            else {
-                runtimeError(vm, "Undefined property %s on Object Exception.", name->chars);
-                return false;
-            }
+            else return setGenericInstanceVariable(vm, object, name, value);
+
             push(vm, value);
             return true;
         }
@@ -588,10 +553,8 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
             ObjFile* file = (ObjFile*)object;
             if (matchVariableName(name, "name", 4) && IS_STRING(value)) file->name = AS_STRING(value);
             else if (matchVariableName(name, "mode", 4) && IS_STRING(value)) file->mode = AS_STRING(value);
-            else {
-                runtimeError(vm, "Undefined property %s on Object File.", name->chars);
-                return false;
-            }
+            else return setGenericInstanceVariable(vm, object, name, value);
+
             push(vm, value);
             return true;
         }
@@ -601,12 +564,7 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
                 runtimeError(vm, "Cannot set property %s on Object Method.", name->chars);
                 return false;
             }
-            else {
-                runtimeError(vm, "Undefined property %s on Object Method.", name->chars);
-                return false;
-            }
-            push(vm, value);
-            return true;
+            else return setGenericInstanceVariable(vm, object, name, value);
         }
         case OBJ_NAMESPACE: {
             ObjNamespace* namespace = (ObjNamespace*)object;
@@ -614,22 +572,15 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
                 runtimeError(vm, "Cannot set property %s on Object Namespace.", name->chars);
                 return false;
             }
-            else {
-                runtimeError(vm, "Undefined property %s on Object Namespace.", name->chars);
-                return false;
-            }
-            push(vm, value);
-            return true;
+            else return setGenericInstanceVariable(vm, object, name, value);
         }
         case OBJ_NODE: {
             ObjNode* node = (ObjNode*)object;
             if (matchVariableName(name, "element", 7)) node->element = value;
             else if (matchVariableName(name, "prev", 4) && IS_NODE(value)) node->prev = AS_NODE(value);
             else if (matchVariableName(name, "next", 4) && IS_NODE(value)) node->next = AS_NODE(value);
-            else {
-                runtimeError(vm, "Undefined property %s on Object Node.", name->chars);
-                return false;
-            }
+            else return setGenericInstanceVariable(vm, object, name, value);
+
             push(vm, value);
             return true;
         }
@@ -637,10 +588,8 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
             ObjRange* range = (ObjRange*)object;
             if (matchVariableName(name, "from", 4) && IS_INT(value)) range->from = AS_INT(value);
             else if (matchVariableName(name, "to", 4) && IS_INT(value)) range->to = AS_INT(value);
-            else {
-                runtimeError(vm, "Undefined property %s on Object Range.", name->chars);
-                return false;
-            }
+            else return setGenericInstanceVariable(vm, object, name, value);
+
             push(vm, value);
             return true;
         }
@@ -650,12 +599,7 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
                 runtimeError(vm, "Cannot set property length on Object String.");
                 return false;
             }
-            else {
-                runtimeError(vm, "Undefined property %s on Object String.", name->chars);
-                return false;
-            }
-            push(vm, value);
-            return true;
+            else return setGenericInstanceVariable(vm, object, name, value);
         }
         default:
             runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
