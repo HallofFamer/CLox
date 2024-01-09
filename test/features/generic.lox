@@ -39,7 +39,7 @@ try {
 }
 catch(IllegalArgumentException e){ 
     e.file = "property.lox";
-    e.line = 37;
+    e.line = 38;
     println("Caught ${e.getClassName()} with message: ${e.message} \nat line ${e.line} in file ${e.file}");
 }
 println("");
