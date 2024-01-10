@@ -11,9 +11,9 @@ val string = "Hello World";
 println("Length of string: ${string.length}");
 
 try { 
-    var x = 1 / 0;
+    val x = 1 / 0;
 }
-catch (Exception e) { 
+catch (ArithmeticException e) { 
     println("Caught exception with message: ${e.message}");
 }
 

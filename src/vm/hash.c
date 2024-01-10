@@ -13,25 +13,19 @@ uint32_t hashString(const char* chars, int length) {
 
 uint32_t hashObject(Obj* object) {
     switch (object->type) {
-        case OBJ_STRING:
-            return ((ObjString*)object)->hash;
-        case OBJ_CLASS: { 
-            ObjClass* klass = (ObjClass*)object;
-            int hash = 7;
-            hash = hash * 31 + hashValue(OBJ_VAL(klass->namespace->fullName));
-            hash = hash * 31 + hashValue(OBJ_VAL(klass->name));
-            return hash;
-        }
-        case OBJ_FUNCTION: {
-            ObjFunction* function = (ObjFunction*)object;
-            return hashNumber((double)function->arity) ^ hashNumber((double)function->chunk.count);
-        }
         case OBJ_ARRAY: { 
             ObjArray* array = (ObjArray*)object;
             int hash = 7;
             for (int i = 0; i < array->elements.count; i++) {
                 hash = hash * 31 + hashValue(array->elements.values[i]);
             }
+            return hash;
+        }
+        case OBJ_CLASS: {
+            ObjClass* klass = (ObjClass*)object;
+            int hash = 7;
+            hash = hash * 31 + hashValue(OBJ_VAL(klass->namespace->fullName));
+            hash = hash * 31 + hashValue(OBJ_VAL(klass->name));
             return hash;
         }
         case OBJ_DICTIONARY: { 
@@ -52,6 +46,10 @@ uint32_t hashObject(Obj* object) {
             hash = hash * 31 + hashValue(entry->value);
             return hash;
         }
+        case OBJ_FUNCTION: {
+            ObjFunction* function = (ObjFunction*)object;
+            return hashNumber((double)function->arity) ^ hashNumber((double)function->chunk.count);
+        }
         case OBJ_INSTANCE: { 
             ObjInstance* instance = (ObjInstance*)object;
             int hash = 7;
@@ -65,6 +63,8 @@ uint32_t hashObject(Obj* object) {
             ObjRange* range = (ObjRange*)object;
             return hashNumber((double)range->from) ^ hashNumber((double)range->to);
         }
+        case OBJ_STRING:
+            return ((ObjString*)object)->hash;
         default: {
             uint64_t hash = (uint64_t)(&object);
             return hash64To32Bits(hash);
