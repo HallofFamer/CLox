@@ -79,25 +79,25 @@ bool loadGlobal(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
     return loadGlobalFromTable(vm, chunk, byte, value);
 }
 
-static void getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
+static void getAndPushGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
     ValueArray* slots = getSlotsFromGenericObject(vm, object);
     int offset = getOffsetForGenericObject(object);
     push(vm, slots->values[index - offset]);
 }
 
-static bool getGenericVariableByIndex(VM* vm, Obj* object, int index) {
+static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
     switch (object->type) {
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
             if (index == 0) push(vm, INT_VAL(array->elements.count));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (index == 0) push(vm, bound->receiver);
             else if (index == 1) push(vm, OBJ_VAL(bound->method));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_CLASS: {
@@ -105,41 +105,41 @@ static bool getGenericVariableByIndex(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, OBJ_VAL(klass->name));
             else if (index == 1) push(vm, OBJ_VAL(klass->namespace));
             else if (index == 2) push(vm, OBJ_VAL(klass->superclass));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
             if (index == 0) push(vm, OBJ_VAL(closure->function->name));
             else if (index == 1) push(vm, INT_VAL(closure->function->arity));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dictionary = (ObjDictionary*)object;
             if (index == 0) push(vm, INT_VAL(dictionary->count));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_ENTRY: {
             ObjEntry* entry = (ObjEntry*)object;
             if (index == 0) push(vm, entry->key);
             else if (index == 1) push(vm, entry->value);
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_EXCEPTION: {
             ObjException* exception = (ObjException*)object;
             if (index == 0) push(vm, OBJ_VAL(exception->message));
             else if (index == 1) push(vm, OBJ_VAL(exception->stacktrace));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_FILE: {
             ObjFile* file = (ObjFile*)object;
             if (index == 0) push(vm, OBJ_VAL(file->name));
             else if (index == 1) push(vm, OBJ_VAL(file->mode));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_METHOD: {
@@ -147,7 +147,7 @@ static bool getGenericVariableByIndex(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, OBJ_VAL(method->closure->function->name));
             else if (index == 1) push(vm, INT_VAL(method->closure->function->arity));
             else if (index == 2) push(vm, OBJ_VAL(method->behavior));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_NAMESPACE: {
@@ -155,7 +155,7 @@ static bool getGenericVariableByIndex(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, OBJ_VAL(namespace->shortName));
             else if (index == 1) push(vm, OBJ_VAL(namespace->fullName));
             else if (index == 2) push(vm, OBJ_VAL(namespace->enclosing));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_NODE: {
@@ -163,20 +163,20 @@ static bool getGenericVariableByIndex(VM* vm, Obj* object, int index) {
             if (index == 0) push(vm, node->element);
             else if (index == 1) push(vm, OBJ_VAL(node->prev));
             else if (index == 2) push(vm, OBJ_VAL(node->next));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_RANGE: {
             ObjRange* range = (ObjRange*)object;
             if (index == 0) push(vm, INT_VAL(range->from));
             else if (index == 1) push(vm, INT_VAL(range->to));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         case OBJ_STRING: { 
             ObjString* string = (ObjString*)object;
             if (index == 0) push(vm, INT_VAL(string->length));
-            else getGenericInstanceVariableByIndex(vm, object, index);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
         default:
@@ -185,7 +185,7 @@ static bool getGenericVariableByIndex(VM* vm, Obj* object, int index) {
     }
 }
 
-static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* name) {
+static bool getAndPushGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* name) {
     ENSURE_OBJECT_ID(object);
     ValueArray* slots = getSlotsFromGenericObject(vm, object);
     if (slots == NULL) {
@@ -204,19 +204,19 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
     return true;
 }
 
-static bool getGenericVariableByName(VM* vm, Obj* object, ObjString* name) {
+static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* name) {
     switch (object->type) {
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
             if (matchVariableName(name, "length", 6)) push(vm, INT_VAL(array->elements.count));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_BOUND_METHOD: {
            ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (matchVariableName(name, "receiver", 8) == 0) push(vm, OBJ_VAL(bound->receiver));
             else if (matchVariableName(name, "method", 6)) push(vm, OBJ_VAL(bound->method));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_CLASS: {
@@ -224,41 +224,41 @@ static bool getGenericVariableByName(VM* vm, Obj* object, ObjString* name) {
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(klass->name));
             else if (matchVariableName(name, "namespace", 9)) push(vm, OBJ_VAL(klass->namespace));
             else if (matchVariableName(name, "superclass", 10)) push(vm, OBJ_VAL(klass->superclass));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(closure->function->name));
             else if (matchVariableName(name, "arity", 5)) push(vm, INT_VAL(closure->function->arity));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dictionary = (ObjDictionary*)object;
             if (matchVariableName(name, "length", 6)) push(vm, INT_VAL(dictionary->count));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_ENTRY: {
             ObjEntry* entry = (ObjEntry*)object;
             if (matchVariableName(name, "key", 3)) push(vm, entry->key);
             else if (matchVariableName(name, "value", 5)) push(vm, entry->value);
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_EXCEPTION: {
             ObjException* exception = (ObjException*)object;
             if (matchVariableName(name, "message", 7)) push(vm, OBJ_VAL(exception->message));
             else if (matchVariableName(name, "stacktrace", 10)) push(vm, OBJ_VAL(exception->stacktrace));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_FILE: {
             ObjFile* file = (ObjFile*)object;
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(file->name));
             else if (matchVariableName(name, "mode", 4)) push(vm, OBJ_VAL(file->mode));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_METHOD: {
@@ -266,7 +266,7 @@ static bool getGenericVariableByName(VM* vm, Obj* object, ObjString* name) {
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(method->closure->function->name));
             else if (matchVariableName(name, "arity", 5)) push(vm, INT_VAL(method->closure->function->arity));
             else if (matchVariableName(name, "behavior", 8)) push(vm, OBJ_VAL(method->behavior));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_NAMESPACE: {
@@ -274,7 +274,7 @@ static bool getGenericVariableByName(VM* vm, Obj* object, ObjString* name) {
             if (matchVariableName(name, "shortName", 9)) push(vm, OBJ_VAL(namespace->shortName));
             else if (matchVariableName(name, "fullName", 8)) push(vm, OBJ_VAL(namespace->fullName));
             else if (matchVariableName(name, "enclosing", 9)) push(vm, OBJ_VAL(namespace->enclosing));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_NODE: {
@@ -282,20 +282,20 @@ static bool getGenericVariableByName(VM* vm, Obj* object, ObjString* name) {
             if (matchVariableName(name, "element", 7)) push(vm, node->element);
             else if (matchVariableName(name, "prev", 4)) push(vm, OBJ_VAL(node->prev));
             else if (matchVariableName(name, "next", 4)) push(vm, OBJ_VAL(node->next));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_RANGE: {
             ObjRange* range = (ObjRange*)object;
             if (matchVariableName(name, "from", 4)) push(vm, INT_VAL(range->from));
             else if (matchVariableName(name, "to", 2)) push(vm, INT_VAL(range->to));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         case OBJ_STRING: {
             ObjString* string = (ObjString*)object;
             if (matchVariableName(name, "length", 6)) push(vm, INT_VAL(string->length));
-            else return getGenericInstanceVariableByName(vm, object, name);
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
         default:
@@ -304,7 +304,7 @@ static bool getGenericVariableByName(VM* vm, Obj* object, ObjString* name) {
     }
 }
 
-static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) {
+static bool getGenericInstanceVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) {
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     int shapeID = object->shapeID;
     pop(vm);
@@ -312,7 +312,7 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
 #ifdef DEBUG_TRACE_CACHE
         printf("Cache hit for getting instance variable: '%s' from Shape ID %d at index %d.\n", AS_CSTRING(chunk->identifiers.values[byte]), inlineCache->id, inlineCache->index);
 #endif  
-        return getGenericVariableByIndex(vm, object, inlineCache->index);
+        return getGenericInstanceVariableByIndex(vm, object, inlineCache->index);
     }
 
 #ifdef DEBUG_TRACE_CACHE
@@ -324,9 +324,9 @@ static bool getGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) 
     int index;
     if (idMapGet(idMap, name, &index)) {
         writeInlineCache(inlineCache, CACHE_IVAR, shapeID, index);
-        return getGenericVariableByIndex(vm, object, index);
+        return getGenericInstanceVariableByIndex(vm, object, index);
     }
-    return getGenericVariableByName(vm, object, name);
+    return getGenericInstanceVariableByName(vm, object, name);
 }
 
 bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
@@ -422,7 +422,7 @@ bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
         }
     }
     else if (IS_OBJ(receiver)) {
-        return getGenericVariable(vm, AS_OBJ(receiver), chunk, byte);
+        return getGenericInstanceVariable(vm, AS_OBJ(receiver), chunk, byte);
     }
     else {
         if (IS_NIL(receiver)) runtimeError(vm, "Undefined property on nil.");
@@ -433,7 +433,7 @@ bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
     return true;
 }
 
-static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Value value) {
+static bool setAndPushGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Value value) {
     ValueArray* slots = getSlotsFromGenericObject(vm, object);
     int offset = getOffsetForGenericObject(object);
     slots->values[index - offset] = value;
@@ -441,7 +441,7 @@ static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Va
     return true;
 }
 
-static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value value) {
+static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Value value) {
     switch (object->type) {
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
@@ -449,13 +449,13 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
                 runtimeError(vm, "Cannot set property length on Object Array.");
                 return false;
             }
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
         }
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (index == 0) bound->receiver = value;
             else if (index == 1 && IS_CLOSURE(value)) bound->method = AS_CLOSURE(value);
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
             return true;
@@ -466,7 +466,7 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
                 runtimeError(vm, "Cannot set property name, namespace or superclass on Object Class.");
                 return false;
             }
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
             return true;
@@ -477,7 +477,7 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
                 runtimeError(vm, "Cannot set property name or arity on Object Function.");
                 return false;
             }
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dictionary = (ObjDictionary*)object;
@@ -485,7 +485,7 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
                 runtimeError(vm, "Cannot set property length on Object Dictionary.");
                 return false;
             }
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
         }
         case OBJ_ENTRY: {
             ObjEntry* entry = (ObjEntry*)object;
@@ -498,13 +498,13 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
                 push(vm, value);
                 return true;
             }
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
         }
         case OBJ_EXCEPTION: {
             ObjException* exception = (ObjException*)object;
             if (index == 0 && IS_STRING(value)) exception->message = AS_STRING(value);
             else if (index == 1 && IS_ARRAY(value)) exception->stacktrace = AS_ARRAY(value);
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
             return true;
@@ -513,7 +513,7 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
             ObjFile* file = (ObjFile*)object;
             if (index == 0 && IS_STRING(value)) file->name = AS_STRING(value);
             else if (index == 1 && IS_STRING(value)) file->mode = AS_STRING(value);
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
             return true;
@@ -524,7 +524,7 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
                 runtimeError(vm, "Cannot set property name, arity or behavior on Object Method.");
                 return false;
             }
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
         }
         case OBJ_NAMESPACE: {
             ObjNamespace* namespace = (ObjNamespace*)object;
@@ -532,14 +532,14 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
                 runtimeError(vm, "Cannot set property shortName, fullName or enclosing on Object Namespace.");
                 return false;
             }
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
         }
         case OBJ_NODE: {
             ObjNode* node = (ObjNode*)object;
             if (index == 0) node->element = value;
             else if (index == 1 && IS_NODE(value)) node->prev = AS_NODE(value);
             else if (index == 2 && IS_NODE(value)) node->next = AS_NODE(value);
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
             return true;
@@ -548,7 +548,7 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
             ObjRange* range = (ObjRange*)object;
             if (index == 0 && IS_INT(value)) range->from = AS_INT(value);
             else if (index == 1 && IS_INT(value)) range->to = AS_INT(value);
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
             return true;
@@ -559,7 +559,7 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
                 runtimeError(vm, "Cannot set property length on Object String.");
                 return false;
             }
-            else return setGenericInstanceVariableByIndex(vm, object, index, value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
         }
         default:
             runtimeError(vm, "Undefined property at index %d on Object type %d.", index, object->type);
@@ -567,7 +567,7 @@ static bool setGenericVariableByIndex(VM* vm, Obj* object, int index, Value valu
     }
 }
 
-static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* name, Value value) {
+static bool setAndPushGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* name, Value value) {
     ENSURE_OBJECT_ID(object);
     ValueArray* slots = getSlotsFromGenericObject(vm, object);
     if (slots == NULL) {
@@ -586,7 +586,7 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
     return true;
 }
 
-static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value value) {
+static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* name, Value value) {
     switch (object->type) {
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
@@ -594,13 +594,13 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
                 runtimeError(vm, "Cannot set property length on Object Array.");
                 return false;
             }
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
         }
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (matchVariableName(name, "receiver", 8)) bound->receiver = value;
             else if (matchVariableName(name, "method", 6) && IS_CLOSURE(value)) bound->method = AS_CLOSURE(value);
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
             push(vm, value);
             return true;
@@ -624,7 +624,7 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
                 runtimeError(vm, "Cannot set property %s on Object Function.", name->chars);
                 return false;
             }
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dictionary = (ObjDictionary*)object;
@@ -632,7 +632,7 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
                 runtimeError(vm, "Cannot set property length on Object Dictionary.");
                 return false;
             }
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
         }
         case OBJ_ENTRY: {
             ObjEntry* entry = (ObjEntry*)object;
@@ -645,13 +645,13 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
                 push(vm, value);
                 return true;
             }
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
         }
         case OBJ_EXCEPTION: {
             ObjException* exception = (ObjException*)object;
             if (matchVariableName(name, "message", 7) && IS_STRING(value)) exception->message = AS_STRING(value);
             else if (matchVariableName(name, "stacktrace", 10) && IS_ARRAY(value)) exception->stacktrace = AS_ARRAY(value);
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
             push(vm, value);
             return true;
@@ -660,7 +660,7 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
             ObjFile* file = (ObjFile*)object;
             if (matchVariableName(name, "name", 4) && IS_STRING(value)) file->name = AS_STRING(value);
             else if (matchVariableName(name, "mode", 4) && IS_STRING(value)) file->mode = AS_STRING(value);
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
             push(vm, value);
             return true;
@@ -671,7 +671,7 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
                 runtimeError(vm, "Cannot set property %s on Object Method.", name->chars);
                 return false;
             }
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
         }
         case OBJ_NAMESPACE: {
             ObjNamespace* namespace = (ObjNamespace*)object;
@@ -679,14 +679,14 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
                 runtimeError(vm, "Cannot set property %s on Object Namespace.", name->chars);
                 return false;
             }
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
         }
         case OBJ_NODE: {
             ObjNode* node = (ObjNode*)object;
             if (matchVariableName(name, "element", 7)) node->element = value;
             else if (matchVariableName(name, "prev", 4) && IS_NODE(value)) node->prev = AS_NODE(value);
             else if (matchVariableName(name, "next", 4) && IS_NODE(value)) node->next = AS_NODE(value);
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
             push(vm, value);
             return true;
@@ -695,7 +695,7 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
             ObjRange* range = (ObjRange*)object;
             if (matchVariableName(name, "from", 4) && IS_INT(value)) range->from = AS_INT(value);
             else if (matchVariableName(name, "to", 4) && IS_INT(value)) range->to = AS_INT(value);
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
             push(vm, value);
             return true;
@@ -706,7 +706,7 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
                 runtimeError(vm, "Cannot set property length on Object String.");
                 return false;
             }
-            else return setGenericInstanceVariableByName(vm, object, name, value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
         }
         default:
             runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
@@ -714,14 +714,14 @@ static bool setGenericVariableByName(VM* vm, Obj* object, ObjString* name, Value
     }
 }
 
-static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, Value value) {
+static bool setGenericInstanceVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, Value value) {
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     int shapeID = object->shapeID;
     if (inlineCache->type == CACHE_IVAR && inlineCache->id == shapeID) {
 #ifdef DEBUG_TRACE_CACHE
         printf("Cache hit for setting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
 #endif 
-        return setGenericVariableByIndex(vm, object, inlineCache->index, value);
+        return setGenericInstanceVariableByIndex(vm, object, inlineCache->index, value);
     }
 
 #ifdef DEBUG_TRACE_CACHE
@@ -733,9 +733,9 @@ static bool setGenericVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, 
     int index;
     if (idMapGet(idMap, name, &index)) {
         writeInlineCache(inlineCache, CACHE_IVAR, shapeID, index);
-        return setGenericVariableByIndex(vm, object, index, value);
+        return setGenericInstanceVariableByIndex(vm, object, index, value);
     }
-    return setGenericVariableByName(vm, object, name, value);
+    return setGenericInstanceVariableByName(vm, object, name, value);
 }
 
 bool setInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Value value) {
@@ -801,7 +801,7 @@ bool setInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Val
         return true;
     }
     else if (IS_OBJ(receiver)) {
-        return setGenericVariable(vm, AS_OBJ(receiver), chunk, byte, value);
+        return setGenericInstanceVariable(vm, AS_OBJ(receiver), chunk, byte, value);
     }
     else {
         runtimeError(vm, "Only instances and classes can set properties.");

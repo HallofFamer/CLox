@@ -464,6 +464,21 @@ bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
     return true;
 }
 
+static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
+    Value method = peek(vm, 0);
+    ObjClass* klass = AS_CLASS(peek(vm, 1));
+
+    if (isClassMethod) {
+        if (klass->behaviorType != BEHAVIOR_CLASS) {
+            runtimeError(vm, "Class method '%s' can only be defined in class body.", name->chars);
+        }
+        klass = klass->obj.klass;
+    }
+
+    tableSet(vm, &klass->methods, name, method);
+    pop(vm);
+}
+
 static ObjUpvalue* captureUpvalue(VM* vm, Value* local) {
     ObjUpvalue* prevUpvalue = NULL;
     ObjUpvalue* upvalue = vm->openUpvalues;
@@ -494,21 +509,6 @@ static void closeUpvalues(VM* vm, Value* last) {
         upvalue->location = &upvalue->closed;
         vm->openUpvalues = upvalue->next;
     }
-}
-
-static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
-    Value method = peek(vm, 0);
-    ObjClass* klass = AS_CLASS(peek(vm, 1));
-
-    if (isClassMethod) {
-        if (klass->behaviorType != BEHAVIOR_CLASS) {
-            runtimeError(vm, "Class method '%s' can only be defined in class body.", name->chars);
-        }
-        klass = klass->obj.klass;
-    }
-
-    tableSet(vm, &klass->methods, name, method);
-    pop(vm);
 }
 
 InterpretResult run(VM* vm) {
