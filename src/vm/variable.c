@@ -100,14 +100,6 @@ static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
             else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
-        case OBJ_CLASS: {
-            ObjClass* klass = (ObjClass*)object;
-            if (index == 0) push(vm, OBJ_VAL(klass->name));
-            else if (index == 1) push(vm, OBJ_VAL(klass->namespace));
-            else if (index == 2) push(vm, OBJ_VAL(klass->superclass));
-            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
-            return true;
-        }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
             if (index == 0) push(vm, OBJ_VAL(closure->function->name));
@@ -216,14 +208,6 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
            ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (matchVariableName(name, "receiver", 8) == 0) push(vm, OBJ_VAL(bound->receiver));
             else if (matchVariableName(name, "method", 6)) push(vm, OBJ_VAL(bound->method));
-            else return getAndPushGenericInstanceVariableByName(vm, object, name);
-            return true;
-        }
-        case OBJ_CLASS: {
-            ObjClass* klass = (ObjClass*)object;
-            if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(klass->name));
-            else if (matchVariableName(name, "namespace", 9)) push(vm, OBJ_VAL(klass->namespace));
-            else if (matchVariableName(name, "superclass", 10)) push(vm, OBJ_VAL(klass->superclass));
             else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
@@ -391,10 +375,9 @@ bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
             writeInlineCache(inlineCache, CACHE_CVAR, klass->behaviorID, index);
             return true;
         }
-
-        if (!bindMethod(vm, klass->obj.klass, name)) {
-            return false;
-        }
+        
+        runtimeError(vm, "Undefined property %s on class %s", name->chars, klass->fullName->chars);
+        return false;
     }
     else if (IS_NAMESPACE(receiver)) {
         ObjNamespace* enclosing = AS_NAMESPACE(receiver);
@@ -455,17 +438,6 @@ static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Va
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (index == 0) bound->receiver = value;
             else if (index == 1 && IS_CLOSURE(value)) bound->method = AS_CLOSURE(value);
-            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
-
-            push(vm, value);
-            return true;
-        }
-        case OBJ_CLASS: {
-            ObjClass* klass = (ObjClass*)object;
-            if (index <= 2) {
-                runtimeError(vm, "Cannot set property name, namespace or superclass on Object Class.");
-                return false;
-            }
             else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
@@ -602,19 +574,6 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             else if (matchVariableName(name, "method", 6) && IS_CLOSURE(value)) bound->method = AS_CLOSURE(value);
             else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
-            push(vm, value);
-            return true;
-        }
-        case OBJ_CLASS: {
-            ObjClass* klass = (ObjClass*)object;
-            if (matchVariableName(name, "name", 4) || matchVariableName(name, "namespace", 9) || matchVariableName(name, "superclass", 10)) {
-                runtimeError(vm, "Cannot set property %s on Object Class.", name->chars);
-                return false;
-            }
-            else {
-                runtimeError(vm, "Undefined property %s on Object Class.", name->chars);
-                return false;
-            }
             push(vm, value);
             return true;
         }
@@ -813,7 +772,6 @@ int getOffsetForGenericObject(Obj* object) {
     switch (object->type) { 
         case OBJ_ARRAY: return 1; 
         case OBJ_BOUND_METHOD: return 2;
-        case OBJ_CLASS: return 3;
         case OBJ_CLOSURE: return 2;
         case OBJ_DICTIONARY: return 1;
         case OBJ_ENTRY: return 2;

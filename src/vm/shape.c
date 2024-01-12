@@ -27,11 +27,9 @@ static void createDefaultShapes(VM* vm) {
     int shapeIDBoundMethod = createShapeFromParent(vm, shapeIDReceiver, newString(vm, "method"));
     defaultShapeIDs[OBJ_BOUND_METHOD] = shapeIDBoundMethod;
 
-    int shapeIDName = createShapeFromParent(vm, 0, newString(vm, "name"));
-    int shapeIDClass1 = createShapeFromParent(vm, shapeIDName, newString(vm, "namespace"));
-    int shapeIDClass2 = createShapeFromParent(vm, shapeIDClass1, newString(vm, "superclass"));
-    defaultShapeIDs[OBJ_CLASS] = shapeIDClass2;
+    defaultShapeIDs[OBJ_CLASS] = 0;
 
+    int shapeIDName = createShapeFromParent(vm, 0, newString(vm, "name"));
     int shapeIDClosure = createShapeFromParent(vm, shapeIDName, newString(vm, "arity"));
     defaultShapeIDs[OBJ_CLOSURE] = shapeIDClosure;
 

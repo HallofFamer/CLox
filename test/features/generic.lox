@@ -10,6 +10,9 @@ println("Length of dictionary: ${dict.length}");
 val string = "Hello World";
 println("Length of string: ${string.length}");
 
+val range = 1..5;
+println("Range from ${range.from} to ${range.to}");
+
 try { 
     val x = 1 / 0;
 }
