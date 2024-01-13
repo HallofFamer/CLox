@@ -47,18 +47,13 @@ static void createDefaultShapes(VM* vm) {
     defaultShapeIDs[OBJ_FILE] = shapeIDFile;
 
     defaultShapeIDs[OBJ_FUNCTION] = -1;
-    defaultShapeIDs[OBJ_GENERIC] = -1;
     defaultShapeIDs[OBJ_INSTANCE] = 0;
 
     int shapeIDMethod = createShapeFromParent(vm, shapeIDClosure, newString(vm, "behavior"));
     defaultShapeIDs[OBJ_METHOD] = shapeIDMethod;
-    defaultShapeIDs[OBJ_MODULE] = -1;
-    
-    int shapeIDShortName = createShapeFromParent(vm, 0, newString(vm, "shortName"));
-    int shapeIDNamespace1 = createShapeFromParent(vm, shapeIDShortName, newString(vm, "fullName"));
-    int shapeIDNamespace2 = createShapeFromParent(vm, shapeIDNamespace1, newString(vm, "enclosing"));
-    defaultShapeIDs[OBJ_NAMESPACE] = shapeIDNamespace2;
 
+    defaultShapeIDs[OBJ_MODULE] = -1;
+    defaultShapeIDs[OBJ_NAMESPACE] = 0;
     defaultShapeIDs[OBJ_NATIVE_FUNCTION] = -1;
     defaultShapeIDs[OBJ_NATIVE_METHOD] = -1;
 
@@ -74,6 +69,8 @@ static void createDefaultShapes(VM* vm) {
     defaultShapeIDs[OBJ_RECORD] = -1;
     defaultShapeIDs[OBJ_STRING] = shapeIDLength;
     defaultShapeIDs[OBJ_UPVALUE] = -1;
+    defaultShapeIDs[OBJ_VALUE_INSTANCE] = 0;
+    defaultShapeIDs[OBJ_VOID] = 0;
 }
 
 void initShapeTree(VM* vm) {

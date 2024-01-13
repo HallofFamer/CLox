@@ -142,14 +142,6 @@ static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
             else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
-        case OBJ_NAMESPACE: {
-            ObjNamespace* namespace = (ObjNamespace*)object;
-            if (index == 0) push(vm, OBJ_VAL(namespace->shortName));
-            else if (index == 1) push(vm, OBJ_VAL(namespace->fullName));
-            else if (index == 2) push(vm, OBJ_VAL(namespace->enclosing));
-            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
-            return true;
-        }
         case OBJ_NODE: {
             ObjNode* node = (ObjNode*)object;
             if (index == 0) push(vm, node->element);
@@ -250,14 +242,6 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(method->closure->function->name));
             else if (matchVariableName(name, "arity", 5)) push(vm, INT_VAL(method->closure->function->arity));
             else if (matchVariableName(name, "behavior", 8)) push(vm, OBJ_VAL(method->behavior));
-            else return getAndPushGenericInstanceVariableByName(vm, object, name);
-            return true;
-        }
-        case OBJ_NAMESPACE: {
-            ObjNamespace* namespace = (ObjNamespace*)object;
-            if (matchVariableName(name, "shortName", 9)) push(vm, OBJ_VAL(namespace->shortName));
-            else if (matchVariableName(name, "fullName", 8)) push(vm, OBJ_VAL(namespace->fullName));
-            else if (matchVariableName(name, "enclosing", 9)) push(vm, OBJ_VAL(namespace->enclosing));
             else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
@@ -498,14 +482,6 @@ static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Va
             }
             else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
         }
-        case OBJ_NAMESPACE: {
-            ObjNamespace* namespace = (ObjNamespace*)object;
-            if (index <= 2) {
-                runtimeError(vm, "Cannot set property shortName, fullName or enclosing on Object Namespace.");
-                return false;
-            }
-            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
-        }
         case OBJ_NODE: {
             ObjNode* node = (ObjNode*)object;
             if (index == 0) node->element = value;
@@ -632,14 +608,6 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             }
             else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
         }
-        case OBJ_NAMESPACE: {
-            ObjNamespace* namespace = (ObjNamespace*)object;
-            if (matchVariableName(name, "shortName", 9) || matchVariableName(name, "fullName", 8) || matchVariableName(name, "enclosing", 9)) {
-                runtimeError(vm, "Cannot set property %s on Object Namespace.", name->chars);
-                return false;
-            }
-            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
-        }
         case OBJ_NODE: {
             ObjNode* node = (ObjNode*)object;
             if (matchVariableName(name, "element", 7)) node->element = value;
@@ -759,6 +727,23 @@ bool setInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Val
         push(vm, value);
         return true;
     }
+    else if (IS_NAMESPACE(receiver)) { 
+        ObjNamespace* namespace = AS_NAMESPACE(receiver);
+        if (!IS_CLASS(value) && !IS_NAMESPACE(value)) { 
+            runtimeError(vm, "Only classes, traits and sub-namespaces may be assigned to namespace %s.", namespace->fullName->chars);
+            return false;
+        }
+
+        ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
+        Value existingValue; 
+        if (tableGet(&namespace->values, name, &existingValue)) {
+            runtimeError(vm, "Identifier %s already exists as class, trait or subnamespace in namespace %s", name->chars, namespace->fullName->chars);
+            return false;
+        }
+
+        tableSet(vm, &namespace->values, name, value);
+        return true;
+    }
     else if (IS_OBJ(receiver)) {
         return setGenericInstanceVariable(vm, AS_OBJ(receiver), chunk, byte, value);
     }
@@ -777,9 +762,7 @@ int getOffsetForGenericObject(Obj* object) {
         case OBJ_ENTRY: return 2;
         case OBJ_EXCEPTION: return 2;
         case OBJ_FILE: return 2;
-        case OBJ_INSTANCE: return 0;
         case OBJ_METHOD: return 3;
-        case OBJ_NAMESPACE: return 3;
         case OBJ_NODE: return 3;
         case OBJ_RANGE: return 2;
         case OBJ_STRING: return 1;
