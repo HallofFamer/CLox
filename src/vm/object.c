@@ -216,6 +216,13 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
     return upvalue;
 }
 
+ObjValueInstance* newValueInstance(VM* vm, Value value, ObjClass* klass) {
+    ObjValueInstance* valueInstance = ALLOCATE_OBJ(ObjValueInstance, OBJ_VALUE_INSTANCE, klass);
+    valueInstance->value = value;
+    initValueArray(&valueInstance->fields);
+    return valueInstance;
+}
+
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
     IDMap* idMap = getShapeIndexes(vm, object->obj.shapeID);
     int index;
@@ -378,6 +385,9 @@ void printObject(Value value) {
             break;
         case OBJ_UPVALUE:
             printf("<upvalue>");
+            break;
+        case OBJ_VALUE_INSTANCE: 
+            printValue(AS_VALUE_INSTANCE(value)->value);
             break;
         default:
             printf("<unknown>");

@@ -46,3 +46,7 @@ catch(IllegalArgumentException e){
     println("Caught ${e.getClassName()} with message: ${e.message} \nat line ${e.line} in file ${e.file}");
 }
 println("");
+
+println("Testing inheritance: ");
+class Byte < Int { }
+println(Byte(5));

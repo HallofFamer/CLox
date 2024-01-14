@@ -29,7 +29,6 @@
 #define IS_EXCEPTION(value)         isObjType(value, OBJ_EXCEPTION)
 #define IS_FILE(value)              isObjType(value, OBJ_FILE)
 #define IS_FUNCTION(value)          isObjType(value, OBJ_FUNCTION)
-#define IS_GENERIC(value)           IS_OBJ(value) && !isObjType(value, OBJ_INSTANCE)
 #define IS_INSTANCE(value)          isObjType(value, OBJ_INSTANCE)
 #define IS_METHOD(value)            isObjType(value, OBJ_METHOD)
 #define IS_NAMESPACE(value)         isObjType(value, OBJ_NAMESPACE)
@@ -39,6 +38,7 @@
 #define IS_RANGE(value)             isObjType(value, OBJ_RANGE)    
 #define IS_RECORD(value)            isObjType(value, OBJ_RECORD)
 #define IS_STRING(value)            isObjType(value, OBJ_STRING)
+#define IS_VALUE_INSTANCE(value)    isObjType(value, OBJ_VALUE_INSTANCE)
 
 #define AS_ARRAY(value)             ((ObjArray*)AS_OBJ(value))
 #define AS_BOUND_METHOD(value)      ((ObjBoundMethod*)AS_OBJ(value))
@@ -58,6 +58,7 @@
 #define AS_RANGE(value)             ((ObjRange*)AS_OBJ(value))
 #define AS_RECORD(value)            ((ObjRecord*)AS_OBJ(value))
 #define AS_STRING(value)            ((ObjString*)AS_OBJ(value))
+#define AS_VALUE_INSTANCE(value)    ((ObjValueInstance*)AS_OBJ(value))
 
 #define AS_CARRAY(value)            (((ObjArray*)AS_OBJ(value))->elements)
 #define AS_CRECORD(value, type)     ((type*)((ObjRecord*)AS_OBJ(value)->data))
@@ -73,7 +74,6 @@ typedef enum {
     OBJ_EXCEPTION,
     OBJ_FILE,
     OBJ_FUNCTION,
-    OBJ_GENERIC,
     OBJ_INSTANCE,
     OBJ_METHOD,
     OBJ_MODULE,
@@ -85,6 +85,7 @@ typedef enum {
     OBJ_RECORD,
     OBJ_STRING,
     OBJ_UPVALUE,
+    OBJ_VALUE_INSTANCE,
     OBJ_VOID
 } ObjType;
 
@@ -114,6 +115,12 @@ typedef struct {
     Obj obj;
     ValueArray fields;
 } ObjInstance;
+
+typedef struct {
+    Obj obj;
+    Value value;
+    ValueArray fields;
+} ObjValueInstance;
 
 typedef struct {
     Obj obj;
@@ -273,6 +280,7 @@ ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
 ObjRange* newRange(VM* vm, int from, int to);
 ObjRecord* newRecord(VM* vm, void* data);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
+ObjValueInstance* newValueInstance(VM* vm, Value value, ObjClass* klass);
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
