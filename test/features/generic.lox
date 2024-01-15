@@ -48,5 +48,17 @@ catch(IllegalArgumentException e){
 println("");
 
 println("Testing inheritance: ");
-class Byte < Int { }
-println(Byte(5));
+class Byte < Int { 
+    init(value) { 
+        super.init(value);
+        if (value < -128 or value > 127) { 
+            throw IllegalArgumentException("Byte has range from -128 to 127.");
+        }
+    }
+}
+val byte = Byte(10);
+println(byte.getClass());
+println(byte);
+println(byte.factorial());
+println(byte.gcd(Byte(6)));
+println(byte.toBinary());

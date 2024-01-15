@@ -163,6 +163,11 @@ static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
             else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
+        case OBJ_VALUE_INSTANCE: { 
+            ObjValueInstance* instance = (ObjValueInstance*)object;
+            push(vm, instance->fields.values[index]);
+            return true;
+        }
         default:
             runtimeError(vm, "Undefined property at index %d on Object type %d.", index, object->type);
             return false;
@@ -264,6 +269,16 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             ObjString* string = (ObjString*)object;
             if (matchVariableName(name, "length", 6)) push(vm, INT_VAL(string->length));
             else return getAndPushGenericInstanceVariableByName(vm, object, name);
+            return true;
+        }
+        case OBJ_VALUE_INSTANCE: { 
+            ObjValueInstance* instance = (ObjValueInstance*)object;
+            int index = getIndexFromObjectShape(vm, object, name);
+            if (index == -1) {
+                runtimeError(vm, "Undefined property %s on instance.", name->chars);
+                return false;
+            }
+            push(vm, instance->fields.values[index]);
             return true;
         }
         default:
