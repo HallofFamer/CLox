@@ -48,6 +48,7 @@ catch(IllegalArgumentException e){
 println("");
 
 println("Testing inheritance: ");
+
 class Byte < Int { 
     init(value) { 
         super.init(value);
@@ -56,9 +57,13 @@ class Byte < Int {
         }
     }
 }
+
 val byte = Byte(10);
-println(byte.getClass());
-println(byte);
-println(byte.factorial());
-println(byte.gcd(Byte(6)));
-println(byte.toBinary());
+val byte2 = Byte(6);
+println("Creating byte: ${byte} and ${byte2}");
+println("Class for byte: ${byte.getClassName()}");
+println("Sum of two bytes: ${byte + byte2}");
+println("factorial of byte: ${byte.factorial()}");
+println("Compute gcd for two bytes: ${byte.gcd(byte2)}");
+println("Convert byte to binary: ${byte.toBinary()}");
+println("");

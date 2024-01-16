@@ -64,6 +64,17 @@
 #define AS_CRECORD(value, type)     ((type*)((ObjRecord*)AS_OBJ(value)->data))
 #define AS_CSTRING(value)           (((ObjString*)AS_OBJ(value))->chars)
 
+#define IS_BOOL_INSTANCE(arg)       (IS_BOOL(arg) || (IS_VALUE_INSTANCE(arg) && IS_BOOL(AS_VALUE_INSTANCE(arg)->value)))
+#define IS_FLOAT_INSTANCE(arg)      (IS_FLOAT(arg) || (IS_VALUE_INSTANCE(arg) && IS_FLOAT(AS_VALUE_INSTANCE(arg)->value))) 
+#define IS_INT_INSTANCE(arg)        (IS_INT(arg) || (IS_VALUE_INSTANCE(arg) && IS_INT(AS_VALUE_INSTANCE(arg)->value))) 
+#define IS_NIL_INSTANCE(arg)        (IS_NIL(arg) || (IS_VALUE_INSTANCE(arg) && IS_NIL(AS_VALUE_INSTANCE(arg)->value))) 
+#define IS_NUMBER_INSTANCE(arg)     (IS_NUMBER(arg) || (IS_VALUE_INSTANCE(arg) && IS_NUMBER(AS_VALUE_INSTANCE(arg)->value))) 
+
+#define AS_BOOL_INSTANCE(arg)       (IS_BOOL(arg) ? AS_BOOL(arg) : AS_BOOL(AS_VALUE_INSTANCE(arg)->value))
+#define AS_FLOAT_INSTANCE(arg)      (IS_FLOAT(arg) ? AS_FLOAT(arg) : AS_FLOAT(AS_VALUE_INSTANCE(arg)->value))
+#define AS_INT_INSTANCE(arg)        (IS_INT(arg) ? AS_INT(arg) : AS_INT(AS_VALUE_INSTANCE(arg)->value))
+#define AS_NUMBER_INSTANCE(arg)     (IS_NUMBER(arg) ? AS_NUMBER(arg) : AS_NUMBER(AS_VALUE_INSTANCE(arg)->value))
+
 typedef enum {
     OBJ_ARRAY,
     OBJ_BOUND_METHOD,
