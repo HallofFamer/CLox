@@ -62,6 +62,7 @@ val byte = Byte(10);
 val byte2 = Byte(6);
 println("Creating byte: ${byte} and ${byte2}");
 println("Class for byte: ${byte.getClassName()}");
+println("Object ID for byte: ${byte.objectID()}");
 println("Sum of two bytes: ${byte + byte2}");
 println("factorial of byte: ${byte.factorial()}");
 println("Compute gcd for two bytes: ${byte.gcd(byte2)}");
