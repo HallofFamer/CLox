@@ -296,15 +296,6 @@ bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
 }
 
 static Value createObject(VM* vm, ObjClass* klass, int argCount) {
-#define ASSERT_MIN_ARG_COUNT(minArgCount) \
-    do { \
-        if (argCount < minArgCount) { \
-            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException"); \
-            throwException(vm, exceptionClass, "Initializer for class %s must have at least %d arguments.", klass->fullName->chars, minArgCount); \
-            return NIL_VAL; \
-        } \
-    } while (false)
-
     switch (klass->classType) {
         case OBJ_ARRAY: return OBJ_VAL(newArray(vm));
         case OBJ_BOUND_METHOD: return OBJ_VAL(newBoundMethod(vm, NIL_VAL, NULL));
@@ -321,14 +312,9 @@ static Value createObject(VM* vm, ObjClass* klass, int argCount) {
         case OBJ_RANGE: return OBJ_VAL(newRange(vm, 0, 1));
         case OBJ_RECORD: return OBJ_VAL(newRecord(vm, NULL));
         case OBJ_STRING: return OBJ_VAL(ALLOCATE_STRING(0, klass));
-        case OBJ_VALUE_INSTANCE: {
-            ASSERT_MIN_ARG_COUNT(1);
-            return OBJ_VAL(newValueInstance(vm, vm->stackTop[-1], klass));
-        }
+        case OBJ_VALUE_INSTANCE: return OBJ_VAL(newValueInstance(vm, NIL_VAL, klass));
         default: return NIL_VAL;
     }
-
-#undef ASSERT_MIN_ARG_COUNT
 }
 
 static bool callNativeFunction(VM* vm, NativeFunction function, int argCount) {

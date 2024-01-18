@@ -23,6 +23,12 @@ static int factorial(int self) {
     return result;
 }
 
+static double fetchObjectID(VM* vm, Obj* object) {
+    ENSURE_OBJECT_ID(object);
+    return (double)object->objectID;
+}
+
+
 static int gcd(int self, int other) {
     while (self != other) {
         if (self > other) self -= other;
@@ -142,22 +148,34 @@ LOX_METHOD(Behavior, __invoke__) {
 }
 
 LOX_METHOD(Bool, clone) {
-    ASSERT_ARG_COUNT("Bool::clone()", 0);
-    RETURN_BOOL(receiver);
+    ASSERT_ARG_COUNT("BOOL::clone()", 0);
+    if (IS_BOOL(receiver)) RETURN_VAL(receiver);
+    else {
+        ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
+        RETURN_OBJ(newValueInstance(vm, self->value, self->obj.klass));
+    }
 }
 
 LOX_METHOD(Bool, init) {
-    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Bool.");
+    ASSERT_ARG_COUNT("Bool::init(value)", 1);
+    ASSERT_ARG_TYPE("Bool::init(value)", 0, Bool);
+    if (IS_BOOL(receiver)) RETURN_VAL(args[0]);
+    else {
+        ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
+        instance->value = args[0];
+        RETURN_OBJ(instance);
+    }
 }
 
 LOX_METHOD(Bool, objectID) {
     ASSERT_ARG_COUNT("Bool::objectID()", 0);
-    RETURN_NUMBER(AS_BOOL(receiver) ? 2 : 3);
+    if (IS_BOOL(receiver)) RETURN_NUMBER(AS_BOOL(receiver) ? 2 : 3);
+    else RETURN_NUMBER(fetchObjectID(vm, AS_OBJ(receiver)));
 }
 
 LOX_METHOD(Bool, toString) {
     ASSERT_ARG_COUNT("Bool::toString()", 0);
-    if (AS_BOOL(receiver)) RETURN_STRING("true", 4);
+    if (AS_BOOL_INSTANCE(receiver)) RETURN_STRING("true", 4);
     else RETURN_STRING("false", 5);
 }
 
@@ -339,16 +357,27 @@ LOX_METHOD(Exception, toString) {
 
 LOX_METHOD(Float, clone) {
     ASSERT_ARG_COUNT("Float::clone()", 0);
-    RETURN_NUMBER((double)receiver);
+    if (IS_FLOAT(receiver)) RETURN_VAL(receiver);
+    else {
+        ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
+        RETURN_OBJ(newValueInstance(vm, self->value, self->obj.klass));
+    }
 }
 
 LOX_METHOD(Float, init) {
-    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Float.");
+    ASSERT_ARG_COUNT("Float::init(value)", 1);
+    ASSERT_ARG_TYPE("Float::init(value)", 0, Int);
+    if (IS_FLOAT(receiver)) RETURN_VAL(args[0]);
+    else {
+        ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
+        instance->value = args[0];
+        RETURN_OBJ(instance);
+    }
 }
 
 LOX_METHOD(Float, toString) {
     ASSERT_ARG_COUNT("Float::toString()", 0);
-    RETURN_STRING_FMT("%g", AS_FLOAT(receiver));
+    RETURN_STRING_FMT("%g", AS_FLOAT_INSTANCE(receiver));
 }
 
 LOX_METHOD(FloatClass, parse) {
@@ -500,8 +529,7 @@ LOX_METHOD(Int, clone) {
     if (IS_INT(receiver)) RETURN_VAL(receiver);
     else {
         ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
-        ObjValueInstance* instance = newValueInstance(vm, self->value, self->obj.klass);
-        RETURN_OBJ(instance);
+        RETURN_OBJ(newValueInstance(vm, self->value, self->obj.klass));
     }
 }
 
@@ -535,10 +563,11 @@ LOX_METHOD(Int, gcd) {
 LOX_METHOD(Int, init) {
     ASSERT_ARG_COUNT("Int::init(value)", 1);
     ASSERT_ARG_TYPE("Int::init(value)", 0, Int);
-    if (!IS_OBJ(receiver)) RETURN_VAL(args[0]);
+    if (IS_INT(receiver)) RETURN_VAL(args[0]);
     else {
         ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
-        RETURN_OBJ(newValueInstance(vm, args[0], instance->obj.klass));
+        instance->value = args[0];
+        RETURN_OBJ(instance);
     }
 }
 
@@ -560,7 +589,8 @@ LOX_METHOD(Int, lcm) {
 
 LOX_METHOD(Int, objectID) {
     ASSERT_ARG_COUNT("Int::objectID()", 0);
-    RETURN_NUMBER((double)(8 * (uint64_t)AS_INT_INSTANCE(receiver) + 4));
+    if (IS_INT(receiver)) RETURN_NUMBER((double)(8 * (uint64_t)AS_INT_INSTANCE(receiver) + 4));
+    else RETURN_NUMBER(fetchObjectID(vm, AS_OBJ(receiver)));
 }
 
 LOX_METHOD(Int, timesRepeat) {
@@ -849,16 +879,28 @@ LOX_METHOD(Namespace, toString) {
 
 LOX_METHOD(Nil, clone) {
     ASSERT_ARG_COUNT("Nil::clone()", 0);
-    RETURN_NIL;
+    if (IS_NIL(receiver)) RETURN_NIL;
+    else {
+        ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
+        RETURN_OBJ(newValueInstance(vm, self->value, self->obj.klass));
+    }
 }
 
 LOX_METHOD(Nil, init) {
-    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Nil.");
+    ASSERT_ARG_COUNT("Nil::init(value)", 1);
+    ASSERT_ARG_TYPE("Nil::init(value)", 0, Nil);
+    if (IS_NIL(receiver)) RETURN_NIL;
+    else {
+        ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
+        instance->value = args[0];
+        RETURN_OBJ(instance);
+    }
 }
 
 LOX_METHOD(Nil, objectID) {
     ASSERT_ARG_COUNT("Nil::objectID()", 0);
-    RETURN_NUMBER(1);
+    if (IS_NIL(receiver)) RETURN_NUMBER(1);
+    else RETURN_NUMBER(fetchObjectID(vm, AS_OBJ(receiver)));    
 }
 
 LOX_METHOD(Nil, toString) {
@@ -868,44 +910,48 @@ LOX_METHOD(Nil, toString) {
 
 LOX_METHOD(Number, abs) {
     ASSERT_ARG_COUNT("Number::abs()", 0);
-    RETURN_NUMBER(fabs(AS_NUMBER(receiver)));
+    RETURN_NUMBER(fabs(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, acos) {
     ASSERT_ARG_COUNT("Number::acos()", 0);
-    RETURN_NUMBER(acos(AS_NUMBER(receiver)));
+    RETURN_NUMBER(acos(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, asin) {
     ASSERT_ARG_COUNT("Number::asin()", 0);
-    RETURN_NUMBER(asin(AS_NUMBER(receiver)));
+    RETURN_NUMBER(asin(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, atan) {
     ASSERT_ARG_COUNT("Number::atan()", 0);
-    RETURN_NUMBER(atan(AS_NUMBER(receiver)));
+    RETURN_NUMBER(atan(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, cbrt) {
     ASSERT_ARG_COUNT("Number::cbrt()", 0);
-    RETURN_NUMBER(cbrt(AS_NUMBER(receiver)));
+    RETURN_NUMBER(cbrt(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, ceil) {
     ASSERT_ARG_COUNT("Number::ceil()", 0);
-    RETURN_NUMBER(ceil(AS_NUMBER(receiver)));
+    RETURN_NUMBER(ceil(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, clone) {
     ASSERT_ARG_COUNT("Number::clone()", 0);
-    RETURN_NUMBER((double)receiver);
+    if (IS_NUMBER(receiver)) RETURN_VAL(receiver);
+    else {
+        ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
+        RETURN_OBJ(newValueInstance(vm, self->value, self->obj.klass));
+    }
 }
 
 LOX_METHOD(Number, compareTo) {
     ASSERT_ARG_COUNT("Number::compareTo(other)", 1);
     ASSERT_ARG_TYPE("Number::compareTo(other)", 0, Number);
-    double self = AS_NUMBER(receiver);
-    double other = AS_NUMBER(args[0]);
+    double self = AS_NUMBER_INSTANCE(receiver);
+    double other = AS_NUMBER_INSTANCE(args[0]);
     if (self > other) RETURN_INT(1);
     else if (self < other) RETURN_INT(-1);
     else RETURN_INT(0);
@@ -913,52 +959,59 @@ LOX_METHOD(Number, compareTo) {
 
 LOX_METHOD(Number, cos) {
     ASSERT_ARG_COUNT("Number::cos()", 0);
-    RETURN_NUMBER(cos(AS_NUMBER(receiver)));
+    RETURN_NUMBER(cos(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, exp) {
     ASSERT_ARG_COUNT("Number::exp()", 0);
-    RETURN_NUMBER(exp(AS_NUMBER(receiver)));
+    RETURN_NUMBER(exp(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, floor) {
     ASSERT_ARG_COUNT("Number::floor()", 0);
-    RETURN_NUMBER(floor(AS_NUMBER(receiver)));
+    RETURN_NUMBER(floor(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, hypot) {
     ASSERT_ARG_COUNT("Number::hypot(other)", 1);
     ASSERT_ARG_TYPE("Number::hypot(other)", 0, Number);
-    RETURN_NUMBER(hypot(AS_NUMBER(receiver), AS_NUMBER(args[0])));
+    RETURN_NUMBER(hypot(AS_NUMBER_INSTANCE(receiver), AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, init) {
-    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Number.");
+    ASSERT_ARG_COUNT("Number::init(value)", 1);
+    ASSERT_ARG_TYPE("Number::init(value)", 0, Number);
+    if (IS_NUMBER(receiver)) RETURN_VAL(args[0]);
+    else {
+        ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
+        instance->value = args[0];
+        RETURN_OBJ(instance);
+    }
 }
 
 LOX_METHOD(Number, isInfinity) {
     ASSERT_ARG_COUNT("Number::isInfinity()", 0);
-    double self = AS_NUMBER(receiver);
+    double self = AS_NUMBER_INSTANCE(receiver);
     RETURN_BOOL(self == INFINITY);
 }
 
 LOX_METHOD(Number, log) {
     ASSERT_ARG_COUNT("Number::log()", 0);
-    double self = AS_NUMBER(receiver);
+    double self = AS_NUMBER_INSTANCE(receiver);
     if (self <= 0) THROW_EXCEPTION_FMT(clox.std.lang.ArithmeticException, "method Number::log() expects receiver to be a positive number but got %g.", self);
     RETURN_NUMBER(log(self));
 }
 
 LOX_METHOD(Number, log10) {
     ASSERT_ARG_COUNT("Number::log10()", 0);
-    double self = AS_NUMBER(receiver);
+    double self = AS_NUMBER_INSTANCE(receiver);
     if (self < 0) THROW_EXCEPTION_FMT(clox.std.lang.ArithmeticException, "method Number::log10() expects receiver to be a positive number but got %g.", self);
     RETURN_NUMBER(log10(self));
 }
 
 LOX_METHOD(Number, log2) {
     ASSERT_ARG_COUNT("Number::log2()", 0);
-    double self = AS_NUMBER(receiver);
+    double self = AS_NUMBER_INSTANCE(receiver);
     if (self < 0) THROW_EXCEPTION_FMT(clox.std.lang.ArithmeticException, "method Number::log2() expects receiver to be a positive number but got %g.", self);
     RETURN_NUMBER(log2(self));
 }
@@ -966,39 +1019,40 @@ LOX_METHOD(Number, log2) {
 LOX_METHOD(Number, max) {
     ASSERT_ARG_COUNT("Number::max(other)", 1);
     ASSERT_ARG_TYPE("Number::max(other)", 0, Number);
-    RETURN_NUMBER(fmax(AS_NUMBER(receiver), AS_NUMBER(args[0])));
+    RETURN_NUMBER(fmax(AS_NUMBER_INSTANCE(receiver), AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, min) {
     ASSERT_ARG_COUNT("Number::min(other)", 1);
     ASSERT_ARG_TYPE("Number::min(other)", 0, Number);
-    RETURN_NUMBER(fmin(AS_NUMBER(receiver), AS_NUMBER(args[0])));
+    RETURN_NUMBER(fmin(AS_NUMBER_INSTANCE(receiver), AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, objectID) {
     ASSERT_ARG_COUNT("Number::objectID()", 0);
-    RETURN_NUMBER((double)receiver);
+    if (IS_NUMBER(receiver)) RETURN_NUMBER((double)receiver);
+    else RETURN_NUMBER(fetchObjectID(vm, AS_OBJ(receiver)));
 }
 
 LOX_METHOD(Number, pow) {
     ASSERT_ARG_COUNT("Number::pow(exponent)", 1);
     ASSERT_ARG_TYPE("Number::pow(exponent)", 0, Number);
-    RETURN_NUMBER(pow(AS_NUMBER(receiver), AS_NUMBER(args[0])));
+    RETURN_NUMBER(pow(AS_NUMBER_INSTANCE(receiver), AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, round) {
     ASSERT_ARG_COUNT("Number::round()", 0);
-    RETURN_NUMBER(round(AS_NUMBER(receiver)));
+    RETURN_NUMBER(round(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, sin) {
     ASSERT_ARG_COUNT("Number::sin()", 0);
-    RETURN_NUMBER(sin(AS_NUMBER(receiver)));
+    RETURN_NUMBER(sin(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, sqrt) {
     ASSERT_ARG_COUNT("Number::sqrt()", 0);
-    double self = AS_NUMBER(receiver);
+    double self = AS_NUMBER_INSTANCE(receiver);
     if (self < 0) THROW_EXCEPTION_FMT(clox.std.lang.ArithmeticException, "method Number::sqrt() expects receiver to be a non-negative number but got %g.", self);
     RETURN_NUMBER(sqrt(self));
 }
@@ -1008,9 +1062,9 @@ LOX_METHOD(Number, step) {
     ASSERT_ARG_TYPE("Number::step(to, by, closure)", 0, Number);
     ASSERT_ARG_TYPE("Number::step(to, by, closure)", 1, Number);
     ASSERT_ARG_TYPE("Number::step(to, by, closure)", 2, Closure);
-    double self = AS_NUMBER(receiver);
-    double to = AS_NUMBER(args[0]);
-    double by = AS_NUMBER(args[1]);
+    double self = AS_NUMBER_INSTANCE(receiver);
+    double to = AS_NUMBER_INSTANCE(args[0]);
+    double by = AS_NUMBER_INSTANCE(args[1]);
     ObjClosure* closure = AS_CLOSURE(args[2]);
 
     if (by == 0) {
@@ -1033,67 +1087,67 @@ LOX_METHOD(Number, step) {
 
 LOX_METHOD(Number, tan) {
     ASSERT_ARG_COUNT("Number::tan()", 0);
-    RETURN_NUMBER(tan(AS_NUMBER(receiver)));
+    RETURN_NUMBER(tan(AS_NUMBER_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Number, toInt) {
     ASSERT_ARG_COUNT("Number::toInt()", 0);
-    RETURN_INT((int)AS_NUMBER(receiver));
+    RETURN_INT((int)AS_NUMBER_INSTANCE(receiver));
 }
 
 LOX_METHOD(Number, toString) {
     ASSERT_ARG_COUNT("Number::toString()", 0);
     char chars[24];
-    int length = sprintf_s(chars, 24, "%.14g", AS_NUMBER(receiver));
+    int length = sprintf_s(chars, 24, "%.14g", AS_NUMBER_INSTANCE(receiver));
     RETURN_STRING(chars, length);
 }
 
 LOX_METHOD(Number, __equal__) {
     ASSERT_ARG_COUNT("Number::==(other)", 1);
     ASSERT_ARG_TYPE("Number::==(other)", 0, Number);
-    RETURN_BOOL((AS_NUMBER(receiver) == AS_NUMBER(args[0])));
+    RETURN_BOOL((AS_NUMBER_INSTANCE(receiver) == AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, __greater__) {
     ASSERT_ARG_COUNT("Number::>(other)", 1);
     ASSERT_ARG_TYPE("Number::>(other)", 0, Number);
-    RETURN_BOOL((AS_NUMBER(receiver) > AS_NUMBER(args[0])));
+    RETURN_BOOL((AS_NUMBER_INSTANCE(receiver) > AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, __less__) {
     ASSERT_ARG_COUNT("Number::<(other)", 1);
     ASSERT_ARG_TYPE("Number::<(other)", 0, Number);
-    RETURN_BOOL((AS_NUMBER(receiver) < AS_NUMBER(args[0])));
+    RETURN_BOOL((AS_NUMBER_INSTANCE(receiver) < AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, __add__) { 
     ASSERT_ARG_COUNT("Number::+(other)", 1);
     ASSERT_ARG_TYPE("Number::+(other)", 0, Number);
-    RETURN_NUMBER((AS_NUMBER(receiver) + AS_NUMBER(args[0])));
+    RETURN_NUMBER((AS_NUMBER_INSTANCE(receiver) + AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, __subtract__) {
     ASSERT_ARG_COUNT("Number::-(other)", 1);
     ASSERT_ARG_TYPE("Number::-(other)", 0, Number);
-    RETURN_NUMBER((AS_NUMBER(receiver) - AS_NUMBER(args[0])));
+    RETURN_NUMBER((AS_NUMBER_INSTANCE(receiver) - AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, __multiply__) {
     ASSERT_ARG_COUNT("Number::*(other)", 1);
     ASSERT_ARG_TYPE("Number::*(other)", 0, Number);
-    RETURN_NUMBER((AS_NUMBER(receiver) * AS_NUMBER(args[0])));
+    RETURN_NUMBER((AS_NUMBER_INSTANCE(receiver) * AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, __divide__) { 
     ASSERT_ARG_COUNT("Number::/(other)", 1);
     ASSERT_ARG_TYPE("Number::/(other)", 0, Number);
-    RETURN_NUMBER((AS_NUMBER(receiver) / AS_NUMBER(args[0])));
+    RETURN_NUMBER((AS_NUMBER_INSTANCE(receiver) / AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(Number, __modulo__) {
     ASSERT_ARG_COUNT("Number::%(other)", 1);
     ASSERT_ARG_TYPE("Number::%(other)", 0, Number);
-    RETURN_NUMBER(fmod(AS_NUMBER(receiver), AS_NUMBER(args[0])));
+    RETURN_NUMBER(fmod(AS_NUMBER_INSTANCE(receiver), AS_NUMBER_INSTANCE(args[0])));
 }
 
 LOX_METHOD(NumberClass, parse) {
@@ -1171,9 +1225,7 @@ LOX_METHOD(Object, memberOf) {
 
 LOX_METHOD(Object, objectID) {
     ASSERT_ARG_COUNT("Object::objectID()", 0);
-    Obj* object = AS_OBJ(receiver);
-    ENSURE_OBJECT_ID(object);
-    RETURN_NUMBER((double)object->objectID);
+    RETURN_NUMBER(fetchObjectID(vm, AS_OBJ(receiver)));
 }
 
 LOX_METHOD(Object, toString) {
