@@ -230,6 +230,14 @@ Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
     return object->fields.values[index];
 }
 
+Value getObjPropertyByIndex(VM* vm, ObjInstance* object, int index) {
+    if (index >= object->fields.count) {
+        runtimeError(vm, "Invalid index %d for object property", index);
+        return NIL_VAL;
+    }
+    return object->fields.values[index];
+}
+
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
     IDMap* idMap = getShapeIndexes(vm, object->obj.shapeID);
     ObjString* key = newString(vm, name);
@@ -242,6 +250,13 @@ void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
         valueArrayWrite(vm, &object->fields, value);
     }
     pop(vm);
+}
+
+void setObjPropertyByIndex(VM* vm, ObjInstance* object, int index, Value value) {
+    if (index < object->fields.count) {
+        runtimeError(vm, "Invalid index %d for object property", index);
+    }
+    object->fields.values[index] = value;
 }
 
 void copyObjProperty(VM* vm, ObjInstance* fromObject, ObjInstance* toObject, char* name) {

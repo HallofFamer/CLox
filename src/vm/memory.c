@@ -189,6 +189,12 @@ static void blackenObject(VM* vm, Obj* object) {
         case OBJ_UPVALUE:
             markValue(vm, ((ObjUpvalue*)object)->closed);
             break;
+        case OBJ_VALUE_INSTANCE: { 
+            ObjValueInstance* instance = (ObjValueInstance*)object;
+            markObject(vm, (Obj*)object->klass);
+            markArray(vm, &instance->fields);
+            break;
+        }
         default:
             break;
     }
@@ -304,6 +310,12 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_UPVALUE:
             FREE(ObjUpvalue, object);
             break;
+        case OBJ_VALUE_INSTANCE: { 
+            ObjValueInstance* instance = (ObjValueInstance*)object;
+            freeValueArray(vm, &instance->fields);
+            FREE(ObjValueInstance, object);
+            break;
+        }
     }
 }
 

@@ -292,7 +292,9 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 ObjValueInstance* newValueInstance(VM* vm, Value value, ObjClass* klass);
 
 Value getObjProperty(VM* vm, ObjInstance* object, char* name);
+Value getObjPropertyByIndex(VM* vm, ObjInstance* object, int index);
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value);
+void setObjPropertyByIndex(VM* vm, ObjInstance* object, int index, Value value);
 void copyObjProperty(VM* vm, ObjInstance* object, ObjInstance* object2, char* name);
 void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject);
 Value getObjMethod(VM* vm, Value object, char* name);
