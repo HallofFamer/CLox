@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "native.h"
 #include "vm.h"
 
 bool propagateException(VM* vm) {
@@ -67,6 +68,23 @@ ObjArray* getStackTrace(VM* vm) {
 }
 
 ObjException* throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...) {
+    char chars[UINT8_MAX];
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(chars, UINT8_MAX, format, args);
+    va_end(args);
+    ObjString* message = copyString(vm, chars, length);
+    ObjArray* stacktrace = getStackTrace(vm);
+
+    ObjException* exception = newException(vm, message, exceptionClass);
+    exception->stacktrace = stacktrace;
+    push(vm, OBJ_VAL(exception));
+    if (!propagateException(vm)) exit(70);
+    else return exception;
+}
+
+ObjException* throwNativeException(VM* vm, const char* exceptionClassName, const char* format, ...) { 
+    ObjClass* exceptionClass = getNativeClass(vm, exceptionClassName);
     char chars[UINT8_MAX];
     va_list args;
     va_start(args, format);

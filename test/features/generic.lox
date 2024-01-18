@@ -67,4 +67,11 @@ println("Sum of two bytes: ${byte + byte2}");
 println("factorial of byte: ${byte.factorial()}");
 println("Compute gcd for two bytes: ${byte.gcd(byte2)}");
 println("Convert byte to binary: ${byte.toBinary()}");
+println("Trying to create an invalid Byte object: ");
+try { 
+    val byte3 = Byte(256);
+}
+catch(IllegalArgumentException e) { 
+    println("Caught exception with message: ${e.message}");
+}
 println("");

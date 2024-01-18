@@ -397,8 +397,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
     ObjString* name = copyString(vm, "()", 2);
     Value method;
     if (!tableGet(&klass->methods, name, &method)) { 
-        ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.MethodNotFoundException");
-        throwException(vm, exceptionClass, "Undefined operator method '%s' on class %s.", name->chars, klass->fullName->chars);
+        throwNativeException(vm, "clox.std.lang.MethodNotFoundException", "Undefined operator method '%s' on class %s.", name->chars, klass->fullName->chars);
         return false;
     }
     return callMethod(vm, method, argCount);
@@ -445,8 +444,7 @@ static bool invokeOperator(VM* vm, ObjString* op, int arity) {
     Value method;
 
     if (!tableGet(&klass->methods, op, &method)) {
-        ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.MethodNotFoundException");
-        throwException(vm, exceptionClass, "Undefined operator method '%s' on class %s.", op->chars, klass->fullName->chars);
+        throwNativeException(vm, "clox.std.lang.MethodNotFoundException", "Undefined operator method '%s' on class %s.", op->chars, klass->fullName->chars);
         return false;
     }
     return invoke(vm, op, arity);
@@ -679,8 +677,7 @@ InterpretResult run(VM* vm) {
                         pop(vm);
                         ObjString* string = AS_STRING(pop(vm));
                         if (index < 0 || index > string->length) {
-                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
-                            throwException(vm, exceptionClass, "String index is out of bound: %d.", index);
+                            throwNativeException(vm, "clox.std.lang.IndexOutOfBoundsException", "String index is out of bound: %d.", index);
                         }
                         else {
                             char chars[2] = { string->chars[index], '\0' };
@@ -692,8 +689,7 @@ InterpretResult run(VM* vm) {
                         pop(vm);
                         ObjArray* array = AS_ARRAY(pop(vm));
                         if (index < 0 || index > array->elements.count) {
-                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
-                            throwException(vm, exceptionClass, "Array index is out of bound: %d.", index);
+                            throwNativeException(vm, "clox.std.lang.IndexOutOfBoundsException", "Array index is out of bound: %d.", index);
                         }
                         else {
                             Value element = array->elements.values[index];
@@ -718,8 +714,7 @@ InterpretResult run(VM* vm) {
                     int index = AS_INT(pop(vm));
                     ObjArray* array = AS_ARRAY(pop(vm));
                     if (index < 0 || index > array->elements.count) {
-                        ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
-                        throwException(vm, exceptionClass, "Array index is out of bound: %d.", index);
+                        throwNativeException(vm, "clox.std.lang.IndexOutOfBoundsException", "Array index is out of bound: %d.", index);
                     }
                     else {
                         valueArrayInsert(vm, &array->elements, index, element);
@@ -747,8 +742,7 @@ InterpretResult run(VM* vm) {
                         pop(vm);
                         ObjString* string = AS_STRING(pop(vm));
                         if (index < 0 || index > string->length) {
-                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
-                            throwException(vm, exceptionClass, "String index is out of bound: %d.", index);
+                            throwNativeException(vm, "clox.std.lang.IndexOutOfBoundsException", "String index is out of bound: %d.", index);
                         }
                         else {
                             char chars[2] = { string->chars[index], '\0' };
@@ -760,8 +754,7 @@ InterpretResult run(VM* vm) {
                         pop(vm);
                         ObjArray* array = AS_ARRAY(pop(vm));
                         if (index < 0 || index > array->elements.count) {
-                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IndexOutOfBoundsException");
-                            throwException(vm, exceptionClass, "Array index is out of bound: %d.", index);
+                            throwNativeException(vm, "clox.std.lang.IndexOutOfBoundsException", "Array index is out of bound: %d.", index);
                         }
                         else {
                             Value element = array->elements.values[index];
@@ -833,8 +826,7 @@ InterpretResult run(VM* vm) {
             }
             case OP_DIVIDE: 
                 if (IS_INT(peek(vm, 0)) && AS_INT(peek(vm, 0)) == 0) {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.ArithmeticException");
-                    throwException(vm, exceptionClass, "It is illegal to divide an integer by 0.");
+                    throwNativeException(vm, "clox.std.lang.ArithmeticException", "It is illegal to divide an integer by 0.");
                 }
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, /);
                 else OVERLOAD_OP(/, 1);
@@ -866,8 +858,7 @@ InterpretResult run(VM* vm) {
                 break;
             case OP_NEGATE:
                 if (!IS_NUMBER(peek(vm, 0))) {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException"); 
-                    throwException(vm, exceptionClass, "Operands must be numbers for negate operator.");
+                    throwNativeException(vm, "clox.std.lang.IllegalArgumentException", "Operands must be numbers for negate operator.");
                 }
                 else if(IS_INT(peek(vm, 0))) push(vm, INT_VAL(-AS_INT(pop(vm))));
                 else push(vm, NUMBER_VAL(-AS_NUMBER(pop(vm))));
@@ -1044,8 +1035,7 @@ InterpretResult run(VM* vm) {
                 Value filePath = pop(vm);
                 Value value;
                 if (!IS_STRING(filePath)) {
-                    ObjClass* exceptionClass = getNativeClass(vm, "clox.std.lang.IllegalArgumentException");
-                    throwException(vm, exceptionClass, "Required file path must be a string.");
+                    throwNativeException(vm, "clox.std.lang.IllegalArgumentException", "Required file path must be a string.");
                     break;
                 }
                 else if (tableGet(&vm->modules, AS_STRING(filePath), &value)) {
@@ -1086,8 +1076,7 @@ InterpretResult run(VM* vm) {
                     else {
                         ObjString* directoryPath = resolveSourceDirectory(vm, shortName, enclosingNamespace);
                         if (!sourceDirectoryExists(directoryPath)) {
-                            ObjClass* exceptionClass = getNativeClass(vm, "clox.std.io.FileNotFoundException");
-                            throwException(vm, exceptionClass, "Failed to load source file for %s", filePath->chars);
+                            throwNativeException(vm, "clox.std.io.FileNotFoundException", "Failed to load source file for %s", filePath->chars);
                         }
                         else if (!tableGet(&enclosingNamespace->values, shortName, &value)) {
                             ObjNamespace* namespace = newNamespace(vm, shortName, enclosingNamespace);
