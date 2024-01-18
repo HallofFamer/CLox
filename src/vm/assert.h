@@ -51,6 +51,7 @@ Value assertArgIsFloat(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsInt(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsMethod(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsNamespace(VM* vm, const char* method, Value* args, int index);
+Value assertArgIsNil(VM * vm, const char* method, Value * args, int index);
 Value assertArgIsNode(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsNumber(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsRange(VM* vm, const char* method, Value* args, int index);
