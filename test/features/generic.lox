@@ -22,6 +22,7 @@ catch (ArithmeticException e) {
 
 println("");
 
+
 println("Testing setting properties: ");
 array.name = "Number Array";
 array.capacity = 8;
@@ -47,6 +48,7 @@ catch(IllegalArgumentException e){
 }
 println("");
 
+
 println("Testing inheritance: ");
 
 class Byte < Int { 
@@ -68,6 +70,7 @@ println("factorial of byte: ${byte.factorial()}");
 println("Compute gcd for two bytes: ${byte.gcd(byte2)}");
 println("Convert byte to binary: ${byte.toBinary()}");
 println("Trying to create an invalid Byte object: ");
+
 try { 
     val byte3 = Byte(256);
 }
