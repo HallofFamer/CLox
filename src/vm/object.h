@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-#include "common.h"
 #include "chunk.h"
+#include "common.h"
 #include "id.h"
 #include "klass.h"
 #include "table.h"

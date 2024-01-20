@@ -66,6 +66,7 @@ println("Creating byte: ${byte} and ${byte2}");
 println("Class for byte: ${byte.getClassName()}");
 println("Object ID for byte: ${byte.objectID()}");
 println("Sum of two bytes: ${byte + byte2}");
+println("Sum of byte and int: ${byte + 5}");
 println("factorial of byte: ${byte.factorial()}");
 println("Compute gcd for two bytes: ${byte.gcd(byte2)}");
 println("Convert byte to binary: ${byte.toBinary()}");

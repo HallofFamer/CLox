@@ -18,4 +18,4 @@ ObjException* throwException(VM* vm, ObjClass* exceptionClass, const char* forma
 ObjException* throwNativeException(VM* vm, const char* exceptionClassName, const char* format, ...);
 
 
-#endif
+#endif // !clox_exception_h
