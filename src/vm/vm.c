@@ -403,11 +403,25 @@ static bool callValue(VM* vm, Value callee, int argCount) {
     return callMethod(vm, method, argCount);
 }
 
+static bool invokeNotFound(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
+    Value interceptor;
+    if (tableGet(&klass->methods, newString(vm, "__invokeMethod__"), &interceptor)) {
+        ObjArray* args = newArray(vm);
+        push(vm, OBJ_VAL(name));
+        push(vm, OBJ_VAL(args));
+        return callMethod(vm, interceptor, 2);
+    }
+    return false;
+}
+
 static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) {
-        if(klass != vm->nilClass) runtimeError(vm, "Undefined method '%s'.", name->chars);
-        return false;
+        if (invokeNotFound(vm, klass, name, argCount)) return true;
+        else { 
+            if (klass != vm->nilClass) runtimeError(vm, "Undefined method '%s'.", name->chars);
+            return false;
+        }
     }
     return callMethod(vm, method, argCount);
 }

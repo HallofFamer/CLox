@@ -1238,6 +1238,19 @@ LOX_METHOD(Object, __equal__) {
     RETURN_BOOL(receiver == args[0]);
 }
 
+LOX_METHOD(Object, __getProperty__) {
+    ASSERT_ARG_COUNT("Object::__getProperty__(name)", 1);
+    ASSERT_ARG_TYPE("Object::__getProperty__(name)", 0, String);
+    THROW_EXCEPTION_FMT("clox.std.lang.NotImplementedException", "Property %s does not exist in object %s.", AS_CSTRING(args[0]), getObjClass(vm, receiver)->fullName->chars);
+}
+
+LOX_METHOD(Object, __invokeMethod__) {
+    ASSERT_ARG_COUNT("Object::__invokeMethod__(name, args)", 2);
+    ASSERT_ARG_TYPE("Object::__invokeMethod__(name, args)", 0, String);
+    ASSERT_ARG_TYPE("Object::__invokeMethod__(name, args)", 1, Array);
+    THROW_EXCEPTION_FMT("clox.std.lang.NotImplementedException", "Method %s does not exist in class %s.", AS_CSTRING(args[0]), getObjClass(vm, receiver)->fullName->chars);
+}
+
 LOX_METHOD(String, capitalize) {
     ASSERT_ARG_COUNT("String::capitalize()", 0);
     RETURN_OBJ(capitalizeString(vm, AS_STRING(receiver)));
@@ -1633,6 +1646,8 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, memberOf, 1);
     DEF_METHOD(vm->objectClass, Object, objectID, 0);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
+    DEF_METHOD(vm->objectClass, Object, __getProperty__, 1);
+    DEF_METHOD(vm->objectClass, Object, __invokeMethod__, 2);
     DEF_OPERATOR(vm->objectClass, Object, ==, __equal__, 1);
 
     ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
