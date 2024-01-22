@@ -1241,14 +1241,14 @@ LOX_METHOD(Object, __equal__) {
 LOX_METHOD(Object, __getProperty__) {
     ASSERT_ARG_COUNT("Object::__getProperty__(name)", 1);
     ASSERT_ARG_TYPE("Object::__getProperty__(name)", 0, String);
-    THROW_EXCEPTION_FMT("clox.std.lang.NotImplementedException", "Property %s does not exist in object %s.", AS_CSTRING(args[0]), getObjClass(vm, receiver)->fullName->chars);
+    THROW_EXCEPTION_FMT(clox.std.lang.NotImplementedException, "Property %s does not exist in %s.", AS_CSTRING(args[0]), valueToString(vm, receiver));
 }
 
 LOX_METHOD(Object, __invokeMethod__) {
     ASSERT_ARG_COUNT("Object::__invokeMethod__(name, args)", 2);
     ASSERT_ARG_TYPE("Object::__invokeMethod__(name, args)", 0, String);
     ASSERT_ARG_TYPE("Object::__invokeMethod__(name, args)", 1, Array);
-    THROW_EXCEPTION_FMT("clox.std.lang.NotImplementedException", "Method %s does not exist in class %s.", AS_CSTRING(args[0]), getObjClass(vm, receiver)->fullName->chars);
+    THROW_EXCEPTION_FMT(clox.std.lang.NotImplementedException, "Method %s does not exist in class %s.", AS_CSTRING(args[0]), getObjClass(vm, receiver)->fullName->chars);
 }
 
 LOX_METHOD(String, capitalize) {

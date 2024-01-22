@@ -403,10 +403,23 @@ static bool callValue(VM* vm, Value callee, int argCount) {
     return callMethod(vm, method, argCount);
 }
 
-static bool invokeNotFound(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
+static bool callGetProperty(VM* vm, ObjClass* klass, ObjString* name) {
+    Value interceptor;
+    if (tableGet(&klass->methods, newString(vm, "__getProperty__"), &interceptor)) {
+        vm->stackTop[-2] = OBJ_VAL(name);
+        return callMethod(vm, interceptor, 1);
+    }
+    return false;
+}
+
+static bool callInvokeMethod(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value interceptor;
     if (tableGet(&klass->methods, newString(vm, "__invokeMethod__"), &interceptor)) {
         ObjArray* args = newArray(vm);
+        for (int i = argCount; i > 0; i--) { 
+            valueArrayWrite(vm, &args->elements, vm->stackTop[-i]);
+        }
+        vm->stackTop -= argCount;
         push(vm, OBJ_VAL(name));
         push(vm, OBJ_VAL(args));
         return callMethod(vm, interceptor, 2);
@@ -417,7 +430,7 @@ static bool invokeNotFound(VM* vm, ObjClass* klass, ObjString* name, int argCoun
 static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) {
-        if (invokeNotFound(vm, klass, name, argCount)) return true;
+        if (callInvokeMethod(vm, klass, name, argCount)) return true;
         else { 
             if (klass != vm->nilClass) runtimeError(vm, "Undefined method '%s'.", name->chars);
             return false;
@@ -466,11 +479,7 @@ static bool invokeOperator(VM* vm, ObjString* op, int arity) {
 
 bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
     Value method;
-    if (!tableGet(&klass->methods, name, &method)) {
-        runtimeError(vm, "Undefined method '%s'.", name->chars);
-        return false;
-    }
-
+    if (!tableGet(&klass->methods, name, &method)) return false;
     ObjBoundMethod* bound = newBoundMethod(vm, peek(vm, 0), AS_CLOSURE(method));
     pop(vm);
     push(vm, OBJ_VAL(bound));
@@ -657,7 +666,9 @@ InterpretResult run(VM* vm) {
                 uint8_t byte = READ_BYTE();
 
                 if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
-                    return INTERPRET_RUNTIME_ERROR;
+                    ObjClass* klass = getObjClass(vm, receiver);
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
+                    callGetProperty(vm, klass, name);
                 }
                 break;
             }
