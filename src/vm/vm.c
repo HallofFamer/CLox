@@ -406,7 +406,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
 static bool callGetProperty(VM* vm, ObjClass* klass, ObjString* name) {
     Value interceptor;
     if (tableGet(&klass->methods, newString(vm, "__getProperty__"), &interceptor)) {
-        vm->stackTop[-2] = OBJ_VAL(name);
+        push(vm, OBJ_VAL(name));
         return callMethod(vm, interceptor, 1);
     }
     return false;
@@ -416,9 +416,12 @@ static bool callInvokeMethod(VM* vm, ObjClass* klass, ObjString* name, int argCo
     Value interceptor;
     if (tableGet(&klass->methods, newString(vm, "__invokeMethod__"), &interceptor)) {
         ObjArray* args = newArray(vm);
+        push(vm, OBJ_VAL(args));
         for (int i = argCount; i > 0; i--) { 
-            valueArrayWrite(vm, &args->elements, vm->stackTop[-i]);
+            valueArrayWrite(vm, &args->elements, vm->stackTop[-i - 1]);
         }
+        pop(vm);
+
         vm->stackTop -= argCount;
         push(vm, OBJ_VAL(name));
         push(vm, OBJ_VAL(args));
@@ -669,6 +672,7 @@ InterpretResult run(VM* vm) {
                     ObjClass* klass = getObjClass(vm, receiver);
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     callGetProperty(vm, klass, name);
+                    frame = &vm->frames[vm->frameCount - 1];
                 }
                 break;
             }

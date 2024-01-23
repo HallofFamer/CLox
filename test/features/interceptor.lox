@@ -1,0 +1,16 @@
+namespace test.features;
+
+class InterceptObject { 
+    __getProperty__(name) { 
+        println("Accessing undefined property: ${name}");
+    }
+
+    __invokeMethod__(name, args){ 
+        println("Invoking undefined method: ${name} with ${args.length} arguments: ${args.toString()}");
+    }
+}
+
+println("Testing interceptor methods: ");
+val intercept = InterceptObject();
+intercept.undefinedMethod(0, 2, 4);
+intercept.undefinedProperty;

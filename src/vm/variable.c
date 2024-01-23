@@ -408,7 +408,6 @@ bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
     }
     else {
         if (IS_NIL(receiver)) runtimeError(vm, "Undefined property on nil.");
-        else runtimeError(vm, "Only instances, classes and namespaces can get properties.");
         return false;
     }
 
