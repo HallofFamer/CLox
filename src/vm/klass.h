@@ -5,11 +5,24 @@
 #include "common.h"
 #include "value.h"
 
+#define HAS_CLASS_INTERCEPTOR(klass, interceptor) ((klass->interceptors) & (1 << interceptor))
+
 typedef enum {
     BEHAVIOR_CLASS,
     BEHAVIOR_METACLASS,
     BEHAVIOR_TRAIT
 } BehaviorType;
+
+typedef enum {
+    INTERCEPTOR_INIT,
+    INTERCEPTOR_NEW,
+    INTERCEPTOR_GET_PROPERTY,
+    INTERCEPTOR_INVOKE_METHOD,
+    INTERCEPTOR_BEFORE_GET_PROPERTY,
+    INTERCEPTOR_AFTER_GET_PROPERTY,
+    INTERCEPTOR_BEFORE_INVOKE_METHOD,
+    INTERCEPTOR_AFTER_INVOKE_METHOD
+} InterceptorType;
 
 void initClass(VM* vm, ObjClass* klass, ObjString* name, ObjClass* metaclass, BehaviorType behaviorType);
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behaviorType);

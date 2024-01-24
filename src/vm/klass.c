@@ -22,6 +22,7 @@ void initClass(VM* vm, ObjClass* klass, ObjString* name, ObjClass* metaclass, Be
     klass->namespace = vm->currentNamespace;
     klass->superclass = NULL;
     klass->isNative = false;
+    klass->interceptors = 0;
 
     if (!klass->namespace->isRoot) {
         char chars[UINT8_MAX];
@@ -51,6 +52,7 @@ void initTrait(VM* vm, ObjClass* trait, ObjString* name) {
     trait->namespace = vm->currentNamespace;
     trait->superclass = NULL;
     trait->isNative = false;
+    trait->interceptors = 0;
 
     if (!trait->namespace->isRoot) {
         char chars[UINT8_MAX];

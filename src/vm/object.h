@@ -239,6 +239,7 @@ struct ObjClass {
     struct ObjClass* superclass;
     ValueArray traits;
     bool isNative;
+    uint8_t interceptors;
     IDMap indexes;
     ValueArray fields;
     Table methods;
