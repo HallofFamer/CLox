@@ -271,15 +271,6 @@ void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
     }
 }
 
-Value getClassProperty(VM* vm, ObjClass* klass, char* name) {
-    int index;
-    if (!idMapGet(&klass->indexes, newString(vm, name), &index)) {
-        runtimeError(vm, "Class property %s does not exist for class %s", name, klass->fullName->chars);
-        return NIL_VAL;
-    }
-    return klass->fields.values[index];
-}
-
 Value getObjMethod(VM* vm, Value object, char* name) {
     ObjClass* klass = getObjClass(vm, object);
     Value method;
