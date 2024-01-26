@@ -115,6 +115,7 @@ bool isClassImplementingTrait(ObjClass* klass, ObjClass* trait) {
 void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     subclass->superclass = superclass;
     subclass->classType = superclass->classType;
+    subclass->interceptors = superclass->interceptors;
     if (superclass->behaviorType == BEHAVIOR_CLASS) {
         for (int i = 0; i < superclass->traits.count; i++) {
             valueArrayWrite(vm, &subclass->traits, superclass->traits.values[i]);
@@ -196,6 +197,15 @@ void bindTraits(VM* vm, int numTraits, ObjClass* klass, ...) {
         bindTrait(vm, klass, AS_CLASS(trait));
     }
     flattenTraits(vm, klass, &klass->traits);
+}
+
+Value getClassProperty(VM* vm, ObjClass* klass, char* name) {
+    int index;
+    if (!idMapGet(&klass->indexes, newString(vm, name), &index)) {
+        runtimeError(vm, "Class property %s does not exist for class %s", name, klass->fullName->chars);
+        return NIL_VAL;
+    }
+    return klass->fields.values[index];
 }
 
 void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value) {

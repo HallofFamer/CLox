@@ -6,6 +6,7 @@
 #include "value.h"
 
 #define HAS_CLASS_INTERCEPTOR(klass, interceptor) ((klass->interceptors) & (1 << interceptor))
+#define SET_CLASS_INTERCEPTOR(klass, interceptor) (klass->interceptors = (klass->interceptors) | (1 << interceptor))
 
 typedef enum {
     BEHAVIOR_CLASS,
@@ -16,14 +17,14 @@ typedef enum {
 typedef enum {
     INTERCEPTOR_INIT,
     INTERCEPTOR_NEW,
-    INTERCEPTOR_GET_PROPERTY,
-    INTERCEPTOR_INVOKE_METHOD,
     INTERCEPTOR_BEFORE_GET_PROPERTY,
     INTERCEPTOR_AFTER_GET_PROPERTY,
+    INTERCEPTOR_UNDEFINED_PROPERTY,
     INTERCEPTOR_BEFORE_SET_PROPERTY,
     INTERCEPTOR_AFTER_SET_PROPERTY,
     INTERCEPTOR_BEFORE_INVOKE_METHOD,
-    INTERCEPTOR_AFTER_INVOKE_METHOD
+    INTERCEPTOR_AFTER_INVOKE_METHOD,
+    INTERCEPTOR_UNDEFINED_METHOD
 } InterceptorType;
 
 void initClass(VM* vm, ObjClass* klass, ObjString* name, ObjClass* metaclass, BehaviorType behaviorType);
