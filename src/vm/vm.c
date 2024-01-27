@@ -403,18 +403,18 @@ static bool callValue(VM* vm, Value callee, int argCount) {
     return callMethod(vm, method, argCount);
 }
 
-static bool callGetProperty(VM* vm, ObjClass* klass, ObjString* name) {
+static bool interceptUndefinedProperty(VM* vm, ObjClass* klass, ObjString* name) {
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__getProperty__"), &interceptor)) {
+    if (tableGet(&klass->methods, newString(vm, "__undefinedProperty__"), &interceptor)) {
         push(vm, OBJ_VAL(name));
         return callMethod(vm, interceptor, 1);
     }
     return false;
 }
 
-static bool callInvokeMethod(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
+static bool interceptUndefinedMethod(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__invokeMethod__"), &interceptor)) {
+    if (tableGet(&klass->methods, newString(vm, "__undefinedMethod__"), &interceptor)) {
         ObjArray* args = newArray(vm);
         push(vm, OBJ_VAL(args));
         for (int i = argCount; i > 0; i--) { 
@@ -433,7 +433,7 @@ static bool callInvokeMethod(VM* vm, ObjClass* klass, ObjString* name, int argCo
 static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) {
-        if (callInvokeMethod(vm, klass, name, argCount)) return true;
+        if (interceptUndefinedMethod(vm, klass, name, argCount)) return true;
         else { 
             if (klass != vm->nilClass) runtimeError(vm, "Undefined method '%s'.", name->chars);
             return false;
@@ -671,7 +671,7 @@ InterpretResult run(VM* vm) {
                 if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
                     ObjClass* klass = getObjClass(vm, receiver);
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
-                    callGetProperty(vm, klass, name);
+                    interceptUndefinedProperty(vm, klass, name);
                     frame = &vm->frames[vm->frameCount - 1];
                 }
                 break;
