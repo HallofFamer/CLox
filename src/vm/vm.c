@@ -403,18 +403,18 @@ static bool callValue(VM* vm, Value callee, int argCount) {
     return callMethod(vm, method, argCount);
 }
 
-static bool interceptUndefinedProperty(VM* vm, ObjClass* klass, ObjString* name) {
+static bool interceptUndefinedGet(VM* vm, ObjClass* klass, ObjString* name) {
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__undefinedProperty__"), &interceptor)) {
+    if (tableGet(&klass->methods, newString(vm, "__undefinedGet__"), &interceptor)) {
         push(vm, OBJ_VAL(name));
         return callMethod(vm, interceptor, 1);
     }
     return false;
 }
 
-static bool interceptUndefinedMethod(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
+static bool interceptUndefinedInvoke(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__undefinedMethod__"), &interceptor)) {
+    if (tableGet(&klass->methods, newString(vm, "__undefinedInvoke__"), &interceptor)) {
         ObjArray* args = newArray(vm);
         push(vm, OBJ_VAL(args));
         for (int i = argCount; i > 0; i--) { 
@@ -433,7 +433,7 @@ static bool interceptUndefinedMethod(VM* vm, ObjClass* klass, ObjString* name, i
 static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) {
-        if (interceptUndefinedMethod(vm, klass, name, argCount)) return true;
+        if (interceptUndefinedInvoke(vm, klass, name, argCount)) return true;
         else { 
             if (klass != vm->nilClass) runtimeError(vm, "Undefined method '%s'.", name->chars);
             return false;
@@ -539,6 +539,7 @@ static void closeUpvalues(VM* vm, Value* last) {
 InterpretResult run(VM* vm) {
     CallFrame* frame = &vm->frames[vm->frameCount - 1];
 
+#define LOAD_FRAME() (frame = &vm->frames[vm->frameCount - 1])
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
@@ -671,7 +672,7 @@ InterpretResult run(VM* vm) {
                 if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
                     ObjClass* klass = getObjClass(vm, receiver);
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
-                    interceptUndefinedProperty(vm, klass, name);
+                    interceptUndefinedGet(vm, klass, name);
                     frame = &vm->frames[vm->frameCount - 1];
                 }
                 break;

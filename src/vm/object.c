@@ -368,6 +368,9 @@ void printObject(Value value) {
         case OBJ_METHOD:
             printf("<method %s::%s>", AS_METHOD(value)->behavior->name->chars, AS_METHOD(value)->closure->function->name->chars);
             break;
+        case OBJ_MODULE:
+            printf("<module %s>", AS_MODULE(value)->path->chars);
+            break;
         case OBJ_NAMESPACE:
             printf("<namespace %s>", AS_NAMESPACE(value)->fullName->chars);
             break;

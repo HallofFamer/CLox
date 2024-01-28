@@ -34,6 +34,7 @@
 #define IS_INSTANCE(value)          isObjType(value, OBJ_INSTANCE)
 #define IS_INT_INSTANCE(arg)        (IS_INT(arg) || (IS_VALUE_INSTANCE(arg) && IS_INT(AS_VALUE_INSTANCE(arg)->value))) 
 #define IS_METHOD(value)            isObjType(value, OBJ_METHOD)
+#define IS_MODULE(value)            isObjType(value, OBJ_MODULE)
 #define IS_NAMESPACE(value)         isObjType(value, OBJ_NAMESPACE)
 #define IS_NATIVE_FUNCTION(value)   isObjType(value, OBJ_NATIVE_FUNCTION)
 #define IS_NATIVE_METHOD(value)     isObjType(value, OBJ_NATIVE_METHOD)
@@ -43,6 +44,7 @@
 #define IS_RANGE(value)             isObjType(value, OBJ_RANGE)    
 #define IS_RECORD(value)            isObjType(value, OBJ_RECORD)
 #define IS_STRING(value)            isObjType(value, OBJ_STRING)
+#define IS_UPVALUE(value)           isObjType(value, OBJ_UPVALUE)
 #define IS_VALUE_INSTANCE(value)    isObjType(value, OBJ_VALUE_INSTANCE)
 
 #define AS_ARRAY(value)             ((ObjArray*)AS_OBJ(value))
@@ -59,6 +61,7 @@
 #define AS_INSTANCE(value)          ((ObjInstance*)AS_OBJ(value))
 #define AS_INT_INSTANCE(arg)        (IS_INT(arg) ? AS_INT(arg) : AS_INT(AS_VALUE_INSTANCE(arg)->value))
 #define AS_METHOD(value)            ((ObjMethod*)AS_OBJ(value))
+#define AS_MODULE(value)            ((ObjModule*)AS_OBJ(value))
 #define AS_NAMESPACE(value)         ((ObjNamespace*)AS_OBJ(value))
 #define AS_NATIVE_FUNCTION(value)   ((ObjNativeFunction*)AS_OBJ(value))
 #define AS_NATIVE_METHOD(value)     ((ObjNativeMethod*)AS_OBJ(value))
@@ -67,6 +70,7 @@
 #define AS_RANGE(value)             ((ObjRange*)AS_OBJ(value))
 #define AS_RECORD(value)            ((ObjRecord*)AS_OBJ(value))
 #define AS_STRING(value)            ((ObjString*)AS_OBJ(value))
+#define AS_UPVALUE(value)           ((ObjUpvalue*)AS_OBJ(value));
 #define AS_VALUE_INSTANCE(value)    ((ObjValueInstance*)AS_OBJ(value))
 
 #define AS_CARRAY(value)            (((ObjArray*)AS_OBJ(value))->elements)
