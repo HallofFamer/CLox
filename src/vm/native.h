@@ -14,6 +14,7 @@
 #define DEF_FUNCTION(name, arity) defineNativeFunction(vm, #name, arity, name##NativeFunction)
 #define DEF_METHOD(klass, className, name, arity) defineNativeMethod(vm, klass, #name, arity, name##NativeMethodFor##className)
 #define DEF_OPERATOR(klass, className, symbol, name, arity) defineNativeMethod(vm, klass, #symbol, arity, name##NativeMethodFor##className)
+#define DEF_INTERCEPTOR(klass, className, type, name, arity) defineNativeInterceptor(vm, klass, type, arity, name##NativeMethodFor##className)
 
 #define RETURN_VAL(value) return (value)
 #define RETURN_NIL return NIL_VAL
@@ -35,6 +36,7 @@ static inline double currentTimeInSec() {
 ObjClass* defineNativeClass(VM* vm, const char* name);
 void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction function);
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, NativeMethod method);
+void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int arity, NativeMethod method);
 ObjClass* defineNativeTrait(VM* vm, const char* name);
 ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* enclosing);
 ObjClass* defineNativeException(VM* vm, const char* name, ObjClass* superClass);

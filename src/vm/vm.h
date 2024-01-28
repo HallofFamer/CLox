@@ -97,6 +97,7 @@ struct VM {
     Table modules;
     Table strings;
     ShapeTree shapes;
+    GenericIDMap genericIDMap;
 
     ObjString* initString;
     ObjModule* currentModule;
@@ -106,7 +107,6 @@ struct VM {
     size_t nextGC;
     Obj* objects;
     uint64_t objectIndex;
-    GenericIDMap genericIDMap;
 
     int grayCount;
     int grayCapacity;

@@ -105,6 +105,51 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, Na
     pop(vm);
 }
 
+void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int arity, NativeMethod method) {
+    switch (type) {
+        case INTERCEPTOR_INIT:
+            defineNativeMethod(vm, klass, "__init__", arity, method);
+            break;
+        case INTERCEPTOR_NEW:
+            defineNativeMethod(vm, klass, "__new__", arity, method);
+            break;
+        case INTERCEPTOR_BEFORE_GET:
+            defineNativeMethod(vm, klass, "__beforeGet__", 1, method);
+            break;
+        case INTERCEPTOR_AFTER_GET:
+            defineNativeMethod(vm, klass, "__afterGet__", 2, method);
+            break;
+        case INTERCEPTOR_UNDEFINED_GET:
+            defineNativeMethod(vm, klass, "__undefinedGet__", 1, method);
+            break;
+        case INTERCEPTOR_BEFORE_SET:
+            defineNativeMethod(vm, klass, "__beforeSet__", 2, method);
+            break;
+        case INTERCEPTOR_AFTER_SET: 
+            defineNativeMethod(vm, klass, "__afterSet__", 2, method);
+            break;
+        case INTERCEPTOR_BEFORE_INVOKE:
+            defineNativeMethod(vm, klass, "__beforeInvoke__", 2, method);
+            break;
+        case INTERCEPTOR_AFTER_INVOKE:
+            defineNativeMethod(vm, klass, "__afterInvoke__", 3, method);
+            break;
+        case INTERCEPTOR_UNDEFINED_INVOKE:
+            defineNativeMethod(vm, klass, "__undefinedInvoke__", 2, method);
+            break;
+        case INTERCEPTOR_BEFORE_THROW:
+            defineNativeMethod(vm, klass, "__beforeThrow__", 2, method);
+            break;
+        case INTERCEPTOR_AFTER_THROW:
+            defineNativeMethod(vm, klass, "__afterThrow__", 2, method);
+            break;
+        default: 
+            runtimeError(vm, "Unknown interceptor type %d.", type);
+            exit(70);
+    }
+    SET_CLASS_INTERCEPTOR(klass, type);
+}
+
 ObjClass* defineNativeTrait(VM* vm, const char* name) {
     ObjString* traitName = newString(vm, name);
     push(vm, OBJ_VAL(traitName));
