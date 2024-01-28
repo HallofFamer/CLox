@@ -144,6 +144,8 @@ set(Source_Files__vm
     "src/vm/hash.h"
     "src/vm/id.c"
     "src/vm/id.h"
+    "src/vm/interceptor.c"
+    "src/vm/interceptor.h"
     "src/vm/klass.c"
     "src/vm/klass.h"
     "src/vm/memory.c"
