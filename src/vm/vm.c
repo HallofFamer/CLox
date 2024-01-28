@@ -474,6 +474,7 @@ static void defineMethod(VM* vm, ObjString* name, bool isClassMethod) {
     }
 
     tableSet(vm, &klass->methods, name, method);
+    handleInterceptorMethod(vm, klass, name);
     pop(vm);
 }
 
@@ -532,6 +533,14 @@ InterpretResult run(VM* vm) {
         double a = AS_NUMBER(pop(vm)); \
         push(vm, valueType(a op b)); \
     } while (false)
+
+#define INTERCEPT(interceptorMethod) \
+    do { \
+        ObjClass* klass = getObjClass(vm, receiver); \
+        ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]); \
+        intercept##interceptorMethod(vm, klass, name); \
+        frame = &vm->frames[vm->frameCount - 1]; \
+    } while(false)
 
 #define OVERLOAD_OP(op, arity) \
     do { \
@@ -642,11 +651,15 @@ InterpretResult run(VM* vm) {
                 Value receiver = peek(vm, 0);
                 uint8_t byte = READ_BYTE();
 
+                if (HAS_OBJ_INTERCEPTOR(receiver, INTERCEPTOR_BEFORE_GET)) {
+                    INTERCEPT(BeforeGet);
+                }
+
                 if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
-                    ObjClass* klass = getObjClass(vm, receiver);
-                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
-                    interceptUndefinedGet(vm, klass, name);
-                    frame = &vm->frames[vm->frameCount - 1];
+                    INTERCEPT(UndefinedGet);
+                }
+                else if (HAS_OBJ_INTERCEPTOR(receiver, INTERCEPTOR_AFTER_GET)) {
+                    INTERCEPT(AfterGet);
                 }
                 break;
             }
@@ -1214,6 +1227,7 @@ InterpretResult run(VM* vm) {
 #undef READ_STRING
 #undef BINARY_INT_OP
 #undef BINARY_NUMBER_OP
+#undef INTERCEPT
 #undef OVERLOAD_OP
 #undef RUNTIME_ERROR
 }

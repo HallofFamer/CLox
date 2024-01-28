@@ -1,12 +1,21 @@
 namespace test.features;
 
-class InterceptObject { 
-    __undefinedProperty__(name) { 
-        println("Accessing undefined property: ${name}");
+class InterceptObject {   
+    init() { 
+        this.definedProperty = "property";
+    } 
+
+    __afterGet__(name, value) { 
+        println("After getting value of property ${name}.");
+        return value;
     }
 
-    __undefinedMethod__(name, args){ 
-        println("Invoking undefined method: ${name} with ${args.length} arguments: ${args.toString()}");
+    __undefinedGet__(name) { 
+        println("Accessing undefined property: ${name}.");
+    }
+
+    __undefinedInvoke__(name, args){ 
+        println("Invoking undefined method: ${name} with ${args.length} arguments: ${args.toString()}.");
     }
 }
 
@@ -14,3 +23,4 @@ println("Testing interceptor methods: ");
 val intercept = InterceptObject();
 intercept.undefinedMethod(0, 2, 4);
 intercept.undefinedProperty;
+println(intercept.definedProperty);

@@ -8,6 +8,7 @@
 #include "chunk.h"
 #include "common.h"
 #include "id.h"
+#include "interceptor.h"
 #include "klass.h"
 #include "table.h"
 #include "value.h"
