@@ -5,6 +5,10 @@ class InterceptObject {
         this.definedProperty = "property";
     } 
 
+    __beforeGet__(name) { 
+        println("Before getting value of property ${name}.");
+    }
+
     __afterGet__(name, value) { 
         println("After getting value of property ${name}.");
         return value;
