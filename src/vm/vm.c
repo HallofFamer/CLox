@@ -536,9 +536,8 @@ InterpretResult run(VM* vm) {
 
 #define INTERCEPT(interceptorMethod) \
     do { \
-        ObjClass* klass = getObjClass(vm, receiver); \
         ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]); \
-        intercept##interceptorMethod(vm, klass, name); \
+        intercept##interceptorMethod(vm, receiver, name); \
         frame = &vm->frames[vm->frameCount - 1]; \
     } while(false)
 
@@ -652,7 +651,7 @@ InterpretResult run(VM* vm) {
                 uint8_t byte = READ_BYTE();
 
                 if (HAS_OBJ_INTERCEPTOR(receiver, INTERCEPTOR_BEFORE_GET)) {
-                    INTERCEPT(BeforeGet);
+                    if(hasInstanceVariable(vm, AS_OBJ(receiver), &frame->closure->function->chunk, byte)) INTERCEPT(BeforeGet);
                 }
 
                 if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {

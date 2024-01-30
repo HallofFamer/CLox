@@ -7,7 +7,7 @@
 #include "vm.h"
 
 bool matchVariableName(ObjString* sourceString, const char* targetChars, int targetLength) {
-    if (sourceString->length != targetLength) return false;
+    if (sourceString == NULL || sourceString->length != targetLength) return false;
     return memcmp(sourceString->chars, targetChars, targetLength) == 0;
 }
 
@@ -77,6 +77,13 @@ static bool loadGlobalFromCache(VM* vm, Chunk* chunk, uint8_t byte, Value* value
 bool loadGlobal(VM* vm, Chunk* chunk, uint8_t byte, Value* value) {
     if (chunk->inlineCaches[byte].type != CACHE_NONE) return loadGlobalFromCache(vm, chunk, byte, value);
     return loadGlobalFromTable(vm, chunk, byte, value);
+}
+
+bool hasInstanceVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte) {
+    ObjString* name = AS_STRING(chunk->identifiers.values[byte]);
+    IDMap* idMap = getShapeIndexes(vm, object->shapeID);
+    int index;
+    return idMapGet(idMap, name, &index);
 }
 
 static void getAndPushGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
