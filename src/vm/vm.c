@@ -534,12 +534,9 @@ InterpretResult run(VM* vm) {
         push(vm, valueType(a op b)); \
     } while (false)
 
-#define INTERCEPT(interceptorMethod) \
-    do { \
-        ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]); \
-        intercept##interceptorMethod(vm, receiver, name); \
-        frame = &vm->frames[vm->frameCount - 1]; \
-    } while(false)
+
+#define CAN_INTERCEPT(receiver, interceptorType, interceptorName) \
+    HAS_OBJ_INTERCEPTOR(receiver, interceptorType) && !matchVariableName(frame->closure->function->name, #interceptorName, (int)strlen(#interceptorName))
 
 #define OVERLOAD_OP(op, arity) \
     do { \
@@ -650,25 +647,44 @@ InterpretResult run(VM* vm) {
                 Value receiver = peek(vm, 0);
                 uint8_t byte = READ_BYTE();
 
-                if (HAS_OBJ_INTERCEPTOR(receiver, INTERCEPTOR_BEFORE_GET)) {
-                    if(hasInstanceVariable(vm, AS_OBJ(receiver), &frame->closure->function->chunk, byte)) INTERCEPT(BeforeGet);
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_GET, __beforeGet__) && hasInstanceVariable(vm, AS_OBJ(receiver), &frame->closure->function->chunk, byte)) {
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
+                    interceptBeforeGet(vm, receiver, name);
+                    frame = &vm->frames[vm->frameCount - 1];
                 }
 
                 if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
-                    INTERCEPT(UndefinedGet);
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
+                    if (interceptUndefinedGet(vm, receiver, name)) frame = &vm->frames[vm->frameCount - 1];
+                    else return INTERPRET_RUNTIME_ERROR;
                 }
-                else if (HAS_OBJ_INTERCEPTOR(receiver, INTERCEPTOR_AFTER_GET)) {
-                    INTERCEPT(AfterGet);
+                else if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_GET, __afterGet__)) {
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
+                    Value value = pop(vm);
+                    interceptAfterGet(vm, receiver, name, value);
+                    frame = &vm->frames[vm->frameCount - 1];
                 }
                 break;
             }
             case OP_SET_PROPERTY: {
                 Value value = pop(vm);
                 Value receiver = pop(vm);
-
                 uint8_t byte = READ_BYTE();
+
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_SET, __beforeSet__) && hasInstanceVariable(vm, AS_OBJ(receiver), &frame->closure->function->chunk, byte)) {
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
+                    interceptBeforeSet(vm, receiver, name, value);
+                    value = pop(vm);
+                    frame = &vm->frames[vm->frameCount - 1];
+                }
+
                 if (!setInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte, value)) {
                     return INTERPRET_RUNTIME_ERROR;
+                }
+                else if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_GET, __afterSet__)) {
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
+                    interceptAfterSet(vm, receiver, name);
+                    frame = &vm->frames[vm->frameCount - 1];
                 }
                 break;
             }
@@ -1226,7 +1242,7 @@ InterpretResult run(VM* vm) {
 #undef READ_STRING
 #undef BINARY_INT_OP
 #undef BINARY_NUMBER_OP
-#undef INTERCEPT
+#undef CAN_INTERCEPT
 #undef OVERLOAD_OP
 #undef RUNTIME_ERROR
 }
