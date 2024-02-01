@@ -10,12 +10,21 @@ class InterceptObject {
     }
 
     __afterGet__(name, value) { 
-        println("After getting value of property ${name}.");
-        return value;
+        println("After getting value of property ${name}: ${value}.");
+        return "new ${value}";
     }
 
     __undefinedGet__(name) { 
         println("Accessing undefined property: ${name}.");
+    }
+
+    __beforeSet__(name, value) { 
+        println("Before Set property ${name} to value ${value}");
+        return "${value} new";
+    }
+
+    __afterSet__(name) { 
+        println("After setting value of property ${name}");
     }
 
     __undefinedInvoke__(name, args){ 
@@ -23,8 +32,16 @@ class InterceptObject {
     }
 }
 
-println("Testing interceptor methods: ");
+println("Testing interceptor methods for property get: ");
 val intercept = InterceptObject();
-intercept.undefinedMethod(0, 2, 4);
-intercept.undefinedProperty;
 println(intercept.definedProperty);
+intercept.undefinedProperty;
+println("");
+
+println("Testing interceptor methods for property set: ");
+intercept.definedProperty = "property 2";
+println(intercept.definedProperty);
+println("");
+
+println("Testing interceptor methods for method invocation: ");
+intercept.undefinedMethod(0, 2, 4);
