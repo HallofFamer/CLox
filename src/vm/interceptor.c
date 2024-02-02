@@ -14,6 +14,8 @@ void handleInterceptorMethod(VM* vm, ObjClass* klass, ObjString* name) {
     else if (strcmp(name->chars, "__undefinedGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_UNDEFINED_GET);
     else if (strcmp(name->chars, "__beforeSet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_BEFORE_SET);
     else if (strcmp(name->chars, "__afterSet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_AFTER_SET);
+    else if (strcmp(name->chars, "__beforeInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_BEFORE_INVOKE);
+    else if (strcmp(name->chars, "__afterInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_AFTER_INVOKE);
     else if (strcmp(name->chars, "__undefinedInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_UNDEFINED_INVOKE);
 }
 
@@ -69,17 +71,43 @@ bool interceptAfterSet(VM* vm, Value receiver, ObjString* name) {
     return false;
 }
 
+static ObjArray* handleInterceptorArguments(VM* vm, int argCount) {
+    ObjArray* args = newArray(vm);
+    push(vm, OBJ_VAL(args));
+    for (int i = argCount; i > 0; i--) {
+        valueArrayWrite(vm, &args->elements, vm->stackTop[-i - 1]);
+    }
+    pop(vm);
+    vm->stackTop -= argCount;
+    return args;
+}
+
+bool interceptBeforeInvoke(VM* vm, Value receiver, ObjString* name, int argCount) {
+    ObjClass* klass = getObjClass(vm, receiver);
+    Value interceptor;
+    if (tableGet(&klass->methods, newString(vm, "__beforeInvoke__"), &interceptor)) {
+        ObjArray* args = handleInterceptorArguments(vm, argCount);
+        callReentrant(vm, receiver, interceptor, OBJ_VAL(name), args);
+        return true;
+    }
+    return false;
+}
+
+bool interceptAfterInvoke(VM* vm, Value receiver, ObjString* name, Value result) {
+    ObjClass* klass = getObjClass(vm, receiver);
+    Value interceptor;
+    if (tableGet(&klass->methods, newString(vm, "__afterInvoke__"), &interceptor)) {
+        Value result2 = callReentrant(vm, receiver, interceptor, OBJ_VAL(name), result);
+        push(vm, result2);
+        return true;
+    }
+    return false;
+}
+
 bool interceptUndefinedInvoke(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value interceptor;
     if (tableGet(&klass->methods, newString(vm, "__undefinedInvoke__"), &interceptor)) {
-        ObjArray* args = newArray(vm);
-        push(vm, OBJ_VAL(args));
-        for (int i = argCount; i > 0; i--) {
-            valueArrayWrite(vm, &args->elements, vm->stackTop[-i - 1]);
-        }
-        pop(vm);
-
-        vm->stackTop -= argCount;
+        ObjArray* args = handleInterceptorArguments(vm, argCount);
         push(vm, OBJ_VAL(name));
         push(vm, OBJ_VAL(args));
         return callMethod(vm, interceptor, 2);

@@ -690,14 +690,28 @@ InterpretResult run(VM* vm) {
             }
             case OP_GET_PROPERTY_OPTIONAL: {
                 Value receiver = peek(vm, 0);
-                uint8_t index = READ_BYTE();
+                uint8_t byte = READ_BYTE();
+
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_GET, __beforeGet__) && hasInstanceVariable(vm, AS_OBJ(receiver), &frame->closure->function->chunk, byte)) {
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
+                    interceptBeforeGet(vm, receiver, name);
+                    frame = &vm->frames[vm->frameCount - 1];
+                }
 
                 if (IS_NIL(receiver)) { 
                     pop(vm);
                     push(vm, NIL_VAL);
                 }
-                else if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, index)) {
-                    return INTERPRET_RUNTIME_ERROR;
+                else if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
+                    if (interceptUndefinedGet(vm, receiver, name)) frame = &vm->frames[vm->frameCount - 1];
+                    else return INTERPRET_RUNTIME_ERROR;
+                }
+                else if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_GET, __afterGet__)) {
+                    ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
+                    Value value = pop(vm);
+                    interceptAfterGet(vm, receiver, name, value);
+                    frame = &vm->frames[vm->frameCount - 1];
                 }
                 break;
             }
@@ -939,6 +953,11 @@ InterpretResult run(VM* vm) {
                 Value receiver = peek(vm, 0);
                 ObjString* method = READ_STRING();
                 uint8_t argCount = READ_BYTE();
+
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_INVOKE, __beforeInvoke__)) {
+                    interceptBeforeInvoke(vm, receiver, method, argCount);
+                    LOAD_FRAME();
+                }
 
                 if (!invoke(vm, method, argCount)) {
                     if (IS_NIL(receiver)) runtimeError(vm, "Calling undefined method '%s' on nil.", method->chars);

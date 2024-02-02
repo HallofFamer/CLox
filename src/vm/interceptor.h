@@ -30,6 +30,8 @@ bool interceptAfterGet(VM* vm, Value receiver, ObjString* name, Value value);
 bool interceptUndefinedGet(VM* vm, Value receiver, ObjString* name);
 bool interceptBeforeSet(VM* vm, Value receiver, ObjString* name, Value value);
 bool interceptAfterSet(VM* vm, Value receiver, ObjString* name);
+bool interceptBeforeInvoke(VM* vm, Value receiver, ObjString* name, int argCount);
+bool interceptAfterInvoke(VM* vm, Value receiver, ObjString* name, Value result);
 bool interceptUndefinedInvoke(VM* vm, ObjClass* klass, ObjString* name, int argCount);
 
 #endif // !clox_interceptor_h
