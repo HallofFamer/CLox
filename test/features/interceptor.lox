@@ -3,7 +3,11 @@ namespace test.features;
 class InterceptObject {   
     init() { 
         this.definedProperty = "property";
-    } 
+    }
+
+    definedMethod(arg, arg2){ 
+        println("Invoking method: definedMethod with arguments: ${arg}, ${arg2}.");
+    }
 
     __beforeGet__(name) { 
         println("Before getting value of property ${name}.");
@@ -27,13 +31,22 @@ class InterceptObject {
         println("After setting value of property ${name}");
     }
 
+    __beforeInvoke__(name, args) { 
+        println("Before invoking method: ${name} with ${args.length} arguments: ${args.toString()}.");
+    }
+
+    __afterInvoke__(name, result) { 
+        println("After invoking method: ${name} with return value ${result}.");
+        return result;
+    }
+
     __undefinedInvoke__(name, args){ 
         println("Invoking undefined method: ${name} with ${args.length} arguments: ${args.toString()}.");
     }
 }
 
-println("Testing interceptor methods for property get: ");
 val intercept = InterceptObject();
+println("Testing interceptor methods for property get: ");
 println(intercept.definedProperty);
 intercept.undefinedProperty;
 println("");
@@ -44,4 +57,5 @@ println(intercept.definedProperty);
 println("");
 
 println("Testing interceptor methods for method invocation: ");
+intercept.definedMethod("Hello", true);
 intercept.undefinedMethod(0, 2, 4);

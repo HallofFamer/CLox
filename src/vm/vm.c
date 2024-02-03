@@ -453,6 +453,11 @@ static bool invokeOperator(VM* vm, ObjString* op, int arity) {
     return invoke(vm, op, arity);
 }
 
+static bool hasMethod(VM* vm, ObjClass* klass, ObjString* name) { 
+    Value method;
+    return tableGet(&klass->methods, name, &method);
+}
+
 bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) return false;
@@ -544,7 +549,7 @@ InterpretResult run(VM* vm) {
         if (!invokeOperator(vm, opName, arity)) { \
             return INTERPRET_RUNTIME_ERROR; \
         } \
-        frame = &vm->frames[vm->frameCount - 1]; \
+        LOAD_FRAME(); \
     } while (false)
 
 #define RUNTIME_ERROR(...) \
@@ -650,19 +655,19 @@ InterpretResult run(VM* vm) {
                 if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_GET, __beforeGet__) && hasInstanceVariable(vm, AS_OBJ(receiver), &frame->closure->function->chunk, byte)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     interceptBeforeGet(vm, receiver, name);
-                    frame = &vm->frames[vm->frameCount - 1];
+                    LOAD_FRAME();
                 }
 
                 if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
-                    if (interceptUndefinedGet(vm, receiver, name)) frame = &vm->frames[vm->frameCount - 1];
+                    if (interceptUndefinedGet(vm, receiver, name)) LOAD_FRAME();
                     else return INTERPRET_RUNTIME_ERROR;
                 }
                 else if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_GET, __afterGet__)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     Value value = pop(vm);
                     interceptAfterGet(vm, receiver, name, value);
-                    frame = &vm->frames[vm->frameCount - 1];
+                    LOAD_FRAME();
                 }
                 break;
             }
@@ -675,7 +680,7 @@ InterpretResult run(VM* vm) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     interceptBeforeSet(vm, receiver, name, value);
                     value = pop(vm);
-                    frame = &vm->frames[vm->frameCount - 1];
+                    LOAD_FRAME();
                 }
 
                 if (!setInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte, value)) {
@@ -684,7 +689,7 @@ InterpretResult run(VM* vm) {
                 else if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_GET, __afterSet__)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     interceptAfterSet(vm, receiver, name);
-                    frame = &vm->frames[vm->frameCount - 1];
+                    LOAD_FRAME();
                 }
                 break;
             }
@@ -695,7 +700,7 @@ InterpretResult run(VM* vm) {
                 if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_GET, __beforeGet__) && hasInstanceVariable(vm, AS_OBJ(receiver), &frame->closure->function->chunk, byte)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     interceptBeforeGet(vm, receiver, name);
-                    frame = &vm->frames[vm->frameCount - 1];
+                    LOAD_FRAME();
                 }
 
                 if (IS_NIL(receiver)) { 
@@ -704,14 +709,14 @@ InterpretResult run(VM* vm) {
                 }
                 else if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
-                    if (interceptUndefinedGet(vm, receiver, name)) frame = &vm->frames[vm->frameCount - 1];
+                    if (interceptUndefinedGet(vm, receiver, name)) LOAD_FRAME();
                     else return INTERPRET_RUNTIME_ERROR;
                 }
                 else if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_GET, __afterGet__)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     Value value = pop(vm);
                     interceptAfterGet(vm, receiver, name, value);
-                    frame = &vm->frames[vm->frameCount - 1];
+                    LOAD_FRAME();
                 }
                 break;
             }
@@ -933,7 +938,7 @@ InterpretResult run(VM* vm) {
                 if (!callValue(vm, peek(vm, argCount), argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                frame = &vm->frames[vm->frameCount - 1];
+                LOAD_FRAME();
                 break;
             }
             case OP_OPTIONAL_CALL: {
@@ -946,15 +951,15 @@ InterpretResult run(VM* vm) {
                 else if (!callValue(vm, peek(vm, argCount), argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                frame = &vm->frames[vm->frameCount - 1];
+                LOAD_FRAME();
                 break;
             }
             case OP_INVOKE: {
-                Value receiver = peek(vm, 0);
                 ObjString* method = READ_STRING();
                 uint8_t argCount = READ_BYTE();
+                Value receiver = peek(vm, argCount);
 
-                if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_INVOKE, __beforeInvoke__)) {
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_INVOKE, __beforeInvoke__) && hasMethod(vm, getObjClass(vm, receiver), method)) {
                     interceptBeforeInvoke(vm, receiver, method, argCount);
                     LOAD_FRAME();
                 }
@@ -963,7 +968,15 @@ InterpretResult run(VM* vm) {
                     if (IS_NIL(receiver)) runtimeError(vm, "Calling undefined method '%s' on nil.", method->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                frame = &vm->frames[vm->frameCount - 1];
+                LOAD_FRAME();
+
+                /*
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasMethod(vm, getObjClass(vm, receiver), method)) {
+                    Value result = pop(vm);
+                    interceptAfterInvoke(vm, receiver, method, result);
+                    LOAD_FRAME();
+                }
+                */
                 break;
             }
             case OP_SUPER_INVOKE: {
@@ -974,13 +987,13 @@ InterpretResult run(VM* vm) {
                 if (!invokeFromClass(vm, klass, method, argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                frame = &vm->frames[vm->frameCount - 1];
+                LOAD_FRAME();
                 break;
             }
             case OP_OPTIONAL_INVOKE: {
-                Value receiver = peek(vm, 0);
                 ObjString* method = READ_STRING();
                 uint8_t argCount = READ_BYTE();
+                Value receiver = peek(vm, argCount);
 
                 if (!invoke(vm, method, argCount)) {
                     if (IS_NIL(receiver)) {
@@ -989,7 +1002,7 @@ InterpretResult run(VM* vm) {
                     }
                     else RUNTIME_ERROR("Undefined method '%s'.", method->chars);
                 }
-                frame = &vm->frames[vm->frameCount - 1];
+                LOAD_FRAME();
                 break;
             }
             case OP_CLOSURE: {
@@ -1093,7 +1106,7 @@ InterpretResult run(VM* vm) {
                 }
 
                 loadModule(vm, AS_STRING(filePath));
-                frame = &vm->frames[vm->frameCount - 1];
+                LOAD_FRAME();
                 break;
             }
             case OP_NAMESPACE: {
@@ -1186,7 +1199,7 @@ InterpretResult run(VM* vm) {
                 ObjException* exception = AS_EXCEPTION(value);
                 exception->stacktrace = stackTrace;
                 if (propagateException(vm)) {
-                    frame = &vm->frames[vm->frameCount - 1];
+                    LOAD_FRAME();
                     break;
                 }
                 return INTERPRET_RUNTIME_ERROR;
@@ -1215,7 +1228,7 @@ InterpretResult run(VM* vm) {
             case OP_FINALLY: { 
                 frame->handlerCount--;
                 if (propagateException(vm)) {
-                    frame = &vm->frames[vm->frameCount - 1];
+                    LOAD_FRAME();
                     break;
                 }
                 return INTERPRET_RUNTIME_ERROR;
@@ -1232,7 +1245,7 @@ InterpretResult run(VM* vm) {
                 vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
-                frame = &vm->frames[vm->frameCount - 1];
+                LOAD_FRAME();
                 break;
             }
             case OP_RETURN_NONLOCAL: {
@@ -1248,7 +1261,7 @@ InterpretResult run(VM* vm) {
                 vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
-                frame = &vm->frames[vm->frameCount - 1];
+                LOAD_FRAME();
                 break;
             }
         }
