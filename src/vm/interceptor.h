@@ -24,6 +24,7 @@ typedef enum {
     INTERCEPTOR_AFTER_THROW
 } InterceptorType;
 
+bool isInterceptorMethod(ObjString* name);
 void handleInterceptorMethod(VM* vm, ObjClass* klass, ObjString* name);
 bool interceptBeforeGet(VM* vm, Value receiver, ObjString* name);
 bool interceptAfterGet(VM* vm, Value receiver, ObjString* name, Value value);

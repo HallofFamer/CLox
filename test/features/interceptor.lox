@@ -7,6 +7,7 @@ class InterceptObject {
 
     definedMethod(arg, arg2){ 
         println("Invoking method: definedMethod with arguments: ${arg}, ${arg2}.");
+        return "defined method";
     }
 
     __beforeGet__(name) { 
@@ -37,11 +38,12 @@ class InterceptObject {
 
     __afterInvoke__(name, result) { 
         println("After invoking method: ${name} with return value ${result}.");
-        return result;
+        return "${result} new";
     }
 
     __undefinedInvoke__(name, args){ 
         println("Invoking undefined method: ${name} with ${args.length} arguments: ${args.toString()}.");
+        return "undefined method";
     }
 }
 
@@ -55,7 +57,6 @@ println("Testing interceptor methods for property set: ");
 intercept.definedProperty = "property 2";
 println(intercept.definedProperty);
 println("");
-
 println("Testing interceptor methods for method invocation: ");
 intercept.definedMethod("Hello", true);
 intercept.undefinedMethod(0, 2, 4);

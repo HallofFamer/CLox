@@ -454,6 +454,7 @@ static bool invokeOperator(VM* vm, ObjString* op, int arity) {
 }
 
 static bool hasMethod(VM* vm, ObjClass* klass, ObjString* name) { 
+    if (name == NULL) return false;
     Value method;
     return tableGet(&klass->methods, name, &method);
 }
@@ -969,14 +970,6 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 LOAD_FRAME();
-
-                /*
-                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasMethod(vm, getObjClass(vm, receiver), method)) {
-                    Value result = pop(vm);
-                    interceptAfterInvoke(vm, receiver, method, result);
-                    LOAD_FRAME();
-                }
-                */
                 break;
             }
             case OP_SUPER_INVOKE: {
@@ -1235,6 +1228,8 @@ InterpretResult run(VM* vm) {
             }
             case OP_RETURN: {
                 Value result = pop(vm);
+                ObjString* name = frame->closure->function->name;
+                Value receiver = peek(vm, frame->closure->function->arity);
                 closeUpvalues(vm, frame->slots);
                 vm->frameCount--;
                 if (vm->frameCount == 0) {
@@ -1246,11 +1241,18 @@ InterpretResult run(VM* vm) {
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
+
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasMethod(vm, getObjClass(vm, receiver), name) && name != vm->initString  && !isInterceptorMethod(name)) {
+                    interceptAfterInvoke(vm, receiver, name, result);
+                    LOAD_FRAME();
+                }
                 break;
             }
             case OP_RETURN_NONLOCAL: {
                 Value result = pop(vm);
                 uint8_t depth = READ_BYTE();
+                ObjString* name = frame->closure->function->name;
+                Value receiver = peek(vm, frame->closure->function->arity);
                 closeUpvalues(vm, frame->slots);
                 vm->frameCount -= depth + 1;
                 if (vm->frameCount == 0) {
@@ -1262,6 +1264,11 @@ InterpretResult run(VM* vm) {
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
+
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasMethod(vm, getObjClass(vm, receiver), name) && name != vm->initString && !isInterceptorMethod(name)) {
+                    interceptAfterInvoke(vm, receiver, name, result);
+                    LOAD_FRAME();
+                }
                 break;
             }
         }

@@ -6,8 +6,14 @@
 #include "klass.h"
 #include "vm.h"
 
+bool isInterceptorMethod(ObjString* name) {
+    return (name != NULL && name->length > 4 && 
+        name->chars[0] == '_' && name->chars[1] == '_' && 
+        name->chars[name->length - 1] == '_' && name->chars[name->length - 2] == '_');
+}
+
 void handleInterceptorMethod(VM* vm, ObjClass* klass, ObjString* name) {
-    if (name->length <= 2 || name->chars[0] != '_' || name->chars[1] != '_') return;
+    if (!isInterceptorMethod(name)) return;
 
     if (strcmp(name->chars, "__beforeGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_BEFORE_GET);
     else if (strcmp(name->chars, "__afterGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_AFTER_GET);
@@ -105,6 +111,8 @@ bool interceptAfterInvoke(VM* vm, Value receiver, ObjString* name, Value result)
     Value interceptor;
     if (tableGet(&klass->methods, newString(vm, "__afterInvoke__"), &interceptor)) {
         Value result2 = callReentrant(vm, receiver, interceptor, OBJ_VAL(name), result);
+        printValue(result2);
+        printf("\n");
         push(vm, result2);
         return true;
     }
