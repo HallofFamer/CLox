@@ -11,7 +11,6 @@
 
 typedef enum {
     INTERCEPTOR_INIT,
-    INTERCEPTOR_NEW,
     INTERCEPTOR_BEFORE_GET,
     INTERCEPTOR_AFTER_GET,
     INTERCEPTOR_UNDEFINED_GET,
@@ -24,8 +23,8 @@ typedef enum {
     INTERCEPTOR_AFTER_THROW
 } InterceptorType;
 
-bool isInterceptorMethod(ObjString* name);
 void handleInterceptorMethod(VM* vm, ObjClass* klass, ObjString* name);
+bool hasInterceptableMethod(VM* vm, Value receiver, ObjString* name);
 bool interceptBeforeGet(VM* vm, Value receiver, ObjString* name);
 bool interceptAfterGet(VM* vm, Value receiver, ObjString* name, Value value);
 bool interceptUndefinedGet(VM* vm, Value receiver, ObjString* name);
@@ -34,5 +33,7 @@ bool interceptAfterSet(VM* vm, Value receiver, ObjString* name);
 bool interceptBeforeInvoke(VM* vm, Value receiver, ObjString* name, int argCount);
 bool interceptAfterInvoke(VM* vm, Value receiver, ObjString* name, Value result);
 bool interceptUndefinedInvoke(VM* vm, ObjClass* klass, ObjString* name, int argCount);
+bool interceptBeforeThrow(VM* vm, Value receiver, ObjString* name, Value exception);
+bool interceptAfterThrow(VM* vm, Value receiver, ObjString* name);
 
 #endif // !clox_interceptor_h

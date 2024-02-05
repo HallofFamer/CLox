@@ -1184,13 +1184,22 @@ InterpretResult run(VM* vm) {
             case OP_THROW: {
                 ObjArray* stackTrace = getStackTrace(vm);
                 Value value = peek(vm, 0);
+
                 if (!isObjInstanceOf(vm, value, vm->exceptionClass)) {
                     runtimeError(vm, "Only instances of class clox.std.lang.Exception may be thrown.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-
                 ObjException* exception = AS_EXCEPTION(value);
                 exception->stacktrace = stackTrace;
+
+                ObjString* name = frame->closure->function->name;
+                Value receiver = peek(vm, frame->closure->function->arity + 1);
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_THROW, __beforeThrow__) && hasInterceptableMethod(vm, receiver, name)) {
+                    pop(vm);
+                    interceptBeforeThrow(vm, receiver, name, OBJ_VAL(exception));
+                    LOAD_FRAME();
+                }
+
                 if (propagateException(vm)) {
                     LOAD_FRAME();
                     break;
@@ -1242,7 +1251,7 @@ InterpretResult run(VM* vm) {
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
 
-                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasMethod(vm, getObjClass(vm, receiver), name) && name != vm->initString  && !isInterceptorMethod(name)) {
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasInterceptableMethod(vm, receiver, name)) {
                     interceptAfterInvoke(vm, receiver, name, result);
                     LOAD_FRAME();
                 }
@@ -1265,7 +1274,7 @@ InterpretResult run(VM* vm) {
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
 
-                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasMethod(vm, getObjClass(vm, receiver), name) && name != vm->initString && !isInterceptorMethod(name)) {
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasInterceptableMethod(vm, receiver, name)) {
                     interceptAfterInvoke(vm, receiver, name, result);
                     LOAD_FRAME();
                 }

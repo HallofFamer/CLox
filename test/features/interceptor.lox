@@ -10,6 +10,10 @@ class InterceptObject {
         return "defined method";
     }
 
+    throwMethod(arg, arg2) {
+        throw Exception("Invoking method: throwMethod with arguments: ${arg}, ${arg2}");
+    }
+
     __beforeGet__(name) { 
         println("Before getting value of property ${name}.");
     }
@@ -45,6 +49,13 @@ class InterceptObject {
         println("Invoking undefined method: ${name} with ${args.length} arguments: ${args.toString()}.");
         return "undefined method";
     }
+
+    __beforeThrow__(name, exception) { 
+        println("Invoking method: ${name} with exception thrown: ${exception}");
+        val newException = IllegalArgumentException(exception.message);
+        newException.stacktrace = exception.stacktrace;
+        return newException;
+    }
 }
 
 val intercept = InterceptObject();
@@ -60,3 +71,10 @@ println("");
 println("Testing interceptor methods for method invocation: ");
 intercept.definedMethod("Hello", true);
 intercept.undefinedMethod(0, 2, 4);
+
+try{
+    intercept.throwMethod(1.5, false);
+}
+catch(Exception e) { 
+    println("Exception caught: ${e}");
+}
