@@ -15,16 +15,16 @@ static bool isInterceptorMethod(ObjString* name) {
 void handleInterceptorMethod(VM* vm, ObjClass* klass, ObjString* name) {
     if (!isInterceptorMethod(name)) return;
 
-    if (strcmp(name->chars, "__beforeGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_BEFORE_GET);
+    else if (strcmp(name->chars, "__init__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_INIT);
+    else if (strcmp(name->chars, "__beforeGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_BEFORE_GET);
     else if (strcmp(name->chars, "__afterGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_AFTER_GET);
-    else if (strcmp(name->chars, "__undefinedGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_UNDEFINED_GET);
     else if (strcmp(name->chars, "__beforeSet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_BEFORE_SET);
     else if (strcmp(name->chars, "__afterSet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_AFTER_SET);
-    else if (strcmp(name->chars, "__beforeInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_BEFORE_INVOKE);
-    else if (strcmp(name->chars, "__afterInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_AFTER_INVOKE);
+    else if (strcmp(name->chars, "__onInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_ON_INVOKE);
+    else if (strcmp(name->chars, "__onReturn__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_ON_RETURN);
+    else if (strcmp(name->chars, "__onThrow__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_ON_THROW);
+    else if (strcmp(name->chars, "__undefinedGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_UNDEFINED_GET);
     else if (strcmp(name->chars, "__undefinedInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_UNDEFINED_INVOKE);
-    else if (strcmp(name->chars, "__beforeThrow__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_BEFORE_THROW);
-    else if (strcmp(name->chars, "__afterThrow__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_AFTER_THROW);
     else runtimeError(vm, "Invalid interceptor method specified.");
 }
 
@@ -51,16 +51,6 @@ bool interceptAfterGet(VM* vm, Value receiver, ObjString* name, Value value) {
     if (tableGet(&klass->methods, newString(vm, "__afterGet__"), &interceptor)) {
         Value result = callReentrant(vm, receiver, interceptor, OBJ_VAL(name), value);
         push(vm, result);
-        return true;
-    }
-    return false;
-}
-
-bool interceptUndefinedGet(VM* vm, Value receiver, ObjString* name) {
-    ObjClass* klass = getObjClass(vm, receiver);
-    Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__undefinedGet__"), &interceptor)) {
-        callReentrant(vm, receiver, interceptor, OBJ_VAL(name));
         return true;
     }
     return false;
@@ -104,10 +94,10 @@ static void unloadInterceptorArguments(VM* vm, ObjArray* args) {
     }
 }
 
-bool interceptBeforeInvoke(VM* vm, Value receiver, ObjString* name, int argCount) {
+bool interceptOnInvoke(VM* vm, Value receiver, ObjString* name, int argCount) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__beforeInvoke__"), &interceptor)) {
+    if (tableGet(&klass->methods, newString(vm, "__onInvoke__"), &interceptor)) {
         ObjArray* args = loadInterceptorArguments(vm, argCount);
         callReentrant(vm, receiver, interceptor, OBJ_VAL(name), OBJ_VAL(args));
         unloadInterceptorArguments(vm, args);
@@ -116,12 +106,33 @@ bool interceptBeforeInvoke(VM* vm, Value receiver, ObjString* name, int argCount
     return false;
 }
 
-bool interceptAfterInvoke(VM* vm, Value receiver, ObjString* name, Value result) {
+bool interceptOnReturn(VM* vm, Value receiver, ObjString* name, Value result) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__afterInvoke__"), &interceptor)) {
+    if (tableGet(&klass->methods, newString(vm, "__onReturn__"), &interceptor)) {
         Value result2 = callReentrant(vm, receiver, interceptor, OBJ_VAL(name), result);
         push(vm, result2);
+        return true;
+    }
+    return false;
+}
+
+bool interceptOnThrow(VM* vm, Value receiver, ObjString* name, Value exception) {
+    ObjClass* klass = getObjClass(vm, receiver);
+    Value interceptor;
+    if (tableGet(&klass->methods, newString(vm, "__onThrow__"), &interceptor)) {
+        Value exception2 = callReentrant(vm, receiver, interceptor, OBJ_VAL(name), exception);
+        push(vm, exception2);
+        return true;
+    }
+    return false;
+}
+
+bool interceptUndefinedGet(VM* vm, Value receiver, ObjString* name) {
+    ObjClass* klass = getObjClass(vm, receiver);
+    Value interceptor;
+    if (tableGet(&klass->methods, newString(vm, "__undefinedGet__"), &interceptor)) {
+        callReentrant(vm, receiver, interceptor, OBJ_VAL(name));
         return true;
     }
     return false;
@@ -135,20 +146,5 @@ bool interceptUndefinedInvoke(VM* vm, ObjClass* klass, ObjString* name, int argC
         push(vm, OBJ_VAL(args));
         return callMethod(vm, interceptor, 2);
     }
-    return false;
-}
-
-bool interceptBeforeThrow(VM* vm, Value receiver, ObjString* name, Value exception) {
-    ObjClass* klass = getObjClass(vm, receiver);
-    Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__beforeThrow__"), &interceptor)) {
-        Value exception2 = callReentrant(vm, receiver, interceptor, OBJ_VAL(name), exception);
-        push(vm, exception2);
-        return true;
-    }
-    return false;
-}
-
-bool interceptAfterThrow(VM* vm, Value receiver, ObjString* name) {
     return false;
 }

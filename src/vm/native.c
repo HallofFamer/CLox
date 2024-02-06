@@ -110,17 +110,11 @@ void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int 
         case INTERCEPTOR_INIT:
             defineNativeMethod(vm, klass, "__init__", arity, method);
             break;
-        case INTERCEPTOR_NEW:
-            defineNativeMethod(vm, klass, "__new__", arity, method);
-            break;
         case INTERCEPTOR_BEFORE_GET:
             defineNativeMethod(vm, klass, "__beforeGet__", 1, method);
             break;
         case INTERCEPTOR_AFTER_GET:
             defineNativeMethod(vm, klass, "__afterGet__", 2, method);
-            break;
-        case INTERCEPTOR_UNDEFINED_GET:
-            defineNativeMethod(vm, klass, "__undefinedGet__", 1, method);
             break;
         case INTERCEPTOR_BEFORE_SET:
             defineNativeMethod(vm, klass, "__beforeSet__", 2, method);
@@ -128,20 +122,20 @@ void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int 
         case INTERCEPTOR_AFTER_SET: 
             defineNativeMethod(vm, klass, "__afterSet__", 2, method);
             break;
-        case INTERCEPTOR_BEFORE_INVOKE:
+        case INTERCEPTOR_ON_INVOKE:
             defineNativeMethod(vm, klass, "__beforeInvoke__", 2, method);
             break;
-        case INTERCEPTOR_AFTER_INVOKE:
+        case INTERCEPTOR_ON_RETURN:
             defineNativeMethod(vm, klass, "__afterInvoke__", 3, method);
+            break;
+        case INTERCEPTOR_ON_THROW:
+            defineNativeMethod(vm, klass, "__beforeThrow__", 2, method);
+            break;
+        case INTERCEPTOR_UNDEFINED_GET:
+            defineNativeMethod(vm, klass, "__undefinedGet__", 1, method);
             break;
         case INTERCEPTOR_UNDEFINED_INVOKE:
             defineNativeMethod(vm, klass, "__undefinedInvoke__", 2, method);
-            break;
-        case INTERCEPTOR_BEFORE_THROW:
-            defineNativeMethod(vm, klass, "__beforeThrow__", 2, method);
-            break;
-        case INTERCEPTOR_AFTER_THROW:
-            defineNativeMethod(vm, klass, "__afterThrow__", 2, method);
             break;
         default: 
             runtimeError(vm, "Unknown interceptor type %d.", type);

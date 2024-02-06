@@ -351,7 +351,8 @@ Value callReentrant(VM* vm, Value receiver, Value callee, ...) {
     if (IS_CLOSURE(callee)) {
         vm->apiStackDepth++;
         callClosure(vm, AS_CLOSURE(callee), argCount);
-        run(vm);
+        InterpretResult result = run(vm);
+        if (result == INTERPRET_RUNTIME_ERROR) exit(70);
         vm->apiStackDepth--;
     }
     else {
@@ -960,8 +961,8 @@ InterpretResult run(VM* vm) {
                 uint8_t argCount = READ_BYTE();
                 Value receiver = peek(vm, argCount);
 
-                if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_INVOKE, __beforeInvoke__) && hasMethod(vm, getObjClass(vm, receiver), method)) {
-                    interceptBeforeInvoke(vm, receiver, method, argCount);
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_INVOKE, __onInvoke__) && hasMethod(vm, getObjClass(vm, receiver), method)) {
+                    interceptOnInvoke(vm, receiver, method, argCount);
                     LOAD_FRAME();
                 }
 
@@ -987,6 +988,11 @@ InterpretResult run(VM* vm) {
                 ObjString* method = READ_STRING();
                 uint8_t argCount = READ_BYTE();
                 Value receiver = peek(vm, argCount);
+
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_INVOKE, __onInvoke__) && hasMethod(vm, getObjClass(vm, receiver), method)) {
+                    interceptOnInvoke(vm, receiver, method, argCount);
+                    LOAD_FRAME();
+                }
 
                 if (!invoke(vm, method, argCount)) {
                     if (IS_NIL(receiver)) {
@@ -1194,9 +1200,9 @@ InterpretResult run(VM* vm) {
 
                 ObjString* name = frame->closure->function->name;
                 Value receiver = peek(vm, frame->closure->function->arity + 1);
-                if (CAN_INTERCEPT(receiver, INTERCEPTOR_BEFORE_THROW, __beforeThrow__) && hasInterceptableMethod(vm, receiver, name)) {
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_THROW, __onThrow__) && hasInterceptableMethod(vm, receiver, name)) {
                     pop(vm);
-                    interceptBeforeThrow(vm, receiver, name, OBJ_VAL(exception));
+                    interceptOnThrow(vm, receiver, name, OBJ_VAL(exception));
                     LOAD_FRAME();
                 }
 
@@ -1251,8 +1257,8 @@ InterpretResult run(VM* vm) {
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
 
-                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasInterceptableMethod(vm, receiver, name)) {
-                    interceptAfterInvoke(vm, receiver, name, result);
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_RETURN, __onReturn__) && hasInterceptableMethod(vm, receiver, name)) {
+                    interceptOnReturn(vm, receiver, name, result);
                     LOAD_FRAME();
                 }
                 break;
@@ -1274,8 +1280,8 @@ InterpretResult run(VM* vm) {
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
 
-                if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_INVOKE, __afterInvoke__) && hasInterceptableMethod(vm, receiver, name)) {
-                    interceptAfterInvoke(vm, receiver, name, result);
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_RETURN, __onReturn__) && hasInterceptableMethod(vm, receiver, name)) {
+                    interceptOnReturn(vm, receiver, name, result);
                     LOAD_FRAME();
                 }
                 break;

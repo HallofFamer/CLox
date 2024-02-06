@@ -13,27 +13,25 @@ typedef enum {
     INTERCEPTOR_INIT,
     INTERCEPTOR_BEFORE_GET,
     INTERCEPTOR_AFTER_GET,
-    INTERCEPTOR_UNDEFINED_GET,
     INTERCEPTOR_BEFORE_SET,
     INTERCEPTOR_AFTER_SET,
-    INTERCEPTOR_BEFORE_INVOKE,
-    INTERCEPTOR_AFTER_INVOKE,
-    INTERCEPTOR_UNDEFINED_INVOKE,
-    INTERCEPTOR_BEFORE_THROW,
-    INTERCEPTOR_AFTER_THROW
+    INTERCEPTOR_ON_INVOKE,
+    INTERCEPTOR_ON_RETURN,
+    INTERCEPTOR_ON_THROW,
+    INTERCEPTOR_UNDEFINED_GET,
+    INTERCEPTOR_UNDEFINED_INVOKE
 } InterceptorType;
 
 void handleInterceptorMethod(VM* vm, ObjClass* klass, ObjString* name);
 bool hasInterceptableMethod(VM* vm, Value receiver, ObjString* name);
 bool interceptBeforeGet(VM* vm, Value receiver, ObjString* name);
 bool interceptAfterGet(VM* vm, Value receiver, ObjString* name, Value value);
-bool interceptUndefinedGet(VM* vm, Value receiver, ObjString* name);
 bool interceptBeforeSet(VM* vm, Value receiver, ObjString* name, Value value);
 bool interceptAfterSet(VM* vm, Value receiver, ObjString* name);
-bool interceptBeforeInvoke(VM* vm, Value receiver, ObjString* name, int argCount);
-bool interceptAfterInvoke(VM* vm, Value receiver, ObjString* name, Value result);
+bool interceptOnInvoke(VM* vm, Value receiver, ObjString* name, int argCount);
+bool interceptOnReturn(VM* vm, Value receiver, ObjString* name, Value result);
+bool interceptOnThrow(VM* vm, Value receiver, ObjString* name, Value exception);
+bool interceptUndefinedGet(VM* vm, Value receiver, ObjString* name);
 bool interceptUndefinedInvoke(VM* vm, ObjClass* klass, ObjString* name, int argCount);
-bool interceptBeforeThrow(VM* vm, Value receiver, ObjString* name, Value exception);
-bool interceptAfterThrow(VM* vm, Value receiver, ObjString* name);
 
 #endif // !clox_interceptor_h
