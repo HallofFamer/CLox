@@ -1238,19 +1238,6 @@ LOX_METHOD(Object, __equal__) {
     RETURN_BOOL(receiver == args[0]);
 }
 
-LOX_METHOD(Object, __undefinedGet__) {
-    ASSERT_ARG_COUNT("Object::__undefinedGet__(name)", 1);
-    ASSERT_ARG_TYPE("Object::__undefinedGet__(name)", 0, String);
-    THROW_EXCEPTION_FMT(clox.std.lang.NotImplementedException, "Property %s does not exist in %s.", AS_CSTRING(args[0]), valueToString(vm, receiver));
-}
-
-LOX_METHOD(Object, __undefinedInvoke__) {
-    ASSERT_ARG_COUNT("Object::__undefinedInvoke__(name, args)", 2);
-    ASSERT_ARG_TYPE("Object::__undefinedInvoke__(name, args)", 0, String);
-    ASSERT_ARG_TYPE("Object::__undefinedInvoke__(name, args)", 1, Array);
-    THROW_EXCEPTION_FMT(clox.std.lang.NotImplementedException, "Method %s does not exist in class %s.", AS_CSTRING(args[0]), getObjClass(vm, receiver)->fullName->chars);
-}
-
 LOX_METHOD(String, capitalize) {
     ASSERT_ARG_COUNT("String::capitalize()", 0);
     RETURN_OBJ(capitalizeString(vm, AS_STRING(receiver)));
@@ -1647,8 +1634,8 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, objectID, 0);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
     DEF_OPERATOR(vm->objectClass, Object, ==, __equal__, 1);
-    DEF_INTERCEPTOR(vm->objectClass, Object, INTERCEPTOR_UNDEFINED_GET, __undefinedGet__, 1);
-    DEF_INTERCEPTOR(vm->objectClass, Object, INTERCEPTOR_UNDEFINED_INVOKE, __undefinedInvoke__, 2);
+    //DEF_INTERCEPTOR(vm->objectClass, Object, INTERCEPTOR_UNDEFINED_GET, __undefinedGet__, 1);
+    //DEF_INTERCEPTOR(vm->objectClass, Object, INTERCEPTOR_UNDEFINED_INVOKE, __undefinedInvoke__, 2);
 
     ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
     inheritSuperclass(vm, behaviorClass, vm->objectClass);
