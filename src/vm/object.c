@@ -4,6 +4,7 @@
 
 #include "memory.h"
 #include "object.h"
+#include "os.h"
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     Obj* object = (Obj*)reallocate(vm, NULL, 0, size);
@@ -355,6 +356,9 @@ void printObject(Value value) {
             break;
         case OBJ_ENTRY:
             printf("<entry>");
+            break;
+        case OBJ_EXCEPTION:
+            printf("<exception: %s>", AS_EXCEPTION(value)->obj.klass->fullName->chars);
             break;
         case OBJ_FILE:
             printf("<file \"%s\">", AS_FILE(value)->name->chars);

@@ -111,5 +111,4 @@ static inline void writeInlineCache(InlineCache* inlineCache, InlineCacheType ty
     inlineCache->index = index;
 }
 
-
 #endif // !clox_chunk_h

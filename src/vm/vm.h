@@ -16,7 +16,7 @@
 #define ABORT_IFNULL(pointer, message, ...) \
     do {\
         if (pointer == NULL) { \
-            fprintf(stderr, message, __VA_ARGS__); \
+            fprintf(stderr, message, ##__VA_ARGS__); \
             exit(74); \
         } \
     } while (false)
@@ -24,7 +24,7 @@
 #define ABORT_IFTRUE(condition, message, ...) \
     do {\
         if (condition) { \
-            fprintf(stderr, message, __VA_ARGS__); \
+            fprintf(stderr, message, ##__VA_ARGS__); \
             exit(74); \
         } \
     } while (false)

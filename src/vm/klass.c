@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "klass.h"
+#include "os.h"
 #include "vm.h"
 
 static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass* superclass) {
