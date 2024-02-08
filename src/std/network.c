@@ -346,9 +346,9 @@ static ObjString* urlToString(VM* vm, ObjInstance* url) {
     return urlString;
 }
 
-LOX_METHOD(Domain, init) {
-    ASSERT_ARG_COUNT("Domain::init(name)", 1);
-    ASSERT_ARG_TYPE("Domain::init(name)", 0, String);
+LOX_METHOD(Domain, __init__) {
+    ASSERT_ARG_COUNT("Domain::__init__(name)", 1);
+    ASSERT_ARG_TYPE("Domain::__init__(name)", 0, String);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "name", args[0]);
     RETURN_OBJ(self);
@@ -449,8 +449,8 @@ LOX_METHOD(HTTPClient, head) {
     RETURN_OBJ(httpResponse);
 }
 
-LOX_METHOD(HTTPClient, init) {
-    ASSERT_ARG_COUNT("HTTPClient::init()", 0);
+LOX_METHOD(HTTPClient, __init__) {
+    ASSERT_ARG_COUNT("HTTPClient::__init__()", 0);
     curl_global_init(CURL_GLOBAL_ALL);
     RETURN_VAL(receiver);
 }
@@ -578,12 +578,12 @@ LOX_METHOD(HTTPClient, send) {
     RETURN_OBJ(httpResponse);
 }
 
-LOX_METHOD(HTTPRequest, init) {
-    ASSERT_ARG_COUNT("HTTPRequest::init(url, method, headers, data)", 4);
-    ASSERT_ARG_INSTANCE_OF_ANY("HTTPRequest::init(url, method, headers, data)", 0, clox.std.lang.String, clox.std.network.URL);
-    ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 1, Int);
-    ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 2, Dictionary);
-    ASSERT_ARG_TYPE("HTTPRequest::init(url, method, headers, data)", 3, Dictionary);
+LOX_METHOD(HTTPRequest, __init__) {
+    ASSERT_ARG_COUNT("HTTPRequest::__init__(url, method, headers, data)", 4);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPRequest::__init__(url, method, headers, data)", 0, clox.std.lang.String, clox.std.network.URL);
+    ASSERT_ARG_TYPE("HTTPRequest::__init__(url, method, headers, data)", 1, Int);
+    ASSERT_ARG_TYPE("HTTPRequest::__init__(url, method, headers, data)", 2, Dictionary);
+    ASSERT_ARG_TYPE("HTTPRequest::__init__(url, method, headers, data)", 3, Dictionary);
 
     ObjInstance* self = AS_INSTANCE(receiver);
     Value rawURL = OBJ_VAL(httpRawURL(vm, args[0]));
@@ -603,12 +603,12 @@ LOX_METHOD(HTTPRequest, toString) {
     RETURN_STRING_FMT("HTTPRequest - URL: %s; Method: %s; Data: %s", url->chars, httpMapMethod(method), httpParsePostData(vm, data)->chars);
 }
 
-LOX_METHOD(HTTPResponse, init) {
-    ASSERT_ARG_COUNT("HTTPResponse::init(url, status, headers, contentType)", 4);
-    ASSERT_ARG_TYPE("HTTPResponse::init(url, status, headers, contentType)", 0, String);
-    ASSERT_ARG_TYPE("HTTPResponse::init(url, status, headers, contentType)", 1, Int);
-    ASSERT_ARG_TYPE("HTTPResponse::init(url, status, headers, contentType)", 2, Dictionary);
-    ASSERT_ARG_TYPE("HTTPResponse::init(url, status, headers, contentType)", 3, String);
+LOX_METHOD(HTTPResponse, __init__) {
+    ASSERT_ARG_COUNT("HTTPResponse::__init__(url, status, headers, contentType)", 4);
+    ASSERT_ARG_TYPE("HTTPResponse::__init__(url, status, headers, contentType)", 0, String);
+    ASSERT_ARG_TYPE("HTTPResponse::__init__(url, status, headers, contentType)", 1, Int);
+    ASSERT_ARG_TYPE("HTTPResponse::__init__(url, status, headers, contentType)", 2, Dictionary);
+    ASSERT_ARG_TYPE("HTTPResponse::__init__(url, status, headers, contentType)", 3, String);
 
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "url", args[0]);
@@ -640,9 +640,9 @@ LOX_METHOD(IPAddress, domain) {
     RETURN_OBJ(domain);
 }
 
-LOX_METHOD(IPAddress, init) {
-    ASSERT_ARG_COUNT("IPAddress::init(address)", 1);
-    ASSERT_ARG_TYPE("IPAddress::init(address)", 0, String);
+LOX_METHOD(IPAddress, __init__) {
+    ASSERT_ARG_COUNT("IPAddress::__init__(address)", 1);
+    ASSERT_ARG_TYPE("IPAddress::__init__(address)", 0, String);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjString* address = AS_STRING(args[0]);
     int version = -1;
@@ -697,11 +697,11 @@ LOX_METHOD(Socket, close) {
     RETURN_NIL;
 }
 
-LOX_METHOD(Socket, init) {
-    ASSERT_ARG_COUNT("Socket::init(addressFamily, socketType, protocolType)", 3);
-    ASSERT_ARG_TYPE("Socket::init(addressFamily, socketType, protocolType)", 0, Int);
-    ASSERT_ARG_TYPE("Socket::init(addressFamily, socketType, protocolType)", 1, Int);
-    ASSERT_ARG_TYPE("Socket::init(addressFamily, socketType, protocolType)", 2, Int);
+LOX_METHOD(Socket, __init__) {
+    ASSERT_ARG_COUNT("Socket::__init__(addressFamily, socketType, protocolType)", 3);
+    ASSERT_ARG_TYPE("Socket::__init__(addressFamily, socketType, protocolType)", 0, Int);
+    ASSERT_ARG_TYPE("Socket::__init__(addressFamily, socketType, protocolType)", 1, Int);
+    ASSERT_ARG_TYPE("Socket::__init__(addressFamily, socketType, protocolType)", 2, Int);
 
     SOCKET descriptor = socket(AS_INT(args[0]), AS_INT(args[1]), AS_INT(args[2]));
     if (descriptor == INVALID_SOCKET) {
@@ -748,11 +748,11 @@ LOX_METHOD(Socket, toString) {
     RETURN_STRING_FMT("Socket - AddressFamily: %d, SocketType: %d, ProtocolType: %d", AS_INT(addressFamily), AS_INT(socketType), AS_INT(protocolType));
 }
 
-LOX_METHOD(SocketAddress, init) {
-    ASSERT_ARG_COUNT("SocketAddress::init(address, family, port)", 3);
-    ASSERT_ARG_TYPE("SocketAddress::init(address, family, port)", 0, String);
-    ASSERT_ARG_TYPE("SocketAddress::init(address, family, port)", 1, Int);
-    ASSERT_ARG_TYPE("SocketAddress::init(address, family, port)", 2, Int);
+LOX_METHOD(SocketAddress, __init__) {
+    ASSERT_ARG_COUNT("SocketAddress::__init__(address, family, port)", 3);
+    ASSERT_ARG_TYPE("SocketAddress::__init__(address, family, port)", 0, String);
+    ASSERT_ARG_TYPE("SocketAddress::__init__(address, family, port)", 1, Int);
+    ASSERT_ARG_TYPE("SocketAddress::__init__(address, family, port)", 2, Int);
 
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "address", args[0]);
@@ -859,14 +859,14 @@ LOX_METHOD(SocketServer, listen) {
     RETURN_NIL;
 }
 
-LOX_METHOD(URL, init) {
-    ASSERT_ARG_COUNT("URL::init(scheme, host, port, path, query, fragment)", 6);
-    ASSERT_ARG_TYPE("URL::init(scheme, host, port, path, query, fragment)", 0, String);
-    ASSERT_ARG_TYPE("URL::init(scheme, host, port, path, query, fragment)", 1, String);
-    ASSERT_ARG_TYPE("URL::init(scheme, host, port, path, query, fragment)", 2, Int);
-    ASSERT_ARG_TYPE("URL::init(scheme, host, port, path, query, fragment)", 3, String);
-    ASSERT_ARG_TYPE("URL::init(scheme, host, port, path, query, fragment)", 4, String);
-    ASSERT_ARG_TYPE("URL::init(scheme, host, port, path, query, fragment)", 5, String);
+LOX_METHOD(URL, __init__) {
+    ASSERT_ARG_COUNT("URL::__init__(scheme, host, port, path, query, fragment)", 6);
+    ASSERT_ARG_TYPE("URL::__init__(scheme, host, port, path, query, fragment)", 0, String);
+    ASSERT_ARG_TYPE("URL::__init__(scheme, host, port, path, query, fragment)", 1, String);
+    ASSERT_ARG_TYPE("URL::__init__(scheme, host, port, path, query, fragment)", 2, Int);
+    ASSERT_ARG_TYPE("URL::__init__(scheme, host, port, path, query, fragment)", 3, String);
+    ASSERT_ARG_TYPE("URL::__init__(scheme, host, port, path, query, fragment)", 4, String);
+    ASSERT_ARG_TYPE("URL::__init__(scheme, host, port, path, query, fragment)", 5, String);
 
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "scheme", args[0]);
@@ -1000,7 +1000,7 @@ void registerNetworkPackage(VM* vm) {
 
     ObjClass* urlClass = defineNativeClass(vm, "URL");
     bindSuperclass(vm, urlClass, vm->objectClass);
-    DEF_METHOD(urlClass, URL, init, 6);
+    DEF_INTERCEPTOR(urlClass, URL, INTERCEPTOR_INIT, __init__, 6);
     DEF_METHOD(urlClass, URL, isAbsolute, 0);
     DEF_METHOD(urlClass, URL, isRelative, 0);
     DEF_METHOD(urlClass, URL, pathArray, 0);
@@ -1013,14 +1013,14 @@ void registerNetworkPackage(VM* vm) {
 
     ObjClass* domainClass = defineNativeClass(vm, "Domain");
     bindSuperclass(vm, domainClass, vm->objectClass);
-    DEF_METHOD(domainClass, Domain, init, 1);
+    DEF_INTERCEPTOR(domainClass, Domain, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(domainClass, Domain, ipAddresses, 0);
     DEF_METHOD(domainClass, Domain, toString, 0);
 
     ObjClass* ipAddressClass = defineNativeClass(vm, "IPAddress");
     bindSuperclass(vm, ipAddressClass, vm->objectClass);
+    DEF_INTERCEPTOR(ipAddressClass, IPAddress, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(ipAddressClass, IPAddress, domain, 0);
-    DEF_METHOD(ipAddressClass, IPAddress, init, 1);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV4, 0);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV6, 0);
     DEF_METHOD(ipAddressClass, IPAddress, toArray, 0);
@@ -1028,7 +1028,7 @@ void registerNetworkPackage(VM* vm) {
 
     ObjClass* socketAddressClass = defineNativeClass(vm, "SocketAddress");
     bindSuperclass(vm, socketAddressClass, vm->objectClass);
-    DEF_METHOD(socketAddressClass, SocketAddress, init, 3);
+    DEF_INTERCEPTOR(socketAddressClass, SocketAddress, INTERCEPTOR_INIT, __init__, 3);
     DEF_METHOD(socketAddressClass, SocketAddress, ipAddress, 0);
     DEF_METHOD(socketAddressClass, SocketAddress, toString, 0);
 
@@ -1036,8 +1036,8 @@ void registerNetworkPackage(VM* vm) {
     ObjClass* socketClass = defineNativeClass(vm, "Socket");
     bindSuperclass(vm, socketClass, vm->objectClass);
     bindTrait(vm, socketClass, closableTrait);
+    DEF_INTERCEPTOR(socketClass, Socket, INTERCEPTOR_INIT, __init__, 3);
     DEF_METHOD(socketClass, Socket, close, 0);
-    DEF_METHOD(socketClass, Socket, init, 3);
     DEF_METHOD(socketClass, Socket, receive, 0);
     DEF_METHOD(socketClass, Socket, send, 1);
     DEF_METHOD(socketClass, Socket, toString, 0);
@@ -1074,11 +1074,11 @@ void registerNetworkPackage(VM* vm) {
     ObjClass* httpClientClass = defineNativeClass(vm, "HTTPClient");
     bindSuperclass(vm, httpClientClass, vm->objectClass);
     bindTrait(vm, httpClientClass, closableTrait);
+    DEF_INTERCEPTOR(httpClientClass, HTTPClient, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(httpClientClass, HTTPClient, close, 0);
     DEF_METHOD(httpClientClass, HTTPClient, delete, 1);
     DEF_METHOD(httpClientClass, HTTPClient, get, 1);
     DEF_METHOD(httpClientClass, HTTPClient, head, 1);
-    DEF_METHOD(httpClientClass, HTTPClient, init, 0);
     DEF_METHOD(httpClientClass, HTTPClient, options, 1);
     DEF_METHOD(httpClientClass, HTTPClient, patch, 2);
     DEF_METHOD(httpClientClass, HTTPClient, post, 2);
@@ -1087,7 +1087,7 @@ void registerNetworkPackage(VM* vm) {
 
     ObjClass* httpRequestClass = defineNativeClass(vm, "HTTPRequest");
     bindSuperclass(vm, httpRequestClass, vm->objectClass);
-    DEF_METHOD(httpRequestClass, HTTPRequest, init, 4);
+    DEF_INTERCEPTOR(httpRequestClass, HTTPRequest, INTERCEPTOR_INIT, __init__, 4);
     DEF_METHOD(httpRequestClass, HTTPRequest, toString, 0);
 
     setClassProperty(vm, httpRequestClass, "httpHEAD", INT_VAL(HTTP_HEAD));
@@ -1103,7 +1103,7 @@ void registerNetworkPackage(VM* vm) {
 
     ObjClass* httpResponseClass = defineNativeClass(vm, "HTTPResponse");
     bindSuperclass(vm, httpResponseClass, vm->objectClass);
-    DEF_METHOD(httpResponseClass, HTTPResponse, init, 4);
+    DEF_INTERCEPTOR(httpResponseClass, HTTPResponse, INTERCEPTOR_INIT, __init__, 4);
     DEF_METHOD(httpResponseClass, HTTPResponse, toString, 0);
 
     setClassProperty(vm, httpResponseClass, "statusOK", INT_VAL(200));

@@ -224,11 +224,11 @@ LOX_METHOD(Date, getTimestamp) {
     RETURN_NUMBER(dateObjGetTimestamp(vm, AS_INSTANCE(receiver)));
 }
 
-LOX_METHOD(Date, init) {
-    ASSERT_ARG_COUNT("Date::init(year, month, day)", 3);
-    ASSERT_ARG_TYPE("Date::init(year, month, day)", 0, Int);
-    ASSERT_ARG_TYPE("Date::init(year, month, day)", 1, Int);
-    ASSERT_ARG_TYPE("Date::init(year, month, day)", 2, Int);
+LOX_METHOD(Date, __init__) {
+    ASSERT_ARG_COUNT("Date::__init__(year, month, day)", 3);
+    ASSERT_ARG_TYPE("Date::__init__(year, month, day)", 0, Int);
+    ASSERT_ARG_TYPE("Date::__init__(year, month, day)", 1, Int);
+    ASSERT_ARG_TYPE("Date::__init__(year, month, day)", 2, Int);
 
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "year", args[0]);
@@ -353,14 +353,14 @@ LOX_METHOD(DateTime, getTimestamp) {
     RETURN_NUMBER(dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver)));
 }
 
-LOX_METHOD(DateTime, init) {
-    ASSERT_ARG_COUNT("DateTime::init(year, month, day, hour, minute, second)", 6);
-    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 0, Int);
-    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 1, Int);
-    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 2, Int);
-    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 3, Int);
-    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 4, Int);
-    ASSERT_ARG_TYPE("DateTime::init(year, month, day, hour, minute, second)", 5, Int);
+LOX_METHOD(DateTime, __init__) {
+    ASSERT_ARG_COUNT("DateTime::__init__(year, month, day, hour, minute, second)", 6);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 0, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 1, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 2, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 3, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 4, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 5, Int);
     
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "year", args[0]);
@@ -484,21 +484,21 @@ LOX_METHOD(Duration, getTotalSeconds) {
     RETURN_NUMBER(durationTotalSeconds(vm, AS_INSTANCE(receiver)));
 }
 
-LOX_METHOD(Duration, init) {
-    ASSERT_ARG_COUNT("Duration::init(days, hours, minutes, seconds)", 4);
-    ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 0, Int);
-    ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 1, Int);
-    ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 2, Int);
-    ASSERT_ARG_TYPE("Duration::init(days, hours, minutes, seconds)", 3, Int);
+LOX_METHOD(Duration, __init__) {
+    ASSERT_ARG_COUNT("Duration::__init__(days, hours, minutes, seconds)", 4);
+    ASSERT_ARG_TYPE("Duration::__init__(days, hours, minutes, seconds)", 0, Int);
+    ASSERT_ARG_TYPE("Duration::__init__(days, hours, minutes, seconds)", 1, Int);
+    ASSERT_ARG_TYPE("Duration::__init__(days, hours, minutes, seconds)", 2, Int);
+    ASSERT_ARG_TYPE("Duration::__init__(days, hours, minutes, seconds)", 3, Int);
 
     int days = AS_INT(args[0]);
     int hours = AS_INT(args[1]);
     int minutes = AS_INT(args[2]);
     int seconds = AS_INT(args[3]);
-    if (days < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::init(days, hours, minutes, seconds) expects argument 1 to be a non negative integer but got %d.", days);
-    if (hours < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::init(days, hours, minutes, seconds) expects argument 2 to be a non negative integer but got %d.", hours);
-    if (minutes < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::init(days, hours, minutes, seconds) expects argument 3 to be a non negative integer but got %d.", minutes);
-    if (seconds < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::init(days, hours, minutes, seconds) expects argument 4 to be a non negative integer but got %d.", seconds);
+    if (days < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::__init__(days, hours, minutes, seconds) expects argument 1 to be a non negative integer but got %d.", days);
+    if (hours < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::__init__(days, hours, minutes, seconds) expects argument 2 to be a non negative integer but got %d.", hours);
+    if (minutes < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::__init__(days, hours, minutes, seconds) expects argument 3 to be a non negative integer but got %d.", minutes);
+    if (seconds < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration::__init__(days, hours, minutes, seconds) expects argument 4 to be a non negative integer but got %d.", seconds);
 
     ObjInstance* self = AS_INSTANCE(receiver);
     int duration[4];
@@ -623,8 +623,8 @@ LOX_METHOD(Random, getSeed) {
     RETURN_VAL(seed);
 }
 
-LOX_METHOD(Random, init) {
-    ASSERT_ARG_COUNT("Random::init()", 0);
+LOX_METHOD(Random, __init__) {
+    ASSERT_ARG_COUNT("Random::__init__()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     uint64_t seed = (uint64_t)time(NULL);
     pcg32_seed(seed);
@@ -669,9 +669,9 @@ LOX_METHOD(Random, setSeed) {
     RETURN_NIL;
 }
 
-LOX_METHOD(Regex, init) {
-    ASSERT_ARG_COUNT("Regex::init(pattern)", 1);
-    ASSERT_ARG_TYPE("Regex::init(pattern)", 0, String);
+LOX_METHOD(Regex, __init__) {
+    ASSERT_ARG_COUNT("Regex::__init__(pattern)", 1);
+    ASSERT_ARG_TYPE("Regex::__init__(pattern)", 0, String);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "pattern", args[0]);
     RETURN_OBJ(self);
@@ -706,8 +706,8 @@ LOX_METHOD(Regex, toString) {
     RETURN_OBJ(pattern);
 }
 
-LOX_METHOD(UUID, init) {
-    ASSERT_ARG_COUNT("UUID::init()", 0);
+LOX_METHOD(UUID, __init__) {
+    ASSERT_ARG_COUNT("UUID::__init__()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     char buffer[UUID4_LEN];
     uuid4_init();
@@ -756,10 +756,10 @@ void registerUtilPackage(VM* vm) {
     ObjClass* dateClass = defineNativeClass(vm, "Date");
     bindSuperclass(vm, dateClass, vm->objectClass);
     bindTrait(vm, dateClass, comparableTrait);
+    DEF_INTERCEPTOR(dateClass, Date, INTERCEPTOR_INIT, __init__, 3);
     DEF_METHOD(dateClass, Date, compareTo, 1);
     DEF_METHOD(dateClass, Date, diff, 1);
     DEF_METHOD(dateClass, Date, getTimestamp, 0);
-    DEF_METHOD(dateClass, Date, init, 3);
     DEF_METHOD(dateClass, Date, toDateTime, 0);
 	DEF_METHOD(dateClass, Date, toString, 0);
     DEF_OPERATOR(dateClass, Date, ==, __equal__, 1);
@@ -776,10 +776,10 @@ void registerUtilPackage(VM* vm) {
     ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
     bindSuperclass(vm, dateTimeClass, dateClass);
     bindTrait(vm, dateTimeClass, comparableTrait);
+    DEF_INTERCEPTOR(dateTimeClass, DateTime, INTERCEPTOR_INIT, __init__, 6);
     DEF_METHOD(dateTimeClass, DateTime, compareTo, 1);
     DEF_METHOD(dateTimeClass, DateTime, diff, 1);
     DEF_METHOD(dateTimeClass, DateTime, getTimestamp, 0);
-    DEF_METHOD(dateTimeClass, DateTime, init, 6);
     DEF_METHOD(dateTimeClass, DateTime, toDate, 0);
     DEF_METHOD(dateTimeClass, DateTime, toString, 0);
     DEF_OPERATOR(dateTimeClass, DateTime, ==, __equal__, 1);
@@ -796,9 +796,9 @@ void registerUtilPackage(VM* vm) {
     ObjClass* durationClass = defineNativeClass(vm, "Duration");
     bindSuperclass(vm, durationClass, vm->objectClass);
     bindTrait(vm, durationClass, comparableTrait);
+    DEF_INTERCEPTOR(durationClass, Duration, INTERCEPTOR_INIT, __init__, 4);
     DEF_METHOD(durationClass, Duration, compareTo, 1);
     DEF_METHOD(durationClass, Duration, getTotalSeconds, 0);
-    DEF_METHOD(durationClass, Duration, init, 4);
     DEF_METHOD(durationClass, Duration, toString, 0);
     DEF_OPERATOR(durationClass, Duration, ==, __equal__, 1);
     DEF_OPERATOR(durationClass, Duration, >, __greater__, 1);
@@ -814,8 +814,8 @@ void registerUtilPackage(VM* vm) {
 
     ObjClass* randomClass = defineNativeClass(vm, "Random");
     bindSuperclass(vm, randomClass, vm->objectClass);
+    DEF_INTERCEPTOR(randomClass, Random, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(randomClass, Random, getSeed, 0);
-    DEF_METHOD(randomClass, Random, init, 0);
     DEF_METHOD(randomClass, Random, nextBool, 0);
     DEF_METHOD(randomClass, Random, nextFloat, 0);
     DEF_METHOD(randomClass, Random, nextInt, 0);
@@ -824,14 +824,14 @@ void registerUtilPackage(VM* vm) {
 
     ObjClass* regexClass = defineNativeClass(vm, "Regex");
     bindSuperclass(vm, regexClass, vm->objectClass);
-    DEF_METHOD(regexClass, Regex, init, 1);
+    DEF_INTERCEPTOR(regexClass, Regex, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(regexClass, Regex, match, 1);
     DEF_METHOD(regexClass, Regex, replace, 2);
     DEF_METHOD(regexClass, Regex, toString, 0);
 
     ObjClass* uuidClass = defineNativeClass(vm, "UUID");
     bindSuperclass(vm, uuidClass, vm->objectClass);
-    DEF_METHOD(uuidClass, UUID, init, 0);
+    DEF_INTERCEPTOR(uuidClass, UUID, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(uuidClass, UUID, toString, 0);
 
     ObjClass* uuidMetaclass = uuidClass->obj.klass;

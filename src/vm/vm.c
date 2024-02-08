@@ -151,7 +151,7 @@ void initVM(VM* vm) {
     initShapeTree(vm);
     initGenericIDMap(vm);
     vm->initString = NULL;
-    vm->initString = copyString(vm, "init", 4);
+    vm->initString = copyString(vm, "__init__", 8);
 
     registerLangPackage(vm);
     registerCollectionPackage(vm);

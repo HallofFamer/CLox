@@ -34,11 +34,11 @@ static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, char* mo
     return true;
 }
 
-LOX_METHOD(BinaryReadStream, init) {
-    ASSERT_ARG_COUNT("BinaryReadStream::init(file)", 1);
+LOX_METHOD(BinaryReadStream, __init__) {
+    ASSERT_ARG_COUNT("BinaryReadStream::__init__(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
-    if (file == NULL) raiseError(vm, "Method BinaryReadStream::init(file) expects argument 1 to be a string or file.");
+    if (file == NULL) raiseError(vm, "Method BinaryReadStream::__init__(file) expects argument 1 to be a string or file.");
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "rb")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create BinaryReadStream, file either does not exist or require additional permission to access.");
     }
@@ -82,11 +82,11 @@ LOX_METHOD(BinaryReadStream, nextBytes) {
     }
 }
 
-LOX_METHOD(BinaryWriteStream, init) {
-    ASSERT_ARG_COUNT("BinaryWriteStream::init(file)", 1);
+LOX_METHOD(BinaryWriteStream, __init__) {
+    ASSERT_ARG_COUNT("BinaryWriteStream::__init__(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
-    if (file == NULL) raiseError(vm, "Method BinaryWriteStream::init(file) expects argument 1 to be a string or file.");
+    if (file == NULL) raiseError(vm, "Method BinaryWriteStream::__init__(file) expects argument 1 to be a string or file.");
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "wb")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create BinaryWriteStream, file either does not exist or require additional permission to access.");
     }
@@ -172,9 +172,9 @@ LOX_METHOD(File, getAbsolutePath) {
     if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file absolute path because it does not exist.");
 }
 
-LOX_METHOD(File, init) {
-    ASSERT_ARG_COUNT("File::init(pathname)", 1);
-    ASSERT_ARG_TYPE("File::init(pathname)", 0, String);
+LOX_METHOD(File, __init__) {
+    ASSERT_ARG_COUNT("File::__init__(pathname)", 1);
+    ASSERT_ARG_TYPE("File::__init__(pathname)", 0, String);
     ObjFile* self = AS_FILE(receiver);
     self->name = AS_STRING(args[0]);
     self->mode = emptyString(vm);
@@ -340,11 +340,11 @@ LOX_METHOD(FileClass, open) {
     }
 }
 
-LOX_METHOD(FileReadStream, init) {
-    ASSERT_ARG_COUNT("FileReadStream::init(file)", 1);
+LOX_METHOD(FileReadStream, __init__) {
+    ASSERT_ARG_COUNT("FileReadStream::__init__(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
-    if(file == NULL) raiseError(vm, "Method FileReadStream::init(file) expects argument 1 to be a string or file.");
+    if(file == NULL) raiseError(vm, "Method FileReadStream::__init__(file) expects argument 1 to be a string or file.");
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "r")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create FileReadStream, file either does not exist or require additional permission to access.");
     }
@@ -390,11 +390,11 @@ LOX_METHOD(FileReadStream, peek) {
     }
 }
 
-LOX_METHOD(FileWriteStream, init) {
-    ASSERT_ARG_COUNT("FileWriteStream::init(file)", 1);
+LOX_METHOD(FileWriteStream, __init__) {
+    ASSERT_ARG_COUNT("FileWriteStream::__init__(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
-    if(file == NULL) raiseError(vm, "Method FileWriteStream::init(file) expects argument 1 to be a string or file.");
+    if(file == NULL) raiseError(vm, "Method FileWriteStream::__init__(file) expects argument 1 to be a string or file.");
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "w")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create FileWriteStream, file either does not exist or require additional permission to access.");
     }
@@ -462,7 +462,7 @@ LOX_METHOD(IOStream, getPosition) {
     else RETURN_INT(ftell(file->file));
 }
 
-LOX_METHOD(IOStream, init) {
+LOX_METHOD(IOStream, __init__) {
     raiseError(vm, "Cannot instantiate from class IOStream.");
     RETURN_NIL;
 }
@@ -475,7 +475,7 @@ LOX_METHOD(IOStream, reset) {
     RETURN_NIL;
 }
 
-LOX_METHOD(ReadStream, init) {
+LOX_METHOD(ReadStream, __init__) {
     raiseError(vm, "Cannot instantiate from class ReadStream.");
     RETURN_NIL;
 }
@@ -518,7 +518,7 @@ LOX_METHOD(WriteStream, flush) {
     RETURN_BOOL(fflush(file->file) == 0);
 }
 
-LOX_METHOD(WriteStream, init) {
+LOX_METHOD(WriteStream, __init__) {
     raiseError(vm, "Cannot instantiate from class WriteStream.");
     RETURN_NIL;
 }
@@ -535,10 +535,10 @@ void registerIOPackage(VM* vm) {
     vm->fileClass = defineNativeClass(vm, "File");
     bindSuperclass(vm, vm->fileClass, vm->objectClass);
     vm->fileClass->classType = OBJ_FILE;
+    DEF_INTERCEPTOR(vm->fileClass, File, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->fileClass, File, create, 0);
     DEF_METHOD(vm->fileClass, File, delete, 0);
     DEF_METHOD(vm->fileClass, File, exists, 0);
-    DEF_METHOD(vm->fileClass, File, init, 1);
     DEF_METHOD(vm->fileClass, File, isDirectory, 0);
     DEF_METHOD(vm->fileClass, File, isExecutable, 0);
     DEF_METHOD(vm->fileClass, File, isFile, 0);
@@ -565,47 +565,47 @@ void registerIOPackage(VM* vm) {
     ObjClass* ioStreamClass = defineNativeClass(vm, "IOStream");
     bindSuperclass(vm, ioStreamClass, vm->objectClass);
     bindTrait(vm, ioStreamClass, closableTrait);
+    DEF_INTERCEPTOR(ioStreamClass, IOStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(ioStreamClass, IOStream, close, 0);
     DEF_METHOD(ioStreamClass, IOStream, file, 0);
     DEF_METHOD(ioStreamClass, IOStream, getPosition, 0);
-    DEF_METHOD(ioStreamClass, IOStream, init, 1);
     DEF_METHOD(ioStreamClass, IOStream, reset, 0);
 
     ObjClass* readStreamClass = defineNativeClass(vm, "ReadStream");
     bindSuperclass(vm, readStreamClass, ioStreamClass);
-    DEF_METHOD(readStreamClass, ReadStream, init, 1);
+    DEF_INTERCEPTOR(readStreamClass, ReadStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(readStreamClass, ReadStream, isAtEnd, 0);
     DEF_METHOD(readStreamClass, ReadStream, next, 0);
     DEF_METHOD(readStreamClass, ReadStream, skip, 1);
 
     ObjClass* writeStreamClass = defineNativeClass(vm, "WriteStream");
     bindSuperclass(vm, writeStreamClass, ioStreamClass);
+    DEF_INTERCEPTOR(writeStreamClass, WriteStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(writeStreamClass, WriteStream, flush, 0);
-    DEF_METHOD(writeStreamClass, WriteStream, init, 1);
     DEF_METHOD(writeStreamClass, WriteStream, put, 1);
 
     ObjClass* binaryReadStreamClass = defineNativeClass(vm, "BinaryReadStream");
     bindSuperclass(vm, binaryReadStreamClass, readStreamClass);
-    DEF_METHOD(binaryReadStreamClass, BinaryReadStream, init, 1);
+    DEF_INTERCEPTOR(binaryReadStreamClass, BinaryReadStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(binaryReadStreamClass, BinaryReadStream, next, 0);
     DEF_METHOD(binaryReadStreamClass, BinaryReadStream, nextBytes, 1);
 
     ObjClass* binaryWriteStreamClass = defineNativeClass(vm, "BinaryWriteStream");
     bindSuperclass(vm, binaryWriteStreamClass, writeStreamClass);
-    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, init, 1);
+    DEF_INTERCEPTOR(binaryWriteStreamClass, BinaryWriteStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, put, 1);
     DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, putBytes, 1);
 
     ObjClass* fileReadStreamClass = defineNativeClass(vm, "FileReadStream");
     bindSuperclass(vm, fileReadStreamClass, readStreamClass);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, init, 1);
+    DEF_INTERCEPTOR(fileReadStreamClass, FileReadStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(fileReadStreamClass, FileReadStream, next, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, nextLine, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, peek, 0);
 
     ObjClass* fileWriteStreamClass = defineNativeClass(vm, "FileWriteStream");
     bindSuperclass(vm, fileWriteStreamClass, writeStreamClass);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, init, 1);
+    DEF_INTERCEPTOR(fileWriteStreamClass, FileWriteStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, put, 1);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, putLine, 0);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, putSpace, 0);

@@ -76,7 +76,7 @@ LOX_METHOD(Behavior, hasMethod) {
     RETURN_BOOL(tableGet(&self->methods, AS_STRING(args[0]), &value));
 }
 
-LOX_METHOD(Behavior, init) {
+LOX_METHOD(Behavior, __init__) {
     THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Behavior.");
 }
 
@@ -156,9 +156,9 @@ LOX_METHOD(Bool, clone) {
     }
 }
 
-LOX_METHOD(Bool, init) {
-    ASSERT_ARG_COUNT("Bool::init(value)", 1);
-    ASSERT_ARG_TYPE("Bool::init(value)", 0, Bool);
+LOX_METHOD(Bool, __init__) {
+    ASSERT_ARG_COUNT("Bool::__init__(value)", 1);
+    ASSERT_ARG_TYPE("Bool::__init__(value)", 0, Bool);
     if (IS_BOOL(receiver)) RETURN_VAL(args[0]);
     else {
         ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
@@ -189,8 +189,8 @@ LOX_METHOD(BoundMethod, clone) {
     RETURN_OBJ(receiver);
 }
 
-LOX_METHOD(BoundMethod, init) {
-    ASSERT_ARG_COUNT("BoundMethod::init(object, method)", 2);
+LOX_METHOD(BoundMethod, __init__) {
+    ASSERT_ARG_COUNT("BoundMethod::__init__(object, method)", 2);
     if (IS_METHOD(args[1])) {
         ObjMethod* method = AS_METHOD(args[1]);
         if (!isObjInstanceOf(vm, args[0], method->behavior)) {
@@ -215,7 +215,7 @@ LOX_METHOD(BoundMethod, init) {
         RETURN_OBJ(boundMethod);
     }
     else {
-        THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "method BoundMethod::init(object, method) expects argument 2 to be a method or string.");
+        THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "method BoundMethod::__init__(object, method) expects argument 2 to be a method or string.");
     }
 }
 
@@ -275,11 +275,11 @@ LOX_METHOD(Class, hasField) {
     RETURN_FALSE;
 }
 
-LOX_METHOD(Class, init) {
-    ASSERT_ARG_COUNT("Class::init(name, superclass, traits)", 3);
-    ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 0, String);
-    ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 1, Class);
-    ASSERT_ARG_TYPE("Class::init(name, superclass, traits)", 2, Array);
+LOX_METHOD(Class, __init__) {
+    ASSERT_ARG_COUNT("Class::__init__(name, superclass, traits)", 3);
+    ASSERT_ARG_TYPE("Class::__init__(name, superclass, traits)", 0, String);
+    ASSERT_ARG_TYPE("Class::__init__(name, superclass, traits)", 1, Class);
+    ASSERT_ARG_TYPE("Class::__init__(name, superclass, traits)", 2, Array);
 
     ObjClass* klass = AS_CLASS(receiver);
     ObjString* name = AS_STRING(args[0]);
@@ -335,9 +335,9 @@ LOX_METHOD(Class, __invoke__) {
     RETURN_OBJ(instance);
 }
 
-LOX_METHOD(Exception, init) {
-    ASSERT_ARG_COUNT("Exception::init(message)", 1);
-    ASSERT_ARG_TYPE("Exception::init(message)", 0, String);
+LOX_METHOD(Exception, __init__) {
+    ASSERT_ARG_COUNT("Exception::__init__(message)", 1);
+    ASSERT_ARG_TYPE("Exception::__init__(message)", 0, String);
     ObjException* self = AS_EXCEPTION(receiver);
     self->message = AS_STRING(args[0]);
     RETURN_OBJ(self);
@@ -364,9 +364,9 @@ LOX_METHOD(Float, clone) {
     }
 }
 
-LOX_METHOD(Float, init) {
-    ASSERT_ARG_COUNT("Float::init(value)", 1);
-    ASSERT_ARG_TYPE("Float::init(value)", 0, Int);
+LOX_METHOD(Float, __init__) {
+    ASSERT_ARG_COUNT("Float::__init__(value)", 1);
+    ASSERT_ARG_TYPE("Float::__init__(value)", 0, Float);
     if (IS_FLOAT(receiver)) RETURN_VAL(args[0]);
     else {
         ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
@@ -447,10 +447,10 @@ LOX_METHOD(Function, clone) {
     RETURN_OBJ(receiver);
 }
 
-LOX_METHOD(Function, init) {
-    ASSERT_ARG_COUNT("Function::init(name, closure)", 2);
-    ASSERT_ARG_TYPE("Function::init(name, closure)", 0, String);
-    ASSERT_ARG_TYPE("Function::init(name, closure)", 1, Closure);
+LOX_METHOD(Function, __init__) {
+    ASSERT_ARG_COUNT("Function::__init__(name, closure)", 2);
+    ASSERT_ARG_TYPE("Function::__init__(name, closure)", 0, String);
+    ASSERT_ARG_TYPE("Function::__init__(name, closure)", 1, Closure);
 
     ObjClosure* self = AS_CLOSURE(receiver);
     ObjString* name = AS_STRING(args[0]);
@@ -560,9 +560,9 @@ LOX_METHOD(Int, gcd) {
     RETURN_INT(gcd(abs(AS_INT_INSTANCE(receiver)), abs(AS_INT_INSTANCE(args[0]))));
 }
 
-LOX_METHOD(Int, init) {
-    ASSERT_ARG_COUNT("Int::init(value)", 1);
-    ASSERT_ARG_TYPE("Int::init(value)", 0, Int);
+LOX_METHOD(Int, __init__) {
+    ASSERT_ARG_COUNT("Int::__init__(value)", 1);
+    ASSERT_ARG_TYPE("Int::__init__(value)", 0, Int);
     if (IS_INT(receiver)) RETURN_VAL(args[0]);
     else {
         ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
@@ -777,11 +777,11 @@ LOX_METHOD(Method, clone) {
     RETURN_OBJ(receiver);
 }
 
-LOX_METHOD(Method, init) {
-    ASSERT_ARG_COUNT("Method::init(behavior, name, closure)", 3);
-    ASSERT_ARG_TYPE("Method::init(behavior, name, closure)", 0, Class);
-    ASSERT_ARG_TYPE("Method::init(behavior, name, closure)", 1, String);
-    ASSERT_ARG_TYPE("Method::init(behavior, name, closure)", 2, Closure);
+LOX_METHOD(Method, __init__) {
+    ASSERT_ARG_COUNT("Method::__init__(behavior, name, closure)", 3);
+    ASSERT_ARG_TYPE("Method::__init__(behavior, name, closure)", 0, Class);
+    ASSERT_ARG_TYPE("Method::__init__(behavior, name, closure)", 1, String);
+    ASSERT_ARG_TYPE("Method::__init__(behavior, name, closure)", 2, Closure);
 
     ObjMethod* self = AS_METHOD(receiver);
     ObjClass* behavior = AS_CLASS(args[0]);
@@ -854,10 +854,10 @@ LOX_METHOD(Namespace, shortName) {
     RETURN_OBJ(self->shortName);
 }
 
-LOX_METHOD(Namespace, init) {
-    ASSERT_ARG_COUNT("Namespace::init(shortName, enclosing)", 2);
-    ASSERT_ARG_TYPE("Namespace::init(shortName, enclosing)", 0, String);
-    ASSERT_ARG_TYPE("Namespace::init(shortName, enclosing)", 1, Namespace);
+LOX_METHOD(Namespace, __init__) {
+    ASSERT_ARG_COUNT("Namespace::__init__(shortName, enclosing)", 2);
+    ASSERT_ARG_TYPE("Namespace::__init__(shortName, enclosing)", 0, String);
+    ASSERT_ARG_TYPE("Namespace::__init__(shortName, enclosing)", 1, Namespace);
     
     ObjNamespace* self = AS_NAMESPACE(receiver);
     ObjString* shortName = AS_STRING(args[0]);
@@ -886,9 +886,9 @@ LOX_METHOD(Nil, clone) {
     }
 }
 
-LOX_METHOD(Nil, init) {
-    ASSERT_ARG_COUNT("Nil::init(value)", 1);
-    ASSERT_ARG_TYPE("Nil::init(value)", 0, Nil);
+LOX_METHOD(Nil, __init__) {
+    ASSERT_ARG_COUNT("Nil::__init__(value)", 1);
+    ASSERT_ARG_TYPE("Nil::__init__(value)", 0, Nil);
     if (IS_NIL(receiver)) RETURN_NIL;
     else {
         ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
@@ -978,9 +978,9 @@ LOX_METHOD(Number, hypot) {
     RETURN_NUMBER(hypot(AS_NUMBER_INSTANCE(receiver), AS_NUMBER_INSTANCE(args[0])));
 }
 
-LOX_METHOD(Number, init) {
-    ASSERT_ARG_COUNT("Number::init(value)", 1);
-    ASSERT_ARG_TYPE("Number::init(value)", 0, Number);
+LOX_METHOD(Number, __init__) {
+    ASSERT_ARG_COUNT("Number::__init__(value)", 1);
+    ASSERT_ARG_TYPE("Number::__init__(value)", 0, Number);
     if (IS_NUMBER(receiver)) RETURN_VAL(args[0]);
     else {
         ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
@@ -1304,9 +1304,9 @@ LOX_METHOD(String, indexOf) {
     RETURN_INT(searchString(vm, haystack, needle, 0));
 }
 
-LOX_METHOD(String, init) {
-    ASSERT_ARG_COUNT("String::init(chars)", 1);
-    ASSERT_ARG_TYPE("String::init(chars)", 0, String);
+LOX_METHOD(String, __init__) {
+    ASSERT_ARG_COUNT("String::__init__(chars)", 1);
+    ASSERT_ARG_TYPE("String::__init__(chars)", 0, String);
     ObjString* string = AS_STRING(args[0]);
     RETURN_OBJ(createString(vm, string->chars, string->length, string->hash, AS_OBJ(receiver)->klass));
 }
@@ -1524,10 +1524,10 @@ LOX_METHOD(Trait, getClassName) {
     RETURN_OBJ(vm->traitClass->name);
 }
 
-LOX_METHOD(Trait, init) {
-    ASSERT_ARG_COUNT("Trait::init(name, traits)", 2);
-    ASSERT_ARG_TYPE("Trait::init(name, traits)", 0, String);
-    ASSERT_ARG_TYPE("Trait::init(name, traits)", 1, Array);
+LOX_METHOD(Trait, __init__) {
+    ASSERT_ARG_COUNT("Trait::__init__(name, traits)", 2);
+    ASSERT_ARG_TYPE("Trait::__init__(name, traits)", 0, String);
+    ASSERT_ARG_TYPE("Trait::__init__(name, traits)", 1, Array);
     ObjClass* trait = createTrait(vm, AS_STRING(args[0]));
     implementTraits(vm, trait, &AS_ARRAY(args[1])->elements);
     RETURN_OBJ(trait);
@@ -1634,16 +1634,14 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, objectID, 0);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
     DEF_OPERATOR(vm->objectClass, Object, ==, __equal__, 1);
-    //DEF_INTERCEPTOR(vm->objectClass, Object, INTERCEPTOR_UNDEFINED_GET, __undefinedGet__, 1);
-    //DEF_INTERCEPTOR(vm->objectClass, Object, INTERCEPTOR_UNDEFINED_INVOKE, __undefinedInvoke__, 2);
 
     ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
     inheritSuperclass(vm, behaviorClass, vm->objectClass);
     behaviorClass->classType = OBJ_CLASS;
+    DEF_INTERCEPTOR(behaviorClass, Behavior, INTERCEPTOR_INIT, __init__, 2);
     DEF_METHOD(behaviorClass, Behavior, clone, 0);
     DEF_METHOD(behaviorClass, Behavior, getMethod, 1);
     DEF_METHOD(behaviorClass, Behavior, hasMethod, 1);
-    DEF_METHOD(behaviorClass, Behavior, init, 2);
     DEF_METHOD(behaviorClass, Behavior, isBehavior, 0);
     DEF_METHOD(behaviorClass, Behavior, isClass, 0);
     DEF_METHOD(behaviorClass, Behavior, isMetaclass, 0);
@@ -1655,9 +1653,9 @@ void registerLangPackage(VM* vm) {
 
     vm->classClass = defineSpecialClass(vm, "Class", BEHAVIOR_CLASS);
     inheritSuperclass(vm, vm->classClass, behaviorClass);
+    DEF_INTERCEPTOR(vm->classClass, Class, INTERCEPTOR_INIT, __init__, 3);
     DEF_METHOD(vm->classClass, Class, getField, 1);
     DEF_METHOD(vm->classClass, Class, hasField, 1);
-    DEF_METHOD(vm->classClass, Class, init, 3);
     DEF_METHOD(vm->classClass, Class, instanceOf, 1);
     DEF_METHOD(vm->classClass, Class, isClass, 0);
     DEF_METHOD(vm->classClass, Class, memberOf, 1);
@@ -1699,11 +1697,11 @@ void registerLangPackage(VM* vm) {
     vm->methodClass = defineNativeClass(vm, "Method");
     bindSuperclass(vm, vm->methodClass, vm->objectClass);
     vm->methodClass->classType = OBJ_METHOD;
+    DEF_INTERCEPTOR(vm->methodClass, Method, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(vm->methodClass, Method, arity, 0);
     DEF_METHOD(vm->methodClass, Method, behavior, 0);
     DEF_METHOD(vm->methodClass, Method, bind, 1);
     DEF_METHOD(vm->methodClass, Method, clone, 0);
-    DEF_METHOD(vm->methodClass, Method, init, 0);
     DEF_METHOD(vm->methodClass, Method, isNative, 0);
     DEF_METHOD(vm->methodClass, Method, isVariadic, 0);
     DEF_METHOD(vm->methodClass, Method, name, 0);
@@ -1721,19 +1719,19 @@ void registerLangPackage(VM* vm) {
     vm->namespaceClass = defineNativeClass(vm, "Namespace");
     bindSuperclass(vm, vm->namespaceClass, vm->objectClass);
     vm->namespaceClass->classType = OBJ_NAMESPACE;
+    DEF_INTERCEPTOR(vm->namespaceClass, Namespace, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, clone, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, enclosing, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, fullName, 0);
-    DEF_METHOD(vm->namespaceClass, Namespace, init, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, shortName, 0);
     DEF_METHOD(vm->namespaceClass, Namespace, toString, 0);
     bindNamespaceClass(vm);
 
     vm->traitClass = defineNativeClass(vm, "Trait");
     bindSuperclass(vm, vm->traitClass, behaviorClass);
+    DEF_INTERCEPTOR(vm->traitClass, Trait, INTERCEPTOR_INIT, __init__, 2);
     DEF_METHOD(vm->traitClass, Trait, getClass, 0);
     DEF_METHOD(vm->traitClass, Trait, getClassName, 0);
-    DEF_METHOD(vm->traitClass, Trait, init, 2);
     DEF_METHOD(vm->traitClass, Trait, instanceOf, 1);
     DEF_METHOD(vm->traitClass, Trait, isTrait, 0);
     DEF_METHOD(vm->traitClass, Trait, memberOf, 1);
@@ -1742,15 +1740,15 @@ void registerLangPackage(VM* vm) {
 
     vm->nilClass = defineNativeClass(vm, "Nil");
     bindSuperclass(vm, vm->nilClass, vm->objectClass);
+    DEF_INTERCEPTOR(vm->nilClass, Nil, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(vm->nilClass, Nil, clone, 0);
-    DEF_METHOD(vm->nilClass, Nil, init, 0);
     DEF_METHOD(vm->nilClass, Nil, objectID, 0);
     DEF_METHOD(vm->nilClass, Nil, toString, 0);
 
     vm->boolClass = defineNativeClass(vm, "Bool");
     bindSuperclass(vm, vm->boolClass, vm->objectClass);
+    DEF_INTERCEPTOR(vm->boolClass, Bool, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->boolClass, Bool, clone, 0);
-    DEF_METHOD(vm->boolClass, Bool, init, 1);
     DEF_METHOD(vm->boolClass, Bool, objectID, 0);
     DEF_METHOD(vm->boolClass, Bool, toString, 0);
 
@@ -1765,6 +1763,7 @@ void registerLangPackage(VM* vm) {
     bindSuperclass(vm, vm->numberClass, vm->objectClass);
     bindTrait(vm, vm->numberClass, comparableTrait);
     vm->numberClass->classType = OBJ_VALUE_INSTANCE;
+    DEF_INTERCEPTOR(vm->numberClass, Number, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->numberClass, Number, abs, 0);
     DEF_METHOD(vm->numberClass, Number, acos, 0);
     DEF_METHOD(vm->numberClass, Number, asin, 0);
@@ -1777,7 +1776,6 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, exp, 1);
     DEF_METHOD(vm->numberClass, Number, floor, 0);
     DEF_METHOD(vm->numberClass, Number, hypot, 1);
-    DEF_METHOD(vm->numberClass, Number, init, 1);
     DEF_METHOD(vm->numberClass, Number, isInfinity, 0);
     DEF_METHOD(vm->numberClass, Number, log, 0);
     DEF_METHOD(vm->numberClass, Number, log2, 0);
@@ -1809,12 +1807,12 @@ void registerLangPackage(VM* vm) {
 
     vm->intClass = defineNativeClass(vm, "Int");
     bindSuperclass(vm, vm->intClass, vm->numberClass);
+    DEF_INTERCEPTOR(vm->intClass, Int, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->intClass, Int, abs, 0);
     DEF_METHOD(vm->intClass, Int, clone, 0);
     DEF_METHOD(vm->intClass, Int, downTo, 2);
     DEF_METHOD(vm->intClass, Int, factorial, 0);
     DEF_METHOD(vm->intClass, Int, gcd, 1);
-    DEF_METHOD(vm->intClass, Int, init, 1);
     DEF_METHOD(vm->intClass, Int, isEven, 0);
     DEF_METHOD(vm->intClass, Int, isOdd, 0);
     DEF_METHOD(vm->intClass, Int, lcm, 1);
@@ -1839,8 +1837,8 @@ void registerLangPackage(VM* vm) {
 
     vm->floatClass = defineNativeClass(vm, "Float");
     bindSuperclass(vm, vm->floatClass, vm->numberClass);
+    DEF_INTERCEPTOR(vm->floatClass, Float, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->floatClass, Float, clone, 0);
-    DEF_METHOD(vm->floatClass, Float, init, 1);
     DEF_METHOD(vm->floatClass, Float, toString, 0);
 
     ObjClass* floatMetaclass = vm->floatClass->obj.klass;
@@ -1851,6 +1849,7 @@ void registerLangPackage(VM* vm) {
     vm->stringClass = defineNativeClass(vm, "String");
     bindSuperclass(vm, vm->stringClass, vm->objectClass);
     vm->stringClass->classType = OBJ_STRING;
+    DEF_INTERCEPTOR(vm->stringClass, String, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->stringClass, String, capitalize, 0);
     DEF_METHOD(vm->stringClass, String, clone, 0);
     DEF_METHOD(vm->stringClass, String, contains, 1);
@@ -1860,7 +1859,6 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->stringClass, String, getByte, 1);
     DEF_METHOD(vm->stringClass, String, getCodePoint, 1);
     DEF_METHOD(vm->stringClass, String, indexOf, 1);
-    DEF_METHOD(vm->stringClass, String, init, 1);
     DEF_METHOD(vm->stringClass, String, length, 0);
     DEF_METHOD(vm->stringClass, String, next, 1);
     DEF_METHOD(vm->stringClass, String, nextValue, 1);
@@ -1886,13 +1884,13 @@ void registerLangPackage(VM* vm) {
     vm->functionClass = defineNativeClass(vm, "Function");
     bindSuperclass(vm, vm->functionClass, vm->objectClass);
     vm->functionClass->classType = OBJ_CLOSURE;
+    DEF_INTERCEPTOR(vm->functionClass, Function, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(vm->functionClass, Function, arity, 0);
     DEF_METHOD(vm->functionClass, Function, call, -1);
     DEF_METHOD(vm->functionClass, Function, call0, 0);
     DEF_METHOD(vm->functionClass, Function, call1, 1);
     DEF_METHOD(vm->functionClass, Function, call2, 2);
     DEF_METHOD(vm->functionClass, Function, clone, 0);
-    DEF_METHOD(vm->functionClass, Function, init, 0);
     DEF_METHOD(vm->functionClass, Function, isAnonymous, 0);
     DEF_METHOD(vm->functionClass, Function, isNative, 0);
     DEF_METHOD(vm->functionClass, Function, isVariadic, 0);
@@ -1904,9 +1902,9 @@ void registerLangPackage(VM* vm) {
     vm->boundMethodClass = defineNativeClass(vm, "BoundMethod");
     bindSuperclass(vm, vm->boundMethodClass, vm->objectClass);
     vm->boundMethodClass->classType = OBJ_BOUND_METHOD;
+    DEF_INTERCEPTOR(vm->boundMethodClass, BoundMethod, INTERCEPTOR_INIT, __init__, 2);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, arity, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, clone, 0);
-    DEF_METHOD(vm->boundMethodClass, BoundMethod, init, 2);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, name, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, receiver, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, toString, 0);
@@ -1916,7 +1914,7 @@ void registerLangPackage(VM* vm) {
     vm->exceptionClass = defineNativeClass(vm, "Exception");
     bindSuperclass(vm, vm->exceptionClass, vm->objectClass);
     vm->exceptionClass->classType = OBJ_EXCEPTION;
-    DEF_METHOD(vm->exceptionClass, Exception, init, 1);
+    DEF_INTERCEPTOR(vm->exceptionClass, Exception, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->exceptionClass, Exception, message, 0);
     DEF_METHOD(vm->exceptionClass, Exception, toString, 0);
 

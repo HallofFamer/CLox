@@ -345,7 +345,7 @@ static Value newCollection(VM* vm, ObjClass* klass) {
         case OBJ_RANGE: return OBJ_VAL(newRange(vm, 0, 0));
         default: {
             ObjInstance* collection = newInstance(vm, klass);
-            Value initMethod = getObjMethod(vm, OBJ_VAL(collection), "init");
+            Value initMethod = getObjMethod(vm, OBJ_VAL(collection), "__init__");
             callReentrant(vm, OBJ_VAL(collection), initMethod);
             return OBJ_VAL(collection);
         }
@@ -498,8 +498,8 @@ LOX_METHOD(Array, indexOf) {
     RETURN_INT(valueArrayFirstIndex(vm, &self->elements, args[0]));
 }
 
-LOX_METHOD(Array, init) {
-    ASSERT_ARG_COUNT("Array::init()", 0);
+LOX_METHOD(Array, __init__) {
+    ASSERT_ARG_COUNT("Array::__init__()", 0);
     RETURN_VAL(receiver);
 }
 
@@ -737,7 +737,7 @@ LOX_METHOD(Collection, each) {
     RETURN_NIL;
 }
 
-LOX_METHOD(Collection, init) {
+LOX_METHOD(Collection, __init__) {
     THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Collection.");
 }
 
@@ -966,8 +966,8 @@ LOX_METHOD(Dictionary, getAt) {
     RETURN_VAL(value);
 }
 
-LOX_METHOD(Dictionary, init) {
-    ASSERT_ARG_COUNT("Dictionary::init()", 0);
+LOX_METHOD(Dictionary, __init__) {
+    ASSERT_ARG_COUNT("Dictionary::__init__()", 0);
     RETURN_VAL(receiver);
 }
 
@@ -1146,8 +1146,8 @@ LOX_METHOD(Entry, getValue) {
     RETURN_VAL(self->value);
 }
 
-LOX_METHOD(Entry, init) {
-    ASSERT_ARG_COUNT("Entry::init(key, value)", 2);
+LOX_METHOD(Entry, __init__) {
+    ASSERT_ARG_COUNT("Entry::__init__(key, value)", 2);
     ObjEntry* self = AS_ENTRY(receiver);
     self->key = args[0];
     self->value = args[1];
@@ -1257,8 +1257,8 @@ LOX_METHOD(LinkedList, indexOf) {
     RETURN_INT(linkFindIndex(vm, AS_INSTANCE(receiver), args[0]));
 }
 
-LOX_METHOD(LinkedList, init) {
-    ASSERT_ARG_COUNT("LinkedList::init()", 0);
+LOX_METHOD(LinkedList, __init__) {
+    ASSERT_ARG_COUNT("LinkedList::__init__()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", NIL_VAL);
     setObjProperty(vm, self, "last", NIL_VAL);
@@ -1434,8 +1434,8 @@ LOX_METHOD(Node, element) {
     RETURN_VAL(AS_NODE(receiver)->element);
 }
 
-LOX_METHOD(Node, init) {
-    ASSERT_ARG_COUNT("Node::init(element, prev, next)", 3);
+LOX_METHOD(Node, __init__) {
+    ASSERT_ARG_COUNT("Node::__init__(element, prev, next)", 3);
     ObjNode* self = AS_NODE(receiver);
     self->element = args[0];
     if (!IS_NIL(args[1])) self->prev = AS_NODE(args[1]);
@@ -1529,8 +1529,8 @@ LOX_METHOD(Queue, getLast) {
     RETURN_VAL(last->element);
 }
 
-LOX_METHOD(Queue, init) {
-    ASSERT_ARG_COUNT("Queue::init()", 0);
+LOX_METHOD(Queue, __init__) {
+    ASSERT_ARG_COUNT("Queue::__init__()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
     setObjProperty(vm, self, "last", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
@@ -1658,10 +1658,10 @@ LOX_METHOD(Range, getAt) {
     RETURN_INT(self->from + index);
 }
 
-LOX_METHOD(Range, init) {
-    ASSERT_ARG_COUNT("Range::init(from, to)", 2);
-    ASSERT_ARG_TYPE("Range::init(from, to)", 0, Int);
-    ASSERT_ARG_TYPE("Range::init(from, to)", 0, Int);
+LOX_METHOD(Range, __init__) {
+    ASSERT_ARG_COUNT("Range::__init__(from, to)", 2);
+    ASSERT_ARG_TYPE("Range::__init__(from, to)", 0, Int);
+    ASSERT_ARG_TYPE("Range::__init__(from, to)", 0, Int);
     int from = AS_INT(args[0]);
     int to = AS_INT(args[1]);
 
@@ -1814,8 +1814,8 @@ LOX_METHOD(Set, equals) {
     RETURN_BOOL(dictsEqual(dict, dict2));
 }
 
-LOX_METHOD(Set, init) {
-    ASSERT_ARG_COUNT("Set::init()", 0);
+LOX_METHOD(Set, __init__) {
+    ASSERT_ARG_COUNT("Set::__init__()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "dict", OBJ_VAL(newDictionary(vm)));
     RETURN_OBJ(receiver);
@@ -1913,8 +1913,8 @@ LOX_METHOD(Stack, getFirst) {
     RETURN_VAL(first->element);
 }
 
-LOX_METHOD(Stack, init) {
-    ASSERT_ARG_COUNT("Stack::init()", 0);
+LOX_METHOD(Stack, __init__) {
+    ASSERT_ARG_COUNT("Stack::__init__()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
     setObjProperty(vm, self, "current", NIL_VAL);
@@ -2050,12 +2050,12 @@ void registerCollectionPackage(VM* vm) {
     ObjClass* collectionClass = defineNativeClass(vm, "Collection");
     bindSuperclass(vm, collectionClass, vm->objectClass);
     bindTrait(vm, collectionClass, enumerableTrait);
+    DEF_INTERCEPTOR(collectionClass, Collection, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(collectionClass, Collection, add, 1);
     DEF_METHOD(collectionClass, Collection, addAll, 1);
     DEF_METHOD(collectionClass, Collection, collect, 1);
     DEF_METHOD(collectionClass, Collection, detect, 1);
     DEF_METHOD(collectionClass, Collection, each, 1);
-    DEF_METHOD(collectionClass, Collection, init, 0);
     DEF_METHOD(collectionClass, Collection, isEmpty, 0);
     DEF_METHOD(collectionClass, Collection, length, 0);
     DEF_METHOD(collectionClass, Collection, reject, 1);
@@ -2071,6 +2071,7 @@ void registerCollectionPackage(VM* vm) {
     vm->arrayClass = defineNativeClass(vm, "Array");
     bindSuperclass(vm, vm->arrayClass, listClass);
     vm->arrayClass->classType = OBJ_ARRAY;
+    DEF_INTERCEPTOR(vm->arrayClass, Array, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(vm->arrayClass, Array, add, 1);
     DEF_METHOD(vm->arrayClass, Array, addAll, 1);
     DEF_METHOD(vm->arrayClass, Array, clear, 0);
@@ -2082,7 +2083,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->arrayClass, Array, equals, 1);
     DEF_METHOD(vm->arrayClass, Array, getAt, 1);
     DEF_METHOD(vm->arrayClass, Array, indexOf, 1);
-    DEF_METHOD(vm->arrayClass, Array, init, 0);
     DEF_METHOD(vm->arrayClass, Array, insertAt, 2);
     DEF_METHOD(vm->arrayClass, Array, isEmpty, 0);
     DEF_METHOD(vm->arrayClass, Array, lastIndexOf, 1);
@@ -2104,6 +2104,7 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, listClass);
+    DEF_INTERCEPTOR(linkedListClass, LinkedList, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(linkedListClass, LinkedList, add, 1);
     DEF_METHOD(linkedListClass, LinkedList, addAt, 2);
     DEF_METHOD(linkedListClass, LinkedList, addFirst, 1);
@@ -2114,7 +2115,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, getFirst, 0);
     DEF_METHOD(linkedListClass, LinkedList, getLast, 0);
     DEF_METHOD(linkedListClass, LinkedList, indexOf, 1);
-    DEF_METHOD(linkedListClass, LinkedList, init, 0);
     DEF_METHOD(linkedListClass, LinkedList, isEmpty, 0);
     DEF_METHOD(linkedListClass, LinkedList, lastIndexOf, 0);
     DEF_METHOD(linkedListClass, LinkedList, length, 0);
@@ -2132,9 +2132,9 @@ void registerCollectionPackage(VM* vm) {
     vm->nodeClass = defineNativeClass(vm, "Node");
     bindSuperclass(vm, vm->nodeClass, vm->objectClass);
     vm->nodeClass->classType = OBJ_NODE;
+    DEF_INTERCEPTOR(vm->nodeClass, Node, INTERCEPTOR_INIT, __init__, 3);
     DEF_METHOD(vm->nodeClass, Node, clone, 0);
     DEF_METHOD(vm->nodeClass, Node, element, 0);
-    DEF_METHOD(vm->nodeClass, Node, init, 3);
     DEF_METHOD(vm->nodeClass, Node, next, 0);
     DEF_METHOD(vm->nodeClass, Node, prev, 0);
     DEF_METHOD(vm->nodeClass, Node, toString, 0);
@@ -2142,6 +2142,7 @@ void registerCollectionPackage(VM* vm) {
     vm->dictionaryClass = defineNativeClass(vm, "Dictionary");
     bindSuperclass(vm, vm->dictionaryClass, collectionClass);
     vm->dictionaryClass->classType = OBJ_DICTIONARY;
+    DEF_INTERCEPTOR(vm->dictionaryClass, Dictionary, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, clear, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, clone, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, collect, 1);
@@ -2154,7 +2155,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->dictionaryClass, Dictionary, entrySet, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, equals, 1);
     DEF_METHOD(vm->dictionaryClass, Dictionary, getAt, 1);
-    DEF_METHOD(vm->dictionaryClass, Dictionary, init, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, isEmpty, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, length, 0);
     DEF_METHOD(vm->dictionaryClass, Dictionary, keySet, 0);
@@ -2173,21 +2173,21 @@ void registerCollectionPackage(VM* vm) {
     vm->entryClass = defineNativeClass(vm, "Entry");
     bindSuperclass(vm, vm->entryClass, vm->objectClass);
     vm->entryClass->classType = OBJ_ENTRY;
+    DEF_INTERCEPTOR(vm->entryClass, Entry, INTERCEPTOR_INIT, __init__, 2);
     DEF_METHOD(vm->entryClass, Entry, clone, 0);
     DEF_METHOD(vm->entryClass, Entry, getKey, 0);
     DEF_METHOD(vm->entryClass, Entry, getValue, 0);
-    DEF_METHOD(vm->entryClass, Entry, init, 2);
     DEF_METHOD(vm->entryClass, Entry, setValue, 1);
     DEF_METHOD(vm->entryClass, Entry, toString, 0);
 
     ObjClass* setClass = defineNativeClass(vm, "Set");
     bindSuperclass(vm, setClass, collectionClass);
+    DEF_INTERCEPTOR(setClass, Set, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(setClass, Set, add, 1);
     DEF_METHOD(setClass, Set, clear, 0);
     DEF_METHOD(setClass, Set, clone, 0);
     DEF_METHOD(setClass, Set, contains, 1);
     DEF_METHOD(setClass, Set, equals, 1);
-    DEF_METHOD(setClass, Set, init, 0);
     DEF_METHOD(setClass, Set, isEmpty, 0);
     DEF_METHOD(setClass, Set, length, 0);
     DEF_METHOD(setClass, Set, next, 1);
@@ -2199,13 +2199,13 @@ void registerCollectionPackage(VM* vm) {
     vm->rangeClass = defineNativeClass(vm, "Range");
     bindSuperclass(vm, vm->rangeClass, listClass);
     vm->rangeClass->classType = OBJ_RANGE;
+    DEF_INTERCEPTOR(vm->rangeClass, Range, INTERCEPTOR_INIT, __init__, 2);
     DEF_METHOD(vm->rangeClass, Range, add, 1);
     DEF_METHOD(vm->rangeClass, Range, addAll, 1);
     DEF_METHOD(vm->rangeClass, Range, clone, 0);
     DEF_METHOD(vm->rangeClass, Range, contains, 1);
     DEF_METHOD(vm->rangeClass, Range, from, 0);
     DEF_METHOD(vm->rangeClass, Range, getAt, 1);
-    DEF_METHOD(vm->rangeClass, Range, init, 2);
     DEF_METHOD(vm->rangeClass, Range, length, 0);
     DEF_METHOD(vm->rangeClass, Range, max, 0);
     DEF_METHOD(vm->rangeClass, Range, min, 0);
@@ -2218,10 +2218,10 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* stackClass = defineNativeClass(vm, "Stack");
     bindSuperclass(vm, stackClass, collectionClass);
+    DEF_INTERCEPTOR(stackClass, Stack, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(stackClass, Stack, clear, 0);
     DEF_METHOD(stackClass, Stack, contains, 1);
     DEF_METHOD(stackClass, Stack, getFirst, 0);
-    DEF_METHOD(stackClass, Stack, init, 0);
     DEF_METHOD(stackClass, Stack, isEmpty, 0);
     DEF_METHOD(stackClass, Stack, length, 0);
     DEF_METHOD(stackClass, Stack, next, 1);
@@ -2235,13 +2235,13 @@ void registerCollectionPackage(VM* vm) {
 
     ObjClass* queueClass = defineNativeClass(vm, "Queue");
     bindSuperclass(vm, queueClass, collectionClass);
+    DEF_INTERCEPTOR(queueClass, Queue, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(queueClass, Queue, clear, 0);
     DEF_METHOD(queueClass, Queue, contains, 1);
     DEF_METHOD(queueClass, Queue, dequeue, 0);
     DEF_METHOD(queueClass, Queue, enqueue, 1);
     DEF_METHOD(queueClass, Queue, getFirst, 0);
     DEF_METHOD(queueClass, Queue, getLast, 0);
-    DEF_METHOD(queueClass, Queue, init, 0);
     DEF_METHOD(queueClass, Queue, isEmpty, 0);
     DEF_METHOD(queueClass, Queue, length, 0);
     DEF_METHOD(queueClass, Queue, next, 1);

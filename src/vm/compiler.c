@@ -988,7 +988,7 @@ static void method(Compiler* compiler) {
     uint8_t constant = propertyConstant(compiler, "Expect method name.");
 
     FunctionType type = TYPE_METHOD;
-    if (compiler->parser->previous.length == 4 && memcmp(compiler->parser->previous.start, "init", 4) == 0) {
+    if (compiler->parser->previous.length == 8 && memcmp(compiler->parser->previous.start, "__init__", 8) == 0) {
         type = TYPE_INITIALIZER;
     }
 
