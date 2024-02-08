@@ -1,7 +1,8 @@
 namespace test.features;
 
 class InterceptObject {   
-    init() { 
+
+    __init__() { 
         this.definedProperty = "property";
     }
 
@@ -23,10 +24,6 @@ class InterceptObject {
         return "new ${value}";
     }
 
-    __undefinedGet__(name) { 
-        println("Accessing undefined property: ${name}.");
-    }
-
     __beforeSet__(name, value) { 
         println("Before Set property ${name} to value ${value}");
         return "${value} new";
@@ -36,25 +33,29 @@ class InterceptObject {
         println("After setting value of property ${name}");
     }
 
-    __beforeInvoke__(name, args) { 
+    __onInvoke__(name, args) { 
         println("Before invoking method: ${name} with ${args.length} arguments: ${args.toString()}.");
     }
 
-    __afterInvoke__(name, result) { 
+    __onReturn(name, result) { 
         println("After invoking method: ${name} with return value ${result}.");
         return "${result} new";
+    }
+
+    __onThrow__(name, exception) { 
+        println("Invoking method: ${name} with exception thrown: ${exception}");
+        val newException = IllegalArgumentException(exception.message);
+        newException.stacktrace = exception.stacktrace;
+        return newException;
+    }
+  
+    __undefinedGet__(name) { 
+        println("Accessing undefined property: ${name}.");
     }
 
     __undefinedInvoke__(name, args){ 
         println("Invoking undefined method: ${name} with ${args.length} arguments: ${args.toString()}.");
         return "undefined method";
-    }
-
-    __beforeThrow__(name, exception) { 
-        println("Invoking method: ${name} with exception thrown: ${exception}");
-        val newException = IllegalArgumentException(exception.message);
-        newException.stacktrace = exception.stacktrace;
-        return newException;
     }
 }
 

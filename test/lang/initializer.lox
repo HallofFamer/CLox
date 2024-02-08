@@ -1,7 +1,7 @@
 namespace test.lang;
 
 class CoffeeMaker {
-    init(coffee){ 
+    __init__(coffee){ 
         this.coffee = coffee;
     }
 

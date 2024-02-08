@@ -1,7 +1,7 @@
 namespace test.benchmarks;
 
 class Zoo {
-  init() {
+  __init__() {
     this.aardvark = 1;
     this.baboon   = 1;
     this.cat      = 1;

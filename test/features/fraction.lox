@@ -3,7 +3,7 @@ using clox.std.collection.Array;
 
 class Fraction {
 
-    init(numerator, denominator){
+    __init__(numerator, denominator){
         this.validateNumbers(numerator, denominator);
         this.numerator = numerator;
         this.denominator = denominator;

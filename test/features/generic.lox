@@ -52,8 +52,8 @@ println("");
 println("Testing inheritance: ");
 
 class Byte < Int { 
-    init(value) { 
-        super.init(value);
+    __init__(value) { 
+        super.__init__(value);
         if (value < -128 or value > 127) { 
             throw IllegalArgumentException("Byte has range from -128 to 127.");
         }

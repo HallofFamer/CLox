@@ -1,7 +1,7 @@
 namespace test.features;
 
 class Street { 
-    init(name, apartment, unit){ 
+    __init__(name, apartment, unit){ 
         this.name = name;
         this.apartment = apartment;
         this.unit = unit;
@@ -9,7 +9,7 @@ class Street {
 }
 
 class Area { 
-    init(city, state, country, zipcode){ 
+    __init__(city, state, country, zipcode){ 
         this.city = city;
         this.state = state;
         this.country = country;
@@ -18,7 +18,7 @@ class Area {
 }
  
 class Address { 
-    init(){ 
+    __init__(){ 
         this.street = nil;
         this.area = nil;
     }

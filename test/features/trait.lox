@@ -56,7 +56,7 @@ println(TTruck.hasMethod("carry"));
 println("");
 
 class Vehicle with TVehicle { 
-    init(color, speed){ 
+    __init__(color, speed){ 
         this.color = color;
         this.speed = speed;
     }
@@ -87,8 +87,8 @@ println(vehicle.instanceOf(TTruck));
 println("");
 
 class Truck < Vehicle with TTruck { 
-    init(color, speed, load) { 
-        super.init(color, speed);
+    __init__(color, speed, load) { 
+        super.__init__(color, speed);
         this.load = load;
     }
 

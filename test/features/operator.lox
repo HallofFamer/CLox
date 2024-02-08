@@ -2,7 +2,7 @@ namespace test.features;
 
 class Complex { 
 
-    init(real, imaginary){ 
+    __init__(real, imaginary){ 
         this.real = real;
         this.imaginary = imaginary;
     }

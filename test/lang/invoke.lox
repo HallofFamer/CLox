@@ -1,7 +1,7 @@
 namespace test.lang;
 
 class Oops { 
-    init(){ 
+    __init__(){ 
         fun f(){ 
             print("not a method");
         }
