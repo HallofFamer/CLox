@@ -12,7 +12,7 @@ https://github.com/munificent/craftinginterpreters
 ## Features
 
 ### Original Features
-- Stacked based bytecote VM with the basic Op Code support.
+- Stacked based bytecote VM with the basic OPCode support.
 - On-demand Scanner, Pratt Parser and Single-Pass Compiler.
 - Uniform runtime representation for Lox Value. 
 - Basic Unary and Binary Expression/Operators.
@@ -37,7 +37,8 @@ https://github.com/munificent/craftinginterpreters
 - Anonymous classes/traits similar to anonymous functions/lambda.
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
 - CLox Standard Library for packages `lang`, `util`, `collection`, `io` and `network` in bullt-in namespace `clox.std`.
-- Raise exception with `throw` keyword, and exception handling with try/catch/finally statement
+- Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
+- Interceptor methods which are invoked automatically when getting/setting properties, invoking methods or throwing exceptions.
 - Customized Runtime configuration for CLox using clox.ini.
 - Allow loading lox source files in lox script and another lox source file with `require` keyword.
 - Cross-platform build with Cmake and package manager with vcpkg.
@@ -46,7 +47,8 @@ https://github.com/munificent/craftinginterpreters
 - VM is no longer a global variable, allowing CLox VM to be embedded in other host applications.
 - Parser is extended with look-ahead capability, with field next storing the next token. 
 - Print statement removed, use native function `print` and `println` instead.
-- Separated integer values and floating point values from Number.
+- Initializer method is renamed from `init` to `__init__` as an interceptor method.
+- Separated integer values(`Int`) and floating point(`Float`) values from `Number`.
 - Improved string concatenation, addition of string interpolation and UTF-8 strings.
 - C style For Loop replaced with Python/Kotlin style for-in Loop.
 - Global variables are scoped within the file it is declared, effectively becoming module variable.
@@ -95,23 +97,23 @@ https://github.com/munificent/craftinginterpreters
 - Fix reentrancy problem with CLox, calling Lox closures from within C API becomes possible.
 - Cross-platform build with Cmake, as well as package manager with vcpkg(windows only).
 
-### CLox 1.7.0(current version)
+### CLox 1.7.0
 - Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
 - Improved CLox standard library with addition of class `Exception` and various exception subclasses.
 - Addition of nil handling operators: Optional chaining operator(?.), Nil coalescing operator(??), and Elvis operator(?:). 
 - Inline caching for VM optimization, as well as implementation of Shape(Hidden Class) for better instance variable representation.
 
-### CLox 1.8.0(next version)
+### CLox 1.8.0(current version)
 - Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
 - Improved string concatenation, addition of string interpolation and UTF-8 strings.
-- Method interception when an undefined method call is invoked on an object/class, similar to Smalltalk's doesNotUnderstand: message.
+- Interceptor methods which are invoked automatically when getting/setting properties, invoking methods or throwing exceptions.
 - Object ID and generic object map which enable inheritance for special build-in classes such as `String` and `Array`.
 
-### CLox 1.9.0
+### CLox 1.9.0(next version)
+- Generator functions/methods which can yield control back to the caller and resume at a later point of execution.
 - Add class `Promise` to the standard library(`clox.std.util`), which uses libuv to handle async tasks that completes in future. 
 - Introduction of async and await keywords, which allows C#/JS style of concurrency.
 - Refactoring package `clox.std.io` and `clox.std.network` to use async non-blocking calls, add new package `clox.std.sql`.
-- First class execution context, possible to manipulate stack frames during function/method calls.
 
 ### CLox 2.0.0
 - Multi-pass compiler with abstract syntax tree, type checker, and generation of IR. 
