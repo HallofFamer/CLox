@@ -32,6 +32,7 @@
 #define IS_FILE(value)              isObjType(value, OBJ_FILE)
 #define IS_FLOAT_INSTANCE(arg)      (IS_FLOAT(arg) || (IS_VALUE_INSTANCE(arg) && IS_FLOAT(AS_VALUE_INSTANCE(arg)->value))) 
 #define IS_FUNCTION(value)          isObjType(value, OBJ_FUNCTION)
+#define IS_GENERATOR(value)         isObjType(value, OBJ_GENERATOR)
 #define IS_INSTANCE(value)          isObjType(value, OBJ_INSTANCE)
 #define IS_INT_INSTANCE(arg)        (IS_INT(arg) || (IS_VALUE_INSTANCE(arg) && IS_INT(AS_VALUE_INSTANCE(arg)->value))) 
 #define IS_METHOD(value)            isObjType(value, OBJ_METHOD)
@@ -59,6 +60,7 @@
 #define AS_FILE(value)              ((ObjFile*)AS_OBJ(value))
 #define AS_FLOAT_INSTANCE(arg)      (IS_FLOAT(arg) ? AS_FLOAT(arg) : AS_FLOAT(AS_VALUE_INSTANCE(arg)->value))
 #define AS_FUNCTION(value)          ((ObjFunction*)AS_OBJ(value))
+#define AS_GENERATOR(value)         ((ObjGenerator*)AS_OBJ(value))
 #define AS_INSTANCE(value)          ((ObjInstance*)AS_OBJ(value))
 #define AS_INT_INSTANCE(arg)        (IS_INT(arg) ? AS_INT(arg) : AS_INT(AS_VALUE_INSTANCE(arg)->value))
 #define AS_METHOD(value)            ((ObjMethod*)AS_OBJ(value))
@@ -88,6 +90,7 @@ typedef enum {
     OBJ_EXCEPTION,
     OBJ_FILE,
     OBJ_FUNCTION,
+    OBJ_GENERATOR,
     OBJ_INSTANCE,
     OBJ_METHOD,
     OBJ_MODULE,
@@ -182,6 +185,13 @@ typedef struct {
     bool isOpen;
     FILE* file;
 } ObjFile;
+
+typedef struct {
+    Obj obj;
+    ObjString* name;
+    bool isExited;
+    CallFrame* frame;
+} ObjGenerator;
 
 typedef struct {
     Obj obj;
