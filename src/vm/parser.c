@@ -221,6 +221,7 @@ void synchronize(Parser* parser) {
             case TOKEN_VAL:
             case TOKEN_VAR:
             case TOKEN_WHILE:
+            case TOKEN_YIELD:
             return;
 
             default:

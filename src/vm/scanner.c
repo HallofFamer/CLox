@@ -235,6 +235,7 @@ static TokenType identifierType(Scanner* scanner) {
                 }
             }
             break;
+        case 'y': return checkKeyword(scanner, 1, 4, "ield", TOKEN_YIELD);
     }
     return TOKEN_IDENTIFIER;
 }
