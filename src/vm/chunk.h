@@ -70,6 +70,7 @@ typedef enum {
     OP_FINALLY,
     OP_RETURN,
     OP_RETURN_NONLOCAL,
+    OP_YIELD,
     OP_END
 } OpCode;
 

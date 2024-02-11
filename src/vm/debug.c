@@ -221,6 +221,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
               return simpleInstruction("OP_RETURN", offset);
           case OP_RETURN_NONLOCAL:
               return byteInstruction("OP_RETURN_NONLOCAL", chunk, offset);
+          case OP_YIELD:
+              return simpleInstruction("OP_YIELD", offset);
           default:
               printf("Unknown opcode %d\n", instruction);
               return offset + 1;
