@@ -3,7 +3,7 @@
 #define clox_exception_h
 
 #include "common.h"
-#include "object.h"
+#include "value.h"
 
 typedef struct {
     uint16_t handlerAddress;
