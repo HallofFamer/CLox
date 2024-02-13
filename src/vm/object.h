@@ -7,6 +7,7 @@
 
 #include "chunk.h"
 #include "common.h"
+#include "exception.h"
 #include "id.h"
 #include "interceptor.h"
 #include "klass.h"
@@ -31,6 +32,7 @@
 #define IS_EXCEPTION(value)         isObjType(value, OBJ_EXCEPTION)
 #define IS_FILE(value)              isObjType(value, OBJ_FILE)
 #define IS_FLOAT_INSTANCE(arg)      (IS_FLOAT(arg) || (IS_VALUE_INSTANCE(arg) && IS_FLOAT(AS_VALUE_INSTANCE(arg)->value))) 
+#define IS_FRAME(value)             isObjType(value, OBJ_FRAME);
 #define IS_FUNCTION(value)          isObjType(value, OBJ_FUNCTION)
 #define IS_GENERATOR(value)         isObjType(value, OBJ_GENERATOR)
 #define IS_INSTANCE(value)          isObjType(value, OBJ_INSTANCE)
@@ -59,6 +61,7 @@
 #define AS_EXCEPTION(value)         ((ObjException*)AS_OBJ(value))
 #define AS_FILE(value)              ((ObjFile*)AS_OBJ(value))
 #define AS_FLOAT_INSTANCE(arg)      (IS_FLOAT(arg) ? AS_FLOAT(arg) : AS_FLOAT(AS_VALUE_INSTANCE(arg)->value))
+#define AS_FRAME(value)             ((ObjFrame*)AS_OBJ(value))
 #define AS_FUNCTION(value)          ((ObjFunction*)AS_OBJ(value))
 #define AS_GENERATOR(value)         ((ObjGenerator*)AS_OBJ(value))
 #define AS_INSTANCE(value)          ((ObjInstance*)AS_OBJ(value))
@@ -89,6 +92,7 @@ typedef enum {
     OBJ_ENTRY,
     OBJ_EXCEPTION,
     OBJ_FILE,
+    OBJ_FRAME,
     OBJ_FUNCTION,
     OBJ_GENERATOR,
     OBJ_INSTANCE,
@@ -119,6 +123,7 @@ typedef struct {
     Obj obj;
     int arity;
     int upvalueCount;
+    bool isGenerator;
     Chunk chunk;
     ObjString* name;
 } ObjFunction;
@@ -153,11 +158,6 @@ typedef struct {
     int arity;
     NativeMethod method;
 } ObjNativeMethod;
-
-typedef struct {
-    Obj obj;
-    ValueArray elements;
-} ObjArray;
  
 typedef struct {
     Obj obj;
@@ -174,24 +174,11 @@ typedef struct {
 
 typedef struct {
     Obj obj;
-    ObjString* message;
-    ObjArray* stacktrace;
-} ObjException;
-
-typedef struct {
-    Obj obj;
     ObjString* name;
     ObjString* mode;
     bool isOpen;
     FILE* file;
 } ObjFile;
-
-typedef struct {
-    Obj obj;
-    ObjString* name;
-    bool isExited;
-    CallFrame* frame;
-} ObjGenerator;
 
 typedef struct {
     Obj obj;
@@ -243,6 +230,35 @@ typedef struct {
     ObjClosure* method;
 } ObjBoundMethod;
 
+typedef enum {
+    GENERATOR_START,
+    GENERATOR_YIELD,
+    GENERATOR_RESUME,
+    GENERATOR_RETURN,
+    GENERATOR_THROW
+} GeneratorState;
+
+typedef struct {
+    Obj obj;
+    ObjClosure* closure;
+    uint8_t* ip;
+    Value* slots;
+    uint8_t handlerCount;
+    ExceptionHandler handlerStack[UINT4_MAX];
+} ObjFrame;
+
+typedef struct ObjGenerator {
+    Obj obj;
+    ObjFrame* frame;
+    struct ObjGenerator* parent;
+    GeneratorState state;
+} ObjGenerator;
+
+struct ObjArray {
+    Obj obj;
+    ValueArray elements;
+};
+
 struct ObjClass {
     Obj obj;
     ObjType classType;
@@ -258,6 +274,12 @@ struct ObjClass {
     IDMap indexes;
     ValueArray fields;
     Table methods;
+};
+
+struct ObjException {
+    Obj obj;
+    ObjString* message;
+    ObjArray* stacktrace;
 };
 
 struct ObjNamespace {
@@ -293,7 +315,9 @@ ObjDictionary* newDictionary(VM* vm);
 ObjEntry* newEntry(VM* vm, Value key, Value value);
 ObjException* newException(VM* vm, ObjString* message, ObjClass* klass);
 ObjFile* newFile(VM* vm, ObjString* name);
+ObjFrame* newFrame(VM* vm, CallFrame* callFrame);
 ObjFunction* newFunction(VM* vm);
+ObjGenerator* newGenerator(VM* vm, ObjFrame* frame, ObjGenerator* parentGenerator);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure);
 ObjModule* newModule(VM* vm, ObjString* path);
