@@ -29,13 +29,13 @@
         } \
     } while (false)
 
-typedef struct {
+struct CallFrame {
     ObjClosure* closure;
     uint8_t* ip;
     Value* slots;
     uint8_t handlerCount;
     ExceptionHandler handlerStack[UINT4_MAX];
-} CallFrame;
+};
 
 typedef struct {
     const char* version;
@@ -71,6 +71,7 @@ struct VM {
     ObjClass* nodeClass;
     ObjClass* entryClass;
     ObjClass* fileClass;
+    ObjClass* generatorClass;
 
     ObjNamespace* rootNamespace;
     ObjNamespace* cloxNamespace;
@@ -83,6 +84,7 @@ struct VM {
     Value stack[STACK_MAX];
     Value* stackTop;
     int apiStackDepth;
+    ObjGenerator* runningGenerator;
 
     Configuration config;
     Compiler* currentCompiler;
@@ -131,6 +133,7 @@ Value peek(VM* vm, int distance);
 bool callClosure(VM* vm, ObjClosure* closure, int argCount);
 bool callMethod(VM* vm, Value method, int argCount);
 Value callReentrant(VM* vm, Value receiver, Value callee, ...);
+Value callGenerator(VM* vm, ObjGenerator* generator);
 void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);
 bool bindMethod(VM* vm, ObjClass* klass, ObjString* name);

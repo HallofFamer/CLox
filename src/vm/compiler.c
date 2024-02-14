@@ -897,6 +897,7 @@ ParseRule rules[] = {
     [TOKEN_VAR]              = {NULL,          NULL,        PREC_NONE},
     [TOKEN_WHILE]            = {NULL,          NULL,        PREC_NONE},
     [TOKEN_WITH]             = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_YIELD]            = {NULL,          NULL,        PREC_NONE},
     [TOKEN_ERROR]            = {NULL,          NULL,        PREC_NONE},
     [TOKEN_EOF]              = {NULL,          NULL,        PREC_NONE},
 };
@@ -1432,6 +1433,25 @@ static void whileStatement(Compiler* compiler) {
     compiler->innermostLoopScopeDepth = scopeDepth;
 }
 
+static void yieldStatement(Compiler* compiler) {
+    if (compiler->type == TYPE_SCRIPT) {
+        error(compiler->parser, "Can't yield from top-level code.");
+    }
+    else if (compiler->type == TYPE_INITIALIZER) {
+        error(compiler->parser, "Cannot yield from an initializer.");
+    }
+
+    compiler->function->isGenerator = true;
+    if (match(compiler->parser, TOKEN_SEMICOLON)) {
+        emitByte(compiler, OP_YIELD);
+    }
+    else {
+        expression(compiler);
+        consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after yield value.");
+        emitByte(compiler, OP_YIELD);
+    }
+}
+
 static void declaration(Compiler* compiler) {
     if (check(compiler->parser, TOKEN_CLASS) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
         advance(compiler->parser);
@@ -1493,6 +1513,9 @@ static void statement(Compiler* compiler) {
     }
     else if (match(compiler->parser, TOKEN_WHILE)) {
         whileStatement(compiler);
+    }
+    else if (match(compiler->parser, TOKEN_YIELD)) {
+        yieldStatement(compiler);
     }
     else if (match(compiler->parser, TOKEN_LEFT_BRACE)) {
         beginScope(compiler);

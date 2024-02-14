@@ -38,6 +38,7 @@ static void resetStack(VM* vm) {
     vm->stackTop = vm->stack;
     vm->frameCount = 0;
     vm->apiStackDepth = 0;
+    vm->runningGenerator = NULL;
     vm->openUpvalues = NULL;
     resetCallFrames(vm);
 }
@@ -288,10 +289,22 @@ bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
         argCount = 1;
     }
 
-    CallFrame* frame = &vm->frames[vm->frameCount++];
-    frame->closure = closure;
-    frame->ip = closure->function->chunk.code;
-    frame->slots = vm->stackTop - argCount - 1;
+    if (closure->function->isGenerator) {
+        CallFrame frame = {
+            .closure = closure,
+            .ip = closure->function->chunk.code,
+            .slots = vm->stackTop - argCount - 1
+        };
+        vm->stackTop -= (size_t)argCount + 1;
+        push(vm, OBJ_VAL(newGenerator(vm, newFrame(vm, &frame), vm->runningGenerator)));
+    }
+    else {
+        CallFrame* frame = &vm->frames[vm->frameCount++];
+        frame->closure = closure;
+        frame->ip = closure->function->chunk.code;
+        frame->slots = vm->stackTop - argCount - 1;
+    }
+
     return true;
 }
 
@@ -305,6 +318,7 @@ static Value createObject(VM* vm, ObjClass* klass, int argCount) {
         case OBJ_ENTRY: return OBJ_VAL(newEntry(vm, NIL_VAL, NIL_VAL));
         case OBJ_EXCEPTION: return OBJ_VAL(newException(vm, emptyString(vm), klass));
         case OBJ_FILE: return OBJ_VAL(newFile(vm, NULL));
+        case OBJ_GENERATOR: return OBJ_VAL(newGenerator(vm, NULL, NULL));
         case OBJ_INSTANCE: return OBJ_VAL(newInstance(vm, klass));
         case OBJ_METHOD: return OBJ_VAL(newMethod(vm, NULL, NULL));
         case OBJ_NAMESPACE: return OBJ_VAL(ALLOCATE_NAMESPACE(klass));
@@ -358,6 +372,20 @@ Value callReentrant(VM* vm, Value receiver, Value callee, ...) {
     else {
         callNativeMethod(vm, AS_NATIVE_METHOD(callee)->method, argCount);
     }
+    return pop(vm);
+}
+
+Value callGenerator(VM* vm, ObjGenerator* generator) {
+    ObjGenerator* parentGenerator = vm->runningGenerator;
+    vm->runningGenerator = generator;
+    CallFrame* frame = &vm->frames[vm->frameCount++];
+    frame->closure = generator->frame->closure;
+    frame->ip = generator->frame->ip;
+    frame->slots = generator->frame->slots;
+
+    InterpretResult result = run(vm);
+    if (result == INTERPRET_RUNTIME_ERROR) exit(70);
+    vm->runningGenerator = parentGenerator;
     return pop(vm);
 }
 
@@ -1246,6 +1274,8 @@ InterpretResult run(VM* vm) {
                 ObjString* name = frame->closure->function->name;
                 Value receiver = peek(vm, frame->closure->function->arity);
                 closeUpvalues(vm, frame->slots);
+                if (vm->runningGenerator != NULL) vm->runningGenerator->state = GENERATOR_RETURN;
+
                 vm->frameCount--;
                 if (vm->frameCount == 0) {
                     pop(vm);
@@ -1269,6 +1299,8 @@ InterpretResult run(VM* vm) {
                 ObjString* name = frame->closure->function->name;
                 Value receiver = peek(vm, frame->closure->function->arity);
                 closeUpvalues(vm, frame->slots);
+                if (vm->runningGenerator != NULL) vm->runningGenerator->state = GENERATOR_RETURN;
+
                 vm->frameCount -= depth + 1;
                 if (vm->frameCount == 0) {
                     pop(vm);
@@ -1284,6 +1316,21 @@ InterpretResult run(VM* vm) {
                     interceptOnReturn(vm, receiver, name, result);
                     LOAD_FRAME();
                 }
+                break;
+            }
+            case OP_YIELD: { 
+                Value result = pop(vm);
+                vm->runningGenerator->frame->closure = frame->closure;
+                vm->runningGenerator->frame->ip = frame->ip;
+                vm->runningGenerator->frame->slots = frame->slots;
+                vm->runningGenerator->state = GENERATOR_YIELD;
+                vm->runningGenerator->current = result;
+                vm->frameCount--;
+
+                vm->stackTop = frame->slots;
+                push(vm, result);
+                if (vm->apiStackDepth > 0) return INTERPRET_OK;
+                LOAD_FRAME();
                 break;
             }
         }
