@@ -131,6 +131,7 @@ ObjGenerator* newGenerator(VM* vm, ObjFrame* frame, ObjGenerator* parentGenerato
     generator->frame = frame;
     generator->parent = parentGenerator;
     generator->state = GENERATOR_START;
+    generator->current = NIL_VAL;
     return generator;
 }
 

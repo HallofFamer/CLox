@@ -584,7 +584,7 @@ InterpretResult run(VM* vm) {
 
 #define RUNTIME_ERROR(...) \
     do { \
-        runtimeError(vm, __VA_ARGS__); \
+        runtimeError(vm, ##__VA_ARGS__); \
         return INTERPRET_RUNTIME_ERROR; \
     }  while (false)
     
@@ -1319,14 +1319,15 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_YIELD: { 
+                printf("Yield control back to caller.\n");
                 Value result = pop(vm);
                 vm->runningGenerator->frame->closure = frame->closure;
                 vm->runningGenerator->frame->ip = frame->ip;
                 vm->runningGenerator->frame->slots = frame->slots;
                 vm->runningGenerator->state = GENERATOR_YIELD;
                 vm->runningGenerator->current = result;
-                vm->frameCount--;
 
+                vm->frameCount--;
                 vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
