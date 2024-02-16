@@ -83,7 +83,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjClass* klass = (ObjClass*)object;
             markObject(vm, (Obj*)klass->name);
             markObject(vm, (Obj*)klass->fullName);
-            if(klass->superclass != NULL) markObject(vm, (Obj*)klass->superclass);
+            markObject(vm, (Obj*)klass->superclass);
             markObject(vm, (Obj*)klass->obj.klass);
             markObject(vm, (Obj*)klass->namespace);
             markArray(vm, &klass->traits);
@@ -143,6 +143,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjGenerator* generator = (ObjGenerator*)object;
             markObject(vm, (Obj*)generator->frame);
             markObject(vm, (Obj*)generator->parent);
+            markValue(vm, generator->current);
             break;
         }
         case OBJ_INSTANCE: {
@@ -170,7 +171,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjNamespace* namespace = (ObjNamespace*)object;
             markObject(vm, (Obj*)namespace->shortName);
             markObject(vm, (Obj*)namespace->fullName);
-            if(namespace->enclosing != NULL) markObject(vm, (Obj*)namespace->enclosing);
+            markObject(vm, (Obj*)namespace->enclosing);
             markTable(vm, &namespace->values);
             break;
         }

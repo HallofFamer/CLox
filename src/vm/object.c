@@ -385,8 +385,14 @@ void printObject(Value value) {
         case OBJ_FILE:
             printf("<file \"%s\">", AS_FILE(value)->name->chars);
             break;
+        case OBJ_FRAME: 
+            printf("frame: %s", AS_FRAME(value)->closure->function->name->chars);
+            break;
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value));
+            break;
+        case OBJ_GENERATOR:
+            printf("<generator %s>", AS_GENERATOR(value)->frame->closure->function->name->chars);
             break;
         case OBJ_INSTANCE:
             printf("<object %s>", AS_OBJ(value)->klass->name->chars);
