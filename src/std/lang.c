@@ -41,6 +41,10 @@ static int lcm(int self, int other) {
     return (self * other) / gcd(self, other);
 }
 
+LOX_METHOD(Behavior, __init__) {
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Behavior.");
+}
+
 LOX_METHOD(Behavior, clone) {
     ASSERT_ARG_COUNT("Behavior::clone()", 0);
     RETURN_OBJ(receiver);
@@ -74,10 +78,6 @@ LOX_METHOD(Behavior, hasMethod) {
     ObjClass* self = AS_CLASS(receiver);
     Value value;
     RETURN_BOOL(tableGet(&self->methods, AS_STRING(args[0]), &value));
-}
-
-LOX_METHOD(Behavior, __init__) {
-    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Behavior.");
 }
 
 LOX_METHOD(Behavior, isBehavior) {
@@ -147,15 +147,6 @@ LOX_METHOD(Behavior, __invoke__) {
     THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot call from class Behavior.");
 }
 
-LOX_METHOD(Bool, clone) {
-    ASSERT_ARG_COUNT("BOOL::clone()", 0);
-    if (IS_BOOL(receiver)) RETURN_VAL(receiver);
-    else {
-        ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
-        RETURN_OBJ(newValueInstance(vm, self->value, self->obj.klass));
-    }
-}
-
 LOX_METHOD(Bool, __init__) {
     ASSERT_ARG_COUNT("Bool::__init__(value)", 1);
     ASSERT_ARG_TYPE("Bool::__init__(value)", 0, Bool);
@@ -164,6 +155,15 @@ LOX_METHOD(Bool, __init__) {
         ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
         instance->value = args[0];
         RETURN_OBJ(instance);
+    }
+}
+
+LOX_METHOD(Bool, clone) {
+    ASSERT_ARG_COUNT("BOOL::clone()", 0);
+    if (IS_BOOL(receiver)) RETURN_VAL(receiver);
+    else {
+        ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
+        RETURN_OBJ(newValueInstance(vm, self->value, self->obj.klass));
     }
 }
 
@@ -177,16 +177,6 @@ LOX_METHOD(Bool, toString) {
     ASSERT_ARG_COUNT("Bool::toString()", 0);
     if (AS_BOOL_INSTANCE(receiver)) RETURN_STRING("true", 4);
     else RETURN_STRING("false", 5);
-}
-
-LOX_METHOD(BoundMethod, arity) {
-    ASSERT_ARG_COUNT("BoundMethod::arity()", 0);
-    RETURN_INT(AS_BOUND_METHOD(receiver)->method->function->arity);
-}
-
-LOX_METHOD(BoundMethod, clone) {
-    ASSERT_ARG_COUNT("BoundMethod::clone()", 0);
-    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(BoundMethod, __init__) {
@@ -217,6 +207,16 @@ LOX_METHOD(BoundMethod, __init__) {
     else {
         THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "method BoundMethod::__init__(object, method) expects argument 2 to be a method or string.");
     }
+}
+
+LOX_METHOD(BoundMethod, arity) {
+    ASSERT_ARG_COUNT("BoundMethod::arity()", 0);
+    RETURN_INT(AS_BOUND_METHOD(receiver)->method->function->arity);
+}
+
+LOX_METHOD(BoundMethod, clone) {
+    ASSERT_ARG_COUNT("BoundMethod::clone()", 0);
+    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(BoundMethod, isVariadic) {
@@ -251,6 +251,23 @@ LOX_METHOD(BoundMethod, __invoke__) {
     RETURN_VAL(callClosure(vm, self->method, argCount));
 }
 
+LOX_METHOD(Class, __init__) {
+    ASSERT_ARG_COUNT("Class::__init__(name, superclass, traits)", 3);
+    ASSERT_ARG_TYPE("Class::__init__(name, superclass, traits)", 0, String);
+    ASSERT_ARG_TYPE("Class::__init__(name, superclass, traits)", 1, Class);
+    ASSERT_ARG_TYPE("Class::__init__(name, superclass, traits)", 2, Array);
+
+    ObjClass* klass = AS_CLASS(receiver);
+    ObjString* name = AS_STRING(args[0]);
+    ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
+    ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass, BEHAVIOR_METACLASS);
+
+    initClass(vm, klass, name, metaclass, BEHAVIOR_CLASS);
+    bindSuperclass(vm, klass, AS_CLASS(args[1]));
+    implementTraits(vm, klass, &AS_ARRAY(args[2])->elements);
+    RETURN_OBJ(klass);
+}
+
 LOX_METHOD(Class, getField) {
     ASSERT_ARG_COUNT("Class::getField(field)", 1);
     ASSERT_ARG_TYPE("Class::getField(field)", 0, String);
@@ -273,23 +290,6 @@ LOX_METHOD(Class, hasField) {
         RETURN_BOOL(idMapGet(&klass->indexes, AS_STRING(args[0]), &index));
     }
     RETURN_FALSE;
-}
-
-LOX_METHOD(Class, __init__) {
-    ASSERT_ARG_COUNT("Class::__init__(name, superclass, traits)", 3);
-    ASSERT_ARG_TYPE("Class::__init__(name, superclass, traits)", 0, String);
-    ASSERT_ARG_TYPE("Class::__init__(name, superclass, traits)", 1, Class);
-    ASSERT_ARG_TYPE("Class::__init__(name, superclass, traits)", 2, Array);
-
-    ObjClass* klass = AS_CLASS(receiver);
-    ObjString* name = AS_STRING(args[0]);
-    ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
-    ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass, BEHAVIOR_METACLASS);  
-
-    initClass(vm, klass, name, metaclass, BEHAVIOR_CLASS);
-    bindSuperclass(vm, klass, AS_CLASS(args[1]));
-    implementTraits(vm, klass, &AS_ARRAY(args[2])->elements);
-    RETURN_OBJ(klass);
 }
 
 LOX_METHOD(Class, instanceOf) {
@@ -394,6 +394,27 @@ LOX_METHOD(FloatClass, parse) {
     RETURN_NUMBER(floatValue);
 }
 
+LOX_METHOD(Function, __init__) {
+    ASSERT_ARG_COUNT("Function::__init__(name, closure)", 2);
+    ASSERT_ARG_TYPE("Function::__init__(name, closure)", 0, String);
+    ASSERT_ARG_TYPE("Function::__init__(name, closure)", 1, Closure);
+
+    ObjClosure* self = AS_CLOSURE(receiver);
+    ObjString* name = AS_STRING(args[0]);
+    ObjClosure* closure = AS_CLOSURE(args[1]);
+
+    int index;
+    if (idMapGet(&vm->currentModule->valIndexes, name, &index)) {
+        THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Function %s already exists.", name->chars);
+    }
+    idMapSet(vm, &vm->currentModule->valIndexes, name, vm->currentModule->valFields.count);
+    valueArrayWrite(vm, &vm->currentModule->valFields, OBJ_VAL(self));
+
+    initClosure(vm, self, closure->function);
+    closure->function->name = name;
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(Function, arity) {
     ASSERT_ARG_COUNT("Function::arity()", 0);
     if (IS_NATIVE_FUNCTION(receiver)) {
@@ -447,27 +468,6 @@ LOX_METHOD(Function, clone) {
     RETURN_OBJ(receiver);
 }
 
-LOX_METHOD(Function, __init__) {
-    ASSERT_ARG_COUNT("Function::__init__(name, closure)", 2);
-    ASSERT_ARG_TYPE("Function::__init__(name, closure)", 0, String);
-    ASSERT_ARG_TYPE("Function::__init__(name, closure)", 1, Closure);
-
-    ObjClosure* self = AS_CLOSURE(receiver);
-    ObjString* name = AS_STRING(args[0]);
-    ObjClosure* closure = AS_CLOSURE(args[1]);
-
-    int index;
-    if (idMapGet(&vm->currentModule->valIndexes, name, &index)) {
-        THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Function %s already exists.", name->chars);
-    }
-    idMapSet(vm, &vm->currentModule->valIndexes, name, vm->currentModule->valFields.count);
-    valueArrayWrite(vm, &vm->currentModule->valFields, OBJ_VAL(self));
-
-    initClosure(vm, self, closure->function);
-    closure->function->name = name;
-    RETURN_OBJ(self);
-}
-
 LOX_METHOD(Function, isAnonymous) {
     ASSERT_ARG_COUNT("Function::isAnonymous()", 0);
     if (IS_NATIVE_FUNCTION(receiver)) RETURN_FALSE;
@@ -518,6 +518,84 @@ LOX_METHOD(Function, __invoke__) {
     RETURN_NIL;
 }
 
+LOX_METHOD(Generator, __init__) {
+    ASSERT_ARG_COUNT("Generator::__init__(closure, args)", 2);
+    ASSERT_ARG_TYPE("Generator::__init__(closure, args)", 0, Closure);
+    ASSERT_ARG_TYPE("Generator::__init__(closure, args)", 1, Array);
+
+    ObjGenerator* self = AS_GENERATOR(receiver);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+    ObjArray* arguments = AS_ARRAY(args[1]);
+
+    CallFrame callFrame = { 
+        .closure = closure, 
+        .ip = closure->function->chunk.code, 
+        .slots = vm->stackTop - arguments->elements.count - 1 
+    };
+    ObjFrame* frame = newFrame(vm, &callFrame);
+
+    for (int i = 0; i < arguments->elements.count; i++) {
+        push(vm, arguments->elements.values[i]);
+    }
+
+    self->frame = frame;
+    self->parent = vm->runningGenerator;
+    self->state = GENERATOR_START;
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Generator, next) {
+    ASSERT_ARG_COUNT("Generator::next()", 0);
+    ObjGenerator* self = AS_GENERATOR(receiver);
+    if (self->state == GENERATOR_RETURN) RETURN_NIL;
+    else if (self->state == GENERATOR_RESUME) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator is already running.");
+    else if (self->state == GENERATOR_THROW) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already thrown an exception.");
+    else {
+        vm->runningGenerator = self;
+        self->state = GENERATOR_RESUME;
+        vm->apiStackDepth++;
+        Value result = callGenerator(vm, self);
+        pop(vm);
+        vm->apiStackDepth--;
+        self->current = result;
+        RETURN_VAL(result);
+    }
+}
+
+LOX_METHOD(Generator, returns) {
+    ASSERT_ARG_COUNT("Generator::returns(value)", 1);
+    ObjGenerator* self = AS_GENERATOR(receiver);
+    if (self->state == GENERATOR_RETURN) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already returned.");
+    else {
+        self->state = GENERATOR_RETURN;
+        self->current = args[0];
+        RETURN_VAL(args[0]);
+    }
+}
+
+LOX_METHOD(Generator, throws) {
+    ASSERT_ARG_COUNT("Generator::throws(exception)", 1);
+    ASSERT_ARG_TYPE("Generator::throws(exception)", 0, Exception);
+    ObjGenerator* self = AS_GENERATOR(receiver);
+    if (self->state == GENERATOR_RETURN) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already returned.");
+    else {
+        ObjException* exception = AS_EXCEPTION(args[0]);
+        self->state = GENERATOR_THROW;
+        THROW_EXCEPTION(exception->obj.klass, exception->message->chars);
+    }
+}
+
+LOX_METHOD(Int, __init__) {
+    ASSERT_ARG_COUNT("Int::__init__(value)", 1);
+    ASSERT_ARG_TYPE("Int::__init__(value)", 0, Int);
+    if (IS_INT(receiver)) RETURN_VAL(args[0]);
+    else {
+        ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
+        instance->value = args[0];
+        RETURN_OBJ(instance);
+    }
+}
+
 LOX_METHOD(Int, abs) {
     ASSERT_ARG_COUNT("Int::abs()", 0);
     int self = AS_INT_INSTANCE(receiver);
@@ -558,17 +636,6 @@ LOX_METHOD(Int, gcd) {
     ASSERT_ARG_COUNT("Int::gcd(other)", 1);
     ASSERT_ARG_TYPE("Int::gcd(other)", 0, Int);
     RETURN_INT(gcd(abs(AS_INT_INSTANCE(receiver)), abs(AS_INT_INSTANCE(args[0]))));
-}
-
-LOX_METHOD(Int, __init__) {
-    ASSERT_ARG_COUNT("Int::__init__(value)", 1);
-    ASSERT_ARG_TYPE("Int::__init__(value)", 0, Int);
-    if (IS_INT(receiver)) RETURN_VAL(args[0]);
-    else {
-        ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
-        instance->value = args[0];
-        RETURN_OBJ(instance);
-    }
 }
 
 LOX_METHOD(Int, isEven) {
@@ -748,6 +815,29 @@ LOX_METHOD(Metaclass, toString) {
     else RETURN_STRING_FMT("<metaclass %s.%s>", self->namespace->fullName->chars, self->name->chars);
 }
 
+LOX_METHOD(Method, __init__) {
+    ASSERT_ARG_COUNT("Method::__init__(behavior, name, closure)", 3);
+    ASSERT_ARG_TYPE("Method::__init__(behavior, name, closure)", 0, Class);
+    ASSERT_ARG_TYPE("Method::__init__(behavior, name, closure)", 1, String);
+    ASSERT_ARG_TYPE("Method::__init__(behavior, name, closure)", 2, Closure);
+
+    ObjMethod* self = AS_METHOD(receiver);
+    ObjClass* behavior = AS_CLASS(args[0]);
+    ObjString* name = AS_STRING(args[1]);
+    ObjClosure* closure = AS_CLOSURE(args[2]);
+
+    Value value;
+    if (tableGet(&behavior->methods, name, &value)) {
+        THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Method %s already exists in behavior %s.", name->chars, behavior->fullName->chars);
+    }
+    tableSet(vm, &behavior->methods, name, OBJ_VAL(closure));
+
+    self->behavior = behavior;
+    self->closure = closure;
+    self->closure->function->name = name;
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(Method, arity) {
     ASSERT_ARG_COUNT("Method::arity()", 0);
     if (IS_NATIVE_METHOD(receiver)) {
@@ -775,29 +865,6 @@ LOX_METHOD(Method, bind) {
 LOX_METHOD(Method, clone) {
     ASSERT_ARG_COUNT("Method::clone()", 0);
     RETURN_OBJ(receiver);
-}
-
-LOX_METHOD(Method, __init__) {
-    ASSERT_ARG_COUNT("Method::__init__(behavior, name, closure)", 3);
-    ASSERT_ARG_TYPE("Method::__init__(behavior, name, closure)", 0, Class);
-    ASSERT_ARG_TYPE("Method::__init__(behavior, name, closure)", 1, String);
-    ASSERT_ARG_TYPE("Method::__init__(behavior, name, closure)", 2, Closure);
-
-    ObjMethod* self = AS_METHOD(receiver);
-    ObjClass* behavior = AS_CLASS(args[0]);
-    ObjString* name = AS_STRING(args[1]);
-    ObjClosure* closure = AS_CLOSURE(args[2]);
-
-    Value value;
-    if (tableGet(&behavior->methods, name, &value)) {
-        THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Method %s already exists in behavior %s.", name->chars, behavior->fullName->chars);
-    }
-    tableSet(vm, &behavior->methods, name, OBJ_VAL(closure));
-
-    self->behavior = behavior;
-    self->closure = closure;
-    self->closure->function->name = name;
-    RETURN_OBJ(self);
 }
 
 LOX_METHOD(Method, isNative) {
@@ -830,6 +897,23 @@ LOX_METHOD(Method, toString) {
     RETURN_STRING_FMT("<method %s::%s>", method->behavior->name->chars, method->closure->function->name->chars);
 }
 
+LOX_METHOD(Namespace, __init__) {
+    ASSERT_ARG_COUNT("Namespace::__init__(shortName, enclosing)", 2);
+    ASSERT_ARG_TYPE("Namespace::__init__(shortName, enclosing)", 0, String);
+    ASSERT_ARG_TYPE("Namespace::__init__(shortName, enclosing)", 1, Namespace);
+
+    ObjNamespace* self = AS_NAMESPACE(receiver);
+    ObjString* shortName = AS_STRING(args[0]);
+    ObjNamespace* enclosing = AS_NAMESPACE(args[1]);
+
+    Value value;
+    if (tableGet(&enclosing->values, shortName, &value)) {
+        THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Namespace %s already exists in enclosing namespace %s.", shortName->chars, enclosing->fullName->chars);
+    }
+    initNamespace(vm, self, shortName, enclosing);
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(Namespace, clone) {
     ASSERT_ARG_COUNT("Namespace::clone()", 0);
     RETURN_OBJ(receiver);
@@ -854,36 +938,10 @@ LOX_METHOD(Namespace, shortName) {
     RETURN_OBJ(self->shortName);
 }
 
-LOX_METHOD(Namespace, __init__) {
-    ASSERT_ARG_COUNT("Namespace::__init__(shortName, enclosing)", 2);
-    ASSERT_ARG_TYPE("Namespace::__init__(shortName, enclosing)", 0, String);
-    ASSERT_ARG_TYPE("Namespace::__init__(shortName, enclosing)", 1, Namespace);
-    
-    ObjNamespace* self = AS_NAMESPACE(receiver);
-    ObjString* shortName = AS_STRING(args[0]);
-    ObjNamespace* enclosing = AS_NAMESPACE(args[1]);
-
-    Value value;
-    if (tableGet(&enclosing->values, shortName, &value)) {
-        THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Namespace %s already exists in enclosing namespace %s.", shortName->chars, enclosing->fullName->chars);
-    }
-    initNamespace(vm, self, shortName, enclosing);
-    RETURN_OBJ(self);
-}
-
 LOX_METHOD(Namespace, toString) {
     ASSERT_ARG_COUNT("Namespace::toString()", 0);
     ObjNamespace* self = AS_NAMESPACE(receiver);
     RETURN_STRING_FMT("<namespace %s>", self->fullName->chars);
-}
-
-LOX_METHOD(Nil, clone) {
-    ASSERT_ARG_COUNT("Nil::clone()", 0);
-    if (IS_NIL(receiver)) RETURN_NIL;
-    else {
-        ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
-        RETURN_OBJ(newValueInstance(vm, self->value, self->obj.klass));
-    }
 }
 
 LOX_METHOD(Nil, __init__) {
@@ -897,6 +955,15 @@ LOX_METHOD(Nil, __init__) {
     }
 }
 
+LOX_METHOD(Nil, clone) {
+    ASSERT_ARG_COUNT("Nil::clone()", 0);
+    if (IS_NIL(receiver)) RETURN_NIL;
+    else {
+        ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
+        RETURN_OBJ(newValueInstance(vm, self->value, self->obj.klass));
+    }
+}
+
 LOX_METHOD(Nil, objectID) {
     ASSERT_ARG_COUNT("Nil::objectID()", 0);
     if (IS_NIL(receiver)) RETURN_NUMBER(1);
@@ -906,6 +973,17 @@ LOX_METHOD(Nil, objectID) {
 LOX_METHOD(Nil, toString) {
     ASSERT_ARG_COUNT("Nil::toString()", 0);
     RETURN_STRING("nil", 3);
+}
+
+LOX_METHOD(Number, __init__) {
+    ASSERT_ARG_COUNT("Number::__init__(value)", 1);
+    ASSERT_ARG_TYPE("Number::__init__(value)", 0, Number);
+    if (IS_NUMBER(receiver)) RETURN_VAL(args[0]);
+    else {
+        ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
+        instance->value = args[0];
+        RETURN_OBJ(instance);
+    }
 }
 
 LOX_METHOD(Number, abs) {
@@ -976,17 +1054,6 @@ LOX_METHOD(Number, hypot) {
     ASSERT_ARG_COUNT("Number::hypot(other)", 1);
     ASSERT_ARG_TYPE("Number::hypot(other)", 0, Number);
     RETURN_NUMBER(hypot(AS_NUMBER_INSTANCE(receiver), AS_NUMBER_INSTANCE(args[0])));
-}
-
-LOX_METHOD(Number, __init__) {
-    ASSERT_ARG_COUNT("Number::__init__(value)", 1);
-    ASSERT_ARG_TYPE("Number::__init__(value)", 0, Number);
-    if (IS_NUMBER(receiver)) RETURN_VAL(args[0]);
-    else {
-        ObjValueInstance* instance = AS_VALUE_INSTANCE(receiver);
-        instance->value = args[0];
-        RETURN_OBJ(instance);
-    }
 }
 
 LOX_METHOD(Number, isInfinity) {
@@ -1238,6 +1305,13 @@ LOX_METHOD(Object, __equal__) {
     RETURN_BOOL(receiver == args[0]);
 }
 
+LOX_METHOD(String, __init__) {
+    ASSERT_ARG_COUNT("String::__init__(chars)", 1);
+    ASSERT_ARG_TYPE("String::__init__(chars)", 0, String);
+    ObjString* string = AS_STRING(args[0]);
+    RETURN_OBJ(createString(vm, string->chars, string->length, string->hash, AS_OBJ(receiver)->klass));
+}
+
 LOX_METHOD(String, capitalize) {
     ASSERT_ARG_COUNT("String::capitalize()", 0);
     RETURN_OBJ(capitalizeString(vm, AS_STRING(receiver)));
@@ -1302,13 +1376,6 @@ LOX_METHOD(String, indexOf) {
     ObjString* haystack = AS_STRING(receiver);
     ObjString* needle = AS_STRING(args[0]);
     RETURN_INT(searchString(vm, haystack, needle, 0));
-}
-
-LOX_METHOD(String, __init__) {
-    ASSERT_ARG_COUNT("String::__init__(chars)", 1);
-    ASSERT_ARG_TYPE("String::__init__(chars)", 0, String);
-    ObjString* string = AS_STRING(args[0]);
-    RETURN_OBJ(createString(vm, string->chars, string->length, string->hash, AS_OBJ(receiver)->klass));
 }
 
 LOX_METHOD(String, length) {
@@ -1514,6 +1581,15 @@ LOX_METHOD(TComparable, __less__) {
     }
 }
 
+LOX_METHOD(Trait, __init__) {
+    ASSERT_ARG_COUNT("Trait::__init__(name, traits)", 2);
+    ASSERT_ARG_TYPE("Trait::__init__(name, traits)", 0, String);
+    ASSERT_ARG_TYPE("Trait::__init__(name, traits)", 1, Array);
+    ObjClass* trait = createTrait(vm, AS_STRING(args[0]));
+    implementTraits(vm, trait, &AS_ARRAY(args[1])->elements);
+    RETURN_OBJ(trait);
+}
+
 LOX_METHOD(Trait, getClass) {
     ASSERT_ARG_COUNT("Trait::getClass()", 0);
     RETURN_OBJ(vm->traitClass);
@@ -1522,15 +1598,6 @@ LOX_METHOD(Trait, getClass) {
 LOX_METHOD(Trait, getClassName) {
     ASSERT_ARG_COUNT("Trait::getClassName()", 0);
     RETURN_OBJ(vm->traitClass->name);
-}
-
-LOX_METHOD(Trait, __init__) {
-    ASSERT_ARG_COUNT("Trait::__init__(name, traits)", 2);
-    ASSERT_ARG_TYPE("Trait::__init__(name, traits)", 0, String);
-    ASSERT_ARG_TYPE("Trait::__init__(name, traits)", 1, Array);
-    ObjClass* trait = createTrait(vm, AS_STRING(args[0]));
-    implementTraits(vm, trait, &AS_ARRAY(args[1])->elements);
-    RETURN_OBJ(trait);
 }
 
 LOX_METHOD(Trait, instanceOf) {
@@ -1910,6 +1977,21 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->boundMethodClass, BoundMethod, toString, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, upvalueCount, 0);
     DEF_OPERATOR(vm->boundMethodClass, BoundMethod, (), __invoke__, -1);
+
+    vm->generatorClass = defineNativeClass(vm, "Generator");
+    bindSuperclass(vm, vm->generatorClass, vm->objectClass);
+    vm->generatorClass->classType = OBJ_GENERATOR;
+    DEF_INTERCEPTOR(vm->generatorClass, Generator, INTERCEPTOR_INIT, __init__, 1);
+    DEF_METHOD(vm->generatorClass, Generator, next, 0);
+    DEF_METHOD(vm->generatorClass, Generator, returns, 1);
+    DEF_METHOD(vm->generatorClass, Generator, throws, 1);
+
+    ObjClass* generatorMetaclass = vm->generatorClass->obj.klass;
+    setClassProperty(vm, vm->generatorClass, "stateStart", INT_VAL(GENERATOR_START));
+    setClassProperty(vm, vm->generatorClass, "stateYield", INT_VAL(GENERATOR_YIELD));
+    setClassProperty(vm, vm->generatorClass, "stateResume", INT_VAL(GENERATOR_RESUME));
+    setClassProperty(vm, vm->generatorClass, "stateReturn", INT_VAL(GENERATOR_RETURN));
+    setClassProperty(vm, vm->generatorClass, "stateThrow", INT_VAL(GENERATOR_THROW));
 
     vm->exceptionClass = defineNativeClass(vm, "Exception");
     bindSuperclass(vm, vm->exceptionClass, vm->objectClass);
