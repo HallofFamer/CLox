@@ -110,6 +110,7 @@ ObjFrame* newFrame(VM* vm, CallFrame* callFrame) {
     frame->ip = callFrame->ip;
     frame->slots = callFrame->slots;
     frame->handlerCount = callFrame->handlerCount;
+
     for (int i = 0; i < frame->handlerCount; i++) {
         frame->handlerStack[i] = callFrame->handlerStack[i];
     }
@@ -386,7 +387,7 @@ void printObject(Value value) {
             printf("<file \"%s\">", AS_FILE(value)->name->chars);
             break;
         case OBJ_FRAME: 
-            printf("frame: %s", AS_FRAME(value)->closure->function->name->chars);
+            printf("<frame: %s>", AS_FRAME(value)->closure->function->name->chars);
             break;
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value));

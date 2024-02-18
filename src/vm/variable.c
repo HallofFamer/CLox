@@ -141,6 +141,14 @@ static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
             else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
+        case OBJ_GENERATOR: { 
+            ObjGenerator* generator = (ObjGenerator*)object;
+            if (index == 0) push(vm, OBJ_VAL(generator->parent));
+            else if (index == 1) push(vm, INT_VAL(generator->state));
+            else if (index == 2) push(vm, generator->current);
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
+            return true;
+        }
         case OBJ_METHOD: {
             ObjMethod* method = (ObjMethod*)object;
             if (index == 0) push(vm, OBJ_VAL(method->closure->function->name));
@@ -246,6 +254,14 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             ObjFile* file = (ObjFile*)object;
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(file->name));
             else if (matchVariableName(name, "mode", 4)) push(vm, OBJ_VAL(file->mode));
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
+            return true;
+        }
+        case OBJ_GENERATOR: {
+            ObjGenerator* generator = (ObjGenerator*)object;
+            if (matchVariableName(name, "parent", 6)) push(vm, OBJ_VAL(generator->parent));
+            else if (matchVariableName(name, "state", 5)) push(vm, INT_VAL(generator->state));
+            else if (matchVariableName(name, "current", 7)) push(vm, generator->current);
             else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
@@ -495,6 +511,16 @@ static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Va
             push(vm, value);
             return true;
         }
+        case OBJ_GENERATOR: {
+            ObjGenerator* generator = (ObjGenerator*)object;
+            if (index == 0 && IS_GENERATOR(value)) generator->parent = AS_GENERATOR(value);
+            else if (index == 1 && IS_INT(value)) generator->state = AS_INT(value);
+            else if (index == 2) generator->current = value;
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
+
+            push(vm, value);
+            return true;
+        }
         case OBJ_METHOD: {
             ObjMethod* method = (ObjMethod*)object;
             if (index <= 2) {
@@ -616,6 +642,16 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             ObjFile* file = (ObjFile*)object;
             if (matchVariableName(name, "name", 4) && IS_STRING(value)) file->name = AS_STRING(value);
             else if (matchVariableName(name, "mode", 4) && IS_STRING(value)) file->mode = AS_STRING(value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
+
+            push(vm, value);
+            return true;
+        }
+        case OBJ_GENERATOR: {
+            ObjGenerator* generator = (ObjGenerator*)object;
+            if (matchVariableName(name, "parent", 6) && IS_GENERATOR(value)) generator->parent = AS_GENERATOR(value);
+            else if (matchVariableName(name, "state", 5) && IS_INT(value)) generator->state = AS_INT(value);
+            else if (matchVariableName(name, "current", 7)) generator->current = value;
             else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
             push(vm, value);
@@ -783,6 +819,7 @@ int getOffsetForGenericObject(Obj* object) {
         case OBJ_ENTRY: return 2;
         case OBJ_EXCEPTION: return 2;
         case OBJ_FILE: return 2;
+        case OBJ_GENERATOR: return 3;
         case OBJ_METHOD: return 3;
         case OBJ_NODE: return 3;
         case OBJ_RANGE: return 2;
