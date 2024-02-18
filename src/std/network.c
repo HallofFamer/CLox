@@ -377,6 +377,12 @@ LOX_METHOD(Domain, toString) {
     RETURN_OBJ(name);
 }
 
+LOX_METHOD(HTTPClient, __init__) {
+    ASSERT_ARG_COUNT("HTTPClient::__init__()", 0);
+    curl_global_init(CURL_GLOBAL_ALL);
+    RETURN_VAL(receiver);
+}
+
 LOX_METHOD(HTTPClient, close) {
     ASSERT_ARG_COUNT("HTTPClient::close()", 0);
     curl_global_cleanup();
@@ -447,12 +453,6 @@ LOX_METHOD(HTTPClient, head) {
     ObjInstance* httpResponse = httpCreateResponse(vm, url, curl, curlResponse);
     curl_easy_cleanup(curl);
     RETURN_OBJ(httpResponse);
-}
-
-LOX_METHOD(HTTPClient, __init__) {
-    ASSERT_ARG_COUNT("HTTPClient::__init__()", 0);
-    curl_global_init(CURL_GLOBAL_ALL);
-    RETURN_VAL(receiver);
 }
 
 LOX_METHOD(HTTPClient, options) {
@@ -627,19 +627,6 @@ LOX_METHOD(HTTPResponse, toString) {
     RETURN_STRING_FMT("HTTPResponse - URL: %s; Status: %d; ContentType: %s", url->chars, status, contentType->chars);
 }
 
-LOX_METHOD(IPAddress, domain) {
-    ASSERT_ARG_COUNT("IPAddress::domain", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    ObjString* address = AS_STRING(getObjProperty(vm, self, "address"));
-
-    int status = -1;
-    ObjString* domain = dnsGetDomainFromIPAddress(vm, address->chars, &status);
-    if (status) {
-        THROW_EXCEPTION(clox.std.network.DomainHostException, "Failed to get domain information for IP Address.");
-    }
-    RETURN_OBJ(domain);
-}
-
 LOX_METHOD(IPAddress, __init__) {
     ASSERT_ARG_COUNT("IPAddress::__init__(address)", 1);
     ASSERT_ARG_TYPE("IPAddress::__init__(address)", 0, String);
@@ -656,6 +643,19 @@ LOX_METHOD(IPAddress, __init__) {
     setObjProperty(vm, self, "address", args[0]);
     setObjProperty(vm, self, "version", INT_VAL(version));
     RETURN_OBJ(self);
+}
+
+LOX_METHOD(IPAddress, domain) {
+    ASSERT_ARG_COUNT("IPAddress::domain", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* address = AS_STRING(getObjProperty(vm, self, "address"));
+
+    int status = -1;
+    ObjString* domain = dnsGetDomainFromIPAddress(vm, address->chars, &status);
+    if (status) {
+        THROW_EXCEPTION(clox.std.network.DomainHostException, "Failed to get domain information for IP Address.");
+    }
+    RETURN_OBJ(domain);
 }
 
 LOX_METHOD(IPAddress, isIPV4) {
@@ -689,14 +689,6 @@ LOX_METHOD(IPAddress, toString) {
     RETURN_OBJ(AS_STRING(address));
 }
 
-LOX_METHOD(Socket, close) {
-    ASSERT_ARG_COUNT("Socket::close()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
-    closesocket(descriptor);
-    RETURN_NIL;
-}
-
 LOX_METHOD(Socket, __init__) {
     ASSERT_ARG_COUNT("Socket::__init__(addressFamily, socketType, protocolType)", 3);
     ASSERT_ARG_TYPE("Socket::__init__(addressFamily, socketType, protocolType)", 0, Int);
@@ -714,6 +706,14 @@ LOX_METHOD(Socket, __init__) {
     setObjProperty(vm, self, "protocolType", args[2]);
     setObjProperty(vm, self, "descriptor", INT_VAL(descriptor));
     RETURN_OBJ(self);
+}
+
+LOX_METHOD(Socket, close) {
+    ASSERT_ARG_COUNT("Socket::close()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
+    closesocket(descriptor);
+    RETURN_NIL;
 }
 
 LOX_METHOD(Socket, receive) {

@@ -201,6 +201,19 @@ static bool uuidCheckString(ObjString* uuid) {
     return true;
 }
 
+LOX_METHOD(Date, __init__) {
+    ASSERT_ARG_COUNT("Date::__init__(year, month, day)", 3);
+    ASSERT_ARG_TYPE("Date::__init__(year, month, day)", 0, Int);
+    ASSERT_ARG_TYPE("Date::__init__(year, month, day)", 1, Int);
+    ASSERT_ARG_TYPE("Date::__init__(year, month, day)", 2, Int);
+
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "year", args[0]);
+    setObjProperty(vm, self, "month", args[1]);
+    setObjProperty(vm, self, "day", args[2]);
+    RETURN_OBJ(receiver);
+}
+
 LOX_METHOD(Date, compareTo) {
     ASSERT_ARG_COUNT("Date::compareTo(date)", 1);
     ASSERT_ARG_INSTANCE_OF("Date::compareTo(date)", 0, clox.std.util.Date);
@@ -222,19 +235,6 @@ LOX_METHOD(Date, diff) {
 LOX_METHOD(Date, getTimestamp) {
     ASSERT_ARG_COUNT("Date::getTimestamp()", 0);
     RETURN_NUMBER(dateObjGetTimestamp(vm, AS_INSTANCE(receiver)));
-}
-
-LOX_METHOD(Date, __init__) {
-    ASSERT_ARG_COUNT("Date::__init__(year, month, day)", 3);
-    ASSERT_ARG_TYPE("Date::__init__(year, month, day)", 0, Int);
-    ASSERT_ARG_TYPE("Date::__init__(year, month, day)", 1, Int);
-    ASSERT_ARG_TYPE("Date::__init__(year, month, day)", 2, Int);
-
-    ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "year", args[0]);
-    setObjProperty(vm, self, "month", args[1]);
-    setObjProperty(vm, self, "day", args[2]);
-    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Date, toDateTime) {
@@ -330,6 +330,25 @@ LOX_METHOD(DateClass, parse) {
     }
 }
 
+LOX_METHOD(DateTime, __init__) {
+    ASSERT_ARG_COUNT("DateTime::__init__(year, month, day, hour, minute, second)", 6);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 0, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 1, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 2, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 3, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 4, Int);
+    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 5, Int);
+
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "year", args[0]);
+    setObjProperty(vm, self, "month", args[1]);
+    setObjProperty(vm, self, "day", args[2]);
+    setObjProperty(vm, self, "hour", args[3]);
+    setObjProperty(vm, self, "minute", args[4]);
+    setObjProperty(vm, self, "second", args[5]);
+    RETURN_OBJ(receiver);
+}
+
 LOX_METHOD(DateTime, compareTo) {
     ASSERT_ARG_COUNT("DateTime::compareTo(dateTime)", 1);
     ASSERT_ARG_INSTANCE_OF("DateTime::compareTo(dateTime)", 0, clox.std.util.Date);
@@ -351,25 +370,6 @@ LOX_METHOD(DateTime, diff) {
 LOX_METHOD(DateTime, getTimestamp) {
     ASSERT_ARG_COUNT("DateTime::getTimestamp()", 0);
     RETURN_NUMBER(dateTimeObjGetTimestamp(vm, AS_INSTANCE(receiver)));
-}
-
-LOX_METHOD(DateTime, __init__) {
-    ASSERT_ARG_COUNT("DateTime::__init__(year, month, day, hour, minute, second)", 6);
-    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 0, Int);
-    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 1, Int);
-    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 2, Int);
-    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 3, Int);
-    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 4, Int);
-    ASSERT_ARG_TYPE("DateTime::__init__(year, month, day, hour, minute, second)", 5, Int);
-    
-    ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "year", args[0]);
-    setObjProperty(vm, self, "month", args[1]);
-    setObjProperty(vm, self, "day", args[2]);
-    setObjProperty(vm, self, "hour", args[3]);
-    setObjProperty(vm, self, "minute", args[4]);
-    setObjProperty(vm, self, "second", args[5]);
-    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(DateTime, toDate) {
@@ -469,21 +469,6 @@ LOX_METHOD(DateTimeClass, parse) {
     }
 }
 
-LOX_METHOD(Duration, compareTo) {
-    ASSERT_ARG_COUNT("Duration::compareTo(duration)", 1);
-    ASSERT_ARG_INSTANCE_OF("Duration::compareTo(duration)", 0, clox.std.util.Duration);
-    double totalSeconds = durationTotalSeconds(vm, AS_INSTANCE(receiver));
-    double totalSeconds2 = durationTotalSeconds(vm, AS_INSTANCE(args[0]));
-    if (totalSeconds > totalSeconds2) RETURN_INT(1);
-    else if (totalSeconds < totalSeconds2) RETURN_INT(-1);
-    else RETURN_INT(0);
-}
-
-LOX_METHOD(Duration, getTotalSeconds) {
-    ASSERT_ARG_COUNT("Duration::getTotalSeconds()", 0);
-    RETURN_NUMBER(durationTotalSeconds(vm, AS_INSTANCE(receiver)));
-}
-
 LOX_METHOD(Duration, __init__) {
     ASSERT_ARG_COUNT("Duration::__init__(days, hours, minutes, seconds)", 4);
     ASSERT_ARG_TYPE("Duration::__init__(days, hours, minutes, seconds)", 0, Int);
@@ -505,6 +490,21 @@ LOX_METHOD(Duration, __init__) {
     durationFromArgs(duration, args);
     durationObjInit(vm, duration, self);
     RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Duration, compareTo) {
+    ASSERT_ARG_COUNT("Duration::compareTo(duration)", 1);
+    ASSERT_ARG_INSTANCE_OF("Duration::compareTo(duration)", 0, clox.std.util.Duration);
+    double totalSeconds = durationTotalSeconds(vm, AS_INSTANCE(receiver));
+    double totalSeconds2 = durationTotalSeconds(vm, AS_INSTANCE(args[0]));
+    if (totalSeconds > totalSeconds2) RETURN_INT(1);
+    else if (totalSeconds < totalSeconds2) RETURN_INT(-1);
+    else RETURN_INT(0);
+}
+
+LOX_METHOD(Duration, getTotalSeconds) {
+    ASSERT_ARG_COUNT("Duration::getTotalSeconds()", 0);
+    RETURN_NUMBER(durationTotalSeconds(vm, AS_INSTANCE(receiver)));
 }
 
 LOX_METHOD(Duration, toString) {
@@ -617,12 +617,6 @@ LOX_METHOD(DurationClass, ofSeconds) {
     RETURN_OBJ(instance);
 }
 
-LOX_METHOD(Random, getSeed) {
-    ASSERT_ARG_COUNT("Random::getSeed()", 0);
-    Value seed = getObjProperty(vm, AS_INSTANCE(receiver), "seed");
-    RETURN_VAL(seed);
-}
-
 LOX_METHOD(Random, __init__) {
     ASSERT_ARG_COUNT("Random::__init__()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -630,6 +624,12 @@ LOX_METHOD(Random, __init__) {
     pcg32_seed(seed);
     setObjProperty(vm, self, "seed", INT_VAL(abs((int)seed)));
     RETURN_OBJ(receiver);
+}
+
+LOX_METHOD(Random, getSeed) {
+    ASSERT_ARG_COUNT("Random::getSeed()", 0);
+    Value seed = getObjProperty(vm, AS_INSTANCE(receiver), "seed");
+    RETURN_VAL(seed);
 }
 
 LOX_METHOD(Random, nextBool) {

@@ -405,6 +405,11 @@ static ObjString* setToString(VM* vm, ObjInstance* set) {
     }
 }
 
+LOX_METHOD(Array, __init__) {
+    ASSERT_ARG_COUNT("Array::__init__()", 0);
+    RETURN_VAL(receiver);
+}
+
 LOX_METHOD(Array, add) {
     ASSERT_ARG_COUNT("Array::add(element)", 1);
     valueArrayWrite(vm, &AS_ARRAY(receiver)->elements, args[0]);
@@ -496,11 +501,6 @@ LOX_METHOD(Array, indexOf) {
     ObjArray* self = AS_ARRAY(receiver);
     if (self->elements.count == 0) RETURN_INT(-1);
     RETURN_INT(valueArrayFirstIndex(vm, &self->elements, args[0]));
-}
-
-LOX_METHOD(Array, __init__) {
-    ASSERT_ARG_COUNT("Array::__init__()", 0);
-    RETURN_VAL(receiver);
 }
 
 LOX_METHOD(Array, insertAt) {
@@ -662,6 +662,10 @@ LOX_METHOD(ArrayClass, fromElements) {
     RETURN_OBJ(array);
 }
 
+LOX_METHOD(Collection, __init__) {
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Collection.");
+}
+
 LOX_METHOD(Collection, add) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
@@ -735,10 +739,6 @@ LOX_METHOD(Collection, each) {
         index = callReentrant(vm, receiver, nextMethod, index);
     }
     RETURN_NIL;
-}
-
-LOX_METHOD(Collection, __init__) {
-    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class Collection.");
 }
 
 LOX_METHOD(Collection, isEmpty) {
@@ -822,6 +822,11 @@ LOX_METHOD(Collection, toArray) {
     RETURN_OBJ(array);
 }
 
+LOX_METHOD(Dictionary, __init__) {
+    ASSERT_ARG_COUNT("Dictionary::__init__()", 0);
+    RETURN_VAL(receiver);
+}
+
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
@@ -857,7 +862,6 @@ LOX_METHOD(Dictionary, collect) {
     pop(vm);
     RETURN_OBJ(collected);
 }
-
 
 LOX_METHOD(Dictionary, containsKey) {
     ASSERT_ARG_COUNT("Dictionary::containsKey(key)", 1);
@@ -964,11 +968,6 @@ LOX_METHOD(Dictionary, getAt) {
     bool valueExists = dictGet(AS_DICTIONARY(receiver), args[0], &value);
     if (!valueExists) RETURN_NIL;
     RETURN_VAL(value);
-}
-
-LOX_METHOD(Dictionary, __init__) {
-    ASSERT_ARG_COUNT("Dictionary::__init__()", 0);
-    RETURN_VAL(receiver);
 }
 
 LOX_METHOD(Dictionary, isEmpty) {
@@ -1127,6 +1126,15 @@ LOX_METHOD(Dictionary, __setSubscript__) {
     RETURN_OBJ(receiver);
 }
 
+LOX_METHOD(Entry, __init__) {
+    ASSERT_ARG_COUNT("Entry::__init__(key, value)", 2);
+    ObjEntry* self = AS_ENTRY(receiver);
+    self->key = args[0];
+    self->value = args[1];
+    RETURN_OBJ(self);
+}
+
+
 LOX_METHOD(Entry, clone) {
     ASSERT_ARG_COUNT("Entry::clone()", 0);
     ObjEntry* self = AS_ENTRY(receiver);
@@ -1144,14 +1152,6 @@ LOX_METHOD(Entry, getValue) {
     ASSERT_ARG_COUNT("Entry::getValue()", 0);
     ObjEntry* self = AS_ENTRY(receiver);
     RETURN_VAL(self->value);
-}
-
-LOX_METHOD(Entry, __init__) {
-    ASSERT_ARG_COUNT("Entry::__init__(key, value)", 2);
-    ObjEntry* self = AS_ENTRY(receiver);
-    self->key = args[0];
-    self->value = args[1];
-    RETURN_OBJ(self);
 }
 
 LOX_METHOD(Entry, setValue) {
@@ -1181,6 +1181,16 @@ LOX_METHOD(Entry, toString) {
     offset += valueLength;
     string[offset + 1] = '\0';
     RETURN_STRING(string, (int)offset + 1);
+}
+
+LOX_METHOD(LinkedList, __init__) {
+    ASSERT_ARG_COUNT("LinkedList::__init__()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "first", NIL_VAL);
+    setObjProperty(vm, self, "last", NIL_VAL);
+    setObjProperty(vm, self, "current", NIL_VAL);
+    setObjProperty(vm, self, "length", INT_VAL(0));
+    RETURN_OBJ(self);
 }
 
 LOX_METHOD(LinkedList, add) {
@@ -1255,16 +1265,6 @@ LOX_METHOD(LinkedList, getLast) {
 LOX_METHOD(LinkedList, indexOf) {
     ASSERT_ARG_COUNT("LinkedList::indexOf(element)", 1);
     RETURN_INT(linkFindIndex(vm, AS_INSTANCE(receiver), args[0]));
-}
-
-LOX_METHOD(LinkedList, __init__) {
-    ASSERT_ARG_COUNT("LinkedList::__init__()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "first", NIL_VAL);
-    setObjProperty(vm, self, "last", NIL_VAL);
-    setObjProperty(vm, self, "current", NIL_VAL);
-    setObjProperty(vm, self, "length", INT_VAL(0));
-    RETURN_OBJ(self);
 }
 
 LOX_METHOD(LinkedList, isEmpty) {
@@ -1422,6 +1422,15 @@ LOX_METHOD(List, putAt) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
+LOX_METHOD(Node, __init__) {
+    ASSERT_ARG_COUNT("Node::__init__(element, prev, next)", 3);
+    ObjNode* self = AS_NODE(receiver);
+    self->element = args[0];
+    if (!IS_NIL(args[1])) self->prev = AS_NODE(args[1]);
+    if (!IS_NIL(args[2])) self->next = AS_NODE(args[2]);
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(Node, clone) {
     ASSERT_ARG_COUNT("Node::clone()", 0);
     ObjNode* self = AS_NODE(receiver);
@@ -1432,15 +1441,6 @@ LOX_METHOD(Node, clone) {
 LOX_METHOD(Node, element) {
     ASSERT_ARG_COUNT("Node::element()", 0);
     RETURN_VAL(AS_NODE(receiver)->element);
-}
-
-LOX_METHOD(Node, __init__) {
-    ASSERT_ARG_COUNT("Node::__init__(element, prev, next)", 3);
-    ObjNode* self = AS_NODE(receiver);
-    self->element = args[0];
-    if (!IS_NIL(args[1])) self->prev = AS_NODE(args[1]);
-    if (!IS_NIL(args[2])) self->next = AS_NODE(args[2]);
-    RETURN_OBJ(self);
 }
 
 LOX_METHOD(Node, next) {
@@ -1464,6 +1464,16 @@ LOX_METHOD(Node, toString) {
     memcpy(nodeString + 6, nodeChars, nodeLength);
     nodeString[nodeLength + 6] = '\0';
     RETURN_STRING(nodeString, (int)nodeLength + 6);
+}
+
+LOX_METHOD(Queue, __init__) {
+    ASSERT_ARG_COUNT("Queue::__init__()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "last", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "current", NIL_VAL);
+    setObjProperty(vm, self, "length", INT_VAL(0));
+    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Queue, clear) {
@@ -1529,16 +1539,6 @@ LOX_METHOD(Queue, getLast) {
     RETURN_VAL(last->element);
 }
 
-LOX_METHOD(Queue, __init__) {
-    ASSERT_ARG_COUNT("Queue::__init__()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
-    setObjProperty(vm, self, "last", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
-    setObjProperty(vm, self, "current", NIL_VAL);
-    setObjProperty(vm, self, "length", INT_VAL(0));
-    RETURN_OBJ(receiver);
-}
-
 LOX_METHOD(Queue, isEmpty) {
     ASSERT_ARG_COUNT("Queue::isEmpty()", 0);
     RETURN_BOOL(collectionIsEmpty(vm, AS_INSTANCE(receiver)));
@@ -1559,7 +1559,7 @@ LOX_METHOD(Queue, next) {
         RETURN_INT(0);
     }
 
-    ASSERT_ARG_TYPE("Stack::next(index)", 0, Int);
+    ASSERT_ARG_TYPE("Queue::next(index)", 0, Int);
     int index = AS_INT(args[0]);
     if (index >= 0 && index < length - 1) {
         ObjNode* current = AS_NODE(getObjProperty(vm, self, (index == 0) ? "first" : "current"));
@@ -1616,6 +1616,19 @@ LOX_METHOD(Queue, toString) {
     RETURN_OBJ(linkToString(vm, self));
 }
 
+LOX_METHOD(Range, __init__) {
+    ASSERT_ARG_COUNT("Range::__init__(from, to)", 2);
+    ASSERT_ARG_TYPE("Range::__init__(from, to)", 0, Int);
+    ASSERT_ARG_TYPE("Range::__init__(from, to)", 0, Int);
+    int from = AS_INT(args[0]);
+    int to = AS_INT(args[1]);
+
+    ObjRange* self = AS_RANGE(receiver);
+    self->from = from;
+    self->to = to;
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(Range, add) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Cannot add an element to instance of class Range.");
 }
@@ -1656,19 +1669,6 @@ LOX_METHOD(Range, getAt) {
     int max = (self->from < self->to) ? self->to : self->from;
     ASSERT_INDEX_WITHIN_BOUNDS("Range::getAt(index)", index, min, max, 0);
     RETURN_INT(self->from + index);
-}
-
-LOX_METHOD(Range, __init__) {
-    ASSERT_ARG_COUNT("Range::__init__(from, to)", 2);
-    ASSERT_ARG_TYPE("Range::__init__(from, to)", 0, Int);
-    ASSERT_ARG_TYPE("Range::__init__(from, to)", 0, Int);
-    int from = AS_INT(args[0]);
-    int to = AS_INT(args[1]);
-
-    ObjRange* self = AS_RANGE(receiver);
-    self->from = from;
-    self->to = to;
-    RETURN_OBJ(self);
 }
 
 LOX_METHOD(Range, length) {
@@ -1775,6 +1775,13 @@ LOX_METHOD(Range, toString) {
     RETURN_STRING_FMT("%d..%d", self->from, self->to);
 }
 
+LOX_METHOD(Set, __init__) {
+    ASSERT_ARG_COUNT("Set::__init__()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "dict", OBJ_VAL(newDictionary(vm)));
+    RETURN_OBJ(receiver);
+}
+
 LOX_METHOD(Set, add) {
     ASSERT_ARG_COUNT("Set::add(element)", 1);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(receiver), "dict"));
@@ -1812,13 +1819,6 @@ LOX_METHOD(Set, equals) {
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
     ObjDictionary* dict2 = AS_DICTIONARY(getObjProperty(vm, AS_INSTANCE(args[0]), "dict"));
     RETURN_BOOL(dictsEqual(dict, dict2));
-}
-
-LOX_METHOD(Set, __init__) {
-    ASSERT_ARG_COUNT("Set::__init__()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "dict", OBJ_VAL(newDictionary(vm)));
-    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Set, isEmpty) {
@@ -1893,6 +1893,15 @@ LOX_METHOD(Set, toString) {
     RETURN_OBJ(setToString(vm, self));
 }
 
+LOX_METHOD(Stack, __init__) {
+    ASSERT_ARG_COUNT("Stack::__init__()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
+    setObjProperty(vm, self, "current", NIL_VAL);
+    setObjProperty(vm, self, "length", INT_VAL(0));
+    RETURN_OBJ(receiver);
+}
+
 LOX_METHOD(Stack, clear) {
     ASSERT_ARG_COUNT("Stack::clear()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -1911,15 +1920,6 @@ LOX_METHOD(Stack, getFirst) {
     ASSERT_ARG_COUNT("Stack::getFirst()", 0);
     ObjNode* first = AS_NODE(getObjProperty(vm, AS_INSTANCE(receiver), "first"));
     RETURN_VAL(first->element);
-}
-
-LOX_METHOD(Stack, __init__) {
-    ASSERT_ARG_COUNT("Stack::__init__()", 0);
-    ObjInstance* self = AS_INSTANCE(receiver);
-    setObjProperty(vm, self, "first", OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL)));
-    setObjProperty(vm, self, "current", NIL_VAL);
-    setObjProperty(vm, self, "length", INT_VAL(0));
-    RETURN_OBJ(receiver);
 }
 
 LOX_METHOD(Stack, isEmpty) {

@@ -133,6 +133,16 @@ LOX_METHOD(BinaryWriteStream, putBytes) {
     }
 }
 
+LOX_METHOD(File, __init__) {
+    ASSERT_ARG_COUNT("File::__init__(pathname)", 1);
+    ASSERT_ARG_TYPE("File::__init__(pathname)", 0, String);
+    ObjFile* self = AS_FILE(receiver);
+    self->name = AS_STRING(args[0]);
+    self->mode = emptyString(vm);
+    self->isOpen = false;
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(File, create) {
     ASSERT_ARG_COUNT("File::create()", 0);
     ObjFile* self = AS_FILE(receiver);
@@ -170,16 +180,6 @@ LOX_METHOD(File, getAbsolutePath) {
     ObjFile* self = AS_FILE(receiver);
     struct stat fileStat;
     if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file absolute path because it does not exist.");
-}
-
-LOX_METHOD(File, __init__) {
-    ASSERT_ARG_COUNT("File::__init__(pathname)", 1);
-    ASSERT_ARG_TYPE("File::__init__(pathname)", 0, String);
-    ObjFile* self = AS_FILE(receiver);
-    self->name = AS_STRING(args[0]);
-    self->mode = emptyString(vm);
-    self->isOpen = false;
-    RETURN_OBJ(self);
 }
 
 LOX_METHOD(File, isDirectory) {
@@ -442,6 +442,11 @@ LOX_METHOD(FileWriteStream, putString) {
     RETURN_NIL;
 }
 
+LOX_METHOD(IOStream, __init__) {
+    raiseError(vm, "Cannot instantiate from class IOStream.");
+    RETURN_NIL;
+}
+
 LOX_METHOD(IOStream, close) {
     ASSERT_ARG_COUNT("IOStream::close()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
@@ -460,11 +465,6 @@ LOX_METHOD(IOStream, getPosition) {
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot get stream position because file is already closed.");
     if (file->file == NULL) RETURN_INT(0);
     else RETURN_INT(ftell(file->file));
-}
-
-LOX_METHOD(IOStream, __init__) {
-    raiseError(vm, "Cannot instantiate from class IOStream.");
-    RETURN_NIL;
 }
 
 LOX_METHOD(IOStream, reset) {
@@ -510,17 +510,17 @@ LOX_METHOD(TClosable, close) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
+LOX_METHOD(WriteStream, __init__) {
+    raiseError(vm, "Cannot instantiate from class WriteStream.");
+    RETURN_NIL;
+}
+
 LOX_METHOD(WriteStream, flush) {
     ASSERT_ARG_COUNT("WriteStream::flush()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot flush stream because file is already closed.");
     if (file->file == NULL) RETURN_FALSE;
     RETURN_BOOL(fflush(file->file) == 0);
-}
-
-LOX_METHOD(WriteStream, __init__) {
-    raiseError(vm, "Cannot instantiate from class WriteStream.");
-    RETURN_NIL;
 }
 
 LOX_METHOD(WriteStream, put) {
