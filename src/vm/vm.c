@@ -24,13 +24,17 @@
 #include "../std/network.h"
 #include "../std/util.h"
 
+static void resetCallFrame(VM* vm, int index) {
+    CallFrame* frame = &vm->frames[index];
+    frame->closure = NULL;
+    frame->ip = NULL;
+    frame->slots = NULL;
+    frame->handlerCount = 0;
+}
+
 static void resetCallFrames(VM* vm) {
     for (int i = 0; i < FRAMES_MAX; i++) {
-        CallFrame* frame = &vm->frames[i];
-        frame->closure = NULL;
-        frame->ip = NULL;
-        frame->slots = NULL;
-        frame->handlerCount = 0;
+        resetCallFrame(vm, i);
     }
 }
 
@@ -119,7 +123,7 @@ static int parseConfiguration(void* data, const char* section, const char* name,
 #undef HAS_CONFIG
 }
 
-void initConfiguration(VM* vm) {
+static void initConfiguration(VM* vm) {
     Configuration config;
     int iniParsed = ini_parse("clox.ini", parseConfiguration, &config);
     ABORT_IFTRUE(iniParsed < 0, "Can't load 'clox.ini' configuration file...\n");
@@ -1319,7 +1323,6 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_YIELD: { 
-                printf("Yield control back to caller.\n");
                 Value result = pop(vm);
                 vm->runningGenerator->frame->closure = frame->closure;
                 vm->runningGenerator->frame->ip = frame->ip;
@@ -1329,7 +1332,6 @@ InterpretResult run(VM* vm) {
 
                 vm->frameCount--;
                 vm->stackTop = frame->slots;
-                push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
                 break;

@@ -91,6 +91,13 @@ Value assertArgIsFloat(VM* vm, const char* method, Value* args, int index) {
     RETURN_NIL;
 }
 
+Value assertArgIsGenerator(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_GENERATOR(args[index]) && !isObjInstanceOf(vm, args[index], vm->generatorClass)) {
+        RETURN_STRING_FMT("method %s expects argument %d to be a generator.", method, index + 1);
+    }
+    RETURN_NIL;
+}
+
 Value assertArgIsInt(VM* vm, const char* method, Value* args, int index) {
     if (!IS_INT(args[index]) && !isObjInstanceOf(vm, args[index], vm->intClass)) {
         RETURN_STRING_FMT("method %s expects argument %d to be an integer number.", method, index + 1);

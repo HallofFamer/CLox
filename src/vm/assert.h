@@ -48,6 +48,7 @@ Value assertArgIsEntry(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsException(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsFile(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsFloat(VM* vm, const char* method, Value* args, int index);
+Value assertArgIsGenerator(VM * vm, const char* method, Value * args, int index);
 Value assertArgIsInt(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsMethod(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsNamespace(VM* vm, const char* method, Value* args, int index);
