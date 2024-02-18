@@ -1331,7 +1331,8 @@ InterpretResult run(VM* vm) {
                 vm->runningGenerator->current = result;
 
                 vm->frameCount--;
-                vm->stackTop = frame->slots;
+                resetCallFrame(vm, vm->frameCount);
+                //vm->stackTop = frame->slots;
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
                 break;

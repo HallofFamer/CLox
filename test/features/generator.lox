@@ -1,0 +1,23 @@
+namespace test.features;
+
+fun fibonacci(){ 
+    var last = 0;
+    var current = 1;
+    yield 1;
+
+    while(true) { 
+        current = last + current;
+        last = current - last;
+        yield current;
+    }
+}
+
+val generator = fibonacci();
+println(generator);
+var i = 1;
+var num = 0;
+while(i <= 10) {
+    num = generator.next();
+    println("Fibonacci number for index ${i}: ${num}");
+    i = i + 1;
+}
