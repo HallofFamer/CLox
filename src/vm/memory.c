@@ -358,6 +358,7 @@ static void markRoots(VM* vm) {
     markTable(vm, &vm->modules);
     markCompilerRoots(vm);
     markObject(vm, (Obj*)vm->initString);
+    markObject(vm, (Obj*)vm->runningGenerator);
 }
 
 static void traceReferences(VM* vm) {

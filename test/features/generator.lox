@@ -3,7 +3,7 @@ namespace test.features;
 fun fibonacci(){ 
     var last = 0;
     var current = 1;
-    yield 1;
+    yield current;
 
     while(true) { 
         current = last + current;
