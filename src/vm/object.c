@@ -108,6 +108,7 @@ ObjFrame* newFrame(VM* vm, CallFrame* callFrame) {
     ObjFrame* frame = ALLOCATE_OBJ(ObjFrame, OBJ_FRAME, NULL);
     frame->closure = callFrame->closure;
     frame->ip = callFrame->ip;
+    frame->slotHeight = (uint8_t)(callFrame->slots - vm->stack);
     frame->slots = callFrame->slots;
     frame->handlerCount = callFrame->handlerCount;
 
