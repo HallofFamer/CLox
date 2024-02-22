@@ -242,8 +242,8 @@ typedef struct {
     Obj obj;
     ObjClosure* closure;
     uint8_t* ip;
-    Value* slots;
-    uint8_t slotHeight;
+    Value slots[UINT8_MAX];
+    uint8_t slotCount;
     uint8_t handlerCount;
     ExceptionHandler handlerStack[UINT4_MAX];
 } ObjFrame;
