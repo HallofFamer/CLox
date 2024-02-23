@@ -554,7 +554,8 @@ LOX_METHOD(Generator, next) {
         self->state = GENERATOR_RESUME;
         vm->apiStackDepth++;
         Value result = callGenerator(vm, self);
-        pop(vm);
+        vm->stackTop -= self->frame->slotCount;
+        push(vm, result);
         vm->apiStackDepth--;
         self->current = result;
         RETURN_VAL(result);
