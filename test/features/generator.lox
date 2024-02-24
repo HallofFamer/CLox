@@ -16,8 +16,7 @@ val generator = fibonacci();
 println(generator);
 var i = 1;
 var num = 0;
-while(i <= 10) {
-    num = generator.next();
-    println("Fibonacci number at index ${i}: ${num}");
+while(i <= 15) {
+    println("Fibonacci number at index ${i}: ${generator.next().current}");
     i = i + 1;
 }

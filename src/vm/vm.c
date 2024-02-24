@@ -878,7 +878,7 @@ InterpretResult run(VM* vm) {
                         Value a = pop(vm);
                         push(vm, BOOL_VAL(a == b));
                     }
-                    else frame = &vm->frames[vm->frameCount - 1];
+                    else LOAD_FRAME();
                 }
                 break;
             }
