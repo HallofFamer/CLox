@@ -834,6 +834,26 @@ static void unary(Compiler* compiler, bool canAssign) {
     }
 }
 
+static void yield(Compiler* compiler, bool canAssign) {
+    if (compiler->type == TYPE_SCRIPT) {
+        error(compiler->parser, "Can't yield from top-level code.");
+    }
+    else if (compiler->type == TYPE_INITIALIZER) {
+        error(compiler->parser, "Cannot yield from an initializer.");
+    }
+
+    compiler->function->isGenerator = true;
+    if (match(compiler->parser, TOKEN_RIGHT_PAREN) || match(compiler->parser, TOKEN_RIGHT_BRACKET) || match(compiler, TOKEN_RIGHT_BRACE)
+        || match(compiler->parser, TOKEN_COMMA) || match(compiler->parser, TOKEN_SEMICOLON))
+    {
+        emitBytes(compiler, OP_NIL, OP_YIELD);
+    }
+    else {
+        expression(compiler);
+        emitByte(compiler, OP_YIELD);
+    }
+}
+
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN]       = {grouping,      call,        PREC_CALL},
     [TOKEN_RIGHT_PAREN]      = {NULL,          NULL,        PREC_NONE},
@@ -897,7 +917,7 @@ ParseRule rules[] = {
     [TOKEN_VAR]              = {NULL,          NULL,        PREC_NONE},
     [TOKEN_WHILE]            = {NULL,          NULL,        PREC_NONE},
     [TOKEN_WITH]             = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_YIELD]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_YIELD]            = {yield,         NULL,        PREC_NONE},
     [TOKEN_ERROR]            = {NULL,          NULL,        PREC_NONE},
     [TOKEN_EOF]              = {NULL,          NULL,        PREC_NONE},
 };
@@ -1443,12 +1463,12 @@ static void yieldStatement(Compiler* compiler) {
 
     compiler->function->isGenerator = true;
     if (match(compiler->parser, TOKEN_SEMICOLON)) {
-        emitByte(compiler, OP_YIELD);
+        emitBytes(compiler, OP_YIELD, OP_POP);
     }
     else {
         expression(compiler);
         consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after yield value.");
-        emitByte(compiler, OP_YIELD);
+        emitBytes(compiler, OP_YIELD, OP_POP);
     }
 }
 

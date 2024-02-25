@@ -389,7 +389,9 @@ Value callGenerator(VM* vm, ObjGenerator* generator) {
     for (int i = 1; i < generator->frame->slotCount; i++) {
         push(vm, generator->frame->slots[i]);
     }
+    if (generator->state != GENERATOR_START) push(vm, generator->current);
 
+    generator->state = GENERATOR_RESUME;
     InterpretResult result = run(vm);
     if (result == INTERPRET_RUNTIME_ERROR) exit(70);
     vm->runningGenerator = parentGenerator;
