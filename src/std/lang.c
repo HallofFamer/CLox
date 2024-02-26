@@ -551,7 +551,6 @@ LOX_METHOD(Generator, next) {
     else if (self->state == GENERATOR_RESUME) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator is already running.");
     else if (self->state == GENERATOR_THROW) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already thrown an exception.");
     else {
-        self->state = GENERATOR_RESUME;
         vm->apiStackDepth++;
         Value result = callGenerator(vm, self);
         vm->stackTop -= self->frame->slotCount;
@@ -570,6 +569,23 @@ LOX_METHOD(Generator, returns) {
         self->state = GENERATOR_RETURN;
         self->current = args[0];
         RETURN_VAL(args[0]);
+    }
+}
+
+LOX_METHOD(Generator, send) {
+    ASSERT_ARG_COUNT("Generator::send(value)", 1);
+    ObjGenerator* self = AS_GENERATOR(receiver);
+    if (self->state == GENERATOR_RETURN) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already returned.");
+    else {
+        self->current = args[0];
+        self->state = GENERATOR_RESUME;
+        vm->apiStackDepth++;
+        Value result = callGenerator(vm, self);
+        vm->stackTop -= self->frame->slotCount;
+        push(vm, result);
+        vm->apiStackDepth--;
+        self->current = result;
+        RETURN_VAL(result);
     }
 }
 
@@ -1984,6 +2000,7 @@ void registerLangPackage(VM* vm) {
     DEF_INTERCEPTOR(vm->generatorClass, Generator, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->generatorClass, Generator, next, 0);
     DEF_METHOD(vm->generatorClass, Generator, returns, 1);
+    DEF_METHOD(vm->generatorClass, Generator, send, 1);
     DEF_METHOD(vm->generatorClass, Generator, throws, 1);
 
     ObjClass* generatorMetaclass = vm->generatorClass->obj.klass;

@@ -2,8 +2,7 @@ namespace test.features;
 
 fun fibonacci(){ 
     var last = 0;
-    var current = 1;
-    yield current;
+    var current = yield 1;
 
     while(true) { 
         current = last + current;
@@ -15,8 +14,8 @@ fun fibonacci(){
 val generator = fibonacci();
 println(generator);
 var i = 1;
-var num = 0;
-while(i <= 15) {
-    println("Fibonacci number at index ${i}: ${generator.next().current}");
+while(i <= 10) {
+    generator.next();
+    println("Fibonacci number at index ${i}: ${generator.current}");
     i = i + 1;
 }
