@@ -10,6 +10,7 @@ typedef struct Obj Obj;
 typedef struct ObjArray ObjArray;
 typedef struct ObjClass ObjClass;
 typedef struct ObjException ObjException;
+typedef struct ObjGenerator ObjGenerator;
 typedef struct ObjNamespace ObjNamespace;
 typedef struct ObjString ObjString;
 
