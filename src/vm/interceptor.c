@@ -23,6 +23,7 @@ void handleInterceptorMethod(VM* vm, ObjClass* klass, ObjString* name) {
     else if (strcmp(name->chars, "__onInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_ON_INVOKE);
     else if (strcmp(name->chars, "__onReturn__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_ON_RETURN);
     else if (strcmp(name->chars, "__onThrow__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_ON_THROW);
+    else if (strcmp(name->chars, "__onYield__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_ON_YIELD);
     else if (strcmp(name->chars, "__undefinedGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_UNDEFINED_GET);
     else if (strcmp(name->chars, "__undefinedInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_UNDEFINED_INVOKE);
     else runtimeError(vm, "Invalid interceptor method specified.");
@@ -123,6 +124,17 @@ bool interceptOnThrow(VM* vm, Value receiver, ObjString* name, Value exception) 
     if (tableGet(&klass->methods, newString(vm, "__onThrow__"), &interceptor)) {
         Value exception2 = callReentrant(vm, receiver, interceptor, OBJ_VAL(name), exception);
         push(vm, exception2);
+        return true;
+    }
+    return false;
+}
+
+bool interceptOnYield(VM* vm, Value receiver, ObjString* name, Value result) {
+    ObjClass* klass = getObjClass(vm, receiver);
+    Value interceptor;
+    if (tableGet(&klass->methods, newString(vm, "__onYield__"), &interceptor)) {
+        Value result2 = callReentrant(vm, receiver, interceptor, OBJ_VAL(name), result);
+        push(vm, result2);
         return true;
     }
     return false;

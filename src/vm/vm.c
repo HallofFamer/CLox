@@ -157,6 +157,7 @@ void initVM(VM* vm) {
     initGenericIDMap(vm);
     vm->initString = NULL;
     vm->initString = copyString(vm, "__init__", 8);
+    vm->runningGenerator = NULL;
 
     registerLangPackage(vm);
     registerCollectionPackage(vm);
@@ -382,16 +383,7 @@ Value callReentrant(VM* vm, Value receiver, Value callee, ...) {
 Value callGenerator(VM* vm, ObjGenerator* generator) {
     ObjGenerator* parentGenerator = vm->runningGenerator;
     vm->runningGenerator = generator;
-    CallFrame* frame = &vm->frames[vm->frameCount++];
-    frame->closure = generator->frame->closure;
-    frame->ip = generator->frame->ip;
-    frame->slots = vm->stackTop - 1;
-    for (int i = 1; i < generator->frame->slotCount; i++) {
-        push(vm, generator->frame->slots[i]);
-    }
-    if (generator->state != GENERATOR_START) push(vm, generator->current);
-
-    generator->state = GENERATOR_RESUME;
+    loadGeneratorFrame(vm, generator);
     InterpretResult result = run(vm);
     if (result == INTERPRET_RUNTIME_ERROR) exit(70);
     vm->runningGenerator = parentGenerator;
@@ -1247,6 +1239,7 @@ InterpretResult run(VM* vm) {
                     LOAD_FRAME();
                     break;
                 }
+                else if (vm->runningGenerator != NULL) vm->runningGenerator->state = GENERATOR_THROW;
                 return INTERPRET_RUNTIME_ERROR;
             }
             case OP_TRY: {
@@ -1329,20 +1322,17 @@ InterpretResult run(VM* vm) {
             }
             case OP_YIELD: { 
                 Value result = peek(vm, 0);
-                vm->runningGenerator->frame->closure = frame->closure;
-                vm->runningGenerator->frame->ip = frame->ip;
-                vm->runningGenerator->state = GENERATOR_YIELD;
-                vm->runningGenerator->current = result;
-
-                vm->runningGenerator->frame->slotCount = 0;
-                for (Value* slot = frame->slots; slot < vm->stackTop - 1; slot++) {
-                    vm->runningGenerator->frame->slots[vm->runningGenerator->frame->slotCount++] = *slot;
-                }
-
+                ObjString* name = frame->closure->function->name;
+                Value receiver = peek(vm, frame->closure->function->arity);
+                saveGeneratorFrame(vm, vm->runningGenerator, frame, result);
                 vm->frameCount--;
-                resetCallFrame(vm, vm->frameCount);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
+
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_YIELD, __onYield__) && hasInterceptableMethod(vm, receiver, name)) {
+                    interceptOnYield(vm, receiver, name, result);
+                    LOAD_FRAME();
+                }
                 break;
             }
         }

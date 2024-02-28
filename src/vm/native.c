@@ -123,13 +123,16 @@ void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int 
             defineNativeMethod(vm, klass, "__afterSet__", 2, method);
             break;
         case INTERCEPTOR_ON_INVOKE:
-            defineNativeMethod(vm, klass, "__beforeInvoke__", 2, method);
+            defineNativeMethod(vm, klass, "__onInvoke__", 2, method);
             break;
         case INTERCEPTOR_ON_RETURN:
-            defineNativeMethod(vm, klass, "__afterInvoke__", 3, method);
+            defineNativeMethod(vm, klass, "__onReturn__", 3, method);
             break;
         case INTERCEPTOR_ON_THROW:
-            defineNativeMethod(vm, klass, "__beforeThrow__", 2, method);
+            defineNativeMethod(vm, klass, "__onThrow__", 3, method);
+            break;
+        case INTERCEPTOR_ON_YIELD:
+            defineNativeMethod(vm, klass, "__onYield__", 3, method);
             break;
         case INTERCEPTOR_UNDEFINED_GET:
             defineNativeMethod(vm, klass, "__undefinedGet__", 1, method);
