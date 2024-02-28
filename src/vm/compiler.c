@@ -843,7 +843,7 @@ static void yield(Compiler* compiler, bool canAssign) {
     }
 
     compiler->function->isGenerator = true;
-    if (match(compiler->parser, TOKEN_RIGHT_PAREN) || match(compiler->parser, TOKEN_RIGHT_BRACKET) || match(compiler, TOKEN_RIGHT_BRACE)
+    if (match(compiler->parser, TOKEN_RIGHT_PAREN) || match(compiler->parser, TOKEN_RIGHT_BRACKET) || match(compiler->parser, TOKEN_RIGHT_BRACE)
         || match(compiler->parser, TOKEN_COMMA) || match(compiler->parser, TOKEN_SEMICOLON))
     {
         emitBytes(compiler, OP_NIL, OP_YIELD);

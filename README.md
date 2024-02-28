@@ -30,7 +30,7 @@ https://github.com/munificent/craftinginterpreters
 - Array/Dictionary Literals and square bracket notation for array/dictionary access.
 - New Operators: Modulo(`%`), Range(`..`) and Nil Handling(`?.`, `??`, `?:`).
 - Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
-- Variadic Functions, Anonymous Functions(local return) and Lambda Expressions(nonlocal return). 
+- Variadic Functions, Anonymous Functions(local return) and Lambda Expressions(nonlocal return).
 - `Object` root class for every class in Lox, everything is an object, and every object has a class.
 - Object ID and generic object map which enable inheritance for special build-in classes such as `String` and `Array`.
 - Class methods in class declaration using `class` keyword, and trait declaration using `trait` keyword.
@@ -39,6 +39,7 @@ https://github.com/munificent/craftinginterpreters
 - CLox Standard Library for packages `lang`, `util`, `collection`, `io` and `network` in bullt-in namespace `clox.std`.
 - Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
 - Interceptor methods which are invoked automatically when getting/setting properties, invoking methods or throwing exceptions.
+- Generator functions/methods which can yield control back to the caller and resume at a later point of execution.
 - Customized Runtime configuration for CLox using clox.ini.
 - Allow loading lox source files in lox script and another lox source file with `require` keyword.
 - Cross-platform build with Cmake and package manager with vcpkg.

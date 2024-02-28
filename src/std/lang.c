@@ -551,12 +551,7 @@ LOX_METHOD(Generator, next) {
     else if (self->state == GENERATOR_RESUME) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator is already running.");
     else if (self->state == GENERATOR_THROW) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already thrown an exception.");
     else {
-        vm->apiStackDepth++;
-        Value result = callGenerator(vm, self);
-        vm->stackTop -= self->frame->slotCount;
-        push(vm, OBJ_VAL(self));
-        vm->apiStackDepth--;
-        self->current = result;
+        resumeGenerator(vm, self);
         RETURN_OBJ(self);
     }
 }
@@ -567,7 +562,7 @@ LOX_METHOD(Generator, returns) {
     if (self->state == GENERATOR_RETURN) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already returned.");
     else {
         self->state = GENERATOR_RETURN;
-        self->current = args[0];
+        self->value = args[0];
         RETURN_VAL(args[0]);
     }
 }
@@ -577,15 +572,9 @@ LOX_METHOD(Generator, send) {
     ObjGenerator* self = AS_GENERATOR(receiver);
     if (self->state == GENERATOR_RETURN) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already returned.");
     else {
-        self->current = args[0];
-        self->state = GENERATOR_RESUME;
-        vm->apiStackDepth++;
-        Value result = callGenerator(vm, self);
-        vm->stackTop -= self->frame->slotCount;
-        push(vm, result);
-        vm->apiStackDepth--;
-        self->current = result;
-        RETURN_VAL(result);
+        self->value = args[0];
+        resumeGenerator(vm, self);
+        RETURN_OBJ(self);
     }
 }
 
