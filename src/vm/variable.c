@@ -145,7 +145,7 @@ static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
             ObjGenerator* generator = (ObjGenerator*)object;
             if (index == 0) push(vm, OBJ_VAL(generator->parent));
             else if (index == 1) push(vm, INT_VAL(generator->state));
-            else if (index == 2) push(vm, generator->current);
+            else if (index == 2) push(vm, generator->value);
             else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
@@ -261,7 +261,7 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             ObjGenerator* generator = (ObjGenerator*)object;
             if (matchVariableName(name, "parent", 6)) push(vm, OBJ_VAL(generator->parent));
             else if (matchVariableName(name, "state", 5)) push(vm, INT_VAL(generator->state));
-            else if (matchVariableName(name, "current", 7)) push(vm, generator->current);
+            else if (matchVariableName(name, "value", 5)) push(vm, generator->value);
             else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
@@ -515,7 +515,7 @@ static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Va
             ObjGenerator* generator = (ObjGenerator*)object;
             if (index == 0 && IS_GENERATOR(value)) generator->parent = AS_GENERATOR(value);
             else if (index == 1 && IS_INT(value)) generator->state = AS_INT(value);
-            else if (index == 2) generator->current = value;
+            else if (index == 2) generator->value = value;
             else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
@@ -651,7 +651,7 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             ObjGenerator* generator = (ObjGenerator*)object;
             if (matchVariableName(name, "parent", 6) && IS_GENERATOR(value)) generator->parent = AS_GENERATOR(value);
             else if (matchVariableName(name, "state", 5) && IS_INT(value)) generator->state = AS_INT(value);
-            else if (matchVariableName(name, "current", 7)) generator->current = value;
+            else if (matchVariableName(name, "value", 5)) generator->value = value;
             else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
             push(vm, value);

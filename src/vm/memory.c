@@ -143,7 +143,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjGenerator* generator = (ObjGenerator*)object;
             markObject(vm, (Obj*)generator->frame);
             markObject(vm, (Obj*)generator->parent);
-            markValue(vm, generator->current);
+            markValue(vm, generator->value);
             break;
         }
         case OBJ_INSTANCE: {

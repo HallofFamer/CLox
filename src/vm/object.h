@@ -8,6 +8,7 @@
 #include "chunk.h"
 #include "common.h"
 #include "exception.h"
+#include "generator.h"
 #include "id.h"
 #include "interceptor.h"
 #include "klass.h"
@@ -230,14 +231,6 @@ typedef struct {
     ObjClosure* method;
 } ObjBoundMethod;
 
-typedef enum {
-    GENERATOR_START,
-    GENERATOR_YIELD,
-    GENERATOR_RESUME,
-    GENERATOR_RETURN,
-    GENERATOR_THROW
-} GeneratorState;
-
 typedef struct {
     Obj obj;
     ObjClosure* closure;
@@ -253,7 +246,7 @@ typedef struct ObjGenerator {
     ObjFrame* frame;
     struct ObjGenerator* parent;
     GeneratorState state;
-    Value current;
+    Value value;
 } ObjGenerator;
 
 struct ObjArray {
