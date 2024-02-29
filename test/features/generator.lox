@@ -3,10 +3,8 @@ namespace test.features;
 fun fibonacci(){ 
     var last = 0;
     var current = yield 1;
-
     var next = 1;
-    var next2 = 2;
-    var next3 = 3;
+
     while(true) { 
         current = last + current;
         last = current - last;
@@ -15,10 +13,9 @@ fun fibonacci(){
 }
 
 val generator = fibonacci();
-println(generator);
+println("Creating generator: ${generator}");
 var i = 1;
 while(i <= 10) {
-    generator.next();
-    println("Fibonacci number at index ${i}: ${generator.value}");
+    println("Fibonacci number at index ${i}: ${generator.next().value}");
     i = i + 1;
 }
