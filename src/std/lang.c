@@ -544,10 +544,20 @@ LOX_METHOD(Generator, __init__) {
     RETURN_OBJ(self);
 }
 
+LOX_METHOD(Generator, isFinished) { 
+    ASSERT_ARG_COUNT("Generator::isFinished()", 0);
+    RETURN_BOOL(AS_GENERATOR(receiver)->state == GENERATOR_RETURN);
+}
+
+LOX_METHOD(Generator, isSuspended) {
+    ASSERT_ARG_COUNT("Generator::isSuspended()", 0);
+    RETURN_BOOL(AS_GENERATOR(receiver)->state == GENERATOR_YIELD);
+}
+
 LOX_METHOD(Generator, next) {
     ASSERT_ARG_COUNT("Generator::next()", 0);
     ObjGenerator* self = AS_GENERATOR(receiver);
-    if (self->state == GENERATOR_RETURN) RETURN_NIL;
+    if (self->state == GENERATOR_RETURN) RETURN_OBJ(self);
     else if (self->state == GENERATOR_RESUME) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator is already running.");
     else if (self->state == GENERATOR_THROW) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already thrown an exception.");
     else {
@@ -1987,6 +1997,8 @@ void registerLangPackage(VM* vm) {
     bindSuperclass(vm, vm->generatorClass, vm->objectClass);
     vm->generatorClass->classType = OBJ_GENERATOR;
     DEF_INTERCEPTOR(vm->generatorClass, Generator, INTERCEPTOR_INIT, __init__, 1);
+    DEF_METHOD(vm->generatorClass, Generator, isFinished, 0);
+    DEF_METHOD(vm->generatorClass, Generator, isSuspended, 0);
     DEF_METHOD(vm->generatorClass, Generator, next, 0);
     DEF_METHOD(vm->generatorClass, Generator, returns, 1);
     DEF_METHOD(vm->generatorClass, Generator, send, 1);

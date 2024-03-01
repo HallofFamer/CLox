@@ -12,7 +12,7 @@ https://github.com/munificent/craftinginterpreters
 ## Features
 
 ### Original Features
-- Stacked based bytecote VM with the basic OPCode support.
+- Stacked based bytecode VM with the basic OPCode support.
 - On-demand Scanner, Pratt Parser and Single-Pass Compiler.
 - Uniform runtime representation for Lox Value. 
 - Basic Unary and Binary Expression/Operators.
