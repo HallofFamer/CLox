@@ -549,6 +549,11 @@ LOX_METHOD(Generator, isFinished) {
     RETURN_BOOL(AS_GENERATOR(receiver)->state == GENERATOR_RETURN);
 }
 
+LOX_METHOD(Generator, isReady) {
+    ASSERT_ARG_COUNT("Generator::isReady()", 0);
+    RETURN_BOOL(AS_GENERATOR(receiver)->state == GENERATOR_START);
+}
+
 LOX_METHOD(Generator, isSuspended) {
     ASSERT_ARG_COUNT("Generator::isSuspended()", 0);
     RETURN_BOOL(AS_GENERATOR(receiver)->state == GENERATOR_YIELD);
@@ -1998,6 +2003,7 @@ void registerLangPackage(VM* vm) {
     vm->generatorClass->classType = OBJ_GENERATOR;
     DEF_INTERCEPTOR(vm->generatorClass, Generator, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->generatorClass, Generator, isFinished, 0);
+    DEF_METHOD(vm->generatorClass, Generator, isReady, 0);
     DEF_METHOD(vm->generatorClass, Generator, isSuspended, 0);
     DEF_METHOD(vm->generatorClass, Generator, next, 0);
     DEF_METHOD(vm->generatorClass, Generator, returns, 1);

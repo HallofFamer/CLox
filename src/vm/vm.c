@@ -1284,7 +1284,7 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_OK;
                 }
 
-                vm->stackTop = frame->slots;
+                if(vm->runningGenerator == NULL) vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
@@ -1309,7 +1309,7 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_OK;
                 }
 
-                vm->stackTop = frame->slots;
+                if (vm->runningGenerator == NULL) vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();

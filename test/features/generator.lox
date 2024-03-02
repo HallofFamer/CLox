@@ -13,9 +13,39 @@ fun fibonacci(){
 }
 
 val generator = fibonacci();
-println("Creating generator: ${generator}");
+println("Testing Infinite Fibonacci number generator: ${generator}");
 var i = 1;
 while(i <= 10) {
     println("Fibonacci number at index ${i}: ${generator.next().value}");
     i = i + 1;
+}
+println("");
+
+fun innerGenerator(){
+    println("Inner Generator starts...");
+    yield 1;
+    yield 2;
+    yield 3;
+    println("Inner Generator ends...");
+}
+
+fun outerGenerator(){ 
+    println("Outer Generator start...");
+    yield 0;
+
+    //yield innerGenerator();
+    val inner = innerGenerator();
+    while(!inner.next().isFinished()) { 
+        yield inner.value;
+    }
+
+    yield 4;
+    yield 5;
+    println("Outer Generator ends...");
+}
+
+println("Testing nested generators: ");
+val generator2 = outerGenerator();
+while(!generator2.next().isFinished()) { 
+    println("Generator yield value: ${generator2.value}");
 }
