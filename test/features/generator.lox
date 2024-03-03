@@ -35,7 +35,7 @@ fun outerGenerator(){
 
     //yield innerGenerator();
     val inner = innerGenerator();
-    while(!inner.next().isFinished()) { 
+    while(!inner.nextFinished()) { 
         yield inner.value;
     }
 
@@ -46,6 +46,6 @@ fun outerGenerator(){
 
 println("Testing nested generators: ");
 val generator2 = outerGenerator();
-while(!generator2.next().isFinished()) { 
+while(!generator2.nextFinished()) { 
     println("Generator yield value: ${generator2.value}");
 }
