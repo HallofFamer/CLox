@@ -210,6 +210,7 @@ void synchronize(Parser* parser) {
         switch (parser->current.type) {
             case TOKEN_CLASS:
             case TOKEN_FOR:
+            case TOKEN_FROM:
             case TOKEN_FUN:
             case TOKEN_IF:
             case TOKEN_NAMESPACE:
