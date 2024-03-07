@@ -539,7 +539,8 @@ LOX_METHOD(Generator, __init__) {
     }
 
     self->frame = frame;
-    self->parent = vm->runningGenerator;
+    self->outer = vm->runningGenerator;
+    self->inner = NULL;
     self->state = GENERATOR_START;
     RETURN_OBJ(self);
 }
@@ -2029,6 +2030,7 @@ void registerLangPackage(VM* vm) {
     setClassProperty(vm, vm->generatorClass, "stateResume", INT_VAL(GENERATOR_RESUME));
     setClassProperty(vm, vm->generatorClass, "stateReturn", INT_VAL(GENERATOR_RETURN));
     setClassProperty(vm, vm->generatorClass, "stateThrow", INT_VAL(GENERATOR_THROW));
+    setClassProperty(vm, vm->generatorClass, "stateError", INT_VAL(GENERATOR_ERROR));
 
     vm->exceptionClass = defineNativeClass(vm, "Exception");
     bindSuperclass(vm, vm->exceptionClass, vm->objectClass);
