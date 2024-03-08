@@ -244,7 +244,8 @@ typedef struct {
 typedef struct ObjGenerator {
     Obj obj;
     ObjFrame* frame;
-    struct ObjGenerator* parent;
+    struct ObjGenerator* outer;
+    struct ObjGenerator* inner;
     GeneratorState state;
     Value value;
 } ObjGenerator;
@@ -312,7 +313,7 @@ ObjException* newException(VM* vm, ObjString* message, ObjClass* klass);
 ObjFile* newFile(VM* vm, ObjString* name);
 ObjFrame* newFrame(VM* vm, CallFrame* callFrame);
 ObjFunction* newFunction(VM* vm);
-ObjGenerator* newGenerator(VM* vm, ObjFrame* frame, ObjGenerator* parentGenerator);
+ObjGenerator* newGenerator(VM* vm, ObjFrame* frame, ObjGenerator* outer);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure);
 ObjModule* newModule(VM* vm, ObjString* path);

@@ -127,10 +127,11 @@ ObjFunction* newFunction(VM* vm) {
     return function;
 }
 
-ObjGenerator* newGenerator(VM* vm, ObjFrame* frame, ObjGenerator* parentGenerator) {
+ObjGenerator* newGenerator(VM* vm, ObjFrame* frame, ObjGenerator* outer) {
     ObjGenerator* generator = ALLOCATE_OBJ(ObjGenerator, OBJ_GENERATOR, vm->generatorClass);
     generator->frame = frame;
-    generator->parent = parentGenerator;
+    generator->outer = outer;
+    generator->inner = NULL;
     generator->state = GENERATOR_START;
     generator->value = NIL_VAL;
     return generator;
