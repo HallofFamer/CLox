@@ -143,7 +143,7 @@ static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
         }
         case OBJ_GENERATOR: { 
             ObjGenerator* generator = (ObjGenerator*)object;
-            if (index == 0) push(vm, OBJ_VAL(generator->parent));
+            if (index == 0) push(vm, generator->outer != NULL ? OBJ_VAL(generator->outer) : NIL_VAL);
             else if (index == 1) push(vm, INT_VAL(generator->state));
             else if (index == 2) push(vm, generator->value);
             else getAndPushGenericInstanceVariableByIndex(vm, object, index);
@@ -259,7 +259,7 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
         }
         case OBJ_GENERATOR: {
             ObjGenerator* generator = (ObjGenerator*)object;
-            if (matchVariableName(name, "parent", 6)) push(vm, OBJ_VAL(generator->parent));
+            if (matchVariableName(name, "outer", 5)) push(vm, generator->outer != NULL ? OBJ_VAL(generator->outer) : NIL_VAL);
             else if (matchVariableName(name, "state", 5)) push(vm, INT_VAL(generator->state));
             else if (matchVariableName(name, "value", 5)) push(vm, generator->value);
             else return getAndPushGenericInstanceVariableByName(vm, object, name);
@@ -513,7 +513,7 @@ static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Va
         }
         case OBJ_GENERATOR: {
             ObjGenerator* generator = (ObjGenerator*)object;
-            if (index == 0 && IS_GENERATOR(value)) generator->parent = AS_GENERATOR(value);
+            if (index == 0 && IS_GENERATOR(value)) generator->outer = AS_GENERATOR(value);
             else if (index == 1 && IS_INT(value)) generator->state = AS_INT(value);
             else if (index == 2) generator->value = value;
             else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
@@ -649,7 +649,7 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
         }
         case OBJ_GENERATOR: {
             ObjGenerator* generator = (ObjGenerator*)object;
-            if (matchVariableName(name, "parent", 6) && IS_GENERATOR(value)) generator->parent = AS_GENERATOR(value);
+            if (matchVariableName(name, "outer", 5) && IS_GENERATOR(value)) generator->outer = AS_GENERATOR(value);
             else if (matchVariableName(name, "state", 5) && IS_INT(value)) generator->state = AS_INT(value);
             else if (matchVariableName(name, "value", 5)) generator->value = value;
             else return setAndPushGenericInstanceVariableByName(vm, object, name, value);

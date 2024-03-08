@@ -48,10 +48,10 @@ static void createDefaultShapes(VM* vm) {
     defaultShapeIDs[OBJ_FRAME] = -1;
     defaultShapeIDs[OBJ_FUNCTION] = -1;
 
-    int shapeIDParent = createShapeFromParent(vm, 0, newString(vm, "parent"));
-    int shapeIDState = createShapeFromParent(vm, shapeIDParent, newString(vm, "state"));
-    int shapeIDCurrent = createShapeFromParent(vm, shapeIDState, newString(vm, "current"));
-    defaultShapeIDs[OBJ_GENERATOR] = shapeIDCurrent;
+    int shapeIDOuter = createShapeFromParent(vm, 0, newString(vm, "outer"));
+    int shapeIDState = createShapeFromParent(vm, shapeIDOuter, newString(vm, "state"));
+    int shapeIDValue = createShapeFromParent(vm, shapeIDState, newString(vm, "value"));
+    defaultShapeIDs[OBJ_GENERATOR] = shapeIDValue;
     defaultShapeIDs[OBJ_INSTANCE] = 0;
 
     int shapeIDMethod = createShapeFromParent(vm, shapeIDClosure, newString(vm, "behavior"));

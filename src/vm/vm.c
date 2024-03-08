@@ -438,7 +438,7 @@ static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCou
     if (!tableGet(&klass->methods, name, &method)) {
         if (interceptUndefinedInvoke(vm, klass, name, argCount)) return true;
         else { 
-            if (klass != vm->nilClass) runtimeError(vm, "Undefined method '%s'.", name->chars);
+            if (klass != vm->nilClass) runtimeError(vm, "Undefined method '%s' on class %s.", name->chars, klass->fullName->chars);
             return false;
         }
     }
@@ -1338,6 +1338,8 @@ InterpretResult run(VM* vm) {
             }
             case OP_YIELD_FROM: {
                 Value result = peek(vm, 0);
+                ObjString* name = frame->closure->function->name;
+                Value receiver = peek(vm, frame->closure->function->arity);
                 saveGeneratorFrame(vm, vm->runningGenerator, frame, result);
                 if (!IS_GENERATOR(result)) result = loadInnerGenerator(vm);
                 ObjGenerator* generator = AS_GENERATOR(result);
@@ -1348,6 +1350,11 @@ InterpretResult run(VM* vm) {
                     vm->frameCount--;
                     if (vm->apiStackDepth > 0) return INTERPRET_OK;
                     LOAD_FRAME();
+
+                    if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_YIELD, __onYieldFrom__) && hasInterceptableMethod(vm, receiver, name)) {
+                        interceptOnYieldFrom(vm, receiver, name, generator, result);
+                        LOAD_FRAME();
+                    }
                 }
                 break;
             }
