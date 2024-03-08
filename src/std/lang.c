@@ -599,6 +599,8 @@ LOX_METHOD(Generator, send) {
     ASSERT_ARG_COUNT("Generator::send(value)", 1);
     ObjGenerator* self = AS_GENERATOR(receiver);
     if (self->state == GENERATOR_RETURN) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already returned.");
+    else if (self->state == GENERATOR_RESUME) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator is already running.");
+    else if (self->state == GENERATOR_THROW) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already thrown an exception.");
     else {
         self->value = args[0];
         resumeGenerator(vm, self);
@@ -615,6 +617,19 @@ LOX_METHOD(Generator, throws) {
         ObjException* exception = AS_EXCEPTION(args[0]);
         self->state = GENERATOR_THROW;
         THROW_EXCEPTION(exception->obj.klass, exception->message->chars);
+    }
+}
+
+LOX_METHOD(Generator, __invoke__) {
+    if(argCount > 1) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator::() accepts 0 or 1 argument.");
+    ObjGenerator* self = AS_GENERATOR(receiver);
+    if (self->state == GENERATOR_RETURN) RETURN_OBJ(self);
+    else if (self->state == GENERATOR_RESUME) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator is already running.");
+    else if (self->state == GENERATOR_THROW) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator has already thrown an exception.");
+    else {
+        if(argCount == 1) self->value = args[0];
+        resumeGenerator(vm, self);
+        RETURN_OBJ(self);
     }
 }
 
@@ -2023,6 +2038,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->generatorClass, Generator, returns, 1);
     DEF_METHOD(vm->generatorClass, Generator, send, 1);
     DEF_METHOD(vm->generatorClass, Generator, throws, 1);
+    DEF_OPERATOR(vm->generatorClass, Generator, (), __invoke__, -1);
 
     ObjClass* generatorMetaclass = vm->generatorClass->obj.klass;
     setClassProperty(vm, vm->generatorClass, "stateStart", INT_VAL(GENERATOR_START));

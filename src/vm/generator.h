@@ -17,5 +17,7 @@ typedef enum {
 void resumeGenerator(VM* vm, ObjGenerator* generator);
 void loadGeneratorFrame(VM* vm, ObjGenerator* generator);
 void saveGeneratorFrame(VM* vm, ObjGenerator* generator, CallFrame* frame, Value result);
+Value loadInnerGenerator(VM* vm);
+void yieldFromInnerGenerator(VM* vm, ObjGenerator* generator);
 
 #endif // !clox_generator_h

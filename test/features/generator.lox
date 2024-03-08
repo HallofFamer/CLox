@@ -21,25 +21,25 @@ while(i <= 10) {
 }
 println("");
 
-fun innerGenerator(){
+fun innerGenerator(){ 
     println("Inner Generator starts...");
-    yield 1;
     yield 2;
     yield 3;
     println("Inner Generator ends...");
 }
 
+fun middleGenerator(){
+    println("Middle Generator starts...");
+    yield 1;
+    yield from innerGenerator();
+    yield 4;
+    println("Middle Generator ends...");
+}
+
 fun outerGenerator(){ 
     println("Outer Generator start...");
     yield 0;
-
-    //yield innerGenerator();
-    val inner = innerGenerator();
-    while(!inner.nextFinished()) { 
-        yield inner.value;
-    }
-
-    yield 4;
+    yield from middleGenerator();
     yield 5;
     println("Outer Generator ends...");
 }

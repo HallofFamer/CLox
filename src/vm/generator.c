@@ -38,3 +38,21 @@ void saveGeneratorFrame(VM* vm, ObjGenerator* generator, CallFrame* frame, Value
         generator->frame->slots[generator->frame->slotCount++] = *slot;
     }
 }
+
+Value loadInnerGenerator(VM* vm) {
+    if (vm->runningGenerator->inner == NULL) {
+        throwNativeException(vm, "clox.std.lang.IllegalArgumentException", "Cannot only yield from a generator.");
+    }
+    Value result = vm->runningGenerator->inner != NULL ? OBJ_VAL(vm->runningGenerator->inner) : NIL_VAL;
+    pop(vm);
+    push(vm, result);
+    return result;
+}
+
+void yieldFromInnerGenerator(VM* vm, ObjGenerator* generator) {
+    vm->runningGenerator->frame->ip--;
+    vm->runningGenerator->inner = generator;
+    Value result = callGenerator(vm, generator);
+    pop(vm);
+    push(vm, result);
+}
