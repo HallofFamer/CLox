@@ -21,31 +21,38 @@ while(i <= 10) {
 }
 println("");
 
-fun innerGenerator(){ 
-    println("Inner Generator starts...");
-    yield 2;
-    yield 3;
-    println("Inner Generator ends...");
-}
+class MultiGenerator { 
+    
+    init(){ 
+        this.totalYields = 0;
+    }
 
-fun middleGenerator(){
-    println("Middle Generator starts...");
-    yield 1;
-    yield from innerGenerator();
-    yield 4;
-    println("Middle Generator ends...");
-}
+    inner(){ 
+        println("Inner Generator starts...");
+        yield 2;
+        yield 3;
+        println("Inner Generator ends...");
+    }
 
-fun outerGenerator(){ 
-    println("Outer Generator start...");
-    yield 0;
-    yield from middleGenerator();
-    yield 5;
-    println("Outer Generator ends...");
+    middle(){ 
+        println("Middle Generator starts...");
+        yield 1;
+        yield from this.inner();
+        yield 4;
+        println("Middle Generator ends...");
+    }
+
+    outer(){ 
+        println("Outer Generator start...");
+        yield 0;
+        yield from this.middle();
+        yield 5;
+        println("Outer Generator ends..."); 
+    }
 }
 
 println("Testing nested generators: ");
-val generator2 = outerGenerator();
+val generator2 = MultiGenerator().outer();
 while(!generator2.nextFinished()) { 
     println("Generator yield value: ${generator2.value}");
 }
