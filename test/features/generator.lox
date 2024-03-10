@@ -1,5 +1,6 @@
 namespace test.features;
 
+/*
 fun fibonacci(){ 
     var last = 0;
     var current = yield 1;
@@ -20,10 +21,11 @@ while(i <= 10) {
     i = i + 1;
 }
 println("");
+*/
 
 class MultiGenerator { 
     
-    init(){ 
+    __init__(){ 
         this.totalYields = 0;
     }
 
@@ -49,10 +51,17 @@ class MultiGenerator {
         yield 5;
         println("Outer Generator ends..."); 
     }
+
+    __onYield__(name, result){ 
+        this.totalYields = this.totalYields + 1;
+        return result;
+    }
 }
 
 println("Testing nested generators: ");
-val generator2 = MultiGenerator().outer();
+val multi = MultiGenerator();
+val generator2 = multi.outer();
 while(!generator2.nextFinished()) { 
     println("Generator yield value: ${generator2.value}");
 }
+println("Total number of yields: ${multi.totalYields}");

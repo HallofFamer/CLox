@@ -8,7 +8,7 @@
 void resumeGenerator(VM* vm, ObjGenerator* generator) {
     vm->apiStackDepth++;
     Value result = callGenerator(vm, generator);
-    vm->stackTop -= generator->frame->slotCount;
+    vm->stackTop -= generator->frame->slotCount + 1;
     push(vm, OBJ_VAL(generator));
     vm->apiStackDepth--;
     generator->value = result;
@@ -23,6 +23,7 @@ void loadGeneratorFrame(VM* vm, ObjGenerator* generator) {
     for (int i = 1; i < generator->frame->slotCount; i++) {
         push(vm, generator->frame->slots[i]);
     }
+    frame->slots[0] = generator->frame->slots[0];
     if (generator->state != GENERATOR_START) push(vm, generator->value);
     generator->state = GENERATOR_RESUME;
 }
