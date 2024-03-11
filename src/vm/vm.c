@@ -301,7 +301,8 @@ bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
             .slots = vm->stackTop - argCount - 1
         };
         vm->stackTop -= (size_t)argCount + 1;
-        push(vm, OBJ_VAL(newGenerator(vm, newFrame(vm, &frame), vm->runningGenerator)));
+        ObjGenerator* generator = newGenerator(vm, newFrame(vm, &frame), vm->runningGenerator);
+        push(vm, OBJ_VAL(generator));
     }
     else {
         CallFrame* frame = &vm->frames[vm->frameCount++];
@@ -692,7 +693,7 @@ InterpretResult run(VM* vm) {
                 if (!getInstanceVariable(vm, receiver, &frame->closure->function->chunk, byte)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
                     if (interceptUndefinedGet(vm, receiver, name)) LOAD_FRAME();
-                    else return INTERPRET_RUNTIME_ERROR;
+                    else RUNTIME_ERROR("Undefined property '%s'", name->chars);
                 }
                 else if (CAN_INTERCEPT(receiver, INTERCEPTOR_AFTER_GET, __afterGet__)) {
                     ObjString* name = AS_STRING(frame->closure->function->chunk.identifiers.values[byte]);
@@ -1276,7 +1277,7 @@ InterpretResult run(VM* vm) {
                 ObjString* name = frame->closure->function->name;
                 Value receiver = peek(vm, frame->closure->function->arity);
                 closeUpvalues(vm, frame->slots);
-                if (vm->runningGenerator != NULL) vm->runningGenerator->state = GENERATOR_RETURN;
+                if (frame->closure->function->isGenerator) vm->runningGenerator->state = GENERATOR_RETURN;
 
                 vm->frameCount--;
                 if (vm->frameCount == 0) {
@@ -1284,7 +1285,7 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_OK;
                 }
 
-                if(vm->runningGenerator == NULL) vm->stackTop = frame->slots;
+                if(!frame->closure->function->isGenerator) vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
@@ -1301,7 +1302,7 @@ InterpretResult run(VM* vm) {
                 ObjString* name = frame->closure->function->name;
                 Value receiver = peek(vm, frame->closure->function->arity);
                 closeUpvalues(vm, frame->slots);
-                if (vm->runningGenerator != NULL) vm->runningGenerator->state = GENERATOR_RETURN;
+                if (frame->closure->function->isGenerator) vm->runningGenerator->state = GENERATOR_RETURN;
 
                 vm->frameCount -= depth + 1;
                 if (vm->frameCount == 0) {
@@ -1309,7 +1310,7 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_OK;
                 }
 
-                if (vm->runningGenerator == NULL) vm->stackTop = frame->slots;
+                if (!frame->closure->function->isGenerator) vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
@@ -1323,38 +1324,41 @@ InterpretResult run(VM* vm) {
             case OP_YIELD: { 
                 Value result = peek(vm, 0);
                 ObjString* name = frame->closure->function->name;
-                Value receiver = peek(vm, frame->closure->function->arity);
+                Value receiver = vm->runningGenerator->frame->slots[0];
                 saveGeneratorFrame(vm, vm->runningGenerator, frame, result);
-
-                vm->frameCount--;
-                if (vm->apiStackDepth > 0) return INTERPRET_OK;
-                LOAD_FRAME();
 
                 if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_YIELD, __onYield__) && hasInterceptableMethod(vm, receiver, name)) {
                     interceptOnYield(vm, receiver, name, result);
                     LOAD_FRAME();
                 }
+
+                vm->frameCount--;
+                if (vm->apiStackDepth > 0) return INTERPRET_OK;
+                LOAD_FRAME();
                 break;
             }
             case OP_YIELD_FROM: {
                 Value result = peek(vm, 0);
                 ObjString* name = frame->closure->function->name;
-                Value receiver = peek(vm, frame->closure->function->arity);
+                Value receiver = vm->runningGenerator->frame->slots[0];
                 saveGeneratorFrame(vm, vm->runningGenerator, frame, result);
-                if (!IS_GENERATOR(result)) result = loadInnerGenerator(vm);
+
+                if (!IS_GENERATOR(result)) {
+                    result = loadInnerGenerator(vm);
+                }
                 ObjGenerator* generator = AS_GENERATOR(result);
                 yieldFromInnerGenerator(vm, generator);
 
                 if (generator->state == GENERATOR_RETURN) vm->runningGenerator->frame->ip++;
                 else {
-                    vm->frameCount--;
-                    if (vm->apiStackDepth > 0) return INTERPRET_OK;
-                    LOAD_FRAME();
-
-                    if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_YIELD, __onYieldFrom__) && hasInterceptableMethod(vm, receiver, name)) {
+                    if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_YIELD_FROM, __onYieldFrom__) && hasInterceptableMethod(vm, receiver, name)) {
                         interceptOnYieldFrom(vm, receiver, name, generator, result);
                         LOAD_FRAME();
                     }
+
+                    vm->frameCount--;
+                    if (vm->apiStackDepth > 0) return INTERPRET_OK;
+                    LOAD_FRAME();
                 }
                 break;
             }

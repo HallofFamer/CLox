@@ -542,6 +542,7 @@ LOX_METHOD(Generator, __init__) {
     self->outer = vm->runningGenerator;
     self->inner = NULL;
     self->state = GENERATOR_START;
+    self->value = NIL_VAL;
     RETURN_OBJ(self);
 }
 
