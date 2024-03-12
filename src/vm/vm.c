@@ -300,8 +300,8 @@ bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
             .ip = closure->function->chunk.code,
             .slots = vm->stackTop - argCount - 1
         };
-        vm->stackTop -= (size_t)argCount + 1;
         ObjGenerator* generator = newGenerator(vm, newFrame(vm, &frame), vm->runningGenerator);
+        vm->stackTop -= (size_t)argCount + 1;
         push(vm, OBJ_VAL(generator));
     }
     else {

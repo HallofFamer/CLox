@@ -108,14 +108,17 @@ ObjFrame* newFrame(VM* vm, CallFrame* callFrame) {
     ObjFrame* frame = ALLOCATE_OBJ(ObjFrame, OBJ_FRAME, NULL);
     frame->closure = callFrame->closure;
     frame->ip = callFrame->ip;
-    frame->slotCount = 0; 
+    frame->slotCount = callFrame->closure->function->arity + 1; 
     frame->handlerCount = callFrame->handlerCount;
+
+    for (int i = 0; i < frame->slotCount; i++) {
+        frame->slots[i] = peek(vm, callFrame->closure->function->arity - i);
+    }
 
     for (int i = 0; i < frame->handlerCount; i++) {
         frame->handlerStack[i] = callFrame->handlerStack[i];
     }
-    Value receiver = peek(vm, callFrame->closure->function->arity - 1);
-    frame->slots[frame->slotCount++] = receiver;
+
     return frame;
 }
 
