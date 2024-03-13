@@ -621,6 +621,12 @@ LOX_METHOD(Generator, throws) {
     }
 }
 
+LOX_METHOD(Generator, toString) {
+    ASSERT_ARG_COUNT("Generator::toString()", 0);
+    ObjGenerator* self = AS_GENERATOR(receiver);
+    RETURN_STRING_FMT("<generator %s>", self->frame->closure->function->name->chars);
+}
+
 LOX_METHOD(Generator, __invoke__) {
     if(argCount > 1) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Generator::() accepts 0 or 1 argument.");
     ObjGenerator* self = AS_GENERATOR(receiver);
@@ -2039,6 +2045,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->generatorClass, Generator, returns, 1);
     DEF_METHOD(vm->generatorClass, Generator, send, 1);
     DEF_METHOD(vm->generatorClass, Generator, throws, 1);
+    DEF_METHOD(vm->generatorClass, Generator, toString, 0);
     DEF_OPERATOR(vm->generatorClass, Generator, (), __invoke__, -1);
 
     ObjClass* generatorMetaclass = vm->generatorClass->obj.klass;

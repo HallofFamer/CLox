@@ -29,38 +29,39 @@ class MultiGenerator {
         this.totalYields = 0;
     }
 
-    inner(){ 
+    inner(arg, arg2){ 
         println("Inner Generator starts...");
-        yield 2;
-        yield 3;
+        yield arg;
+        yield arg2;
         println("Inner Generator ends...");
     }
 
-    middle(){ 
+    middle(arg, arg2){ 
         println("Middle Generator starts...");
-        yield 1;
-        yield from this.inner();
-        yield 4;
+        yield arg;
+        yield from this.inner(2, 3);
+        yield arg2;
         println("Middle Generator ends...");
     }
 
-    outer(){ 
+    outer(arg, arg2){ 
         println("Outer Generator start...");
-        yield 0;
-        yield from this.middle();
-        yield 5;
+        yield arg;
+        yield from this.middle(1, 4);
+        yield arg2;
         println("Outer Generator ends..."); 
     }
 
-    __onYield__(name, result){ 
+    __onYield__(name, result){
+        println("Intercepting yield at method ${name}");
         this.totalYields = this.totalYields + 1;
         return result;
-    }
+    } 
 }
 
-println("Testing nested generators: ");
+println("Testing nested generators:");
 val multi = MultiGenerator();
-val generator2 = multi.outer();
+val generator2 = multi.outer(0, 5);
 while(!generator2.nextFinished()) { 
     println("Generator yield value: ${generator2.value}");
 }
