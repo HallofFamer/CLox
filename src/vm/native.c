@@ -134,9 +134,6 @@ void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int 
         case INTERCEPTOR_ON_YIELD:
             defineNativeMethod(vm, klass, "__onYield__", 2, method);
             break;
-        case INTERCEPTOR_ON_YIELD_FROM:
-            defineNativeMethod(vm, klass, "__onYieldFrom__", 3, method);
-            break;
         case INTERCEPTOR_UNDEFINED_GET:
             defineNativeMethod(vm, klass, "__undefinedGet__", 1, method);
             break;

@@ -19,7 +19,6 @@ typedef enum {
     INTERCEPTOR_ON_RETURN,
     INTERCEPTOR_ON_THROW,
     INTERCEPTOR_ON_YIELD,
-    INTERCEPTOR_ON_YIELD_FROM,
     INTERCEPTOR_UNDEFINED_GET,
     INTERCEPTOR_UNDEFINED_INVOKE
 } InterceptorType;
@@ -34,7 +33,6 @@ bool interceptOnInvoke(VM* vm, Value receiver, ObjString* name, int argCount);
 bool interceptOnReturn(VM* vm, Value receiver, ObjString* name, Value result);
 bool interceptOnThrow(VM* vm, Value receiver, ObjString* name, Value exception);
 bool interceptOnYield(VM* vm, Value receiver, ObjString* name, Value result);
-bool interceptOnYieldFrom(VM* vm, Value receiver, ObjString* name, ObjGenerator* generator, Value result);
 bool interceptUndefinedGet(VM* vm, Value receiver, ObjString* name);
 bool interceptUndefinedInvoke(VM* vm, ObjClass* klass, ObjString* name, int argCount);
 

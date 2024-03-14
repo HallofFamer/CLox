@@ -1285,7 +1285,7 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_OK;
                 }
 
-                if(!frame->closure->function->isGenerator) vm->stackTop = frame->slots;
+                if (!frame->closure->function->isGenerator) vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
@@ -1351,11 +1351,6 @@ InterpretResult run(VM* vm) {
 
                 if (generator->state == GENERATOR_RETURN) vm->runningGenerator->frame->ip++;
                 else {
-                    if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_YIELD_FROM, __onYieldFrom__) && hasInterceptableMethod(vm, receiver, name)) {
-                        interceptOnYieldFrom(vm, receiver, name, generator, result);
-                        LOAD_FRAME();
-                    }
-
                     vm->frameCount--;
                     if (vm->apiStackDepth > 0) return INTERPRET_OK;
                     LOAD_FRAME();
