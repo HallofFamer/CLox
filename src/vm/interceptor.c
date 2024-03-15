@@ -134,6 +134,7 @@ bool interceptOnYield(VM* vm, Value receiver, ObjString* name, Value result) {
     Value interceptor;
     if (tableGet(&klass->methods, newString(vm, "__onYield__"), &interceptor)) {
         Value result2 = callReentrant(vm, receiver, interceptor, OBJ_VAL(name), result);
+        pop(vm);
         push(vm, result2);
         return true;
     }
