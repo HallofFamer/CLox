@@ -546,6 +546,11 @@ LOX_METHOD(Generator, __init__) {
     RETURN_OBJ(self);
 }
 
+LOX_METHOD(Generator, getReceiver) {
+    ASSERT_ARG_COUNT("Generator::getReceiver()", 0);
+    RETURN_VAL(AS_GENERATOR(receiver)->frame->slots[0]);
+}
+
 LOX_METHOD(Generator, isFinished) { 
     ASSERT_ARG_COUNT("Generator::isFinished()", 0);
     RETURN_BOOL(AS_GENERATOR(receiver)->state == GENERATOR_RETURN);
@@ -607,6 +612,13 @@ LOX_METHOD(Generator, send) {
         resumeGenerator(vm, self);
         RETURN_OBJ(self);
     }
+}
+
+LOX_METHOD(Generator, setReceiver) {
+    ASSERT_ARG_COUNT("Generator::setReceiver(receiver)", 1);
+    ObjGenerator* self = AS_GENERATOR(receiver);
+    self->frame->slots[0] = args[0];
+    RETURN_NIL;
 }
 
 LOX_METHOD(Generator, throws) {
@@ -2037,6 +2049,7 @@ void registerLangPackage(VM* vm) {
     bindSuperclass(vm, vm->generatorClass, vm->objectClass);
     vm->generatorClass->classType = OBJ_GENERATOR;
     DEF_INTERCEPTOR(vm->generatorClass, Generator, INTERCEPTOR_INIT, __init__, 1);
+    DEF_METHOD(vm->generatorClass, Generator, getReceiver, 0);
     DEF_METHOD(vm->generatorClass, Generator, isFinished, 0);
     DEF_METHOD(vm->generatorClass, Generator, isReady, 0);
     DEF_METHOD(vm->generatorClass, Generator, isSuspended, 0);
@@ -2044,6 +2057,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->generatorClass, Generator, nextFinished, 0);
     DEF_METHOD(vm->generatorClass, Generator, returns, 1);
     DEF_METHOD(vm->generatorClass, Generator, send, 1);
+    DEF_METHOD(vm->generatorClass, Generator, setReceiver, 1);
     DEF_METHOD(vm->generatorClass, Generator, throws, 1);
     DEF_METHOD(vm->generatorClass, Generator, toString, 0);
     DEF_OPERATOR(vm->generatorClass, Generator, (), __invoke__, -1);

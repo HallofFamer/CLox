@@ -1,6 +1,5 @@
 namespace test.features;
 
-/*
 fun fibonacci(){ 
     var last = 0;
     var current = yield 1;
@@ -21,7 +20,6 @@ while(i <= 10) {
     i = i + 1;
 }
 println("");
-*/
 
 class MultiGenerator { 
     
@@ -56,12 +54,13 @@ class MultiGenerator {
         println("Intercepting yield at method ${name}");
         this.totalYields = this.totalYields + 1;
         return result;
-    } 
+    }
 }
 
 println("Testing nested generators:");
 val multi = MultiGenerator();
 val generator2 = multi.outer(0, 5);
+println("Generator receiver: ${generator2.getReceiver()}");
 while(!generator2.nextFinished()) { 
     println("Generator yield value: ${generator2.value}");
 }

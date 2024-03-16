@@ -37,7 +37,7 @@ class InterceptObject {
         println("Before invoking method: ${name} with ${args.length} arguments: ${args.toString()}.");
     }
 
-    __onReturn(name, result) { 
+    __onReturn__(name, result) { 
         println("After invoking method: ${name} with return value ${result}.");
         return "${result} new";
     }
