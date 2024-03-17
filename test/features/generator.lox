@@ -3,12 +3,11 @@ namespace test.features;
 fun fibonacci(){ 
     var last = 0;
     var current = yield 1;
-    var next = 1;
 
     while(true) { 
         current = last + current;
         last = current - last;
-        next = yield current;
+        yield current;
     }
 }
 
