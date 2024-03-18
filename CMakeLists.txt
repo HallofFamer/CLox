@@ -92,7 +92,6 @@ set(no_group_source_files
     "clox.ini"
     "CMakeLists.txt"
     "main.c"
-    "README.md"
 )
 source_group("" FILES ${no_group_source_files})
 

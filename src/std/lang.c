@@ -329,7 +329,7 @@ LOX_METHOD(Class, __invoke__) {
     push(vm, OBJ_VAL(instance));
     Value initMethod;
     if (tableGet(&self->methods, vm->initString, &initMethod)) {
-        callReentrant(vm, receiver, initMethod, args);
+        callReentrantMethod(vm, receiver, initMethod, args);
     }
     pop(vm);
     RETURN_OBJ(instance);
@@ -683,11 +683,11 @@ LOX_METHOD(Int, downTo) {
     ASSERT_ARG_TYPE("Int::downTo(to, closure)", 0, Int);
     ASSERT_ARG_TYPE("Int::downTo(to, closure)", 1, Closure);
     int self = AS_INT_INSTANCE(receiver);
-    int to = AS_INT_INSTANCE(receiver);
+    int to = AS_INT_INSTANCE(args[0]);
     ObjClosure* closure = AS_CLOSURE(args[1]);
 
     for (int i = self; i >= to; i--) {
-        callReentrant(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
+        callReentrantMethod(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
     }
     RETURN_NIL;
 }
@@ -734,7 +734,7 @@ LOX_METHOD(Int, timesRepeat) {
     ObjClosure* closure = AS_CLOSURE(args[0]);
 
     for (int i = 0; i < self; i++) {
-        callReentrant(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
+        callReentrantMethod(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
     }
     RETURN_NIL;
 }
@@ -782,7 +782,7 @@ LOX_METHOD(Int, upTo) {
     ObjClosure* closure = AS_CLOSURE(args[1]);
 
     for (int i = self; i <= to; i++) {
-        callReentrant(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
+        callReentrantMethod(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
     }
     RETURN_NIL;
 }
@@ -1207,12 +1207,12 @@ LOX_METHOD(Number, step) {
     else {
         if (by > 0) {
             for (double num = self; num <= to; num += by) {
-                callReentrant(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
+                callReentrantMethod(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
             }
         }
         else {
             for (double num = self; num >= to; num += by) {
-                callReentrant(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
+                callReentrantMethod(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
             }
         }
     }
@@ -1616,7 +1616,7 @@ LOX_METHOD(TComparable, equals) {
     ASSERT_ARG_COUNT("TComparable::equals(other)", 1);
     if (valuesEqual(receiver, args[0])) RETURN_TRUE;
     else {
-        Value result = callReentrant(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
+        Value result = callReentrantMethod(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
         RETURN_BOOL(result == 0);
     }
 }
@@ -1625,7 +1625,7 @@ LOX_METHOD(TComparable, __equal__) {
     ASSERT_ARG_COUNT("TComparable::==(other)", 1);
     if (valuesEqual(receiver, args[0])) RETURN_TRUE;
     else {
-        Value result = callReentrant(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
+        Value result = callReentrantMethod(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
         RETURN_BOOL(result > 0);
     }
 }
@@ -1634,7 +1634,7 @@ LOX_METHOD(TComparable, __greater__) {
     ASSERT_ARG_COUNT("TComparable::>(other)", 1);
     if (valuesEqual(receiver, args[0])) RETURN_TRUE;
     else {
-        Value result = callReentrant(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
+        Value result = callReentrantMethod(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
         RETURN_BOOL(result == 0);
     }
 }
@@ -1643,7 +1643,7 @@ LOX_METHOD(TComparable, __less__) {
     ASSERT_ARG_COUNT("TComparable::<(other)", 1);
     if (valuesEqual(receiver, args[0])) RETURN_TRUE;
     else {
-        Value result = callReentrant(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
+        Value result = callReentrantMethod(vm, receiver, getObjMethod(vm, receiver, "compareTo"), args[0]);
         RETURN_BOOL(result < 0);
     }
 }

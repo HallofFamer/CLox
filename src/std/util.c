@@ -617,6 +617,76 @@ LOX_METHOD(DurationClass, ofSeconds) {
     RETURN_OBJ(instance);
 }
 
+LOX_METHOD(Promise, __init__) {
+    ASSERT_ARG_COUNT("Promise::__init__(executor)", 1);
+    ASSERT_ARG_TYPE("Promise::__init__(executor)", 0, Closure);
+    ObjPromise* self = AS_PROMISE(receiver);
+    self->executor = AS_CLOSURE(args[0]);
+
+    Value fulfill;
+    tableGet(&self->obj.klass->methods, copyString(vm, "fulfill", 7), &fulfill);
+    Value reject;
+    tableGet(&self->obj.klass->methods, copyString(vm, "reject", 6), &reject);
+    callReentrantMethod(vm, OBJ_VAL(self), OBJ_VAL(self->executor), fulfill, reject);
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Promise, catch) {
+    ASSERT_ARG_COUNT("Promise::catch(closure)", 1);
+    ASSERT_ARG_TYPE("Promise::catch(closure)", 0, Closure);
+    ObjPromise* self = AS_PROMISE(receiver);
+    if (self->state == PROMISE_REJECTED) callReentrantMethod(vm, self, args[0], OBJ_VAL(self->exception));
+    else self->onCatch = args[0];
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Promise, finally) {
+    ASSERT_ARG_COUNT("Promise::finally(closure)", 1);
+    ASSERT_ARG_TYPE("Promise::catch(closure)", 0, Closure);
+    ObjPromise* self = AS_PROMISE(receiver);
+    if (self->state == PROMISE_FULFILLED || self->state == PROMISE_REJECTED) callReentrantMethod(vm, self, args[0], self->value);
+    else self->onCatch = args[0];
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Promise, fulfill) {
+    ASSERT_ARG_COUNT("Promise::fulfill(value)", 1);
+    ObjPromise* self = AS_PROMISE(receiver);
+    self->state = PROMISE_FULFILLED;
+    self->value = args[0];
+    for (int i = 0; i < self->handlers.count; i++) {
+        self->value = callReentrantMethod(vm, self, self->handlers.values[i], self->value);
+    }
+    if (IS_CLOSURE(self->onFinally)) callReentrantMethod(vm, self, self->onFinally, self->value);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Promise, isResolved) {
+    ASSERT_ARG_COUNT("Promise::isResolved()", 0);
+    ObjPromise* self = AS_PROMISE(receiver);
+    RETURN_BOOL(self->state == PROMISE_FULFILLED || self->state == PROMISE_REJECTED);
+}
+
+LOX_METHOD(Promise, reject) {
+    ASSERT_ARG_COUNT("Promise::reject(exception)", 1);
+    ASSERT_ARG_TYPE("Promise::reject(exception)", 0, Exception);
+    ObjPromise* self = AS_PROMISE(receiver);
+    self->state = PROMISE_REJECTED;
+    self->exception = AS_EXCEPTION(args[0]);
+    if (IS_CLOSURE(self->onCatch)) callReentrantMethod(vm, self, self->onCatch, OBJ_VAL(self->exception));
+    if (IS_CLOSURE(self->onFinally)) callReentrantMethod(vm, self, self->onFinally, self->value);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Promise, then) {
+    ASSERT_ARG_COUNT("Promise::then(onFulfilled)", 1);
+    ASSERT_ARG_TYPE("Promise::then(onFulfilled)", 0, Closure);
+    ObjPromise* self = AS_PROMISE(receiver);
+    if (self->state == PROMISE_FULFILLED) self->value = callReentrantMethod(vm, OBJ_VAL(self), args[0], self->value);
+    else valueArrayWrite(vm, &self->handlers, args[0]);
+    RETURN_OBJ(self);
+}
+
 LOX_METHOD(Random, __init__) {
     ASSERT_ARG_COUNT("Random::__init__()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -761,10 +831,10 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateClass, Date, diff, 1);
     DEF_METHOD(dateClass, Date, getTimestamp, 0);
     DEF_METHOD(dateClass, Date, toDateTime, 0);
-	DEF_METHOD(dateClass, Date, toString, 0);
-    DEF_OPERATOR(dateClass, Date, ==, __equal__, 1);
-    DEF_OPERATOR(dateClass, Date, >, __greater__, 1);
-    DEF_OPERATOR(dateClass, Date, <, __less__, 1);
+    DEF_METHOD(dateClass, Date, toString, 0);
+    DEF_OPERATOR(dateClass, Date, == , __equal__, 1);
+    DEF_OPERATOR(dateClass, Date, > , __greater__, 1);
+    DEF_OPERATOR(dateClass, Date, < , __less__, 1);
     DEF_OPERATOR(dateClass, Date, +, __add__, 1);
     DEF_OPERATOR(dateClass, Date, -, __subtract__, 1);
 
@@ -772,7 +842,7 @@ void registerUtilPackage(VM* vm) {
     setClassProperty(vm, dateClass, "now", OBJ_VAL(dateObjNow(vm, dateClass)));
     DEF_METHOD(dateMetaclass, DateClass, fromTimestamp, 1);
     DEF_METHOD(dateMetaclass, DateClass, parse, 1);
-   
+
     ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
     bindSuperclass(vm, dateTimeClass, dateClass);
     bindTrait(vm, dateTimeClass, comparableTrait);
@@ -782,9 +852,9 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateTimeClass, DateTime, getTimestamp, 0);
     DEF_METHOD(dateTimeClass, DateTime, toDate, 0);
     DEF_METHOD(dateTimeClass, DateTime, toString, 0);
-    DEF_OPERATOR(dateTimeClass, DateTime, ==, __equal__, 1);
-    DEF_OPERATOR(dateTimeClass, DateTime, >, __greater__, 1);
-    DEF_OPERATOR(dateTimeClass, DateTime, <, __less__, 1);
+    DEF_OPERATOR(dateTimeClass, DateTime, == , __equal__, 1);
+    DEF_OPERATOR(dateTimeClass, DateTime, > , __greater__, 1);
+    DEF_OPERATOR(dateTimeClass, DateTime, < , __less__, 1);
     DEF_OPERATOR(dateTimeClass, DateTime, +, __add__, 1);
     DEF_OPERATOR(dateTimeClass, DateTime, -, __subtract__, 1);
 
@@ -792,7 +862,7 @@ void registerUtilPackage(VM* vm) {
     setClassProperty(vm, dateTimeClass, "now", OBJ_VAL(dateTimeObjNow(vm, dateTimeClass)));
     DEF_METHOD(dateTimeMetaClass, DateTimeClass, fromTimestamp, 1);
     DEF_METHOD(dateTimeMetaClass, DateTimeClass, parse, 1);
-    
+
     ObjClass* durationClass = defineNativeClass(vm, "Duration");
     bindSuperclass(vm, durationClass, vm->objectClass);
     bindTrait(vm, durationClass, comparableTrait);
@@ -800,9 +870,9 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(durationClass, Duration, compareTo, 1);
     DEF_METHOD(durationClass, Duration, getTotalSeconds, 0);
     DEF_METHOD(durationClass, Duration, toString, 0);
-    DEF_OPERATOR(durationClass, Duration, ==, __equal__, 1);
-    DEF_OPERATOR(durationClass, Duration, >, __greater__, 1);
-    DEF_OPERATOR(durationClass, Duration, <, __less__, 1);
+    DEF_OPERATOR(durationClass, Duration, == , __equal__, 1);
+    DEF_OPERATOR(durationClass, Duration, > , __greater__, 1);
+    DEF_OPERATOR(durationClass, Duration, < , __less__, 1);
     DEF_OPERATOR(durationClass, Duration, +, __add__, 1);
     DEF_OPERATOR(durationClass, Duration, -, __subtract__, 1);
 
@@ -811,6 +881,22 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(durationMetaclass, DurationClass, ofHours, 1);
     DEF_METHOD(durationMetaclass, DurationClass, ofMinutes, 1);
     DEF_METHOD(durationMetaclass, DurationClass, ofSeconds, 1);
+
+    vm->promiseClass = defineNativeClass(vm, "Promise");
+    bindSuperclass(vm, vm->promiseClass, vm->objectClass);
+    vm->promiseClass->classType = OBJ_PROMISE;
+    DEF_INTERCEPTOR(vm->promiseClass, Promise, INTERCEPTOR_INIT, __init__, 1);
+    DEF_METHOD(vm->promiseClass, Promise, catch, 1);
+    DEF_METHOD(vm->promiseClass, Promise, finally, 1);
+    DEF_METHOD(vm->promiseClass, Promise, fulfill, 1);
+    DEF_METHOD(vm->promiseClass, Promise, isResolved, 0);
+    DEF_METHOD(vm->promiseClass, Promise, reject, 1);
+    DEF_METHOD(vm->promiseClass, Promise, then, 1);
+
+    ObjClass* promiseMetaClass = vm->promiseClass->obj.klass;
+    setClassProperty(vm, vm->promiseClass, "statePending", INT_VAL(PROMISE_PENDING));
+    setClassProperty(vm, vm->promiseClass, "stateFulfilled", INT_VAL(PROMISE_FULFILLED));
+    setClassProperty(vm, vm->promiseClass, "stateRejected", INT_VAL(PROMISE_REJECTED));
 
     ObjClass* randomClass = defineNativeClass(vm, "Random");
     bindSuperclass(vm, randomClass, vm->objectClass);
