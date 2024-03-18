@@ -48,10 +48,10 @@ static void createDefaultShapes(VM* vm) {
     defaultShapeIDs[OBJ_FRAME] = -1;
     defaultShapeIDs[OBJ_FUNCTION] = -1;
 
-    int shapeIDOuter = createShapeFromParent(vm, 0, newString(vm, "outer"));
-    int shapeIDState = createShapeFromParent(vm, shapeIDOuter, newString(vm, "state"));
+    int shapeIDState = createShapeFromParent(vm, 0, newString(vm, "state"));
     int shapeIDValue = createShapeFromParent(vm, shapeIDState, newString(vm, "value"));
-    defaultShapeIDs[OBJ_GENERATOR] = shapeIDValue;
+    int shapeIDOuter = createShapeFromParent(vm, shapeIDValue, newString(vm, "outer"));
+    defaultShapeIDs[OBJ_GENERATOR] = shapeIDOuter;
     defaultShapeIDs[OBJ_INSTANCE] = 0;
 
     int shapeIDMethod = createShapeFromParent(vm, shapeIDClosure, newString(vm, "behavior"));
@@ -66,6 +66,9 @@ static void createDefaultShapes(VM* vm) {
     int shapeIDNode1 = createShapeFromParent(vm, shapeIDElement, newString(vm, "prev"));
     int shapeIDNode2 = createShapeFromParent(vm, shapeIDNode1, newString(vm, "next"));
     defaultShapeIDs[OBJ_NODE] = shapeIDNode2;
+
+    int shapeIDID = createShapeFromParent(vm, shapeIDValue, newString(vm, "id"));
+    defaultShapeIDs[OBJ_PROMISE] = shapeIDID;
 
     int shapeIDFrom = createShapeFromParent(vm, 0, newString(vm, "from"));
     int shapeIDRange = createShapeFromParent(vm, shapeIDFrom, newString(vm, "to"));

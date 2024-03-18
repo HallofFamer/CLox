@@ -72,6 +72,7 @@ struct VM {
     ObjClass* entryClass;
     ObjClass* fileClass;
     ObjClass* generatorClass;
+    ObjClass* promiseClass;
 
     ObjNamespace* rootNamespace;
     ObjNamespace* cloxNamespace;
@@ -93,6 +94,7 @@ struct VM {
     int behaviorCount;
     int namespaceCount;
     int moduleCount;
+    int promiseCount;
 
     Table classes;
     Table namespaces;

@@ -148,6 +148,7 @@ void initVM(VM* vm) {
     vm->behaviorCount = 0;
     vm->namespaceCount = 0;
     vm->moduleCount = 1;
+    vm->promiseCount = 0;
 
     initTable(&vm->classes);
     initTable(&vm->namespaces);
@@ -329,6 +330,7 @@ static Value createObject(VM* vm, ObjClass* klass, int argCount) {
         case OBJ_METHOD: return OBJ_VAL(newMethod(vm, NULL, NULL));
         case OBJ_NAMESPACE: return OBJ_VAL(ALLOCATE_NAMESPACE(klass));
         case OBJ_NODE: return OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL));
+        case OBJ_PROMISE: return OBJ_VAL(newPromise(vm, NULL));
         case OBJ_RANGE: return OBJ_VAL(newRange(vm, 0, 1));
         case OBJ_RECORD: return OBJ_VAL(newRecord(vm, NULL));
         case OBJ_STRING: return OBJ_VAL(ALLOCATE_STRING(0, klass));
