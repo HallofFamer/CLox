@@ -360,7 +360,29 @@ bool callMethod(VM* vm, Value method, int argCount) {
     else return callClosure(vm, AS_CLOSURE(method), argCount);
 }
 
-Value callReentrant(VM* vm, Value receiver, Value callee, ...) {
+static void callReentrantClosure(VM* vm, Value callee, int argCount) {
+    vm->apiStackDepth++;
+    callClosure(vm, AS_CLOSURE(callee), argCount);
+    InterpretResult result = run(vm);
+    if (result == INTERPRET_RUNTIME_ERROR) exit(70);
+    vm->apiStackDepth--;
+}
+
+Value callReentrantFunction(VM* vm, Value callee, ...) {
+    int argCount = IS_NATIVE_FUNCTION(callee) ? AS_NATIVE_FUNCTION(callee)->arity : AS_CLOSURE(callee)->function->arity;
+    va_list args;
+    va_start(args, callee);
+    for (int i = 0; i < argCount; i++) {
+        push(vm, va_arg(args, Value));
+    }
+    va_end(args);
+
+    if (IS_CLOSURE(callee)) callReentrantClosure(vm, callee, argCount);
+    else callNativeFunction(vm, AS_NATIVE_FUNCTION(callee)->function, argCount);
+    return pop(vm);
+}
+
+Value callReentrantMethod(VM* vm, Value receiver, Value callee, ...) {
     push(vm, receiver);
     int argCount = IS_NATIVE_METHOD(callee) ? AS_NATIVE_METHOD(callee)->arity : AS_CLOSURE(callee)->function->arity;
     va_list args;
@@ -370,16 +392,8 @@ Value callReentrant(VM* vm, Value receiver, Value callee, ...) {
     }
     va_end(args);
 
-    if (IS_CLOSURE(callee)) {
-        vm->apiStackDepth++;
-        callClosure(vm, AS_CLOSURE(callee), argCount);
-        InterpretResult result = run(vm);
-        if (result == INTERPRET_RUNTIME_ERROR) exit(70);
-        vm->apiStackDepth--;
-    }
-    else {
-        callNativeMethod(vm, AS_NATIVE_METHOD(callee)->method, argCount);
-    }
+    if (IS_CLOSURE(callee)) callReentrantClosure(vm, callee, argCount);
+    else callNativeMethod(vm, AS_NATIVE_METHOD(callee)->method, argCount);
     return pop(vm);
 }
 

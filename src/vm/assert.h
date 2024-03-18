@@ -55,6 +55,7 @@ Value assertArgIsNamespace(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsNil(VM * vm, const char* method, Value * args, int index);
 Value assertArgIsNode(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsNumber(VM* vm, const char* method, Value* args, int index);
+Value assertArgIsPromise(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsRange(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsString(VM* vm, const char* method, Value* args, int index);
 Value assertIndexWithinBounds(VM* vm, const char* method, int value, int min, int max, int index);

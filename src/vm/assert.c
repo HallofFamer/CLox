@@ -140,6 +140,13 @@ Value assertArgIsNumber(VM* vm, const char* method, Value* args, int index) {
     RETURN_NIL;
 }
 
+Value assertArgIsPromise(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_PROMISE(args[index]) && !isObjInstanceOf(vm, args[index], vm->promiseClass)) {
+        RETURN_STRING_FMT("method %s expects argument %d to be a promise.", method, index + 1);
+    }
+    RETURN_NIL;
+}
+
 Value assertArgIsRange(VM* vm, const char* method, Value* args, int index) {
     if (!IS_RANGE(args[index]) && !isObjInstanceOf(vm, args[index], vm->rangeClass)) {
         RETURN_STRING_FMT("method %s expects argument %d to be a range.", method, index + 1);
