@@ -223,6 +223,19 @@ ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next) {
     return node;
 }
 
+ObjPromise* newPromise(VM* vm, ObjClosure* executor){
+    ObjPromise* promise = ALLOCATE_OBJ(ObjPromise, OBJ_PROMISE, vm->promiseClass);
+    promise->id = ++vm->promiseCount;
+    promise->state = PROMISE_PENDING;
+    promise->value = NIL_VAL;
+    promise->exception = NULL;
+    promise->executor = executor;
+    promise->onCatch = NIL_VAL;
+    promise->onFinally = NIL_VAL;
+    initValueArray(&promise->handlers);
+    return promise;
+}
+
 ObjRange* newRange(VM* vm, int from, int to) {
     ObjRange* range = ALLOCATE_OBJ(ObjRange, OBJ_RANGE, vm->rangeClass);
     range->from = from;
@@ -421,6 +434,9 @@ void printObject(Value value) {
             break;
         case OBJ_NODE:
             printf("<node>");
+            break;
+        case OBJ_PROMISE:
+            printf("<promise: %d>", AS_PROMISE(value)->id);
             break;
         case OBJ_RANGE:
             printf("%d..%d", AS_RANGE(value)->from, AS_RANGE(value)->to);

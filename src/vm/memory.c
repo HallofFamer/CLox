@@ -194,6 +194,14 @@ static void blackenObject(VM* vm, Obj* object) {
             markObject(vm, (Obj*)node->next);
             break;
         }
+        case OBJ_PROMISE: {
+            ObjPromise* promise = (ObjPromise*)object;
+            markValue(vm, promise->value);
+            markObject(vm, (Obj*)promise->exception);
+            markObject(vm, (Obj*)promise->executor);
+            markArray(vm, &promise->handlers);
+            break;
+        }
         case OBJ_RECORD: {
             ObjRecord* record = (ObjRecord*)object;
             if (record->markFunction) record->markFunction(record->data);
@@ -311,6 +319,12 @@ static void freeObject(VM* vm, Obj* object) {
             break;
         case OBJ_NODE: {
             FREE(ObjNode, object);
+            break;
+        }
+        case OBJ_PROMISE: {
+            ObjPromise* promise = (ObjPromise*)object;
+            freeValueArray(vm, &promise->handlers);
+            FREE(ObjPromise, object);
             break;
         }
         case OBJ_RANGE: {

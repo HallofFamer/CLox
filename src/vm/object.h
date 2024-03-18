@@ -46,6 +46,7 @@
 #define IS_NIL_INSTANCE(arg)        (IS_NIL(arg) || (IS_VALUE_INSTANCE(arg) && IS_NIL(AS_VALUE_INSTANCE(arg)->value))) 
 #define IS_NODE(value)              isObjType(value, OBJ_NODE)
 #define IS_NUMBER_INSTANCE(arg)     (IS_NUMBER(arg) || (IS_VALUE_INSTANCE(arg) && IS_NUMBER(AS_VALUE_INSTANCE(arg)->value))) 
+#define IS_PROMISE(value)           isObjType(value, OBJ_PROMISE)
 #define IS_RANGE(value)             isObjType(value, OBJ_RANGE)    
 #define IS_RECORD(value)            isObjType(value, OBJ_RECORD)
 #define IS_STRING(value)            isObjType(value, OBJ_STRING)
@@ -74,6 +75,7 @@
 #define AS_NATIVE_METHOD(value)     ((ObjNativeMethod*)AS_OBJ(value))
 #define AS_NODE(value)              ((ObjNode*)AS_OBJ(value))
 #define AS_NUMBER_INSTANCE(arg)     (IS_NUMBER(arg) ? AS_NUMBER(arg) : AS_NUMBER(AS_VALUE_INSTANCE(arg)->value))
+#define AS_PROMISE(value)           ((ObjPromise*)AS_OBJ(value))
 #define AS_RANGE(value)             ((ObjRange*)AS_OBJ(value))
 #define AS_RECORD(value)            ((ObjRecord*)AS_OBJ(value))
 #define AS_STRING(value)            ((ObjString*)AS_OBJ(value))
@@ -103,6 +105,7 @@ typedef enum {
     OBJ_NATIVE_FUNCTION,
     OBJ_NATIVE_METHOD,
     OBJ_NODE,
+    OBJ_PROMISE,
     OBJ_RANGE,
     OBJ_RECORD,
     OBJ_STRING,
@@ -250,6 +253,24 @@ typedef struct ObjGenerator {
     Value value;
 } ObjGenerator;
 
+typedef enum {
+    PROMISE_PENDING,
+    PROMISE_FULFILLED,
+    PROMISE_REJECTED
+} PromiseState;
+
+typedef struct {
+    Obj obj;
+    int id;
+    PromiseState state;
+    Value value;
+    ObjException* exception;
+    ObjClosure* executor;
+    ValueArray handlers;
+    Value onCatch;
+    Value onFinally;
+} ObjPromise;
+
 struct ObjArray {
     Obj obj;
     ValueArray elements;
@@ -322,6 +343,7 @@ ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
+ObjPromise* newPromise(VM* vm, ObjClosure* executor);
 ObjRange* newRange(VM* vm, int from, int to);
 ObjRecord* newRecord(VM* vm, void* data);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
