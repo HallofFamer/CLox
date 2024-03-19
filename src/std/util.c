@@ -642,7 +642,7 @@ LOX_METHOD(Promise, catch) {
 
 LOX_METHOD(Promise, finally) {
     ASSERT_ARG_COUNT("Promise::finally(closure)", 1);
-    ASSERT_ARG_TYPE("Promise::catch(closure)", 0, Closure);
+    ASSERT_ARG_TYPE("Promise::finally(closure)", 0, Closure);
     ObjPromise* self = AS_PROMISE(receiver);
     if (self->state == PROMISE_FULFILLED || self->state == PROMISE_REJECTED) callReentrantMethod(vm, self, args[0], self->value);
     else self->onCatch = args[0];
