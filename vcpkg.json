@@ -2,6 +2,6 @@
   "name": "clox",
   "version": "1.8.0",
   "dependencies": [
-    "curl"
+    "curl", "libuv"
   ]
 }
