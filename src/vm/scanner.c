@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <uv.h>
 
 #include "common.h"
 #include "scanner.h"
@@ -48,7 +49,7 @@ static bool match(Scanner* scanner, char expected) {
     return true;
 }
 
-static Token makeToken(Scanner* scanner, TokenType type) {
+static Token makeToken(Scanner* scanner, TokenSymbol type) {
     Token token = {
         .type = type, 
         .start = scanner->start, 
@@ -129,8 +130,8 @@ static void skipWhitespace(Scanner* scanner) {
     }
 }
 
-static TokenType checkKeyword(Scanner* scanner, int start, int length,
-    const char* rest, TokenType type) {
+static TokenSymbol checkKeyword(Scanner* scanner, int start, int length,
+    const char* rest, TokenSymbol type) {
     if (scanner->current - scanner->start == start + length &&
         memcmp(scanner->start + start, rest, length) == 0) {
         return type;
@@ -139,7 +140,7 @@ static TokenType checkKeyword(Scanner* scanner, int start, int length,
     return TOKEN_IDENTIFIER;
 }
 
-static TokenType identifierType(Scanner* scanner) {
+static TokenSymbol identifierType(Scanner* scanner) {
     switch (scanner->start[0]) {
         case 'a': 
             if (scanner->current - scanner->start > 1) {
