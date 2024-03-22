@@ -20,10 +20,10 @@ void initParser(Parser* parser, VM* vm, Scanner* scanner);
 void error(Parser* parser, const char* message);
 void errorAtCurrent(Parser* parser, const char* message);
 void advance(Parser* parser);
-void consume(Parser* parser, TokenType type, const char* message);
-bool check(Parser* parser, TokenType type);
-bool checkNext(Parser* parser, TokenType type);
-bool match(Parser* parser, TokenType type);
+void consume(Parser* parser, TokenSymbol type, const char* message);
+bool check(Parser* parser, TokenSymbol type);
+bool checkNext(Parser* parser, TokenSymbol type);
+bool match(Parser* parser, TokenSymbol type);
 char* parseString(Parser* parser, int* length);
 void synchronize(Parser* parser);
 

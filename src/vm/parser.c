@@ -51,7 +51,7 @@ void advance(Parser* parser) {
     }
 }
 
-void consume(Parser* parser, TokenType type, const char* message) {
+void consume(Parser* parser, TokenSymbol type, const char* message) {
     if (parser->current.type == type) {
         advance(parser);
         return;
@@ -59,15 +59,15 @@ void consume(Parser* parser, TokenType type, const char* message) {
     errorAtCurrent(parser, message);
 }
 
-bool check(Parser* parser, TokenType type) {
+bool check(Parser* parser, TokenSymbol type) {
     return parser->current.type == type;
 }
 
-bool checkNext(Parser* parser, TokenType type) {
+bool checkNext(Parser* parser, TokenSymbol type) {
     return parser->next.type == type;
 }
 
-bool match(Parser* parser, TokenType type) {
+bool match(Parser* parser, TokenSymbol type) {
     if (!check(parser, type)) return false;
     advance(parser);
     return true;

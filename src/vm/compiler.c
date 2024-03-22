@@ -239,7 +239,7 @@ static void block(Compiler* compiler);
 static void behavior(Compiler* compiler, BehaviorType type, Token name);
 static void function(Compiler* enclosing, FunctionType type);
 static void declaration(Compiler* compiler);
-static ParseRule* getRule(TokenType type);
+static ParseRule* getRule(TokenSymbol type);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
 
 static uint8_t makeIdentifier(Compiler* compiler, Value value) {
@@ -503,7 +503,7 @@ static void and_(Compiler* compiler, bool canAssign) {
 }
 
 static void binary(Compiler* compiler, bool canAssign) {
-    TokenType operatorType = compiler->parser->previous.type;
+    TokenSymbol operatorType = compiler->parser->previous.type;
     ParseRule* rule = getRule(operatorType);
     parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
 
@@ -549,7 +549,7 @@ static void dot(Compiler* compiler, bool canAssign) {
 static void question(Compiler* compiler, bool canAssign) {
 #define PARSE_PRECEDENCE() \
     do { \
-        TokenType operatorType = compiler->parser->previous.type; \
+        TokenSymbol operatorType = compiler->parser->previous.type; \
         ParseRule* rule = getRule(operatorType); \
         parsePrecedence(compiler, (Precedence)(rule->precedence + 1)); \
     } while (false)
@@ -824,7 +824,7 @@ static void this_(Compiler* compiler, bool canAssign) {
 }
 
 static void unary(Compiler* compiler, bool canAssign) {
-    TokenType operatorType = compiler->parser->previous.type;
+    TokenSymbol operatorType = compiler->parser->previous.type;
     parsePrecedence(compiler, PREC_UNARY);
 
     switch (operatorType) {
@@ -949,7 +949,7 @@ static void parsePrecedence(Compiler* compiler, Precedence precedence) {
     }
 }
 
-static ParseRule* getRule(TokenType type) {
+static ParseRule* getRule(TokenSymbol type) {
     return &rules[type];
 }
 
@@ -1310,7 +1310,7 @@ static void switchStatement(Compiler* compiler) {
 
     while (!match(compiler->parser, TOKEN_RIGHT_BRACE) && !check(compiler->parser, TOKEN_EOF)) {
         if (match(compiler->parser, TOKEN_CASE) || match(compiler->parser, TOKEN_DEFAULT)) {
-            TokenType caseType = compiler->parser->previous.type;
+            TokenSymbol caseType = compiler->parser->previous.type;
             if (state == 2) {
                 error(compiler->parser, "Can't have another case or default after the default case.");
             }
