@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <uv.h>
 
 #include "assert.h"
 #include "memory.h"
@@ -71,15 +70,6 @@ LOX_FUNCTION(read) {
     ObjString* input = newString(vm, line);
     free(line);
     RETURN_OBJ(input);
-}
-
-LOX_FUNCTION(setTimeout) {
-    ASSERT_ARG_COUNT("setTimeout(closure, delay)", 2);
-    ASSERT_ARG_TYPE("setTimeout(closure, delay)", 0, Closure);
-    ASSERT_ARG_TYPE("setTimeout(closure, delay)", 1, Int);
-    Sleep(AS_INT(args[1]));
-    callReentrantFunction(vm, args[0]);
-    RETURN_NIL;
 }
 
 ObjClass* defineNativeClass(VM* vm, const char* name) {
@@ -242,5 +232,4 @@ void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(print, 1);
     DEF_FUNCTION(println, 1);
     DEF_FUNCTION(read, 0);
-    DEF_FUNCTION(setTimeout, 2);
 }
