@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
+#include <uv.h>
 
 #include "chunk.h"
 #include "common.h"
@@ -50,6 +51,7 @@
 #define IS_RANGE(value)             isObjType(value, OBJ_RANGE)    
 #define IS_RECORD(value)            isObjType(value, OBJ_RECORD)
 #define IS_STRING(value)            isObjType(value, OBJ_STRING)
+#define IS_TIMER(value)             isObjType(value, OBJ_TIMER)
 #define IS_UPVALUE(value)           isObjType(value, OBJ_UPVALUE)
 #define IS_VALUE_INSTANCE(value)    isObjType(value, OBJ_VALUE_INSTANCE)
 
@@ -79,6 +81,7 @@
 #define AS_RANGE(value)             ((ObjRange*)AS_OBJ(value))
 #define AS_RECORD(value)            ((ObjRecord*)AS_OBJ(value))
 #define AS_STRING(value)            ((ObjString*)AS_OBJ(value))
+#define AS_TIMER(value)             ((ObjTimer*)AS_OBJ(value))
 #define AS_UPVALUE(value)           ((ObjUpvalue*)AS_OBJ(value));
 #define AS_VALUE_INSTANCE(value)    ((ObjValueInstance*)AS_OBJ(value))
 
@@ -109,6 +112,7 @@ typedef enum {
     OBJ_RANGE,
     OBJ_RECORD,
     OBJ_STRING,
+    OBJ_TIMER,
     OBJ_UPVALUE,
     OBJ_VALUE_INSTANCE,
     OBJ_VOID
@@ -271,6 +275,21 @@ typedef struct {
     Value onFinally;
 } ObjPromise;
 
+typedef struct {
+    VM* vm;
+    Value receiver;
+    ObjClosure* closure;
+    int delay;
+    int interval;
+} TimerData;
+
+typedef struct {
+    Obj obj;
+    uv_timer_t* timer;
+    int id;
+    bool isRunning;
+} ObjTimer;
+
 struct ObjArray {
     Obj obj;
     ValueArray elements;
@@ -346,6 +365,7 @@ ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
 ObjPromise* newPromise(VM* vm, ObjClosure* executor);
 ObjRange* newRange(VM* vm, int from, int to);
 ObjRecord* newRecord(VM* vm, void* data);
+ObjTimer* newTimer(VM* vm, ObjClosure* closure, int delay, int interval);
 ObjUpvalue* newUpvalue(VM* vm, Value* slot);
 ObjValueInstance* newValueInstance(VM* vm, Value value, ObjClass* klass);
 

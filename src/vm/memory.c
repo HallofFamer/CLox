@@ -207,6 +207,15 @@ static void blackenObject(VM* vm, Obj* object) {
             if (record->markFunction) record->markFunction(record->data);
             break;
         }
+        case OBJ_TIMER: { 
+            ObjTimer* timer = (ObjTimer*)object;
+            if (timer->timer != NULL && timer->timer->data != NULL) {
+                TimerData* data = (TimerData*)timer->timer->data;
+                markValue(vm, data->receiver);
+                markObject(vm, (Obj*)data->closure);
+            }
+            break;
+        }
         case OBJ_UPVALUE:
             markValue(vm, ((ObjUpvalue*)object)->closed);
             break;
@@ -341,6 +350,11 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_STRING: {
             ObjString* string = (ObjString*)object;
             reallocate(vm, object, sizeof(ObjString) + string->length + 1, 0);
+            break;
+        } 
+        case OBJ_TIMER: { 
+            ObjTimer* timer = (ObjTimer*)object;
+            FREE(ObjTimer, object);
             break;
         }
         case OBJ_UPVALUE:
