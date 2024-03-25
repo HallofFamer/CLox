@@ -1,0 +1,20 @@
+namespace test.std;
+using clox.std.util.Timer;
+
+println("Creating timers that run after delays...");
+val timer = Timer({ println("Timer finishes..."); }, 1000, 0).run();
+val timer2 = Timer({ println("Timer2 finishes..."); }, 2000, 0).run();
+val timer3 = Timer.timeout({ println("Timer3 finishes..."); }, 500);
+println(timer.toString());
+println(timer2.toString());
+println(timer3.toString());
+println("");
+
+var count = 0;
+println("Creating timers that run at certain interval...");
+val timer4 = Timer.interval({|timer| 
+    count = count + 1;
+    println("Timer4 runs ${count} times...");
+    if (count == 5) timer.clear();
+}, 1000);
+println(timer4.toString());

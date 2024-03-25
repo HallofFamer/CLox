@@ -171,6 +171,30 @@ static double durationTotalSeconds(VM* vm, ObjInstance* duration) {
     return 86400.0 * AS_INT(days) + 3600.0 * AS_INT(hours) + 60.0 * AS_INT(minutes) + AS_INT(seconds);
 }
 
+static void timerClose(uv_handle_t* handle) {
+    free(handle->data);
+    free(handle);
+}
+
+static void timerRun(uv_timer_t* timer) {
+    TimerData* data = (TimerData*)timer->data;
+    if(data->interval == 0) uv_close((uv_handle_t*)timer, timerClose);
+    push(data->vm, OBJ_VAL(data->vm->script));
+    data->vm->frameCount++;
+    switch (data->closure->function->arity) {
+        case 0:
+            callReentrantMethod(data->vm, data->receiver, OBJ_VAL(data->closure));
+            break;
+        case 1:
+            callReentrantMethod(data->vm, data->receiver, OBJ_VAL(data->closure), data->receiver);
+            break;
+        default:
+            throwNativeException(data->vm, "clox.std.lang.IllegalArgumentException", "timer callback closure may accept only 0 or 1 argument");
+    }
+    pop(data->vm);
+    data->vm->frameCount--;
+}
+
 static bool uuidCheckChar(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
 }
@@ -635,7 +659,7 @@ LOX_METHOD(Promise, catch) {
     ASSERT_ARG_COUNT("Promise::catch(closure)", 1);
     ASSERT_ARG_TYPE("Promise::catch(closure)", 0, Closure);
     ObjPromise* self = AS_PROMISE(receiver);
-    if (self->state == PROMISE_REJECTED) callReentrantMethod(vm, self, args[0], OBJ_VAL(self->exception));
+    if (self->state == PROMISE_REJECTED) callReentrantMethod(vm, OBJ_VAL(self), args[0], OBJ_VAL(self->exception));
     else self->onCatch = args[0];
     RETURN_OBJ(self);
 }
@@ -644,7 +668,7 @@ LOX_METHOD(Promise, finally) {
     ASSERT_ARG_COUNT("Promise::finally(closure)", 1);
     ASSERT_ARG_TYPE("Promise::finally(closure)", 0, Closure);
     ObjPromise* self = AS_PROMISE(receiver);
-    if (self->state == PROMISE_FULFILLED || self->state == PROMISE_REJECTED) callReentrantMethod(vm, self, args[0], self->value);
+    if (self->state == PROMISE_FULFILLED || self->state == PROMISE_REJECTED) callReentrantMethod(vm, OBJ_VAL(self), args[0], self->value);
     else self->onCatch = args[0];
     RETURN_OBJ(self);
 }
@@ -655,9 +679,9 @@ LOX_METHOD(Promise, fulfill) {
     self->state = PROMISE_FULFILLED;
     self->value = args[0];
     for (int i = 0; i < self->handlers.count; i++) {
-        self->value = callReentrantMethod(vm, self, self->handlers.values[i], self->value);
+        self->value = callReentrantMethod(vm, OBJ_VAL(self), self->handlers.values[i], self->value);
     }
-    if (IS_CLOSURE(self->onFinally)) callReentrantMethod(vm, self, self->onFinally, self->value);
+    if (IS_CLOSURE(self->onFinally)) callReentrantMethod(vm, OBJ_VAL(self), self->onFinally, self->value);
     RETURN_NIL;
 }
 
@@ -673,8 +697,8 @@ LOX_METHOD(Promise, reject) {
     ObjPromise* self = AS_PROMISE(receiver);
     self->state = PROMISE_REJECTED;
     self->exception = AS_EXCEPTION(args[0]);
-    if (IS_CLOSURE(self->onCatch)) callReentrantMethod(vm, self, self->onCatch, OBJ_VAL(self->exception));
-    if (IS_CLOSURE(self->onFinally)) callReentrantMethod(vm, self, self->onFinally, self->value);
+    if (IS_CLOSURE(self->onCatch)) callReentrantMethod(vm, OBJ_VAL(self), self->onCatch, OBJ_VAL(self->exception));
+    if (IS_CLOSURE(self->onFinally)) callReentrantMethod(vm, OBJ_VAL(self), self->onFinally, self->value);
     RETURN_NIL;
 }
 
@@ -774,6 +798,86 @@ LOX_METHOD(Regex, toString) {
     ASSERT_ARG_COUNT("Regex::toString()", 0);
     Value pattern = getObjProperty(vm, AS_INSTANCE(receiver), "pattern");
     RETURN_OBJ(pattern);
+}
+
+LOX_METHOD(Timer, __init__) {
+    ASSERT_ARG_COUNT("Timer::__init__(closure, delay, interval)", 3);
+    ASSERT_ARG_TYPE("Timer::__init__(closure, delay, interval)", 0, Closure);
+    ASSERT_ARG_TYPE("Timer::__init__(closure, delay, interval)", 1, Int);
+    ASSERT_ARG_TYPE("Timer::__init__(closure, delay, interval)", 2, Int);
+    ObjTimer* self = AS_TIMER(receiver);
+    TimerData* data = (TimerData*)self->timer->data;
+    data->receiver = receiver;
+    data->closure = AS_CLOSURE(args[0]);
+    data->delay = AS_INT(args[1]);
+    data->interval = AS_INT(args[2]);
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Timer, clear) {
+    ASSERT_ARG_COUNT("Timer::clear()", 0);
+    ObjTimer* self = AS_TIMER(receiver);
+    uv_timer_stop(self->timer);
+    RETURN_NIL;
+}
+
+LOX_METHOD(Timer, isRunning) {
+    ASSERT_ARG_COUNT("Timer::isRunning()", 0);
+    RETURN_BOOL(AS_TIMER(receiver)->isRunning);
+}
+
+LOX_METHOD(Timer, run) {
+    ASSERT_ARG_COUNT("Timer::run()", 0);
+    ObjTimer* self = AS_TIMER(receiver);
+    if (self->isRunning) THROW_EXCEPTION_FMT(clox.std.lang.UnsupportedOperationException, "Timer ID: %d is already running...", self->id);
+    else {
+        TimerData* data = (TimerData*)self->timer->data;
+        uv_timer_init(vm->eventLoop, self->timer);
+        uv_timer_start(self->timer, timerRun, data->delay, data->interval);
+        self->id = (int)self->timer->start_id;
+        RETURN_OBJ(self);
+    }
+}
+
+LOX_METHOD(Timer, toString) {
+    ASSERT_ARG_COUNT("Timer::run()", 0);
+    ObjTimer* self = AS_TIMER(receiver);
+    TimerData* data = (TimerData*)self->timer->data;
+    if (data->delay != 0 && data->interval == 0) RETURN_STRING_FMT("Timer: delay after %dms", data->delay);
+    if (data->delay == 0 && data->interval != 0) RETURN_STRING_FMT("Timer: interval at %dms", data->interval);
+    RETURN_STRING_FMT("Timer: delay after %dms, interval at %dms", data->delay, data->interval);
+}
+
+LOX_METHOD(TimerClass, interval) {
+    ASSERT_ARG_COUNT("Timer class::interval(closure, interval)", 2);
+    ASSERT_ARG_TYPE("Timer class::interval(closure, interval)", 0, Closure);
+    ASSERT_ARG_TYPE("Timer class::interval(closure, interval)", 1, Int);
+
+    ObjClass* self = AS_CLASS(receiver);
+    ObjTimer* timer = newTimer(vm, AS_CLOSURE(args[0]), 0, AS_INT(args[1]));
+    TimerData* data = (TimerData*)timer->timer->data;
+    timer->obj.klass = self;
+    data->receiver = OBJ_VAL(timer);
+    uv_timer_init(vm->eventLoop, timer->timer);
+    uv_timer_start(timer->timer, timerRun, 0, (uint64_t)data->interval);
+    timer->id = (int)timer->timer->start_id;
+    RETURN_OBJ(timer);
+}
+
+LOX_METHOD(TimerClass, timeout) {
+    ASSERT_ARG_COUNT("Timer class::timeout(closure, delay)", 2);
+    ASSERT_ARG_TYPE("Timer class::timeout(closure, delay)", 0, Closure);
+    ASSERT_ARG_TYPE("Timer class::timeout(closure, delay)", 1, Int);
+
+    ObjClass* self = AS_CLASS(receiver);
+    ObjTimer* timer = newTimer(vm, AS_CLOSURE(args[0]), AS_INT(args[1]), 0);
+    TimerData* data = (TimerData*)timer->timer->data;
+    timer->obj.klass = self;
+    data->receiver = OBJ_VAL(timer);
+    uv_timer_init(vm->eventLoop, timer->timer);
+    uv_timer_start(timer->timer, timerRun, (uint64_t)data->delay, 0);
+    timer->id = (int)timer->timer->start_id;
+    RETURN_OBJ(timer);
 }
 
 LOX_METHOD(UUID, __init__) {
@@ -893,7 +997,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->promiseClass, Promise, reject, 1);
     DEF_METHOD(vm->promiseClass, Promise, then, 1);
 
-    ObjClass* promiseMetaClass = vm->promiseClass->obj.klass;
+    ObjClass* promiseMetaclass = vm->promiseClass->obj.klass;
     setClassProperty(vm, vm->promiseClass, "statePending", INT_VAL(PROMISE_PENDING));
     setClassProperty(vm, vm->promiseClass, "stateFulfilled", INT_VAL(PROMISE_FULFILLED));
     setClassProperty(vm, vm->promiseClass, "stateRejected", INT_VAL(PROMISE_REJECTED));
@@ -914,6 +1018,19 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(regexClass, Regex, match, 1);
     DEF_METHOD(regexClass, Regex, replace, 2);
     DEF_METHOD(regexClass, Regex, toString, 0);
+
+    vm->timerClass = defineNativeClass(vm, "Timer");
+    bindSuperclass(vm, vm->timerClass, vm->objectClass);
+    vm->timerClass->classType = OBJ_TIMER;
+    DEF_INTERCEPTOR(vm->timerClass, Timer, INTERCEPTOR_INIT, __init__, 3);
+    DEF_METHOD(vm->timerClass, Timer, clear, 0);
+    DEF_METHOD(vm->timerClass, Timer, isRunning, 0);
+    DEF_METHOD(vm->timerClass, Timer, run, 0);
+    DEF_METHOD(vm->timerClass, Timer, toString, 0);
+
+    ObjClass* timerMetaclass = vm->timerClass->obj.klass;
+    DEF_METHOD(timerMetaclass, TimerClass, interval, 2);
+    DEF_METHOD(timerMetaclass, TimerClass, timeout, 2);
 
     ObjClass* uuidClass = defineNativeClass(vm, "UUID");
     bindSuperclass(vm, uuidClass, vm->objectClass);
