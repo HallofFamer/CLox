@@ -186,6 +186,13 @@ static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
             else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
+        case OBJ_TIMER: { 
+            ObjTimer* timer = (ObjTimer*)object;
+            if (index == 0) push(vm, INT_VAL(timer->id));
+            else if (index == 1) push(vm, BOOL_VAL(timer->isRunning));
+            else getAndPushGenericInstanceVariableByIndex(vm, object, index);
+            return true;
+        }
         case OBJ_VALUE_INSTANCE: { 
             ObjValueInstance* instance = (ObjValueInstance*)object;
             push(vm, instance->fields.values[index]);
@@ -307,6 +314,13 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
         case OBJ_STRING: {
             ObjString* string = (ObjString*)object;
             if (matchVariableName(name, "length", 6)) push(vm, INT_VAL(string->length));
+            else return getAndPushGenericInstanceVariableByName(vm, object, name);
+            return true;
+        }
+        case OBJ_TIMER: { 
+            ObjTimer* timer = (ObjTimer*)object;
+            if (matchVariableName(name, "id", 2)) push(vm, INT_VAL(timer->id));
+            else if (matchVariableName(name, "isRunning", 9)) push(vm, BOOL_VAL(timer->isRunning));
             else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
@@ -585,6 +599,15 @@ static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Va
             }
             else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
         }
+        case OBJ_TIMER: { 
+            ObjTimer* timer = (ObjTimer*)object;
+            if (index == 0 && IS_INT(value)) timer->id = AS_INT(value);
+            else if (index == 1 && IS_BOOL(value)) timer->isRunning = AS_BOOL(value);
+            else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
+
+            push(vm, value);
+            return true;
+        }
         default:
             runtimeError(vm, "Undefined property at index %d on Object type %d.", index, object->type);
             return false;
@@ -708,7 +731,7 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             ObjPromise* promise = (ObjPromise*)object;
             if (matchVariableName(name, "state", 5) && IS_INT(value)) promise->state = AS_INT(value);
             else if (matchVariableName(name, "value", 5)) promise->value = value;
-            if (matchVariableName(name, "id", 2)) { 
+            else if (matchVariableName(name, "id", 2)) { 
                 runtimeError(vm, "Cannot set property id on Object Promise.");
                 return false;
             }
@@ -733,6 +756,15 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
                 return false;
             }
             else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
+        }
+        case OBJ_TIMER: {
+            ObjTimer* timer = (ObjTimer*)object;
+            if (matchVariableName(name, "id", 2) && IS_INT(value)) timer->id = AS_INT(value);
+            else if (matchVariableName(name, "isRunning", 9)) timer->isRunning = AS_BOOL(value);
+            else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
+
+            push(vm, value);
+            return true;
         }
         default:
             runtimeError(vm, "Undefined property %s on Object type %d.", name->chars, object->type);
@@ -867,6 +899,7 @@ int getOffsetForGenericObject(Obj* object) {
         case OBJ_PROMISE: return 3;
         case OBJ_RANGE: return 2;
         case OBJ_STRING: return 1;
+        case OBJ_TIMER: return 2;
         default: return 0;
     }
 }
