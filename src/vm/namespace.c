@@ -119,11 +119,11 @@ bool loadModule(VM* vm, ObjString* path) {
     pop(vm);
     push(vm, OBJ_VAL(closure));
     callClosure(vm, closure, 0);
-    vm->currentModule = lastModule;
     free(source);
 
     vm->apiStackDepth++;
     run(vm);
     vm->apiStackDepth--;
+    vm->currentModule = lastModule;
     return true;
 }
