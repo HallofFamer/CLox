@@ -189,7 +189,7 @@ LOX_METHOD(BoundMethod, __init__) {
 
         ObjBoundMethod* boundMethod = AS_BOUND_METHOD(receiver);
         boundMethod->receiver = args[0];
-        boundMethod->method = method->closure;
+        boundMethod->method = OBJ_VAL(method->closure);
         RETURN_OBJ(boundMethod);
     }
     else if (IS_STRING(args[1])) {
@@ -201,7 +201,7 @@ LOX_METHOD(BoundMethod, __init__) {
 
         ObjBoundMethod* boundMethod = AS_BOUND_METHOD(receiver);
         boundMethod->receiver = args[0];
-        boundMethod->method = AS_CLOSURE(value);
+        boundMethod->method = value;
         RETURN_OBJ(boundMethod);
     }
     else {
@@ -211,7 +211,8 @@ LOX_METHOD(BoundMethod, __init__) {
 
 LOX_METHOD(BoundMethod, arity) {
     ASSERT_ARG_COUNT("BoundMethod::arity()", 0);
-    RETURN_INT(AS_BOUND_METHOD(receiver)->method->function->arity);
+    Value method = AS_BOUND_METHOD(receiver)->method;
+    RETURN_INT(IS_NATIVE_METHOD(method) ? AS_NATIVE_METHOD(method)->arity : AS_CLOSURE(method)->function->arity);
 }
 
 LOX_METHOD(BoundMethod, clone) {
@@ -219,15 +220,23 @@ LOX_METHOD(BoundMethod, clone) {
     RETURN_OBJ(receiver);
 }
 
+LOX_METHOD(BoundMethod, isNative) { 
+    ASSERT_ARG_COUNT("BoundMethod::isNative()", 0);
+    RETURN_BOOL(AS_BOUND_METHOD(receiver)->isNative);
+}
+
 LOX_METHOD(BoundMethod, isVariadic) {
     ASSERT_ARG_COUNT("BoundMethod::isVariadic()", 0);
-    RETURN_BOOL(AS_BOUND_METHOD(receiver)->method->function->arity == -1);
+    Value method = AS_BOUND_METHOD(receiver)->method;
+    int arity = IS_NATIVE_METHOD(method) ? AS_NATIVE_METHOD(method)->arity : AS_CLOSURE(method)->function->arity;
+    RETURN_BOOL(arity == -1);
 }
 
 LOX_METHOD(BoundMethod, name) {
     ASSERT_ARG_COUNT("BoundMethod::name()", 0);
     ObjBoundMethod* boundMethod = AS_BOUND_METHOD(receiver);
-    RETURN_STRING_FMT("%s::%s", getObjClass(vm, boundMethod->receiver)->name->chars, boundMethod->method->function->name->chars);
+    char* methodName = IS_NATIVE_METHOD(boundMethod->method) ? AS_NATIVE_METHOD(boundMethod->method)->name->chars : AS_CLOSURE(boundMethod->method)->function->name->chars;
+    RETURN_STRING_FMT("%s::%s", getObjClass(vm, boundMethod->receiver)->name->chars, methodName);
 }
 
 LOX_METHOD(BoundMethod, receiver) {
@@ -238,17 +247,20 @@ LOX_METHOD(BoundMethod, receiver) {
 LOX_METHOD(BoundMethod, toString) {
     ASSERT_ARG_COUNT("BoundMethod::toString()", 0);
     ObjBoundMethod* boundMethod = AS_BOUND_METHOD(receiver);
-    RETURN_STRING_FMT("<bound method %s::%s>", getObjClass(vm, boundMethod->receiver)->name->chars, boundMethod->method->function->name->chars);
+    char* methodName = IS_NATIVE_METHOD(boundMethod->method) ? AS_NATIVE_METHOD(boundMethod->method)->name->chars : AS_CLOSURE(boundMethod->method)->function->name->chars;
+    RETURN_STRING_FMT("<bound method %s::%s>", getObjClass(vm, boundMethod->receiver)->name->chars, methodName);
 }
 
 LOX_METHOD(BoundMethod, upvalueCount) {
     ASSERT_ARG_COUNT("BoundMethod::upvalueCount()", 0);
-    RETURN_INT(AS_BOUND_METHOD(receiver)->method->upvalueCount);
+    Value method = AS_BOUND_METHOD(receiver)->method;
+    if (!IS_CLOSURE(method)) RETURN_INT(0);
+    RETURN_INT(AS_CLOSURE(method)->upvalueCount);
 }
 
 LOX_METHOD(BoundMethod, __invoke__) {
     ObjBoundMethod* self = AS_BOUND_METHOD(receiver);
-    RETURN_VAL(callClosure(vm, self->method, argCount));
+    RETURN_VAL(callMethod(vm, self->method, argCount));
 }
 
 LOX_METHOD(Class, __init__) {
@@ -923,10 +935,8 @@ LOX_METHOD(Method, behavior) {
 
 LOX_METHOD(Method, bind) {
     ASSERT_ARG_COUNT("Method::bind(receiver)", 1);
-    if (IS_NATIVE_METHOD(receiver)) {
-        THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot bind receiver to native method.");
-    }
-    RETURN_OBJ(newBoundMethod(vm, args[1], AS_METHOD(receiver)->closure));
+    Value method = IS_NATIVE_METHOD(receiver) ? receiver : OBJ_VAL(AS_METHOD(receiver)->closure);
+    RETURN_OBJ(newBoundMethod(vm, args[1], method));
 }
 
 LOX_METHOD(Method, clone) {
@@ -1767,7 +1777,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->objectClass, Object, memberOf, 1);
     DEF_METHOD(vm->objectClass, Object, objectID, 0);
     DEF_METHOD(vm->objectClass, Object, toString, 0);
-    DEF_OPERATOR(vm->objectClass, Object, ==, __equal__, 1);
+    DEF_OPERATOR(vm->objectClass, Object, == , __equal__, 1);
 
     ObjClass* behaviorClass = defineSpecialClass(vm, "Behavior", BEHAVIOR_CLASS);
     inheritSuperclass(vm, behaviorClass, vm->objectClass);
@@ -1889,9 +1899,9 @@ void registerLangPackage(VM* vm) {
     ObjClass* comparableTrait = defineNativeTrait(vm, "TComparable");
     DEF_METHOD(comparableTrait, TComparable, compareTo, 1);
     DEF_METHOD(comparableTrait, TComparable, equals, 1);
-    DEF_OPERATOR(comparableTrait, TComparable, ==, __equal__, 1);
-    DEF_OPERATOR(comparableTrait, TComparable, >, __greater__, 1);
-    DEF_OPERATOR(comparableTrait, TComparable, <, __less__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, == , __equal__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, > , __greater__, 1);
+    DEF_OPERATOR(comparableTrait, TComparable, < , __less__, 1);
 
     vm->numberClass = defineNativeClass(vm, "Number");
     bindSuperclass(vm, vm->numberClass, vm->objectClass);
@@ -1925,13 +1935,13 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, tan, 0);
     DEF_METHOD(vm->numberClass, Number, toInt, 0);
     DEF_METHOD(vm->numberClass, Number, toString, 0);
-    DEF_OPERATOR(vm->numberClass, Number, ==, __equal__, 1);
-    DEF_OPERATOR(vm->numberClass, Number, >, __greater__, 1);
-    DEF_OPERATOR(vm->numberClass, Number, <, __less__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, == , __equal__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, > , __greater__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, < , __less__, 1);
     DEF_OPERATOR(vm->numberClass, Number, +, __add__, 1);
     DEF_OPERATOR(vm->numberClass, Number, -, __subtract__, 1);
     DEF_OPERATOR(vm->numberClass, Number, *, __multiply__, 1);
-    DEF_OPERATOR(vm->numberClass, Number, /, __divide__, 1);
+    DEF_OPERATOR(vm->numberClass, Number, / , __divide__, 1);
     DEF_OPERATOR(vm->numberClass, Number, %, __modulo__, 1);
 
     ObjClass* numberMetaclass = vm->numberClass->obj.klass;
@@ -2039,6 +2049,8 @@ void registerLangPackage(VM* vm) {
     DEF_INTERCEPTOR(vm->boundMethodClass, BoundMethod, INTERCEPTOR_INIT, __init__, 2);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, arity, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, clone, 0);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, isNative, 0);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, isVariadic, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, name, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, receiver, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, toString, 0);

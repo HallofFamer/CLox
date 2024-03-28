@@ -171,30 +171,6 @@ static double durationTotalSeconds(VM* vm, ObjInstance* duration) {
     return 86400.0 * AS_INT(days) + 3600.0 * AS_INT(hours) + 60.0 * AS_INT(minutes) + AS_INT(seconds);
 }
 
-static void timerClose(uv_handle_t* handle) {
-    free(handle->data);
-    free(handle);
-}
-
-static void timerRun(uv_timer_t* timer) {
-    TimerData* data = (TimerData*)timer->data;
-    if(data->interval == 0) uv_close((uv_handle_t*)timer, timerClose);
-    push(data->vm, OBJ_VAL(data->vm->script));
-    data->vm->frameCount++;
-    switch (data->closure->function->arity) {
-        case 0:
-            callReentrantMethod(data->vm, data->receiver, OBJ_VAL(data->closure));
-            break;
-        case 1:
-            callReentrantMethod(data->vm, data->receiver, OBJ_VAL(data->closure), data->receiver);
-            break;
-        default:
-            throwNativeException(data->vm, "clox.std.lang.IllegalArgumentException", "timer callback closure may accept only 0 or 1 argument");
-    }
-    pop(data->vm);
-    data->vm->frameCount--;
-}
-
 static bool uuidCheckChar(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
 }
@@ -643,15 +619,18 @@ LOX_METHOD(DurationClass, ofSeconds) {
 
 LOX_METHOD(Promise, __init__) {
     ASSERT_ARG_COUNT("Promise::__init__(executor)", 1);
-    ASSERT_ARG_TYPE("Promise::__init__(executor)", 0, Closure);
+    ASSERT_ARG_INSTANCE_OF_ANY("Promise::__init__(executor)", 0, clox.std.lang.BoundMethod, clox.std.lang.Function);
     ObjPromise* self = AS_PROMISE(receiver);
-    self->executor = AS_CLOSURE(args[0]);
+    self->executor = args[0];
 
     Value fulfill;
     tableGet(&self->obj.klass->methods, copyString(vm, "fulfill", 7), &fulfill);
     Value reject;
     tableGet(&self->obj.klass->methods, copyString(vm, "reject", 6), &reject);
-    callReentrantMethod(vm, OBJ_VAL(self), OBJ_VAL(self->executor), fulfill, reject);
+
+    ObjBoundMethod* onFulfill = newBoundMethod(vm, receiver, fulfill);
+    ObjBoundMethod* onReject = newBoundMethod(vm, receiver, reject);
+    callReentrantMethod(vm, receiver, self->executor, OBJ_VAL(onFulfill), OBJ_VAL(onReject));
     RETURN_OBJ(self);
 }
 
@@ -709,6 +688,32 @@ LOX_METHOD(Promise, then) {
     if (self->state == PROMISE_FULFILLED) self->value = callReentrantMethod(vm, OBJ_VAL(self), args[0], self->value);
     else valueArrayWrite(vm, &self->handlers, args[0]);
     RETURN_OBJ(self);
+}
+
+LOX_METHOD(PromiseClass, fulfill) {
+    ASSERT_ARG_COUNT("Promise class::fulfill(value)", 1);
+    ObjClass* klass = AS_CLASS(receiver);
+    if (IS_PROMISE(args[0])) RETURN_VAL(args[0]);
+    else {
+        Value fulfill;
+        tableGet(&klass->methods, copyString(vm, "fulfill", 7), &fulfill);
+        ObjPromise* promise = newPromise(vm, fulfill);
+        promise->state = PROMISE_FULFILLED;
+        promise->value = args[0];
+        RETURN_OBJ(promise);
+    }
+}
+
+LOX_METHOD(PromiseClass, reject) {
+    ASSERT_ARG_COUNT("Promise class::reject(exception)", 1);
+    ASSERT_ARG_TYPE("Promise class::reject(exception)", 0, Exception);
+    ObjClass* klass = AS_CLASS(receiver);
+    Value reject;
+    tableGet(&klass->methods, copyString(vm, "reject", 6), &reject);
+    ObjPromise* promise = newPromise(vm, reject);
+    promise->state = PROMISE_REJECTED;
+    promise->exception = AS_EXCEPTION(args[0]);
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(Random, __init__) {
@@ -1001,6 +1006,8 @@ void registerUtilPackage(VM* vm) {
     setClassProperty(vm, vm->promiseClass, "statePending", INT_VAL(PROMISE_PENDING));
     setClassProperty(vm, vm->promiseClass, "stateFulfilled", INT_VAL(PROMISE_FULFILLED));
     setClassProperty(vm, vm->promiseClass, "stateRejected", INT_VAL(PROMISE_REJECTED));
+    DEF_METHOD(promiseMetaclass, PromiseClass, fulfill, 1);
+    DEF_METHOD(promiseMetaclass, PromiseClass, reject, 1);
 
     ObjClass* randomClass = defineNativeClass(vm, "Random");
     bindSuperclass(vm, randomClass, vm->objectClass);

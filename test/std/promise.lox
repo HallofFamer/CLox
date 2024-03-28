@@ -1,0 +1,90 @@
+namespace test.std;
+//using clox.std.util.Promise;
+using clox.std.util.Timer;
+
+class Promise { 
+    __init__(executor){ 
+        this.handlers = [];
+        this.onCatch = nil;
+        this.onFinally = nil;
+        this.state = "pending";
+        this.value = nil;
+        this.error = nil;
+        executor(this.fulfill, this.reject);
+    }
+
+    then(closure) { 
+        if (this.state == "fulfilled") this.value = closure(this.value);
+        else this.handlers.add(closure);
+    }
+
+    catches(closure) { 
+        if (this.status == "rejected") closure(this.error);
+        else this.onCatch = closure;
+    }
+
+    fulfill(value) { 
+        this.value = value;
+        this.state = "fulfilled";
+        var index = 0;
+        var handler;
+        while (index < this.handlers.length) { 
+            handler = this.handlers[index];
+            this.value = handler(this.value);
+        }
+    }
+
+    reject(value) { 
+        this.error = value;
+        this.status = "rejected";
+        if (this.onCatch) this.onCatch(this.error);
+    }
+
+    class resolve(value) { 
+        if (value.instanceOf(Promise)) return value;
+        else {
+            return Promise(fun(resolve, reject){
+                resolve(value);
+            });
+        }
+    }
+
+    class all(promises) { 
+        return Promise(fun(resolve, reject){ 
+            val results = [];
+            promises.collect(fun(promise){ 
+                return promise.then(fun(result){ 
+                    results.add(result);
+                    if (results.length == promises.length) resolve(results);
+                });
+            });
+        });
+    }
+}
+
+/*
+val promise = Promise({|fulfill, reject|
+    Timer.timeout({ fulfill("hello world"); }, 1000);
+});
+
+println("Promise created: ${promise}");
+promise.then({|value| println("Promise resolved: ${value}") });
+*/
+
+val p1 = Promise(fun(resolve, reject) { 
+    Timer.timeout(fun(){ 
+        resolve(1); 
+    }, 500);
+});
+val p2 = Promise(fun(resolve, reject) { 
+    Timer.timeout(fun(){ 
+        resolve(2); 
+    }, 1000);
+});
+val p3 = Promise(fun(resolve, reject) { 
+    Timer.timeout(fun(){ 
+        resolve(3); 
+    }, 300);
+});
+
+Promise.all([p1, p2, p3]).then(fun(res) { println(res); });
