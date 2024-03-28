@@ -161,6 +161,13 @@ Value assertArgIsString(VM* vm, const char* method, Value* args, int index) {
     RETURN_NIL;
 }
 
+Value assertArgIsTimer(VM* vm, const char* method, Value* args, int index) {
+    if (!IS_TIMER(args[index]) && !isObjInstanceOf(vm, args[index], vm->timerClass)) {
+        RETURN_STRING_FMT("method %s expects argument %d to be a timer.", method, index + 1);
+    }
+    RETURN_NIL;
+}
+
 Value assertIndexWithinBounds(VM* vm, const char* method, int value, int min, int max, int index){
     if (value < min || value > max) {
         RETURN_STRING_FMT("method %s expects argument %d to be an integer within range %d to %d but got %d.",

@@ -73,6 +73,7 @@ struct VM {
     ObjClass* fileClass;
     ObjClass* generatorClass;
     ObjClass* promiseClass;
+    ObjClass* timerClass;
 
     ObjNamespace* rootNamespace;
     ObjNamespace* cloxNamespace;
@@ -86,6 +87,7 @@ struct VM {
     Value* stackTop;
     int apiStackDepth;
     ObjGenerator* runningGenerator;
+    uv_loop_t* eventLoop;
 
     Configuration config;
     Compiler* currentCompiler;

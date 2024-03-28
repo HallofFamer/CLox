@@ -156,6 +156,7 @@ void initVM(VM* vm) {
     initTable(&vm->strings);
     initShapeTree(vm);
     initGenericIDMap(vm);
+    initLoop(vm);
     vm->initString = NULL;
     vm->initString = copyString(vm, "__init__", 8);
     vm->runningGenerator = NULL;
@@ -177,6 +178,7 @@ void freeVM(VM* vm) {
     freeGenericIDMap(vm, &vm->genericIDMap);
     vm->initString = NULL;
     freeObjects(vm);
+    freeLoop(vm);
 }
 
 void push(VM* vm, Value value) {
@@ -279,6 +281,49 @@ static ObjArray* makeTraitArray(VM* vm, uint8_t behaviorCount) {
     return traits;
 }
 
+static Value createObject(VM* vm, ObjClass* klass, int argCount) {
+    switch (klass->classType) {
+        case OBJ_ARRAY: return OBJ_VAL(newArray(vm));
+        case OBJ_BOUND_METHOD: return OBJ_VAL(newBoundMethod(vm, NIL_VAL, NIL_VAL));
+        case OBJ_CLASS: return OBJ_VAL(ALLOCATE_CLASS(klass));
+        case OBJ_CLOSURE: return OBJ_VAL(ALLOCATE_CLOSURE(klass));
+        case OBJ_DICTIONARY: return OBJ_VAL(newDictionary(vm));
+        case OBJ_ENTRY: return OBJ_VAL(newEntry(vm, NIL_VAL, NIL_VAL));
+        case OBJ_EXCEPTION: return OBJ_VAL(newException(vm, emptyString(vm), klass));
+        case OBJ_FILE: return OBJ_VAL(newFile(vm, NULL));
+        case OBJ_GENERATOR: return OBJ_VAL(newGenerator(vm, NULL, NULL));
+        case OBJ_INSTANCE: return OBJ_VAL(newInstance(vm, klass));
+        case OBJ_METHOD: return OBJ_VAL(newMethod(vm, NULL, NULL));
+        case OBJ_NAMESPACE: return OBJ_VAL(ALLOCATE_NAMESPACE(klass));
+        case OBJ_NODE: return OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL));
+        case OBJ_PROMISE: return OBJ_VAL(newPromise(vm, NIL_VAL));
+        case OBJ_RANGE: return OBJ_VAL(newRange(vm, 0, 1));
+        case OBJ_RECORD: return OBJ_VAL(newRecord(vm, NULL));
+        case OBJ_STRING: return OBJ_VAL(ALLOCATE_STRING(0, klass));
+        case OBJ_TIMER: return OBJ_VAL(newTimer(vm, NULL, 0, 0));
+        case OBJ_VALUE_INSTANCE: return OBJ_VAL(newValueInstance(vm, NIL_VAL, klass));
+        default: return NIL_VAL;
+    }
+}
+
+static void createCallFrame(VM* vm, ObjClosure* closure, int argCount) { 
+    CallFrame* frame = &vm->frames[vm->frameCount++];
+    frame->closure = closure;
+    frame->ip = closure->function->chunk.code;
+    frame->slots = vm->stackTop - argCount - 1;
+}
+
+static void createGeneratorFrame(VM* vm, ObjClosure* closure, int argCount) {
+    CallFrame frame = {
+        .closure = closure,
+        .ip = closure->function->chunk.code,
+        .slots = vm->stackTop - argCount - 1
+    };
+    ObjGenerator* generator = newGenerator(vm, newFrame(vm, &frame), vm->runningGenerator);
+    vm->stackTop -= (size_t)argCount + 1;
+    push(vm, OBJ_VAL(generator));
+}
+
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
     if (closure->function->arity > 0 && argCount != closure->function->arity) {
         runtimeError(vm, "Expected %d arguments but got %d.", closure->function->arity, argCount);
@@ -295,48 +340,9 @@ bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
         argCount = 1;
     }
 
-    if (closure->function->isGenerator) {
-        CallFrame frame = {
-            .closure = closure,
-            .ip = closure->function->chunk.code,
-            .slots = vm->stackTop - argCount - 1
-        };
-        ObjGenerator* generator = newGenerator(vm, newFrame(vm, &frame), vm->runningGenerator);
-        vm->stackTop -= (size_t)argCount + 1;
-        push(vm, OBJ_VAL(generator));
-    }
-    else {
-        CallFrame* frame = &vm->frames[vm->frameCount++];
-        frame->closure = closure;
-        frame->ip = closure->function->chunk.code;
-        frame->slots = vm->stackTop - argCount - 1;
-    }
-
+    if (closure->function->isGenerator) createGeneratorFrame(vm, closure, argCount);
+    else createCallFrame(vm, closure, argCount);
     return true;
-}
-
-static Value createObject(VM* vm, ObjClass* klass, int argCount) {
-    switch (klass->classType) {
-        case OBJ_ARRAY: return OBJ_VAL(newArray(vm));
-        case OBJ_BOUND_METHOD: return OBJ_VAL(newBoundMethod(vm, NIL_VAL, NULL));
-        case OBJ_CLASS: return OBJ_VAL(ALLOCATE_CLASS(klass));
-        case OBJ_CLOSURE: return OBJ_VAL(ALLOCATE_CLOSURE(klass));
-        case OBJ_DICTIONARY: return OBJ_VAL(newDictionary(vm));
-        case OBJ_ENTRY: return OBJ_VAL(newEntry(vm, NIL_VAL, NIL_VAL));
-        case OBJ_EXCEPTION: return OBJ_VAL(newException(vm, emptyString(vm), klass));
-        case OBJ_FILE: return OBJ_VAL(newFile(vm, NULL));
-        case OBJ_GENERATOR: return OBJ_VAL(newGenerator(vm, NULL, NULL));
-        case OBJ_INSTANCE: return OBJ_VAL(newInstance(vm, klass));
-        case OBJ_METHOD: return OBJ_VAL(newMethod(vm, NULL, NULL));
-        case OBJ_NAMESPACE: return OBJ_VAL(ALLOCATE_NAMESPACE(klass));
-        case OBJ_NODE: return OBJ_VAL(newNode(vm, NIL_VAL, NULL, NULL));
-        case OBJ_PROMISE: return OBJ_VAL(newPromise(vm, NULL));
-        case OBJ_RANGE: return OBJ_VAL(newRange(vm, 0, 1));
-        case OBJ_RECORD: return OBJ_VAL(newRecord(vm, NULL));
-        case OBJ_STRING: return OBJ_VAL(ALLOCATE_STRING(0, klass));
-        case OBJ_VALUE_INSTANCE: return OBJ_VAL(newValueInstance(vm, NIL_VAL, klass));
-        default: return NIL_VAL;
-    }
 }
 
 static bool callNativeFunction(VM* vm, NativeFunction function, int argCount) {
@@ -358,6 +364,24 @@ bool callMethod(VM* vm, Value method, int argCount) {
         return callNativeMethod(vm, AS_NATIVE_METHOD(method)->method, argCount);
     }
     else return callClosure(vm, AS_CLOSURE(method), argCount);
+}
+
+static bool callBoundMethod(VM* vm, ObjBoundMethod* boundMethod, int argCount) {
+    vm->stackTop[-argCount - 1] = boundMethod->receiver;
+    return callMethod(vm, boundMethod->method, argCount);
+}
+
+static bool callClass(VM* vm, ObjClass* klass, int argCount) {
+    vm->stackTop[-argCount - 1] = createObject(vm, klass, argCount);
+    Value initializer;
+    if (tableGet(&klass->methods, vm->initString, &initializer)) {
+        return callMethod(vm, initializer, argCount);
+    }
+    else if (argCount != 0) {
+        runtimeError(vm, "Expected 0 argument but got %d.", argCount);
+        return false;
+    }
+    return true;
 }
 
 static void callReentrantClosure(VM* vm, Value callee, int argCount) {
@@ -393,6 +417,7 @@ Value callReentrantMethod(VM* vm, Value receiver, Value callee, ...) {
     va_end(args);
 
     if (IS_CLOSURE(callee)) callReentrantClosure(vm, callee, argCount);
+    else if (IS_BOUND_METHOD(callee)) callBoundMethod(vm, AS_BOUND_METHOD(callee), argCount);
     else callNativeMethod(vm, AS_NATIVE_METHOD(callee)->method, argCount);
     return pop(vm);
 }
@@ -410,25 +435,10 @@ Value callGenerator(VM* vm, ObjGenerator* generator) {
 static bool callValue(VM* vm, Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
-            case OBJ_BOUND_METHOD: {
-                ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
-                vm->stackTop[-argCount - 1] = bound->receiver;
-                return callMethod(vm, OBJ_VAL(bound->method), argCount);
-            }
-            case OBJ_CLASS: {
-                ObjClass* klass = AS_CLASS(callee);
-                vm->stackTop[-argCount - 1] = createObject(vm, klass, argCount);
-
-                Value initializer;
-                if (tableGet(&klass->methods, vm->initString, &initializer)) {
-                    return callMethod(vm, initializer, argCount);
-                }
-                else if (argCount != 0) {
-                    runtimeError(vm, "Expected 0 argument but got %d.", argCount);
-                    return false;
-                }
-                return true;
-            }
+            case OBJ_BOUND_METHOD:
+                return callBoundMethod(vm, AS_BOUND_METHOD(callee), argCount);
+            case OBJ_CLASS: 
+                return callClass(vm, AS_CLASS(callee), argCount);
             case OBJ_CLOSURE:
                 return callClosure(vm, AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE_FUNCTION: 
@@ -509,7 +519,7 @@ static bool hasMethod(VM* vm, ObjClass* klass, ObjString* name) {
 bool bindMethod(VM* vm, ObjClass* klass, ObjString* name) {
     Value method;
     if (!tableGet(&klass->methods, name, &method)) return false;
-    ObjBoundMethod* bound = newBoundMethod(vm, peek(vm, 0), AS_CLOSURE(method));
+    ObjBoundMethod* bound = newBoundMethod(vm, peek(vm, 0), method);
     pop(vm);
     push(vm, OBJ_VAL(bound));
     return true;
@@ -1394,6 +1404,7 @@ InterpretResult interpret(VM* vm, const char* source) {
 
     push(vm, OBJ_VAL(function));
     ObjClosure* closure = newClosure(vm, function);
+    vm->currentModule->closure = closure;
     pop(vm);
     push(vm, OBJ_VAL(closure));
     callClosure(vm, closure, 0);
