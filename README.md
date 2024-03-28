@@ -40,6 +40,7 @@ https://github.com/munificent/craftinginterpreters
 - Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
 - Interceptor methods which are invoked automatically when getting/setting properties, invoking methods or throwing exceptions.
 - Generator functions/methods which can yield control back to the caller and resume at a later point of execution.
+- Promise API with event loop provided by libuv library for non-blocking IO operations.
 - Customized Runtime configuration for CLox using clox.ini.
 - Allow loading lox source files in lox script and another lox source file with `require` keyword.
 - Cross-platform build with Cmake and package manager with vcpkg.

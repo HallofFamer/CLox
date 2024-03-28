@@ -149,6 +149,8 @@ set(Source_Files__vm
     "src/vm/interceptor.h"
     "src/vm/klass.c"
     "src/vm/klass.h"
+    "src/vm/loop.c"
+    "src/vm/loop.h"
     "src/vm/memory.c"
     "src/vm/memory.h"
     "src/vm/namespace.c"

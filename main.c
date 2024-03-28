@@ -66,6 +66,7 @@ int main(int argc, char* argv[]) {
         exit(64);
     }
   
+    uv_run(vm.eventLoop, UV_RUN_DEFAULT);
     freeVM(&vm);
     return 0;
 }
