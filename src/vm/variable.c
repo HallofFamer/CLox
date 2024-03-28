@@ -103,7 +103,7 @@ static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (index == 0) push(vm, bound->receiver);
-            else if (index == 1) push(vm, OBJ_VAL(bound->method));
+            else if (index == 1) push(vm, bound->method);
             else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
@@ -234,7 +234,7 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
         case OBJ_BOUND_METHOD: {
            ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (matchVariableName(name, "receiver", 8) == 0) push(vm, OBJ_VAL(bound->receiver));
-            else if (matchVariableName(name, "method", 6)) push(vm, OBJ_VAL(bound->method));
+            else if (matchVariableName(name, "method", 6)) push(vm, bound->method);
             else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
@@ -488,7 +488,7 @@ static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Va
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (index == 0) bound->receiver = value;
-            else if (index == 1 && IS_CLOSURE(value)) bound->method = AS_CLOSURE(value);
+            else if (index == 1 && (IS_NATIVE_METHOD(value) || IS_CLOSURE(value))) bound->method = value;
             else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
@@ -646,7 +646,7 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             if (matchVariableName(name, "receiver", 8)) bound->receiver = value;
-            else if (matchVariableName(name, "method", 6) && IS_CLOSURE(value)) bound->method = AS_CLOSURE(value);
+            else if (matchVariableName(name, "method", 6) && (IS_NATIVE_METHOD(value) || IS_CLOSURE(value))) bound->method = value;
             else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
             push(vm, value);

@@ -2,10 +2,6 @@
 #ifndef clox_object_h
 #define clox_object_h
 
-#include <stdio.h>
-#include <sys/stat.h>
-#include <uv.h>
-
 #include "chunk.h"
 #include "common.h"
 #include "exception.h"
@@ -13,6 +9,7 @@
 #include "id.h"
 #include "interceptor.h"
 #include "klass.h"
+#include "loop.h"
 #include "table.h"
 #include "value.h"
 
@@ -201,30 +198,12 @@ typedef struct {
     FreeFunction freeFunction;
 } ObjRecord;
 
-typedef struct {
-    Obj obj;
-    ObjString* path;
-    bool isNative;
-    IDMap valIndexes;
-    ValueArray valFields;
-    IDMap varIndexes;
-    ValueArray varFields;
-} ObjModule;
-
 typedef struct ObjUpvalue {
     Obj obj;
     Value* location;
     Value closed;
     struct ObjUpvalue* next;
 } ObjUpvalue;
-
-typedef struct {
-    Obj obj;
-    ObjFunction* function;
-    ObjModule* module;
-    ObjUpvalue** upvalues;
-    int upvalueCount;
-} ObjClosure;
 
 typedef struct {
     Obj obj;
@@ -235,7 +214,8 @@ typedef struct {
 typedef struct {
     Obj obj;
     Value receiver;
-    ObjClosure* method;
+    Value method;
+    bool isNative;
 } ObjBoundMethod;
 
 typedef struct {
@@ -269,19 +249,11 @@ typedef struct {
     PromiseState state;
     Value value;
     ObjException* exception;
-    ObjClosure* executor;
+    Value executor;
     ValueArray handlers;
     Value onCatch;
     Value onFinally;
 } ObjPromise;
-
-typedef struct {
-    VM* vm;
-    Value receiver;
-    ObjClosure* closure;
-    int delay;
-    int interval;
-} TimerData;
 
 typedef struct {
     Obj obj;
@@ -312,10 +284,29 @@ struct ObjClass {
     Table methods;
 };
 
+struct ObjClosure {
+    Obj obj;
+    ObjFunction* function;
+    ObjModule* module;
+    ObjUpvalue** upvalues;
+    int upvalueCount;
+};
+
 struct ObjException {
     Obj obj;
     ObjString* message;
     ObjArray* stacktrace;
+};
+
+struct ObjModule {
+    Obj obj;
+    ObjString* path;
+    ObjClosure* closure;
+    bool isNative;
+    IDMap valIndexes;
+    ValueArray valFields;
+    IDMap varIndexes;
+    ValueArray varFields;
 };
 
 struct ObjNamespace {
@@ -343,7 +334,7 @@ struct ObjString {
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
 ObjArray* newArray(VM* vm);
-ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method);
+ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, Value method);
 ObjClass* newClass(VM* vm, ObjString* name, ObjType classType);
 void initClosure(VM* vm, ObjClosure* closure, ObjFunction* function);
 ObjClosure* newClosure(VM* vm, ObjFunction* function);
@@ -362,7 +353,7 @@ ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
-ObjPromise* newPromise(VM* vm, ObjClosure* executor);
+ObjPromise* newPromise(VM* vm, Value executor);
 ObjRange* newRange(VM* vm, int from, int to);
 ObjRecord* newRecord(VM* vm, void* data);
 ObjTimer* newTimer(VM* vm, ObjClosure* closure, int delay, int interval);

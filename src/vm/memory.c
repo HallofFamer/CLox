@@ -162,6 +162,7 @@ static void blackenObject(VM* vm, Obj* object) {
         case OBJ_MODULE: {
             ObjModule* module = (ObjModule*)object;
             markObject(vm, (Obj*)module->path);
+            if (module->closure != NULL) markObject(vm, (Obj*)module->closure);
             markIDMap(vm, &module->valIndexes);
             markArray(vm, &module->valFields);
             markIDMap(vm, &module->varIndexes);
@@ -198,7 +199,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjPromise* promise = (ObjPromise*)object;
             markValue(vm, promise->value);
             markObject(vm, (Obj*)promise->exception);
-            markObject(vm, (Obj*)promise->executor);
+            markValue(vm, promise->executor);
             markArray(vm, &promise->handlers);
             break;
         }

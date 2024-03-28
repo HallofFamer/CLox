@@ -30,10 +30,11 @@ ObjArray* newArray(VM* vm) {
     return array;
 }
 
-ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, ObjClosure* method) {
+ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, Value method) {
     ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD, vm->boundMethodClass);
     bound->receiver = receiver;
     bound->method = method;
+    bound->isNative = IS_NATIVE_METHOD(method);
     return bound;
 }
 
@@ -158,6 +159,7 @@ ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure) {
 ObjModule* newModule(VM* vm, ObjString* path) {
     ObjModule* module = ALLOCATE_OBJ(ObjModule, OBJ_MODULE, NULL);
     module->path = path;
+    module->closure = NULL;
     module->isNative = false;
     initIDMap(&module->valIndexes);
     initValueArray(&module->valFields);
@@ -223,7 +225,7 @@ ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next) {
     return node;
 }
 
-ObjPromise* newPromise(VM* vm, ObjClosure* executor){
+ObjPromise* newPromise(VM* vm, Value executor){
     ObjPromise* promise = ALLOCATE_OBJ(ObjPromise, OBJ_PROMISE, vm->promiseClass);
     promise->id = ++vm->promiseCount;
     promise->state = PROMISE_PENDING;
@@ -406,9 +408,12 @@ void printObject(Value value) {
         case OBJ_ARRAY:
             printArray(AS_ARRAY(value));
             break;
-        case OBJ_BOUND_METHOD:
-            printf("<bound method %s::%s>", AS_OBJ(AS_BOUND_METHOD(value)->receiver)->klass->name->chars, AS_BOUND_METHOD(value)->method->function->name->chars);
+        case OBJ_BOUND_METHOD: { 
+            ObjBoundMethod* boundMethod = AS_BOUND_METHOD(value);
+            if (IS_NATIVE_METHOD(boundMethod->method)) printf("<bound method %s::%s>", AS_OBJ(boundMethod->receiver)->klass->name->chars, AS_NATIVE_METHOD(boundMethod->method)->name->chars);
+            else printf("<bound method %s::%s>", AS_OBJ(boundMethod->receiver)->klass->name->chars, AS_CLOSURE(boundMethod->method)->function->name->chars);
             break;
+        }
         case OBJ_CLASS:
             printClass(AS_CLASS(value));
             break;
@@ -439,9 +444,11 @@ void printObject(Value value) {
         case OBJ_INSTANCE:
             printf("<object %s>", AS_OBJ(value)->klass->name->chars);
             break;
-        case OBJ_METHOD:
-            printf("<method %s::%s>", AS_METHOD(value)->behavior->name->chars, AS_METHOD(value)->closure->function->name->chars);
+        case OBJ_METHOD: { 
+            ObjMethod* method = AS_METHOD(value);
+            printf("<method %s::%s>", method->behavior->name->chars, method->closure->function->name->chars);
             break;
+        }
         case OBJ_MODULE:
             printf("<module %s>", AS_MODULE(value)->path->chars);
             break;
@@ -451,25 +458,29 @@ void printObject(Value value) {
         case OBJ_NATIVE_FUNCTION:
             printf("<native function %s>", AS_NATIVE_FUNCTION(value)->name->chars);
             break;
-        case OBJ_NATIVE_METHOD:
-            printf("<native method %s::%s>", AS_NATIVE_METHOD(value)->klass->name->chars, AS_NATIVE_METHOD(value)->name->chars);
+        case OBJ_NATIVE_METHOD: { 
+            ObjNativeMethod* nativeMethod = AS_NATIVE_METHOD(value);
+            printf("<native method %s::%s>", nativeMethod->klass->name->chars, nativeMethod->name->chars);
             break;
+        }
         case OBJ_NODE:
             printf("<node>");
             break;
         case OBJ_PROMISE:
             printf("<promise: %d>", AS_PROMISE(value)->id);
             break;
-        case OBJ_RANGE:
-            printf("%d..%d", AS_RANGE(value)->from, AS_RANGE(value)->to);
+        case OBJ_RANGE: { 
+            ObjRange* range = AS_RANGE(value);
+            printf("%d..%d", range->from, range->to);
             break;
+        }
         case OBJ_RECORD:
             printf("<record>");
             break;
         case OBJ_STRING:
             printf("%s", AS_CSTRING(value));
             break;
-        case OBJ_TIMER:
+        case OBJ_TIMER: 
             printf("<timer: %d>", AS_TIMER(value)->id);
             break;
         case OBJ_UPVALUE:
