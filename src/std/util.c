@@ -619,7 +619,7 @@ LOX_METHOD(DurationClass, ofSeconds) {
 
 LOX_METHOD(Promise, __init__) {
     ASSERT_ARG_COUNT("Promise::__init__(executor)", 1);
-    ASSERT_ARG_INSTANCE_OF_ANY("Promise::__init__(executor)", 0, clox.std.lang.BoundMethod, clox.std.lang.Function);
+    ASSERT_ARG_INSTANCE_OF("Promise::__init__(executor)", 0, clox.std.lang.TCallable);
     ObjPromise* self = AS_PROMISE(receiver);
     self->executor = args[0];
 
@@ -636,7 +636,7 @@ LOX_METHOD(Promise, __init__) {
 
 LOX_METHOD(Promise, catch) {
     ASSERT_ARG_COUNT("Promise::catch(closure)", 1);
-    ASSERT_ARG_TYPE("Promise::catch(closure)", 0, Closure);
+    ASSERT_ARG_INSTANCE_OF("Promise::catch(closure)", 0, clox.std.lang.TCallable);
     ObjPromise* self = AS_PROMISE(receiver);
     if (self->state == PROMISE_REJECTED) callReentrantMethod(vm, OBJ_VAL(self), args[0], OBJ_VAL(self->exception));
     else self->onCatch = args[0];
@@ -683,7 +683,7 @@ LOX_METHOD(Promise, reject) {
 
 LOX_METHOD(Promise, then) {
     ASSERT_ARG_COUNT("Promise::then(onFulfilled)", 1);
-    ASSERT_ARG_TYPE("Promise::then(onFulfilled)", 0, Closure);
+    ASSERT_ARG_INSTANCE_OF("Promise::then(onFulfilled)", 0, TCallable);
     ObjPromise* self = AS_PROMISE(receiver);
     if (self->state == PROMISE_FULFILLED) self->value = callReentrantMethod(vm, OBJ_VAL(self), args[0], self->value);
     else valueArrayWrite(vm, &self->handlers, args[0]);

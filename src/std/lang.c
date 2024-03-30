@@ -1618,6 +1618,26 @@ LOX_METHOD(StringClass, fromCodePoint) {
     RETURN_OBJ(utf8StringFromCodePoint(vm, AS_INT(args[0])));
 }
 
+LOX_METHOD(TCallable, arity) {
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
+}
+
+LOX_METHOD(TCallable, isNative) {
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
+}
+
+LOX_METHOD(TCallable, isVariadic) {
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
+}
+
+LOX_METHOD(TCallable, name) {
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
+}
+
+LOX_METHOD(TCallable, __invoke__) {
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
+}
+
 LOX_METHOD(TComparable, compareTo) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
@@ -2025,8 +2045,16 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(stringMetaclass, StringClass, fromByte, 1);
     DEF_METHOD(stringMetaclass, StringClass, fromCodePoint, 1);
 
+    ObjClass* callableTrait = defineNativeTrait(vm, "TCallable");
+    DEF_METHOD(callableTrait, TCallable, arity, 0);
+    DEF_METHOD(callableTrait, TCallable, isNative, 0);
+    DEF_METHOD(callableTrait, TCallable, isVariadic, 0);
+    DEF_METHOD(callableTrait, TCallable, name, 0);
+    DEF_OPERATOR(callableTrait, TCallable, (), __invoke__, -1);
+
     vm->functionClass = defineNativeClass(vm, "Function");
     bindSuperclass(vm, vm->functionClass, vm->objectClass);
+    bindTrait(vm, vm->functionClass, callableTrait);
     vm->functionClass->classType = OBJ_CLOSURE;
     DEF_INTERCEPTOR(vm->functionClass, Function, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(vm->functionClass, Function, arity, 0);
@@ -2045,6 +2073,7 @@ void registerLangPackage(VM* vm) {
 
     vm->boundMethodClass = defineNativeClass(vm, "BoundMethod");
     bindSuperclass(vm, vm->boundMethodClass, vm->objectClass);
+    bindTrait(vm, vm->boundMethodClass, callableTrait);
     vm->boundMethodClass->classType = OBJ_BOUND_METHOD;
     DEF_INTERCEPTOR(vm->boundMethodClass, BoundMethod, INTERCEPTOR_INIT, __init__, 2);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, arity, 0);
