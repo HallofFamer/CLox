@@ -1248,7 +1248,7 @@ LOX_METHOD(Number, toString) {
 
 LOX_METHOD(Number, __equal__) {
     ASSERT_ARG_COUNT("Number::==(other)", 1);
-    ASSERT_ARG_TYPE("Number::==(other)", 0, Number);
+    if (!IS_NUMBER_INSTANCE(args[0])) RETURN_FALSE;
     RETURN_BOOL((AS_NUMBER_INSTANCE(receiver) == AS_NUMBER_INSTANCE(args[0])));
 }
 
