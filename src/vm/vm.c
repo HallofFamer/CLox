@@ -821,13 +821,8 @@ InterpretResult run(VM* vm) {
                 Value element = pop(vm);
                 int index = AS_INT(pop(vm));
                 ObjArray* array = AS_ARRAY(pop(vm));
-                if (index < 0 || index > array->elements.count) {
-                    throwNativeException(vm, "clox.std.lang.IndexOutOfBoundsException", "Array index is out of bound: %d.", index);
-                }
-                else {
-                    valueArrayInsert(vm, &array->elements, index, element);
-                    push(vm, OBJ_VAL(array));
-                }
+                valueArrayPut(vm, &array->elements, index, element);
+                push(vm, OBJ_VAL(array));
             }
             else if (IS_DICTIONARY(peek(vm, 2))) {
                 Value value = pop(vm);
@@ -891,7 +886,7 @@ InterpretResult run(VM* vm) {
             break;
         }
         case OP_EQUAL: {
-            if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, ==);
+            if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, == );
             else {
                 ObjString* op = copyString(vm, "==", 2);
                 if (!invokeOperator(vm, op, 1)) {
@@ -904,12 +899,12 @@ InterpretResult run(VM* vm) {
             break;
         }
         case OP_GREATER:
-            if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, >);
-            else OVERLOAD_OP(>, 1);
+            if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, > );
+            else OVERLOAD_OP(> , 1);
             break;
         case OP_LESS:
-            if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, <);
-            else OVERLOAD_OP(<, 1);
+            if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, < );
+            else OVERLOAD_OP(< , 1);
             break;
         case OP_ADD: {
             if (IS_STRING(peek(vm, 0)) && IS_STRING(peek(vm, 1))) {
@@ -936,8 +931,8 @@ InterpretResult run(VM* vm) {
             if (IS_INT(peek(vm, 0)) && AS_INT(peek(vm, 0)) == 0) {
                 throwNativeException(vm, "clox.std.lang.ArithmeticException", "It is illegal to divide an integer by 0.");
             }
-            else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, /);
-            else OVERLOAD_OP(/, 1);
+            else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, / );
+            else OVERLOAD_OP(/ , 1);
             break;
         case OP_MODULO: {
             if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, %);

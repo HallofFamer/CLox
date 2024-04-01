@@ -36,6 +36,27 @@ void valueArrayAddAll(VM* vm, ValueArray* from, ValueArray* to) {
     }
 }
 
+void valueArrayPut(VM* vm, ValueArray* array, int index, Value value) {
+    if (index < array->count) array->values[index] = value;
+    else {
+        for (int i = array->count; i < index; i++) {
+            valueArrayWrite(vm, array, NIL_VAL);
+        }
+        valueArrayWrite(vm, array, value);
+    }
+}
+
+void valueArrayInsert(VM* vm, ValueArray* array, int index, Value value) {
+    if (IS_OBJ(value)) push(vm, value);
+    valueArrayWrite(vm, array, NIL_VAL);
+    if (IS_OBJ(value)) pop(vm);
+
+    for (int i = array->count - 1; i > index; i--) {
+        array->values[i] = array->values[i - 1];
+    }
+    array->values[index] = value;
+}
+
 int valueArrayFirstIndex(VM* vm, ValueArray* array, Value value) {
     for (int i = 0; i < array->count; i++) {
         if (valuesEqual(array->values[i], value)) {
@@ -52,17 +73,6 @@ int valueArrayLastIndex(VM* vm, ValueArray* array, Value value) {
         }
     }
     return -1;
-}
-
-void valueArrayInsert(VM* vm, ValueArray* array, int index, Value value) {
-    if (IS_OBJ(value)) push(vm, value);
-    valueArrayWrite(vm, array, NIL_VAL);
-    if (IS_OBJ(value)) pop(vm);
-
-    for (int i = array->count - 1; i > index; i--) {
-        array->values[i] = array->values[i - 1];
-    }
-    array->values[index] = value;
 }
 
 Value valueArrayDelete(VM* vm, ValueArray* array, int index) {

@@ -157,6 +157,7 @@ void initValueArray(ValueArray* array);
 void freeValueArray(VM* vm, ValueArray* array);
 void valueArrayWrite(VM* vm, ValueArray* array, Value value);
 void valueArrayAddAll(VM* vm, ValueArray* from, ValueArray* to);
+void valueArrayPut(VM* vm, ValueArray* array, int index, Value value);
 void valueArrayInsert(VM* vm, ValueArray* array, int index, Value value);
 int valueArrayFirstIndex(VM* vm, ValueArray* array, Value value);
 int valueArrayLastIndex(VM* vm, ValueArray* array, Value value);
