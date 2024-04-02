@@ -31,11 +31,11 @@ ObjArray* newArray(VM* vm) {
 }
 
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, Value method) {
-    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD, vm->boundMethodClass);
-    bound->receiver = receiver;
-    bound->method = method;
-    bound->isNative = IS_NATIVE_METHOD(method);
-    return bound;
+    ObjBoundMethod* boundMethod = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD, vm->boundMethodClass);
+    boundMethod->receiver = receiver;
+    boundMethod->method = method;
+    boundMethod->isNative = IS_NATIVE_METHOD(method);
+    return boundMethod;
 }
 
 ObjClass* newClass(VM* vm, ObjString* name, ObjType classType) {

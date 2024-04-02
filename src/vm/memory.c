@@ -74,9 +74,9 @@ static void blackenObject(VM* vm, Obj* object) {
             break;
         }
         case OBJ_BOUND_METHOD: {
-            ObjBoundMethod* bound = (ObjBoundMethod*)object;
-            markValue(vm, bound->receiver);
-            markObject(vm, (Obj*)bound->method);
+            ObjBoundMethod* boundMethod = (ObjBoundMethod*)object;
+            markValue(vm, boundMethod->receiver);
+            markValue(vm, boundMethod->method);
             break;
         }
         case OBJ_CLASS: {
@@ -243,9 +243,9 @@ static void freeObject(VM* vm, Obj* object) {
             FREE(ObjArray, object);
             break;
         }
-        case OBJ_BOUND_METHOD:
+        case OBJ_BOUND_METHOD: 
             FREE(ObjBoundMethod, object);
-            break;        
+            break;       
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
             freeValueArray(vm, &klass->traits);
