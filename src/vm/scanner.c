@@ -141,6 +141,8 @@ static TokenSymbol checkKeyword(Scanner* scanner, int start, int length,
 }
 
 static TokenSymbol identifierType(Scanner* scanner) {
+    if (scanner->start[-1] == '.') return TOKEN_IDENTIFIER;
+
     switch (scanner->start[0]) {
         case 'a': 
             if (scanner->current - scanner->start > 1) {
@@ -247,6 +249,16 @@ static Token identifier(Scanner* scanner) {
     return makeToken(scanner, identifierType(scanner));
 }
 
+static Token keywordIdentifier(Scanner* scanner) {
+    advance(scanner);
+    while (isAlpha(peek(scanner)) || isDigit(peek(scanner))) advance(scanner);
+    if (peek(scanner) == '`') {
+        advance(scanner);
+        return makeToken(scanner, TOKEN_IDENTIFIER);
+    }
+    else return errorToken(scanner, "Keyword identifiers must end with a closing backtick.");
+}
+
 static Token number(Scanner* scanner) {
     while (isDigit(peek(scanner))) advance(scanner);
 
@@ -330,6 +342,8 @@ Token scanToken(Scanner* scanner) {
             return makeToken(scanner, match(scanner, '=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
         case '.': 
             return makeToken(scanner, match(scanner, '.') ? TOKEN_DOT_DOT : TOKEN_DOT);
+        case '`':
+            return keywordIdentifier(scanner);
         case '"': return string(scanner);
     }
     return errorToken(scanner, "Unexpected character.");
