@@ -481,10 +481,33 @@ LOX_METHOD(Array, each) {
     RETURN_NIL;
 }
 
+LOX_METHOD(Array, eachIndex) { 
+    ASSERT_ARG_COUNT("Array::eachIndex(closure)", 1);
+    ASSERT_ARG_TYPE("Array::eachIndex(closure)", 0, Closure);
+    ObjArray* self = AS_ARRAY(receiver);
+    ObjClosure* closure = AS_CLOSURE(args[0]);
+    
+    for (int i = 0; i < self->elements.count; i++) {
+        callReentrantMethod(vm, receiver, OBJ_VAL(closure), INT_VAL(i), self->elements.values[i]);
+    }
+    RETURN_NIL;
+}
+
 LOX_METHOD(Array, equals) {
     ASSERT_ARG_COUNT("Array::equals(other)", 1);
     if (!IS_ARRAY(args[0])) RETURN_FALSE;
     RETURN_BOOL(valueArraysEqual(&AS_ARRAY(receiver)->elements, &AS_ARRAY(args[0])->elements));
+}
+
+LOX_METHOD(Array, fill) {
+    ASSERT_ARG_COUNT("Array::fill(num, value)", 2);
+    ASSERT_ARG_TYPE("Array::fill(num, value)", 0, Int);
+    ObjArray* array = AS_ARRAY(receiver);
+    int num = AS_INT(args[0]);
+    for (int i = 0; i < num; i++) {
+        valueArrayWrite(vm, &array->elements, args[1]);
+    }
+    RETURN_NIL;
 }
 
 LOX_METHOD(Array, getAt) {
@@ -557,10 +580,7 @@ LOX_METHOD(Array, putAt) {
     ASSERT_ARG_COUNT("Array::putAt(index, element)", 2);
     ASSERT_ARG_TYPE("Array::putAt(index, element)", 0, Int);
     ObjArray* self = AS_ARRAY(receiver);
-    int index = AS_INT(args[0]);
-    ASSERT_INDEX_WITHIN_BOUNDS("Array::putAt(index, element)", index, 0, self->elements.count, 0);
-    self->elements.values[index] = args[1];
-    if (index == self->elements.count) self->elements.count++;
+    valueArrayPut(vm, &self->elements, AS_INT(args[0]), args[1]);
     RETURN_OBJ(receiver);
 }
 
@@ -2080,7 +2100,9 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->arrayClass, Array, contains, 1);
     DEF_METHOD(vm->arrayClass, Array, detect, 1);
     DEF_METHOD(vm->arrayClass, Array, each, 1);
+    DEF_METHOD(vm->arrayClass, Array, eachIndex, 1);
     DEF_METHOD(vm->arrayClass, Array, equals, 1);
+    DEF_METHOD(vm->arrayClass, Array, fill, 2);
     DEF_METHOD(vm->arrayClass, Array, getAt, 1);
     DEF_METHOD(vm->arrayClass, Array, indexOf, 1);
     DEF_METHOD(vm->arrayClass, Array, insertAt, 2);
