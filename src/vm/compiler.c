@@ -258,7 +258,7 @@ static uint8_t makeIdentifier(Compiler* compiler, Value value) {
 }
 
 static uint8_t identifierConstant(Compiler* compiler, Token* name) {
-    char* start = name->start[0] != '`' ? name->start : name->start + 1;
+    const char* start = name->start[0] != '`' ? name->start : name->start + 1;
     int length = name->start[0] != '`' ? name->length : name->length - 2;
     return makeIdentifier(compiler, OBJ_VAL(copyString(compiler->parser->vm, start, length)));
 }

@@ -384,6 +384,14 @@ static bool callClass(VM* vm, ObjClass* klass, int argCount) {
     return true;
 }
 
+static int getCalleeArity(Value callee) {
+    if (IS_CLOSURE(callee)) return AS_CLOSURE(callee)->function->arity;
+    else if (IS_NATIVE_METHOD(callee)) return AS_NATIVE_METHOD(callee)->arity;
+    else if (IS_NATIVE_FUNCTION(callee)) return AS_NATIVE_FUNCTION(callee)->arity;
+    else if (IS_BOUND_METHOD(callee)) return getCalleeArity(AS_BOUND_METHOD(callee)->method);
+    else return 0;
+}
+
 static void callReentrantClosure(VM* vm, Value callee, int argCount) {
     vm->apiStackDepth++;
     callClosure(vm, AS_CLOSURE(callee), argCount);
@@ -393,7 +401,7 @@ static void callReentrantClosure(VM* vm, Value callee, int argCount) {
 }
 
 Value callReentrantFunction(VM* vm, Value callee, ...) {
-    int argCount = IS_NATIVE_FUNCTION(callee) ? AS_NATIVE_FUNCTION(callee)->arity : AS_CLOSURE(callee)->function->arity;
+    int argCount = getCalleeArity(callee);
     va_list args;
     va_start(args, callee);
     for (int i = 0; i < argCount; i++) {
@@ -408,7 +416,7 @@ Value callReentrantFunction(VM* vm, Value callee, ...) {
 
 Value callReentrantMethod(VM* vm, Value receiver, Value callee, ...) {
     push(vm, receiver);
-    int argCount = IS_NATIVE_METHOD(callee) ? AS_NATIVE_METHOD(callee)->arity : AS_CLOSURE(callee)->function->arity;
+    int argCount = getCalleeArity(callee);
     va_list args;
     va_start(args, callee);
     for (int i = 0; i < argCount; i++) {
