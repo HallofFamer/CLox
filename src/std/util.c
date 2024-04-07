@@ -622,15 +622,7 @@ LOX_METHOD(Promise, __init__) {
     ASSERT_ARG_INSTANCE_OF("Promise::__init__(executor)", 0, clox.std.lang.TCallable);
     ObjPromise* self = AS_PROMISE(receiver);
     self->executor = args[0];
-
-    Value fulfill;
-    tableGet(&self->obj.klass->methods, copyString(vm, "fulfill", 7), &fulfill);
-    Value reject;
-    tableGet(&self->obj.klass->methods, copyString(vm, "reject", 6), &reject);
-
-    ObjBoundMethod* onFulfill = newBoundMethod(vm, receiver, fulfill);
-    ObjBoundMethod* onReject = newBoundMethod(vm, receiver, reject);
-    callReentrantMethod(vm, receiver, self->executor, OBJ_VAL(onFulfill), OBJ_VAL(onReject));
+    promiseExecute(vm, self);
     RETURN_OBJ(self);
 }
 
@@ -645,10 +637,10 @@ LOX_METHOD(Promise, catch) {
 
 LOX_METHOD(Promise, finally) {
     ASSERT_ARG_COUNT("Promise::finally(closure)", 1);
-    ASSERT_ARG_TYPE("Promise::finally(closure)", 0, Closure);
+    ASSERT_ARG_INSTANCE_OF("Promise::finally(closure)", 0, clox.std.lang.TCallable);
     ObjPromise* self = AS_PROMISE(receiver);
     if (self->state == PROMISE_FULFILLED || self->state == PROMISE_REJECTED) callReentrantMethod(vm, OBJ_VAL(self), args[0], self->value);
-    else self->onCatch = args[0];
+    else self->onFinally = args[0];
     RETURN_OBJ(self);
 }
 
@@ -670,6 +662,67 @@ LOX_METHOD(Promise, isResolved) {
     RETURN_BOOL(self->state == PROMISE_FULFILLED || self->state == PROMISE_REJECTED);
 }
 
+LOX_METHOD(Promise, onCatch) { 
+    ASSERT_ARG_COUNT("Promise::onCatch(exception)", 1);
+    ASSERT_ARG_TYPE("Promise::onCatch(exception)", 0, Exception);
+    ObjPromise* self = AS_PROMISE(receiver);
+    ObjBoundMethod* reject = AS_BOUND_METHOD(self->capturedValues->elements.values[5]);
+    callReentrantMethod(vm, reject->receiver, reject->method, args[0]);
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Promise, onExecute) {
+    ASSERT_ARG_COUNT("Promise::onExecute(fulfill, reject)", 2);
+    ASSERT_ARG_INSTANCE_OF("Promise::onExecute(fulfill, reject)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_INSTANCE_OF("Promise::onExecute(fulfill, reject)", 1, clox.std.lang.TCallable);
+    ObjPromise* self = AS_PROMISE(receiver);
+    ObjArray* promises = AS_ARRAY(self->capturedValues->elements.values[0]);
+    valueArrayWrite(vm, &self->capturedValues->elements, args[0]);
+    valueArrayWrite(vm, &self->capturedValues->elements, args[1]);
+    self->value = OBJ_VAL(promises);
+
+    Value then = getObjMethod(vm, receiver, "then");
+    Value onThen = getObjMethod(vm, receiver, "onThen");
+    Value catch = getObjMethod(vm, receiver, "catch");
+    Value onCatch = getObjMethod(vm, receiver, "onCatch");
+
+    for (int i = 0; i < promises->elements.count; i++) {
+        ObjPromise* promise = AS_PROMISE(promises->elements.values[i]);
+        callReentrantMethod(vm, OBJ_VAL(promise), then, OBJ_VAL(newBoundMethod(vm, OBJ_VAL(promise), onThen)));
+        callReentrantMethod(vm, OBJ_VAL(promise), catch, OBJ_VAL(newBoundMethod(vm, OBJ_VAL(promise), onCatch)));
+    }
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Promise, onThen) {
+    ASSERT_ARG_COUNT("Promise::onThen(result)", 1);
+    ObjPromise* self = AS_PROMISE(receiver);
+    ObjArray* promises = AS_ARRAY(self->capturedValues->elements.values[0]);
+    ObjArray* results = AS_ARRAY(self->capturedValues->elements.values[1]);
+    int numCompleted = AS_INT(self->capturedValues->elements.values[2]);
+    int index = AS_INT(self->capturedValues->elements.values[3]);
+
+    valueArrayPut(vm, &results->elements, index, args[0]);
+    self->capturedValues->elements.values[2] = INT_VAL(numCompleted++);
+    if (numCompleted == promises->elements.count) {
+        ObjBoundMethod* fulfill = AS_BOUND_METHOD(self->capturedValues->elements.values[4]);
+        callReentrantMethod(vm, fulfill->receiver, fulfill->method, OBJ_VAL(results));
+    }
+    RETURN_OBJ(self);
+}
+
+LOX_METHOD(Promise, raceAll) {
+    ASSERT_ARG_COUNT("Promise::raceAll(result)", 1);
+    ObjPromise* self = AS_PROMISE(receiver);
+    ObjPromise* racePromise = AS_PROMISE(self->capturedValues->elements.values[0]);
+    if (racePromise->state == PROMISE_PENDING) { 
+        self->value = args[0];
+        self->state = PROMISE_FULFILLED;
+        promiseFulfill(vm, racePromise, args[0]);
+    }
+    RETURN_NIL;
+}
+
 LOX_METHOD(Promise, reject) {
     ASSERT_ARG_COUNT("Promise::reject(exception)", 1);
     ASSERT_ARG_TYPE("Promise::reject(exception)", 0, Exception);
@@ -683,11 +736,33 @@ LOX_METHOD(Promise, reject) {
 
 LOX_METHOD(Promise, then) {
     ASSERT_ARG_COUNT("Promise::then(onFulfilled)", 1);
-    ASSERT_ARG_INSTANCE_OF("Promise::then(onFulfilled)", 0, TCallable);
+    ASSERT_ARG_INSTANCE_OF("Promise::then(onFulfilled)", 0, clox.std.lang.TCallable);
     ObjPromise* self = AS_PROMISE(receiver);
     if (self->state == PROMISE_FULFILLED) self->value = callReentrantMethod(vm, OBJ_VAL(self), args[0], self->value);
     else valueArrayWrite(vm, &self->handlers, args[0]);
     RETURN_OBJ(self);
+}
+
+LOX_METHOD(PromiseClass, all) {
+    ASSERT_ARG_COUNT("Promise class::all(promises)", 1);
+    ASSERT_ARG_TYPE("Promise class::all(promises)", 0, Array);
+    ObjClass* klass = AS_CLASS(receiver);
+    ObjArray* promises = AS_ARRAY(args[0]);
+    ObjArray* results = newArray(vm);
+    push(vm, OBJ_VAL(results));
+    int numCompleted = 0;
+    for (int i = 0; i < promises->elements.count; i++) {
+        promiseCapture(vm, AS_PROMISE(promises->elements.values[i]), 4, args[0], OBJ_VAL(results), INT_VAL(numCompleted), INT_VAL(i));
+    }
+    pop(vm);
+
+    Value onExecute;
+    tableGet(&klass->methods, copyString(vm, "onExecute", 9), &onExecute);
+    ObjBoundMethod* executor = newBoundMethod(vm, receiver, onExecute);
+    ObjPromise* promise = newPromise(vm, OBJ_VAL(executor));
+    promiseCapture(vm, promise, 3, args[0], OBJ_VAL(results), INT_VAL(numCompleted));
+    promiseExecute(vm, promise);
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(PromiseClass, fulfill) {
@@ -698,10 +773,31 @@ LOX_METHOD(PromiseClass, fulfill) {
         Value fulfill;
         tableGet(&klass->methods, copyString(vm, "fulfill", 7), &fulfill);
         ObjPromise* promise = newPromise(vm, fulfill);
+        promise->obj.klass = klass;
         promise->state = PROMISE_FULFILLED;
         promise->value = args[0];
         RETURN_OBJ(promise);
     }
+}
+
+LOX_METHOD(PromiseClass, race) {
+    ASSERT_ARG_COUNT("Promise class::race(promises)", 1);
+    ASSERT_ARG_TYPE("Promise class::race(promises)", 0, Array);
+    ObjClass* klass = AS_CLASS(receiver);
+    ObjArray* promises = AS_ARRAY(args[0]);
+    ObjPromise* racePromise = newPromise(vm, NIL_VAL);
+    push(vm, OBJ_VAL(racePromise));
+
+    for (int i = 0; i < promises->elements.count; i++) {
+        ObjPromise* promise = AS_PROMISE(promises->elements.values[i]);
+        promiseCapture(vm, promise, 1, OBJ_VAL(racePromise));
+        Value then = getObjMethod(vm, OBJ_VAL(promise), "then");
+        Value raceAll = getObjMethod(vm, OBJ_VAL(promise), "raceAll");
+        ObjBoundMethod* raceAllMethod = newBoundMethod(vm, OBJ_VAL(promise), raceAll);
+        callReentrantMethod(vm, OBJ_VAL(promise), then, OBJ_VAL(raceAllMethod));
+    }    
+    pop(vm);
+    RETURN_OBJ(racePromise);
 }
 
 LOX_METHOD(PromiseClass, reject) {
@@ -711,6 +807,7 @@ LOX_METHOD(PromiseClass, reject) {
     Value reject;
     tableGet(&klass->methods, copyString(vm, "reject", 6), &reject);
     ObjPromise* promise = newPromise(vm, reject);
+    promise->obj.klass = klass;
     promise->state = PROMISE_REJECTED;
     promise->exception = AS_EXCEPTION(args[0]);
     RETURN_OBJ(promise);
@@ -999,6 +1096,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->promiseClass, Promise, finally, 1);
     DEF_METHOD(vm->promiseClass, Promise, fulfill, 1);
     DEF_METHOD(vm->promiseClass, Promise, isResolved, 0);
+    DEF_METHOD(vm->promiseClass, Promise, raceAll, 1);
     DEF_METHOD(vm->promiseClass, Promise, reject, 1);
     DEF_METHOD(vm->promiseClass, Promise, then, 1);
 
@@ -1007,6 +1105,7 @@ void registerUtilPackage(VM* vm) {
     setClassProperty(vm, vm->promiseClass, "stateFulfilled", INT_VAL(PROMISE_FULFILLED));
     setClassProperty(vm, vm->promiseClass, "stateRejected", INT_VAL(PROMISE_REJECTED));
     DEF_METHOD(promiseMetaclass, PromiseClass, fulfill, 1);
+    DEF_METHOD(promiseMetaclass, PromiseClass, race, 1);
     DEF_METHOD(promiseMetaclass, PromiseClass, reject, 1);
 
     ObjClass* randomClass = defineNativeClass(vm, "Random");
