@@ -237,24 +237,6 @@ typedef struct ObjGenerator {
     Value value;
 } ObjGenerator;
 
-typedef enum {
-    PROMISE_PENDING,
-    PROMISE_FULFILLED,
-    PROMISE_REJECTED
-} PromiseState;
-
-typedef struct {
-    Obj obj;
-    int id;
-    PromiseState state;
-    Value value;
-    ObjException* exception;
-    Value executor;
-    ValueArray handlers;
-    Value onCatch;
-    Value onFinally;
-} ObjPromise;
-
 typedef struct {
     Obj obj;
     uv_timer_t* timer;
@@ -318,12 +300,31 @@ struct ObjNamespace {
     Table values;
 };
 
-typedef struct ObjNode{
+typedef struct ObjNode {
     Obj obj;
     Value element;
     struct ObjNode* prev;
     struct ObjNode* next;
 } ObjNode;
+
+typedef enum {
+    PROMISE_PENDING,
+    PROMISE_FULFILLED,
+    PROMISE_REJECTED
+} PromiseState;
+
+struct ObjPromise {
+    Obj obj;
+    int id;
+    PromiseState state;
+    Value value;
+    ObjArray* capturedValues;
+    ObjException* exception;
+    Value executor;
+    ValueArray handlers;
+    Value onCatch;
+    Value onFinally;
+};
 
 struct ObjString {
     Obj obj;

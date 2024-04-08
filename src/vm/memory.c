@@ -198,6 +198,7 @@ static void blackenObject(VM* vm, Obj* object) {
         case OBJ_PROMISE: {
             ObjPromise* promise = (ObjPromise*)object;
             markValue(vm, promise->value);
+            markObject(vm, (Obj*)promise->capturedValues);
             markObject(vm, (Obj*)promise->exception);
             markValue(vm, promise->executor);
             markArray(vm, &promise->handlers);
