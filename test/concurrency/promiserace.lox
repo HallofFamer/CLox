@@ -1,0 +1,25 @@
+namespace test.std;
+using clox.std.util.Promise;
+using clox.std.util.Timer;
+
+val promise = Promise({|fulfill, reject| 
+    Timer.timeout(fun(){ 
+        fulfill(1); 
+    }, 500);
+});
+
+val promise2 = Promise({|fulfill, reject| 
+    Timer.timeout(fun(){ 
+        fulfill(2); 
+    }, 1000);
+});
+
+val promise3 = Promise({|fulfill, reject| 
+    Timer.timeout(fun(){ 
+        fulfill(3); 
+    }, 300);
+});
+
+Promise.race([promise, promise2, promise3])
+       .then({|result| println("promise race fulfilled with result: ${result}") })
+       .catch({|exception| println("promise race failed: ${exception.message}") });

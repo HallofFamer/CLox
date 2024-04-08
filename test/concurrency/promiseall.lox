@@ -1,0 +1,120 @@
+namespace test.std;
+using clox.std.util.Promise;
+using clox.std.util.Timer;
+
+/*
+class Promise { 
+    __init__(executor){ 
+        this.handlers = [];
+        this.onCatch = nil;
+        this.onFinally = nil;
+        this.state = "pending";
+        this.value = nil;
+        this.error = nil;
+        executor(this.fulfill, this.reject);
+    }
+
+    then(closure) { 
+        if (this.state == "fulfilled") this.value = closure(this.value);
+        else this.handlers.add(closure);
+        return this;
+    }
+
+    `catch`(closure) { 
+        if (this.state == "rejected") closure(this.error);
+        else this.onCatch = closure;
+        return this;
+    }
+
+    `finally`(closure) { 
+        if (this.state == "fulfilled" or this.state == "rejected") closure(this.value);
+        else this.onFinally = closure;
+        return this;
+    }
+
+    fulfill(value) { 
+        this.value = value;
+        this.state = "fulfilled";
+        var index = 0;
+        var handler;
+        while (index < this.handlers.length) { 
+            handler = this.handlers[index];
+            this.value = handler(this.value);
+        }
+        return this;
+    }
+
+    reject(value) { 
+        this.error = value;
+        this.status = "rejected";
+        if (this.onCatch) this.onCatch(this.error);
+        return this;
+    }
+
+    class resolve(value) { 
+        if (value.instanceOf(Promise)) return value;
+        else {
+            return Promise(fun(resolve, reject){
+                resolve(value);
+            });
+        }
+    }
+
+    class all(promises) { 
+        var results = [];
+        var completedPromises = 0;
+
+        return Promise(fun(fulfill, reject){ 
+            promises.eachIndex(fun(index, promise){ 
+                var onThen = fun(result) { 
+                    results[index] = result;
+                    completedPromises = completedPromises + 1;
+                    if (completedPromises == promises.length) fulfill(results);
+                };
+                var onCatch = fun(error) { reject(error); };
+                
+                promise.then(onThen);
+                promise.catch(onCatch);                
+            });
+        });
+    }
+
+    class any(promises) { 
+        var errors = [];
+        var rejectedPromises = 0;
+
+        return Promise(fun(fulfill, reject){ 
+            promises.eachIndex(fun(index, promise){ 
+                var onCatch = fun(error) { 
+                    errors[index] = error;
+                    rejectedPromises = rejectedPromises + 1;
+                    if (rejectedPromises == promises.length) reject(results);
+                };
+                Promise.resolve(promise).then(fulfill).catch(onCatch);
+            });
+        });
+    }
+}
+*/
+
+val promise = Promise({|fulfill, reject| 
+    Timer.timeout(fun(){ 
+        fulfill(1); 
+    }, 500);
+});
+
+val promise2 = Promise({|fulfill, reject| 
+    Timer.timeout(fun(){ 
+        fulfill(2); 
+    }, 1000);
+});
+
+val promise3 = Promise({|fulfill, reject| 
+    Timer.timeout(fun(){ 
+        fulfill(3); 
+    }, 300);
+});
+
+Promise.all([promise, promise2, promise3])
+       .then({|result| println("promise all fulfilled with result: ${result}") })
+       .catch({|exception| println("promise all failed: ${exception.message}") });
