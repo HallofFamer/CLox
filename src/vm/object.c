@@ -48,9 +48,9 @@ ObjClass* newClass(VM* vm, ObjString* name, ObjType classType) {
     ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass, BEHAVIOR_METACLASS);
     metaclass->classType = OBJ_CLASS;
     push(vm, OBJ_VAL(metaclass));
+
     ObjClass* klass = createClass(vm, name, metaclass, BEHAVIOR_CLASS);
     klass->classType = classType;
-
     pop(vm);
     return klass;
 }

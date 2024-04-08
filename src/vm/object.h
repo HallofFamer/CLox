@@ -10,6 +10,7 @@
 #include "interceptor.h"
 #include "klass.h"
 #include "loop.h"
+#include "promise.h"
 #include "table.h"
 #include "value.h"
 
@@ -306,12 +307,6 @@ typedef struct ObjNode {
     struct ObjNode* prev;
     struct ObjNode* next;
 } ObjNode;
-
-typedef enum {
-    PROMISE_PENDING,
-    PROMISE_FULFILLED,
-    PROMISE_REJECTED
-} PromiseState;
 
 struct ObjPromise {
     Obj obj;

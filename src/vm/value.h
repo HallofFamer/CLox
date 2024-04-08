@@ -14,6 +14,7 @@ typedef struct ObjException ObjException;
 typedef struct ObjGenerator ObjGenerator;
 typedef struct ObjModule ObjModule;
 typedef struct ObjNamespace ObjNamespace;
+typedef struct ObjPromise ObjPromise;
 typedef struct ObjString ObjString;
 
 #ifdef NAN_BOXING
