@@ -163,6 +163,8 @@ set(Source_Files__vm
     "src/vm/os.h"
     "src/vm/parser.c"
     "src/vm/parser.h"
+    "src/vm/promise.c"
+    "src/vm/promise.h"
     "src/vm/scanner.c"
     "src/vm/scanner.h"
     "src/vm/shape.c"
