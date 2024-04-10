@@ -754,12 +754,11 @@ LOX_METHOD(PromiseClass, fulfill) {
     ObjClass* klass = AS_CLASS(receiver);
     if (IS_PROMISE(args[0])) RETURN_VAL(args[0]);
     else {
-        Value fulfill;
-        tableGet(&klass->methods, copyString(vm, "fulfill", 7), &fulfill);
-        ObjPromise* promise = newPromise(vm, fulfill);
+        ObjPromise* promise = newPromise(vm, NIL_VAL);
         promise->obj.klass = klass;
         promise->state = PROMISE_FULFILLED;
         promise->value = args[0];
+        promise->executor = getObjMethod(vm, receiver, "fulfill");
         RETURN_OBJ(promise);
     }
 }

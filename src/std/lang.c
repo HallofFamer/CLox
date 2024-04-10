@@ -28,7 +28,6 @@ static double fetchObjectID(VM* vm, Obj* object) {
     return (double)object->objectID;
 }
 
-
 static int gcd(int self, int other) {
     while (self != other) {
         if (self > other) self -= other;
