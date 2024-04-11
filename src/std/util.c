@@ -730,15 +730,20 @@ LOX_METHOD(Promise, thenAll) {
     ASSERT_ARG_COUNT("Promise::thenAll(result)", 1);
     ObjPromise* self = AS_PROMISE(receiver);
     ObjArray* promises = AS_ARRAY(self->capturedValues->elements.values[0]);
-    ObjArray* results = AS_ARRAY(self->capturedValues->elements.values[1]);
-    int numCompleted = AS_INT(self->capturedValues->elements.values[2]);
-    int index = AS_INT(self->capturedValues->elements.values[3]);
+    ObjPromise* allPromise = AS_PROMISE(self->capturedValues->elements.values[1]);
+    ObjArray* results = AS_ARRAY(self->capturedValues->elements.values[2]);
+    int remainingCount = AS_INT(self->capturedValues->elements.values[3]);
+    int index = AS_INT(self->capturedValues->elements.values[4]);
 
     valueArrayPut(vm, &results->elements, index, args[0]);
-    self->capturedValues->elements.values[2] = INT_VAL(numCompleted++);
-    if (numCompleted == promises->elements.count) {
-        ObjBoundMethod* fulfill = AS_BOUND_METHOD(self->capturedValues->elements.values[4]);
-        callReentrantMethod(vm, fulfill->receiver, fulfill->method, OBJ_VAL(results));
+    remainingCount--;
+    for (int i = 0; i < promises->elements.count; i++) {
+        ObjPromise* promise = AS_PROMISE(promises->elements.values[i]);
+        promise->capturedValues->elements.values[3] = INT_VAL(remainingCount);
+    }
+
+    if (remainingCount <= 0 && allPromise->state == PROMISE_PENDING) {
+        promiseFulfill(vm, allPromise, OBJ_VAL(results));
     }
     RETURN_OBJ(self);
 }

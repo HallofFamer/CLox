@@ -6,23 +6,32 @@
 #include "vm.h"
 
 ObjPromise* promiseAll(VM* vm, ObjClass* klass, ObjArray* promises) {
-    ObjArray* results = newArray(vm);
-    push(vm, OBJ_VAL(results));
-    int numCompleted = 0;
-    for (int i = 0; i < promises->elements.count; i++) {
-        promiseCapture(vm, AS_PROMISE(promises->elements.values[i]), 4, OBJ_VAL(promises), OBJ_VAL(results), INT_VAL(numCompleted), INT_VAL(i));
-    }
-    pop(vm);
-
+    int remainingCount = promises->elements.count;
     ObjPromise* allPromise = newPromise(vm, NIL_VAL);
     push(vm, OBJ_VAL(allPromise));
     allPromise->obj.klass = klass;
-    Value execute = getObjMethod(vm, OBJ_VAL(allPromise), "execute");
-    ObjBoundMethod* executor = newBoundMethod(vm, OBJ_VAL(allPromise), execute);
-    allPromise->executor = OBJ_VAL(executor);
+    if (remainingCount == 0) allPromise->state = PROMISE_FULFILLED;
+    else {
+        ObjArray* results = newArray(vm);
+        push(vm, OBJ_VAL(results));
+        for (int i = 0; i < promises->elements.count; i++) {
+            promiseCapture(vm, AS_PROMISE(promises->elements.values[i]), 5, OBJ_VAL(promises), OBJ_VAL(allPromise), OBJ_VAL(results), INT_VAL(remainingCount), INT_VAL(i));
+        }
+        pop(vm);
 
-    promiseCapture(vm, allPromise, 3, OBJ_VAL(promises), OBJ_VAL(results), INT_VAL(numCompleted));
-    promiseExecute(vm, allPromise);
+        for (int i = 0; i < promises->elements.count; i++) {
+            ObjPromise* promise = AS_PROMISE(promises->elements.values[i]);
+            Value then = getObjMethod(vm, OBJ_VAL(promise), "then");
+            Value thenAll = getObjMethod(vm, OBJ_VAL(promise), "thenAll");
+            ObjBoundMethod* thenAllMethod = newBoundMethod(vm, OBJ_VAL(promise), thenAll);
+            callReentrantMethod(vm, OBJ_VAL(promise), then, OBJ_VAL(thenAllMethod));
+
+            Value catch = getObjMethod(vm, OBJ_VAL(promise), "catch");
+            Value catchAll = getObjMethod(vm, OBJ_VAL(promise), "catchAll");
+            ObjBoundMethod* catchAllMethod = newBoundMethod(vm, OBJ_VAL(promise), catchAll);
+            callReentrantMethod(vm, OBJ_VAL(promise), catch, OBJ_VAL(catchAllMethod));
+        }
+    }
     pop(vm);
     return allPromise;
 }
@@ -39,7 +48,7 @@ void promiseCapture(VM* vm, ObjPromise* promise, int count, ...) {
 
 void promiseExecute(VM* vm, ObjPromise* promise) {
     Value fulfill = getObjMethod(vm, OBJ_VAL(promise), "fulfill");
-    Value reject = getObjMethod(vm, OBJ(promise), "reject");
+    Value reject = getObjMethod(vm, OBJ_VAL(promise), "reject");
 
     ObjBoundMethod* onFulfill = newBoundMethod(vm, OBJ_VAL(promise), fulfill);
     ObjBoundMethod* onReject = newBoundMethod(vm, OBJ_VAL(promise), reject);
