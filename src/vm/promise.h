@@ -16,5 +16,6 @@ void promiseCapture(VM* vm, ObjPromise* promise, int count, ...);
 void promiseExecute(VM* vm, ObjPromise* promise);
 void promiseFulfill(VM* vm, ObjPromise* promise, Value value);
 ObjPromise* promiseRace(VM* vm, ObjClass* klass, ObjArray* promises);
-
+void promiseReject(VM* vm, ObjPromise* promise, Value exception);
+void promiseThen(VM* vm, ObjPromise* promise, Value value);
 #endif // !clox_promise_h

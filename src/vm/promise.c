@@ -49,18 +49,18 @@ void promiseCapture(VM* vm, ObjPromise* promise, int count, ...) {
 void promiseExecute(VM* vm, ObjPromise* promise) {
     Value fulfill = getObjMethod(vm, OBJ_VAL(promise), "fulfill");
     Value reject = getObjMethod(vm, OBJ_VAL(promise), "reject");
-
     ObjBoundMethod* onFulfill = newBoundMethod(vm, OBJ_VAL(promise), fulfill);
     ObjBoundMethod* onReject = newBoundMethod(vm, OBJ_VAL(promise), reject);
     callReentrantMethod(vm, OBJ_VAL(promise), promise->executor, OBJ_VAL(onFulfill), OBJ_VAL(onReject));
 }
 
 void promiseFulfill(VM* vm, ObjPromise* promise, Value value) {
+    promise->state = PROMISE_FULFILLED;
+    promise->value = value;
     for (int i = 0; i < promise->handlers.count; i++) {
-        ObjBoundMethod* handler = newBoundMethod(vm, OBJ_VAL(promise), promise->handlers.values[i]);
-        callReentrantMethod(vm, OBJ_VAL(promise), handler->method, value);
+        promise->value = callReentrantMethod(vm, OBJ_VAL(promise), promise->handlers.values[i], promise->value);
     }
-    initValueArray(&promise->handlers);
+    if (IS_CLOSURE(promise->onFinally)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onFinally, promise->value);
 }
 
 ObjPromise* promiseRace(VM* vm, ObjClass* klass, ObjArray* promises) {
@@ -78,4 +78,19 @@ ObjPromise* promiseRace(VM* vm, ObjClass* klass, ObjArray* promises) {
     }
     pop(vm);
     return racePromise;
+}
+
+void promiseReject(VM* vm, ObjPromise* promise, Value exception) {
+    promise->state = PROMISE_REJECTED;
+    promise->exception = AS_EXCEPTION(exception);
+    if (IS_CLOSURE(promise->onCatch)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onCatch, exception);
+    if (IS_CLOSURE(promise->onFinally)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onFinally, promise->value);
+}
+
+void promiseThen(VM* vm, ObjPromise* promise, Value value) {
+    for (int i = 0; i < promise->handlers.count; i++) {
+        ObjBoundMethod* handler = newBoundMethod(vm, OBJ_VAL(promise), promise->handlers.values[i]);
+        callReentrantMethod(vm, OBJ_VAL(promise), handler->method, value);
+    }
+    initValueArray(&promise->handlers);
 }
