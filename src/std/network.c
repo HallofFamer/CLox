@@ -67,12 +67,12 @@ static ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
     while (result) {
         inet_ntop(result->ai_family, result->ai_addr->sa_data, ipString, 100);
         switch (result->ai_family) {
-        case AF_INET:
-            source = &((struct sockaddr_in*)result->ai_addr)->sin_addr;
-            break;
-        case AF_INET6:
-            source = &((struct sockaddr_in6*)result->ai_addr)->sin6_addr;
-            break;
+            case AF_INET:
+                source = &((struct sockaddr_in*)result->ai_addr)->sin_addr;
+                break;
+            case AF_INET6:
+                source = &((struct sockaddr_in6*)result->ai_addr)->sin6_addr;
+                break;
         }
 
         if (source != NULL) {

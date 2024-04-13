@@ -644,29 +644,6 @@ LOX_METHOD(Promise, catchAll) {
     RETURN_OBJ(self);
 }
 
-LOX_METHOD(Promise, execute) {
-    ASSERT_ARG_COUNT("Promise::execute(fulfill, reject)", 2);
-    ASSERT_ARG_INSTANCE_OF("Promise::execute(fulfill, reject)", 0, clox.std.lang.TCallable);
-    ASSERT_ARG_INSTANCE_OF("Promise::execute(fulfill, reject)", 1, clox.std.lang.TCallable);
-    ObjPromise* self = AS_PROMISE(receiver);
-    ObjArray* promises = AS_ARRAY(self->capturedValues->elements.values[0]);
-    valueArrayWrite(vm, &self->capturedValues->elements, args[0]);
-    valueArrayWrite(vm, &self->capturedValues->elements, args[1]);
-    self->value = OBJ_VAL(promises);
-
-    Value then = getObjMethod(vm, receiver, "then");
-    Value thenAll = getObjMethod(vm, receiver, "thenAll");
-    Value catch = getObjMethod(vm, receiver, "catch");
-    Value catchAll = getObjMethod(vm, receiver, "catchAll");
-
-    for (int i = 0; i < promises->elements.count; i++) {
-        ObjPromise* promise = AS_PROMISE(promises->elements.values[i]);
-        callReentrantMethod(vm, OBJ_VAL(promise), then, OBJ_VAL(newBoundMethod(vm, OBJ_VAL(promise), thenAll)));
-        callReentrantMethod(vm, OBJ_VAL(promise), catch, OBJ_VAL(newBoundMethod(vm, OBJ_VAL(promise), catchAll)));
-    }
-    RETURN_OBJ(self);
-}
-
 LOX_METHOD(Promise, finally) {
     ASSERT_ARG_COUNT("Promise::finally(closure)", 1);
     ASSERT_ARG_INSTANCE_OF("Promise::finally(closure)", 0, clox.std.lang.TCallable);
@@ -678,13 +655,7 @@ LOX_METHOD(Promise, finally) {
 
 LOX_METHOD(Promise, fulfill) {
     ASSERT_ARG_COUNT("Promise::fulfill(value)", 1);
-    ObjPromise* self = AS_PROMISE(receiver);
-    self->state = PROMISE_FULFILLED;
-    self->value = args[0];
-    for (int i = 0; i < self->handlers.count; i++) {
-        self->value = callReentrantMethod(vm, OBJ_VAL(self), self->handlers.values[i], self->value);
-    }
-    if (IS_CLOSURE(self->onFinally)) callReentrantMethod(vm, OBJ_VAL(self), self->onFinally, self->value);
+    promiseFulfill(vm, AS_PROMISE(receiver), args[0]);
     RETURN_NIL;
 }
 
@@ -701,7 +672,7 @@ LOX_METHOD(Promise, raceAll) {
     if (racePromise->state == PROMISE_PENDING) { 
         self->value = args[0];
         self->state = PROMISE_FULFILLED;
-        promiseFulfill(vm, racePromise, args[0]);
+        promiseThen(vm, racePromise, args[0]);
     }
     RETURN_NIL;
 }
@@ -709,11 +680,7 @@ LOX_METHOD(Promise, raceAll) {
 LOX_METHOD(Promise, reject) {
     ASSERT_ARG_COUNT("Promise::reject(exception)", 1);
     ASSERT_ARG_TYPE("Promise::reject(exception)", 0, Exception);
-    ObjPromise* self = AS_PROMISE(receiver);
-    self->state = PROMISE_REJECTED;
-    self->exception = AS_EXCEPTION(args[0]);
-    if (IS_CLOSURE(self->onCatch)) callReentrantMethod(vm, OBJ_VAL(self), self->onCatch, OBJ_VAL(self->exception));
-    if (IS_CLOSURE(self->onFinally)) callReentrantMethod(vm, OBJ_VAL(self), self->onFinally, self->value);
+    promiseReject(vm, AS_PROMISE(receiver), args[0]);
     RETURN_NIL;
 }
 
@@ -743,7 +710,7 @@ LOX_METHOD(Promise, thenAll) {
     }
 
     if (remainingCount <= 0 && allPromise->state == PROMISE_PENDING) {
-        promiseFulfill(vm, allPromise, OBJ_VAL(results));
+        promiseThen(vm, allPromise, OBJ_VAL(results));
     }
     RETURN_OBJ(self);
 }
@@ -1068,7 +1035,6 @@ void registerUtilPackage(VM* vm) {
     DEF_INTERCEPTOR(vm->promiseClass, Promise, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->promiseClass, Promise, catch, 1);
     DEF_METHOD(vm->promiseClass, Promise, catchAll, 1);
-    DEF_METHOD(vm->promiseClass, Promise, execute, 2);
     DEF_METHOD(vm->promiseClass, Promise, finally, 1);
     DEF_METHOD(vm->promiseClass, Promise, fulfill, 1);
     DEF_METHOD(vm->promiseClass, Promise, isResolved, 0);
