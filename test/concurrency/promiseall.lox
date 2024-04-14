@@ -3,19 +3,19 @@ using clox.std.util.Promise;
 using clox.std.util.Timer;
 
 val promise = Promise({|fulfill, reject| 
-    Timer.timeout(fun(){ 
+    Timer.timeout({ 
         fulfill(1); 
     }, 500);
 });
 
 val promise2 = Promise({|fulfill, reject| 
-    Timer.timeout(fun(){ 
+    Timer.timeout({ 
         fulfill(2); 
     }, 1000);
 });
 
 val promise3 = Promise({|fulfill, reject| 
-    Timer.timeout(fun(){ 
+    Timer.timeout({ 
         fulfill(3); 
     }, 300);
 });
