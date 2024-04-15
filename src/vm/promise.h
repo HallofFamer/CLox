@@ -18,4 +18,7 @@ void promiseFulfill(VM* vm, ObjPromise* promise, Value value);
 ObjPromise* promiseRace(VM* vm, ObjClass* klass, ObjArray* promises);
 void promiseReject(VM* vm, ObjPromise* promise, Value exception);
 void promiseThen(VM* vm, ObjPromise* promise, Value value);
+ObjPromise* promiseWithFulfilled(VM* vm, Value value);
+ObjPromise* promiseWithRejected(VM* vm, ObjException* exception);
+
 #endif // !clox_promise_h

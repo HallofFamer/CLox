@@ -94,3 +94,17 @@ void promiseThen(VM* vm, ObjPromise* promise, Value value) {
     }
     initValueArray(&promise->handlers);
 }
+
+ObjPromise* promiseWithFulfilled(VM* vm, Value value) {
+    ObjPromise* promise = newPromise(vm, NIL_VAL);
+    promise->state = PROMISE_FULFILLED;
+    promise->value = value;
+    return promise;
+}
+
+ObjPromise* promiseWithRejected(VM* vm, ObjException* exception) {
+    ObjPromise* promise = newPromise(vm, NIL_VAL);
+    promise->state = PROMISE_REJECTED;
+    promise->exception = exception;
+    return promise;
+}
