@@ -6,6 +6,12 @@ val promise = Promise({|fulfill, reject|
     Timer.timeout({ fulfill("hello world"); }, 1000);
 });
 
+val promise2 = Promise({|fulfill, reject|
+    Timer.timeout({ fulfill("hello world 2"); }, 500);
+});
+
 println("Promise created: ${promise}");
-var result = promise.then({|value| println("Promise resolved: ${value}") })
-                    .catch({|exception| println("promise failed: ${exception.message}") });
+promise.then({|value| println("Promise fulfilled: ${value}"); })
+       .catch({|exception| println("promise failed: ${exception.message}") });
+promise2.then({|value| println("Promise2 fulfilled: ${value}"); })
+        .catch({|exception| println("promise2 failed: ${exception.message}") });

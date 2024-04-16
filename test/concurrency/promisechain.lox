@@ -1,0 +1,17 @@
+namespace test.std;
+using clox.std.util.Promise;
+using clox.std.util.Timer;
+
+val promise = Promise({|fulfill, reject|
+    Timer.timeout({ fulfill("hello world"); }, 1000);
+});
+
+println("Promise created: ${promise}");
+promise.then(fun(value) { 
+           println("Promise fulfilled: ${value}"); 
+           return Promise(fun(fulfill, reject){ 
+               Timer.timeout({ fulfill("hello world again"); }, 2000);
+           });
+       })
+       .then({|value| println("Promise fulfilled: ${value}"); })
+       .catch({|exception| println("promise failed: ${exception.message}") });
