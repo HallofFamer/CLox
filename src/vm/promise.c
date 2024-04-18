@@ -63,6 +63,11 @@ void promiseFulfill(VM* vm, ObjPromise* promise, Value value) {
     if (IS_CLOSURE(promise->onFinally)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onFinally, promise->value);
 }
 
+void promisePushHandler(VM* vm, ObjPromise* promise, Value handler, ObjPromise* thenPromise) {
+    if (promise->state == PROMISE_FULFILLED)  callReentrantMethod(vm, OBJ_VAL(thenPromise), handler, promise->value);
+    else valueArrayWrite(vm, &promise->handlers, handler);
+}
+
 ObjPromise* promiseRace(VM* vm, ObjClass* klass, ObjArray* promises) {
     ObjPromise* racePromise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
     racePromise->obj.klass = klass;
