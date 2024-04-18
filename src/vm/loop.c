@@ -30,14 +30,14 @@ void timerRun(uv_timer_t* timer) {
     push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
     data->vm->frameCount++;
     switch (data->closure->function->arity) {
-    case 0:
-        callReentrantMethod(data->vm, data->receiver, OBJ_VAL(data->closure));
-        break;
-    case 1:
-        callReentrantMethod(data->vm, data->receiver, OBJ_VAL(data->closure), data->receiver);
-        break;
-    default:
-        throwNativeException(data->vm, "clox.std.lang.IllegalArgumentException", "timer callback closure may accept only 0 or 1 argument");
+        case 0:
+            callReentrantMethod(data->vm, data->receiver, OBJ_VAL(data->closure));
+            break;
+        case 1:
+            callReentrantMethod(data->vm, data->receiver, OBJ_VAL(data->closure), data->receiver);
+            break;
+        default:
+            throwNativeException(data->vm, "clox.std.lang.IllegalArgumentException", "timer callback closure may accept only 0 or 1 argument");
     }
     pop(data->vm);
     data->vm->frameCount--;
