@@ -128,7 +128,7 @@ void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     if (superclass == NULL) {
         runtimeError(vm, "Superclass cannot be NULL for class %s", subclass->name);
-        return;
+        exit(70);
     }
     inheritSuperclass(vm, subclass, superclass);
     if (subclass->name->length == 0) {

@@ -131,7 +131,7 @@ int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     ShapeTree* shapeTree = &vm->shapes;
     if (shapeTree->count >= INT32_MAX) {
         runtimeError(vm, "Too many shapes have been created.");
-        return -1;
+        exit(70);
     }
     Shape* parentShape = &shapeTree->list[parentID];
 
@@ -177,7 +177,7 @@ int getShapeFromParent(VM* vm, int parentID, ObjString* edge) {
     ShapeTree* shapeTree = &vm->shapes;
     if (shapeTree->count >= UINT32_MAX) {
         runtimeError(vm, "Too many shapes have been created.");
-        return -1;
+        exit(70);
     }
     Shape* parentShape = &shapeTree->list[parentID];
 

@@ -105,7 +105,7 @@ void freeGenericIDMap(VM* vm, GenericIDMap* genericIDMap) {
 IDMap* getIDMapFromGenericObject(VM* vm, Obj* object) {
     if (object->shapeID > vm->shapes.count) {
         runtimeError(vm, "Generic object has invalid shape ID assigned.");
-        return NULL;
+        exit(70);
     }
     return &vm->shapes.list[object->shapeID].indexes;
 }

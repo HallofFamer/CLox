@@ -26,7 +26,10 @@ void handleInterceptorMethod(VM* vm, ObjClass* klass, ObjString* name) {
     else if (strcmp(name->chars, "__onYield__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_ON_YIELD);
     else if (strcmp(name->chars, "__undefinedGet__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_UNDEFINED_GET);
     else if (strcmp(name->chars, "__undefinedInvoke__") == 0) SET_CLASS_INTERCEPTOR(klass, INTERCEPTOR_UNDEFINED_INVOKE);
-    else runtimeError(vm, "Invalid interceptor method specified.");
+    else {
+        runtimeError(vm, "Invalid interceptor method specified.");
+        exit(70);
+    }
 }
 
 bool hasInterceptableMethod(VM* vm, Value receiver, ObjString* name) {
