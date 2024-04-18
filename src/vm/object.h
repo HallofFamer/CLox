@@ -349,7 +349,7 @@ ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
-ObjPromise* newPromise(VM* vm, Value executor);
+ObjPromise* newPromise(VM* vm, PromiseState state, Value value, Value executor);
 ObjRange* newRange(VM* vm, int from, int to);
 ObjRecord* newRecord(VM* vm, void* data);
 ObjTimer* newTimer(VM* vm, ObjClosure* closure, int delay, int interval);

@@ -41,7 +41,7 @@ ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, Value method) {
 ObjClass* newClass(VM* vm, ObjString* name, ObjType classType) {
     if (vm->behaviorCount == INT32_MAX) {
         runtimeError(vm, "Cannot have more than %d classes/traits.", INT32_MAX);
-        return NULL;
+        exit(70);
     }
 
     ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
@@ -225,11 +225,11 @@ ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next) {
     return node;
 }
 
-ObjPromise* newPromise(VM* vm, Value executor){
+ObjPromise* newPromise(VM* vm, PromiseState state, Value value, Value executor){
     ObjPromise* promise = ALLOCATE_OBJ(ObjPromise, OBJ_PROMISE, vm->promiseClass);
     promise->id = ++vm->promiseCount;
-    promise->state = PROMISE_PENDING;
-    promise->value = NIL_VAL;
+    promise->state = state;
+    promise->value = value;
     promise->exception = NULL;
     promise->executor = executor;
     promise->onCatch = NIL_VAL;
@@ -301,7 +301,7 @@ Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
 Value getObjPropertyByIndex(VM* vm, ObjInstance* object, int index) {
     if (index >= object->fields.count) {
         runtimeError(vm, "Invalid index %d for object property", index);
-        return NIL_VAL;
+        exit(70);
     }
     return object->fields.values[index];
 }
@@ -323,6 +323,7 @@ void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
 void setObjPropertyByIndex(VM* vm, ObjInstance* object, int index, Value value) {
     if (index < object->fields.count) {
         runtimeError(vm, "Invalid index %d for object property", index);
+        exit(70);
     }
     object->fields.values[index] = value;
 }
@@ -344,6 +345,7 @@ Value getObjMethod(VM* vm, Value object, char* name) {
     Value method;
     if (!tableGet(&klass->methods, newString(vm, name), &method)) {
         runtimeError(vm, "Method %s::%s does not exist.", klass->name->chars, name);
+        exit(70);
     }
     return method;
 }
