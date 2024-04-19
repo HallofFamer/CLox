@@ -694,15 +694,13 @@ LOX_METHOD(Promise, then) {
         else RETURN_OBJ(promiseWithFulfilled(vm, self->value));
     }
     else {
-        //valueArrayWrite(vm, &self->handlers, args[0]);
-        ObjPromise* thenPromise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        ObjPromise* thenPromise = self->capturedValues->elements.count > 0 ? AS_PROMISE(self->capturedValues->elements.values[0]) : newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
         Value thenChain = getObjMethod(vm, receiver, "thenChain");
         ObjBoundMethod* thenChainMethod = newBoundMethod(vm, receiver, thenChain);
         promiseCapture(vm, self, 2, OBJ_VAL(thenPromise), args[0]);
-        valueArrayWrite(vm, &self->handlers, OBJ_VAL(thenChainMethod));
+        promisePushHandler(vm, self, OBJ_VAL(thenChainMethod), thenPromise);
         RETURN_OBJ(thenPromise);
     }
-    //RETURN_OBJ(self);
 }
 
 LOX_METHOD(Promise, thenAll) {
@@ -732,14 +730,14 @@ LOX_METHOD(Promise, thenChain) {
     ObjPromise* self = AS_PROMISE(receiver);
     ObjPromise* thenPromise = AS_PROMISE(self->capturedValues->elements.values[0]);
     Value onFulfilled = self->capturedValues->elements.values[1];
-    Value result = callReentrantMethod(vm, receiver, onFulfilled, args[0]);
+    Value result = callReentrantMethod(vm, OBJ_VAL(thenPromise), onFulfilled, args[0]);
     if (IS_PROMISE(result)) {
-        printf("then chain promise: %d.\n", self->id);
+        ObjPromise* resultPromise = AS_PROMISE(result);
         Value then = getObjMethod(vm, result, "then");
         Value thenFulfill = getObjMethod(vm, receiver, "thenFulfill");
         ObjBoundMethod* thenFulfillMethod = newBoundMethod(vm, result, thenFulfill);
-        promiseCapture(vm, AS_PROMISE(result), 2, OBJ_VAL(thenPromise), onFulfilled);
-        callReentrantMethod(vm, OBJ_VAL(result), then, OBJ_VAL(thenFulfillMethod));
+        promiseCapture(vm, resultPromise, 2, OBJ_VAL(thenPromise), onFulfilled);
+        callReentrantMethod(vm, OBJ_VAL(resultPromise), then, OBJ_VAL(thenFulfillMethod));
     }
     else promiseFulfill(vm, thenPromise, result);
     RETURN_OBJ(thenPromise);
@@ -749,7 +747,7 @@ LOX_METHOD(Promise, thenFulfill) {
     ASSERT_ARG_COUNT("Promise::thenFulfill()", 0);
     ObjPromise* self = AS_PROMISE(receiver);
     ObjPromise* thenPromise = AS_PROMISE(self->capturedValues->elements.values[0]);
-    promiseFulfill(vm, self, NIL_VAL);
+    promiseFulfill(vm, thenPromise, NIL_VAL);
     RETURN_OBJ(self);
 }
 
