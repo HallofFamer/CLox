@@ -58,8 +58,9 @@ void promiseFulfill(VM* vm, ObjPromise* promise, Value value) {
     promise->state = PROMISE_FULFILLED;
     promise->value = value;
     for (int i = 0; i < promise->handlers.count; i++) {
-        callReentrantMethod(vm, OBJ_VAL(promise), promise->handlers.values[i], promise->value);
+        promise->value = callReentrantMethod(vm, OBJ_VAL(promise), promise->handlers.values[i], promise->value);
     }
+    initValueArray(&promise->handlers);
     if (IS_CLOSURE(promise->onFinally)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onFinally, promise->value);
 }
 

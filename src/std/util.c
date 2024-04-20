@@ -694,10 +694,10 @@ LOX_METHOD(Promise, then) {
         else RETURN_OBJ(promiseWithFulfilled(vm, self->value));
     }
     else {
-        ObjPromise* thenPromise = self->capturedValues->elements.count > 0 ? AS_PROMISE(self->capturedValues->elements.values[0]) : newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        ObjPromise* thenPromise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
         Value thenChain = getObjMethod(vm, receiver, "thenChain");
         ObjBoundMethod* thenChainMethod = newBoundMethod(vm, receiver, thenChain);
-        promiseCapture(vm, self, 2, OBJ_VAL(thenPromise), args[0]);
+        if(self->capturedValues->elements.count == 0) promiseCapture(vm, self, 2, OBJ_VAL(thenPromise), args[0]);
         promisePushHandler(vm, self, OBJ_VAL(thenChainMethod), thenPromise);
         RETURN_OBJ(thenPromise);
     }
@@ -731,24 +731,25 @@ LOX_METHOD(Promise, thenChain) {
     ObjPromise* thenPromise = AS_PROMISE(self->capturedValues->elements.values[0]);
     Value onFulfilled = self->capturedValues->elements.values[1];
     Value result = callReentrantMethod(vm, OBJ_VAL(thenPromise), onFulfilled, args[0]);
+
     if (IS_PROMISE(result)) {
         ObjPromise* resultPromise = AS_PROMISE(result);
         Value then = getObjMethod(vm, result, "then");
         Value thenFulfill = getObjMethod(vm, receiver, "thenFulfill");
         ObjBoundMethod* thenFulfillMethod = newBoundMethod(vm, result, thenFulfill);
-        promiseCapture(vm, resultPromise, 2, OBJ_VAL(thenPromise), onFulfilled);
+        promiseCapture(vm, resultPromise, 2, OBJ_VAL(thenPromise), OBJ_VAL(thenFulfillMethod));
         callReentrantMethod(vm, OBJ_VAL(resultPromise), then, OBJ_VAL(thenFulfillMethod));
     }
     else promiseFulfill(vm, thenPromise, result);
-    RETURN_OBJ(thenPromise);
+    RETURN_NIL;
 }
 
 LOX_METHOD(Promise, thenFulfill) {
-    ASSERT_ARG_COUNT("Promise::thenFulfill()", 0);
+    ASSERT_ARG_COUNT("Promise::thenFulfill(value)", 1);
     ObjPromise* self = AS_PROMISE(receiver);
     ObjPromise* thenPromise = AS_PROMISE(self->capturedValues->elements.values[0]);
-    promiseFulfill(vm, thenPromise, NIL_VAL);
-    RETURN_OBJ(self);
+    promiseFulfill(vm, thenPromise, args[0]);
+    RETURN_VAL(args[0]);
 }
 
 LOX_METHOD(PromiseClass, all) {
@@ -1075,7 +1076,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->promiseClass, Promise, then, 1);
     DEF_METHOD(vm->promiseClass, Promise, thenAll, 1);
     DEF_METHOD(vm->promiseClass, Promise, thenChain, 1);
-    DEF_METHOD(vm->promiseClass, Promise, thenFulfill, 0);
+    DEF_METHOD(vm->promiseClass, Promise, thenFulfill, 1);
 
     ObjClass* promiseMetaclass = vm->promiseClass->obj.klass;
     setClassProperty(vm, vm->promiseClass, "statePending", INT_VAL(PROMISE_PENDING));
