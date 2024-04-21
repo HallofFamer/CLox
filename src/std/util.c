@@ -694,7 +694,9 @@ LOX_METHOD(Promise, then) {
         else RETURN_OBJ(promiseWithFulfilled(vm, self->value));
     }
     else {
-        ObjPromise* thenPromise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        ObjPromise* thenPromise = (self->capturedValues->elements.count == 0)
+            ? newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL)
+            : AS_PROMISE(self->capturedValues->elements.values[0]);
         Value thenChain = getObjMethod(vm, receiver, "thenChain");
         ObjBoundMethod* thenChainMethod = newBoundMethod(vm, receiver, thenChain);
         if(self->capturedValues->elements.count == 0) promiseCapture(vm, self, 2, OBJ_VAL(thenPromise), args[0]);

@@ -443,18 +443,12 @@ Value callGenerator(VM* vm, ObjGenerator* generator) {
 static bool callValue(VM* vm, Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
-            case OBJ_BOUND_METHOD:
-                return callBoundMethod(vm, AS_BOUND_METHOD(callee), argCount);
-            case OBJ_CLASS: 
-                return callClass(vm, AS_CLASS(callee), argCount);
-            case OBJ_CLOSURE:
-                return callClosure(vm, AS_CLOSURE(callee), argCount);
-            case OBJ_NATIVE_FUNCTION: 
-                return callNativeFunction(vm, AS_NATIVE_FUNCTION(callee)->function, argCount);
-            case OBJ_NATIVE_METHOD: 
-                return callNativeMethod(vm, AS_NATIVE_METHOD(callee)->method, argCount);
-            default:
-                break;
+            case OBJ_BOUND_METHOD: return callBoundMethod(vm, AS_BOUND_METHOD(callee), argCount);
+            case OBJ_CLASS: return callClass(vm, AS_CLASS(callee), argCount);
+            case OBJ_CLOSURE: return callClosure(vm, AS_CLOSURE(callee), argCount);
+            case OBJ_NATIVE_FUNCTION: return callNativeFunction(vm, AS_NATIVE_FUNCTION(callee)->function, argCount);
+            case OBJ_NATIVE_METHOD: return callNativeMethod(vm, AS_NATIVE_METHOD(callee)->method, argCount);
+            default: break;
         }
     }
 
