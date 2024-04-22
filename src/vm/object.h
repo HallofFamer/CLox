@@ -313,7 +313,7 @@ struct ObjPromise {
     int id;
     PromiseState state;
     Value value;
-    ObjArray* capturedValues;
+    ObjDictionary* captures;
     ObjException* exception;
     Value executor;
     ValueArray handlers;
