@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "dict.h"
 #include "object.h"
 #include "vm.h"
 
@@ -15,7 +16,12 @@ ObjPromise* promiseAll(VM* vm, ObjClass* klass, ObjArray* promises) {
         ObjArray* results = newArray(vm);
         push(vm, OBJ_VAL(results));
         for (int i = 0; i < promises->elements.count; i++) {
-            promiseCapture(vm, AS_PROMISE(promises->elements.values[i]), 5, OBJ_VAL(promises), OBJ_VAL(allPromise), OBJ_VAL(results), INT_VAL(remainingCount), INT_VAL(i));
+            ObjPromise* promise = AS_PROMISE(promises->elements.values[i]);
+            promiseCapture(vm, promise, "promises", OBJ_VAL(promises));
+            promiseCapture(vm, promise, "allPromise", OBJ_VAL(allPromise));
+            promiseCapture(vm, promise, "results", OBJ_VAL(results));
+            promiseCapture(vm, promise, "remainingCount", INT_VAL(remainingCount));
+            promiseCapture(vm, promise, "index", INT_VAL(i));
         }
         pop(vm);
 
@@ -36,14 +42,9 @@ ObjPromise* promiseAll(VM* vm, ObjClass* klass, ObjArray* promises) {
     return allPromise;
 }
 
-void promiseCapture(VM* vm, ObjPromise* promise, int count, ...) {
-    va_list args;
-    va_start(args, count);
-    for (int i = 0; i < count; i++) {
-        Value value = va_arg(args, Value);
-        valueArrayWrite(vm, &promise->capturedValues->elements, value);
-    }
-    va_end(args);
+bool promiseCapture(VM* vm, ObjPromise* promise, const char* name, Value value) {
+    ObjString* key = newString(vm, name);
+    return dictSet(vm, promise->captures, key, value);
 }
 
 void promiseExecute(VM* vm, ObjPromise* promise) {
@@ -64,6 +65,13 @@ void promiseFulfill(VM* vm, ObjPromise* promise, Value value) {
     if (IS_CLOSURE(promise->onFinally)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onFinally, promise->value);
 }
 
+Value promiseLoad(VM* vm, ObjPromise* promise, const char* name) {
+    ObjString* key = newString(vm, name);
+    Value value;
+    if (!dictGet(promise->captures, key, &value)) return NIL_VAL;
+    else return value;
+}
+
 void promisePushHandler(VM* vm, ObjPromise* promise, Value handler, ObjPromise* thenPromise) {
     if (promise->state == PROMISE_FULFILLED)  callReentrantMethod(vm, OBJ_VAL(thenPromise), handler, promise->value);
     else valueArrayWrite(vm, &promise->handlers, handler);
@@ -76,7 +84,7 @@ ObjPromise* promiseRace(VM* vm, ObjClass* klass, ObjArray* promises) {
 
     for (int i = 0; i < promises->elements.count; i++) {
         ObjPromise* promise = AS_PROMISE(promises->elements.values[i]);
-        promiseCapture(vm, promise, 1, OBJ_VAL(racePromise));
+        promiseCapture(vm, promise, "racePromise", OBJ_VAL(racePromise));
         Value then = getObjMethod(vm, OBJ_VAL(promise), "then");
         Value raceAll = getObjMethod(vm, OBJ_VAL(promise), "raceAll");
         ObjBoundMethod* raceAllMethod = newBoundMethod(vm, OBJ_VAL(promise), raceAll);
@@ -109,4 +117,10 @@ ObjPromise* promiseWithRejected(VM* vm, ObjException* exception) {
     ObjPromise* promise = newPromise(vm, PROMISE_REJECTED, NIL_VAL, NIL_VAL);
     promise->exception = exception;
     return promise;
+}
+
+ObjPromise* promiseWithThen(VM* vm, ObjPromise* promise) {
+    if (promise->captures->count == 0) return newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+    Value thenPromise = promiseLoad(vm, promise, "thenPromise");
+    return IS_NIL(thenPromise) ? newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL) : AS_PROMISE(thenPromise);
 }
