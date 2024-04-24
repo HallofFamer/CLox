@@ -178,8 +178,12 @@ LOX_METHOD(File, exists) {
 LOX_METHOD(File, getAbsolutePath) {
     ASSERT_ARG_COUNT("File::getAbsolutePath()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file absolute path because it does not exist.");
+    uv_fs_t fRealPath;
+    if (uv_fs_realpath(vm->eventLoop, &fRealPath, self->name->chars, NULL) == NULL) {
+        THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file absolute path because it does not exist.");
+    }
+    ObjString* realPath = newString(vm, (const char*)fRealPath.ptr);
+    RETURN_OBJ(realPath);
 }
 
 LOX_METHOD(File, isDirectory) {

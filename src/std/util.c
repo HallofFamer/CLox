@@ -639,7 +639,11 @@ LOX_METHOD(Promise, catchAll) {
     ASSERT_ARG_COUNT("Promise::catchAll(exception)", 1);
     ASSERT_ARG_TYPE("Promise::catchAll(exception)", 0, Exception);
     ObjPromise* self = AS_PROMISE(receiver);
-    ObjBoundMethod* reject = AS_BOUND_METHOD(self->capturedValues->elements.values[5]);
+    if (self->captures->count == 0) {
+        THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Method Promise::catchAll(exception) can only be called internally by Promise class::all(promises).");
+    }
+
+    ObjBoundMethod* reject = AS_BOUND_METHOD(promiseLoad(vm, self, "reject"));
     callReentrantMethod(vm, reject->receiver, reject->method, args[0]);
     RETURN_OBJ(self);
 }
@@ -668,7 +672,11 @@ LOX_METHOD(Promise, isResolved) {
 LOX_METHOD(Promise, raceAll) {
     ASSERT_ARG_COUNT("Promise::raceAll(result)", 1);
     ObjPromise* self = AS_PROMISE(receiver);
-    ObjPromise* racePromise = AS_PROMISE(self->capturedValues->elements.values[0]);
+    if (self->captures->count == 0) {
+        THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Method Promise::raceAll(result) can only be called internally by Promise class::race(promises).");
+    }
+
+    ObjPromise* racePromise = AS_PROMISE(promiseLoad(vm, self, "racePromise"));
     if (racePromise->state == PROMISE_PENDING) { 
         self->value = args[0];
         self->state = PROMISE_FULFILLED;
@@ -694,12 +702,11 @@ LOX_METHOD(Promise, then) {
         else RETURN_OBJ(promiseWithFulfilled(vm, self->value));
     }
     else {
-        ObjPromise* thenPromise = (self->capturedValues->elements.count == 0)
-            ? newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL)
-            : AS_PROMISE(self->capturedValues->elements.values[0]);
+        ObjPromise* thenPromise = promiseWithThen(vm, self);
         Value thenChain = getObjMethod(vm, receiver, "thenChain");
         ObjBoundMethod* thenChainMethod = newBoundMethod(vm, receiver, thenChain);
-        if(self->capturedValues->elements.count == 0) promiseCapture(vm, self, 2, OBJ_VAL(thenPromise), args[0]);
+        promiseCapture(vm, self, "thenPromise", OBJ_VAL(thenPromise));
+        promiseCapture(vm, self, "onFulfilled", args[0]);
         promisePushHandler(vm, self, OBJ_VAL(thenChainMethod), thenPromise);
         RETURN_OBJ(thenPromise);
     }
@@ -708,17 +715,21 @@ LOX_METHOD(Promise, then) {
 LOX_METHOD(Promise, thenAll) {
     ASSERT_ARG_COUNT("Promise::thenAll(result)", 1);
     ObjPromise* self = AS_PROMISE(receiver);
-    ObjArray* promises = AS_ARRAY(self->capturedValues->elements.values[0]);
-    ObjPromise* allPromise = AS_PROMISE(self->capturedValues->elements.values[1]);
-    ObjArray* results = AS_ARRAY(self->capturedValues->elements.values[2]);
-    int remainingCount = AS_INT(self->capturedValues->elements.values[3]);
-    int index = AS_INT(self->capturedValues->elements.values[4]);
+    if (self->captures->count == 0) {
+        THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Method Promise::thenAll(result) can only be called internally by Promise class::all(promises).");
+    }
+
+    ObjArray* promises = AS_ARRAY(promiseLoad(vm, self, "promises"));
+    ObjPromise* allPromise = AS_PROMISE(promiseLoad(vm, self, "allPromise"));
+    ObjArray* results = AS_ARRAY(promiseLoad(vm, self, "results"));
+    int remainingCount = AS_INT(promiseLoad(vm, self, "remainingCount"));
+    int index = AS_INT(promiseLoad(vm, self, "index"));
 
     valueArrayPut(vm, &results->elements, index, args[0]);
     remainingCount--;
     for (int i = 0; i < promises->elements.count; i++) {
         ObjPromise* promise = AS_PROMISE(promises->elements.values[i]);
-        promise->capturedValues->elements.values[3] = INT_VAL(remainingCount);
+        promiseCapture(vm, promise, "remainingCount", INT_VAL(remainingCount));
     }
 
     if (remainingCount <= 0 && allPromise->state == PROMISE_PENDING) {
@@ -730,8 +741,12 @@ LOX_METHOD(Promise, thenAll) {
 LOX_METHOD(Promise, thenChain) {
     ASSERT_ARG_COUNT("Promise::thenChain(result)", 1);
     ObjPromise* self = AS_PROMISE(receiver);
-    ObjPromise* thenPromise = AS_PROMISE(self->capturedValues->elements.values[0]);
-    Value onFulfilled = self->capturedValues->elements.values[1];
+    if (self->captures->count == 0) {
+        THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Method Promise::thenChain(result) can only be called internally by Promise::then(onFulfilled).");
+    }
+
+    ObjPromise* thenPromise = AS_PROMISE(promiseLoad(vm, self, "thenPromise"));
+    Value onFulfilled = promiseLoad(vm, self, "onFulfilled");
     Value result = callReentrantMethod(vm, OBJ_VAL(thenPromise), onFulfilled, args[0]);
 
     if (IS_PROMISE(result)) {
@@ -739,7 +754,8 @@ LOX_METHOD(Promise, thenChain) {
         Value then = getObjMethod(vm, result, "then");
         Value thenFulfill = getObjMethod(vm, receiver, "thenFulfill");
         ObjBoundMethod* thenFulfillMethod = newBoundMethod(vm, result, thenFulfill);
-        promiseCapture(vm, resultPromise, 2, OBJ_VAL(thenPromise), OBJ_VAL(thenFulfillMethod));
+        promiseCapture(vm, resultPromise, "thenPromise", OBJ_VAL(thenPromise));
+        promiseCapture(vm, resultPromise, "onFulfilled", OBJ_VAL(thenFulfillMethod));
         callReentrantMethod(vm, OBJ_VAL(resultPromise), then, OBJ_VAL(thenFulfillMethod));
     }
     else promiseFulfill(vm, thenPromise, result);
@@ -749,7 +765,11 @@ LOX_METHOD(Promise, thenChain) {
 LOX_METHOD(Promise, thenFulfill) {
     ASSERT_ARG_COUNT("Promise::thenFulfill(value)", 1);
     ObjPromise* self = AS_PROMISE(receiver);
-    ObjPromise* thenPromise = AS_PROMISE(self->capturedValues->elements.values[0]);
+    if (self->captures->count == 0) {
+        THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Method Promise::thenFulfill(value) can only be called internally by Promise::thenChain(result).");
+    }
+
+    ObjPromise* thenPromise = AS_PROMISE(promiseLoad(vm, self, "thenPromise"));
     promiseFulfill(vm, thenPromise, args[0]);
     RETURN_VAL(args[0]);
 }
