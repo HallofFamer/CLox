@@ -10,8 +10,15 @@
 #include "../vm/string.h"
 #include "../vm/vm.h"
 
-static bool fileExists(ObjFile* file, struct stat* fileStat) {
-    return (stat(file->name->chars, fileStat) == 0);
+static bool loadFileStat(VM* vm, ObjFile* file, uv_fs_t* fStat) {
+    return (uv_fs_stat(vm->eventLoop, fStat, file->name->chars, NULL) == 0);
+}
+
+static bool fileExists(VM* vm, ObjFile* file) {
+    uv_fs_t fStat;
+    bool fileExists = loadFileStat(vm, file, &fStat);
+    uv_fs_req_cleanup(&fStat);
+    return fileExists;
 }
 
 static ObjFile* getFileArgument(VM* vm, Value arg) {
@@ -114,7 +121,7 @@ LOX_METHOD(BinaryWriteStream, putBytes) {
     ASSERT_ARG_TYPE("BinaryWriteStream::put(bytes)", 0, Array);
     ObjArray* bytes = AS_ARRAY(args[0]);
     if (bytes->elements.count == 0) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write empty byte array to stream.");
-    
+
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write bytes to stream because file is already closed.");
     if (file->file == NULL) RETURN_NIL;
@@ -146,11 +153,10 @@ LOX_METHOD(File, __init__) {
 LOX_METHOD(File, create) {
     ASSERT_ARG_COUNT("File::create()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (fileExists(self, &fileStat)) {
+    if (fileExists(vm, self)) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create new file because it already exists");
     }
-    
+
     FILE* file;
     fopen_s(&file, self->name->chars, "w");
     if (file != NULL) {
@@ -163,23 +169,20 @@ LOX_METHOD(File, create) {
 LOX_METHOD(File, delete) {
     ASSERT_ARG_COUNT("File::delete()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
+    if (!fileExists(vm, self)) RETURN_FALSE;
     RETURN_BOOL(remove(self->name->chars) == 0);
 }
 
 LOX_METHOD(File, exists) {
     ASSERT_ARG_COUNT("File::exists()", 0);
-    ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    RETURN_BOOL(fileExists(self, &fileStat));
+    RETURN_BOOL(fileExists(vm, AS_FILE(receiver)));
 }
 
 LOX_METHOD(File, getAbsolutePath) {
     ASSERT_ARG_COUNT("File::getAbsolutePath()", 0);
     ObjFile* self = AS_FILE(receiver);
     uv_fs_t fRealPath;
-    if (uv_fs_realpath(vm->eventLoop, &fRealPath, self->name->chars, NULL) == NULL) {
+    if (uv_fs_realpath(vm->eventLoop, &fRealPath, self->name->chars, NULL) != 0) {
         THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file absolute path because it does not exist.");
     }
     ObjString* realPath = newString(vm, (const char*)fRealPath.ptr);
@@ -189,64 +192,77 @@ LOX_METHOD(File, getAbsolutePath) {
 LOX_METHOD(File, isDirectory) {
     ASSERT_ARG_COUNT("File::isDirectory()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
-    RETURN_BOOL(fileStat.st_mode & S_IFDIR);
+    uv_fs_t fStat;
+    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
+    uint64_t mode = fStat.statbuf.st_mode;
+    uv_fs_req_cleanup(&fStat);
+    RETURN_BOOL(mode & S_IFDIR);
 }
 
 LOX_METHOD(File, isExecutable) {
     ASSERT_ARG_COUNT("File::isExecutable()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
-    RETURN_BOOL(fileStat.st_mode & S_IEXEC);
+    uv_fs_t fStat;
+    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
+    uint64_t mode = fStat.statbuf.st_mode;
+    uv_fs_req_cleanup(&fStat);
+    RETURN_BOOL(mode & S_IEXEC);
 }
 
 LOX_METHOD(File, isFile) {
     ASSERT_ARG_COUNT("File::isFile()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
-    RETURN_BOOL(fileStat.st_mode & S_IFREG);
+    uv_fs_t fStat;
+    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
+    uint64_t mode = fStat.statbuf.st_mode;
+    uv_fs_req_cleanup(&fStat);
+    RETURN_BOOL(mode & S_IFREG);
 }
 
 LOX_METHOD(File, isReadable) {
     ASSERT_ARG_COUNT("File::isReadable()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
-    RETURN_BOOL(fileStat.st_mode & S_IREAD);
+    uv_fs_t fStat;
+    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
+    uint64_t mode = fStat.statbuf.st_mode;
+    uv_fs_req_cleanup(&fStat);
+    RETURN_BOOL(mode & S_IREAD);
 }
 
 LOX_METHOD(File, isWritable) {
     ASSERT_ARG_COUNT("File::isWritable()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
-    RETURN_BOOL(fileStat.st_mode & S_IWRITE);
+    uv_fs_t fStat;
+    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
+    uint64_t mode = fStat.statbuf.st_mode;
+    uv_fs_req_cleanup(&fStat);
+    RETURN_BOOL(mode & S_IWRITE);
 }
 
 LOX_METHOD(File, lastAccessed) {
     ASSERT_ARG_COUNT("File::lastAccessed()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file last accessed date because it does not exist.");
-    RETURN_INT(fileStat.st_atime);
+    uv_fs_t fStat;
+    if (!loadFileStat(vm, self, &fStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file last accessed date because it does not exist.");
+    int fAccessTime = fStat.statbuf.st_atim.tv_sec;
+    uv_fs_req_cleanup(&fStat);
+    RETURN_INT(fAccessTime);
 }
 
 LOX_METHOD(File, lastModified) {
     ASSERT_ARG_COUNT("File::lastModified()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file last modified date because it does not exist.");
-    RETURN_INT(fileStat.st_mtime);
+    uv_fs_t fStat;
+    if (!loadFileStat(vm, self, &fStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file last modified date because it does not exist.");
+    int fModifiedTime = fStat.statbuf.st_mtim.tv_sec;
+    uv_fs_req_cleanup(&fStat);
+    RETURN_INT(fModifiedTime);
 }
 
 LOX_METHOD(File, mkdir) {
     ASSERT_ARG_COUNT("File::mkdir()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (fileExists(self, &fileStat)) RETURN_FALSE;
+    if (fileExists(vm, self)) RETURN_FALSE;
     RETURN_BOOL(_mkdir(self->name->chars) == 0);
 }
 
@@ -259,16 +275,14 @@ LOX_METHOD(File, rename) {
     ASSERT_ARG_COUNT("File::rename(name)", 1);
     ASSERT_ARG_TYPE("File::rename(name)", 0, String);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
+    if (!fileExists(vm, self)) RETURN_FALSE;
     RETURN_BOOL(rename(self->name->chars, AS_STRING(args[0])->chars) == 0);
 }
 
 LOX_METHOD(File, rmdir) {
     ASSERT_ARG_COUNT("File::rmdir()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
+    if (!fileExists(vm, self)) RETURN_FALSE;
     RETURN_BOOL(_rmdir(self->name->chars) == 0);
 }
 
@@ -276,8 +290,7 @@ LOX_METHOD(File, setExecutable) {
     ASSERT_ARG_COUNT("File::setExecutable(canExecute)", 1);
     ASSERT_ARG_TYPE("File::setExecutable(canExecute)", 0, Bool);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
+    if (!fileExists(vm, self)) RETURN_FALSE;
     if (AS_BOOL(args[0])) RETURN_BOOL(_chmod(self->name->chars, S_IEXEC));
     else RETURN_BOOL(_chmod(self->name->chars, ~S_IEXEC));
 }
@@ -286,8 +299,7 @@ LOX_METHOD(File, setReadable) {
     ASSERT_ARG_COUNT("File::setReadable(canRead)", 1);
     ASSERT_ARG_TYPE("File::setReadable(canWrite)", 0, Bool);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
+    if (!fileExists(vm, self)) RETURN_FALSE;
     if (AS_BOOL(args[0])) RETURN_BOOL(_chmod(self->name->chars, S_IREAD));
     else RETURN_BOOL(_chmod(self->name->chars, ~S_IREAD));
 }
@@ -296,8 +308,7 @@ LOX_METHOD(File, setWritable) {
     ASSERT_ARG_COUNT("File::setWritable(canWrite)", 1);
     ASSERT_ARG_TYPE("File::setWritable(canWrite)", 0, Bool);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) RETURN_FALSE;
+    if (!fileExists(vm, self)) RETURN_FALSE;
     if (AS_BOOL(args[0])) RETURN_BOOL(_chmod(self->name->chars, S_IWRITE));
     else RETURN_BOOL(_chmod(self->name->chars, ~S_IWRITE));
 }
@@ -305,9 +316,11 @@ LOX_METHOD(File, setWritable) {
 LOX_METHOD(File, size) {
     ASSERT_ARG_COUNT("File::size()", 0);
     ObjFile* self = AS_FILE(receiver);
-    struct stat fileStat;
-    if (!fileExists(self, &fileStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file size because it does not exist.");
-    RETURN_NUMBER(fileStat.st_size);
+    uv_fs_t fStat;
+    if (!loadFileStat(vm, self, &fStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file size because it does not exist.");
+    int fSize = fStat.statbuf.st_size;
+    uv_fs_req_cleanup(&fStat);
+    RETURN_NUMBER(fSize);
 }
 
 LOX_METHOD(File, toString) {
@@ -331,7 +344,7 @@ LOX_METHOD(FileClass, open) {
         RETURN_OBJ(fileReadStream);
     }
     else if (mode->chars == "w") {
-        ObjInstance*  fileWriteStream = newInstance(vm, getNativeClass(vm, "clox.std.io.FileWriteStream"));
+        ObjInstance* fileWriteStream = newInstance(vm, getNativeClass(vm, "clox.std.io.FileWriteStream"));
         if (!setFileProperty(vm, fileWriteStream, file, "w")) {
             THROW_EXCEPTION(clox.std.io.IOException, "Cannot open FileWriteStream, file either does not exist or require additional permission to access.");
         }
@@ -348,7 +361,7 @@ LOX_METHOD(FileReadStream, __init__) {
     ASSERT_ARG_COUNT("FileReadStream::__init__(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
-    if(file == NULL) raiseError(vm, "Method FileReadStream::__init__(file) expects argument 1 to be a string or file.");
+    if (file == NULL) raiseError(vm, "Method FileReadStream::__init__(file) expects argument 1 to be a string or file.");
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "r")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create FileReadStream, file either does not exist or require additional permission to access.");
     }
@@ -398,7 +411,7 @@ LOX_METHOD(FileWriteStream, __init__) {
     ASSERT_ARG_COUNT("FileWriteStream::__init__(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
-    if(file == NULL) raiseError(vm, "Method FileWriteStream::__init__(file) expects argument 1 to be a string or file.");
+    if (file == NULL) raiseError(vm, "Method FileWriteStream::__init__(file) expects argument 1 to be a string or file.");
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "w")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create FileWriteStream, file either does not exist or require additional permission to access.");
     }
@@ -430,7 +443,7 @@ LOX_METHOD(FileWriteStream, putSpace) {
     ASSERT_ARG_COUNT("FileWriteStream::putSpace()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write empty space to stream because file is already closed.");
-    if (file->file != NULL) fputc(' ', file->file);    
+    if (file->file != NULL) fputc(' ', file->file);
     RETURN_NIL;
 }
 
@@ -543,6 +556,7 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(vm->fileClass, File, create, 0);
     DEF_METHOD(vm->fileClass, File, delete, 0);
     DEF_METHOD(vm->fileClass, File, exists, 0);
+    DEF_METHOD(vm->fileClass, File, getAbsolutePath, 0);
     DEF_METHOD(vm->fileClass, File, isDirectory, 0);
     DEF_METHOD(vm->fileClass, File, isExecutable, 0);
     DEF_METHOD(vm->fileClass, File, isFile, 0);
@@ -562,7 +576,7 @@ void registerIOPackage(VM* vm) {
 
     ObjClass* fileMetaclass = vm->fileClass->obj.klass;
     DEF_METHOD(fileMetaclass, FileClass, open, 2);
-    
+
     ObjClass* closableTrait = defineNativeTrait(vm, "TClosable");
     DEF_METHOD(closableTrait, TClosable, close, 0);
 

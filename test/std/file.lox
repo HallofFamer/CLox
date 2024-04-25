@@ -20,6 +20,8 @@ print("File last modified: ");
 println(file.lastModified());
 print("File size: ");
 println(file.size());
+print("File absolute path: ");
+println(file.getAbsolutePath());
 println("");
 
 var dir = File("test/others");
