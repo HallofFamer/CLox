@@ -184,6 +184,7 @@ typedef struct {
     ObjString* mode;
     bool isOpen;
     FILE* file;
+    uv_fs_t* fsStat;
 } ObjFile;
 
 typedef struct {
