@@ -4,21 +4,18 @@
 
 #include "io.h"
 #include "../vm/assert.h"
+#include "../vm/memory.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
 #include "../vm/os.h"
 #include "../vm/string.h"
 #include "../vm/vm.h"
 
-static bool loadFileStat(VM* vm, ObjFile* file, uv_fs_t* fStat) {
-    return (uv_fs_stat(vm->eventLoop, fStat, file->name->chars, NULL) == 0);
-}
-
 static bool fileExists(VM* vm, ObjFile* file) {
-    uv_fs_t fStat;
-    bool fileExists = loadFileStat(vm, file, &fStat);
-    uv_fs_req_cleanup(&fStat);
-    return fileExists;
+    uv_fs_t fsAccess;
+    bool exists = (uv_fs_access(vm->eventLoop, &fsAccess, file->name->chars, F_OK, NULL) == 0);
+    uv_fs_req_cleanup(&fsAccess);
+    return exists;
 }
 
 static ObjFile* getFileArgument(VM* vm, Value arg) {
@@ -30,6 +27,11 @@ static ObjFile* getFileArgument(VM* vm, Value arg) {
 
 static ObjFile* getFileProperty(VM* vm, ObjInstance* object, char* field) {
     return AS_FILE(getObjProperty(vm, object, field));
+}
+
+static bool loadFileStat(VM* vm, ObjFile* file) {
+    if (file->fsStat == NULL) file->fsStat = ALLOCATE_STRUCT(uv_fs_t);
+    return (uv_fs_stat(vm->eventLoop, file->fsStat, file->name->chars, NULL) == 0);
 }
 
 static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, char* mode) {
@@ -153,9 +155,7 @@ LOX_METHOD(File, __init__) {
 LOX_METHOD(File, create) {
     ASSERT_ARG_COUNT("File::create()", 0);
     ObjFile* self = AS_FILE(receiver);
-    if (fileExists(vm, self)) {
-        THROW_EXCEPTION(clox.std.io.IOException, "Cannot create new file because it already exists");
-    }
+    if (fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.IOException, "Cannot create new file because it already exists");
 
     FILE* file;
     fopen_s(&file, self->name->chars, "w");
@@ -192,78 +192,60 @@ LOX_METHOD(File, getAbsolutePath) {
 LOX_METHOD(File, isDirectory) {
     ASSERT_ARG_COUNT("File::isDirectory()", 0);
     ObjFile* self = AS_FILE(receiver);
-    uv_fs_t fStat;
-    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
-    uint64_t mode = fStat.statbuf.st_mode;
-    uv_fs_req_cleanup(&fStat);
-    RETURN_BOOL(mode & S_IFDIR);
+    if (!loadFileStat(vm, self)) RETURN_FALSE;
+    RETURN_BOOL(self->fsStat->statbuf.st_mode & S_IFDIR);
 }
 
 LOX_METHOD(File, isExecutable) {
     ASSERT_ARG_COUNT("File::isExecutable()", 0);
     ObjFile* self = AS_FILE(receiver);
-    uv_fs_t fStat;
-    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
-    uint64_t mode = fStat.statbuf.st_mode;
-    uv_fs_req_cleanup(&fStat);
-    RETURN_BOOL(mode & S_IEXEC);
+    if (!loadFileStat(vm, self)) RETURN_FALSE;
+    RETURN_BOOL(self->fsStat->statbuf.st_mode & S_IEXEC);
 }
 
 LOX_METHOD(File, isFile) {
     ASSERT_ARG_COUNT("File::isFile()", 0);
     ObjFile* self = AS_FILE(receiver);
-    uv_fs_t fStat;
-    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
-    uint64_t mode = fStat.statbuf.st_mode;
-    uv_fs_req_cleanup(&fStat);
-    RETURN_BOOL(mode & S_IFREG);
+    if (!loadFileStat(vm, self)) RETURN_FALSE;
+    RETURN_BOOL(self->fsStat->statbuf.st_mode & S_IFREG);
 }
 
 LOX_METHOD(File, isReadable) {
     ASSERT_ARG_COUNT("File::isReadable()", 0);
     ObjFile* self = AS_FILE(receiver);
-    uv_fs_t fStat;
-    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
-    uint64_t mode = fStat.statbuf.st_mode;
-    uv_fs_req_cleanup(&fStat);
-    RETURN_BOOL(mode & S_IREAD);
+    if (!loadFileStat(vm, self)) RETURN_FALSE;
+    RETURN_BOOL(self->fsStat->statbuf.st_mode & S_IREAD);
 }
 
 LOX_METHOD(File, isWritable) {
     ASSERT_ARG_COUNT("File::isWritable()", 0);
     ObjFile* self = AS_FILE(receiver);
-    uv_fs_t fStat;
-    if (!loadFileStat(vm, self, &fStat)) RETURN_FALSE;
-    uint64_t mode = fStat.statbuf.st_mode;
-    uv_fs_req_cleanup(&fStat);
-    RETURN_BOOL(mode & S_IWRITE);
+    if (!loadFileStat(vm, self)) RETURN_FALSE;
+    RETURN_BOOL(self->fsStat->statbuf.st_mode & S_IWRITE);
 }
 
 LOX_METHOD(File, lastAccessed) {
     ASSERT_ARG_COUNT("File::lastAccessed()", 0);
     ObjFile* self = AS_FILE(receiver);
-    uv_fs_t fStat;
-    if (!loadFileStat(vm, self, &fStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file last accessed date because it does not exist.");
-    int fAccessTime = fStat.statbuf.st_atim.tv_sec;
-    uv_fs_req_cleanup(&fStat);
-    RETURN_INT(fAccessTime);
+    if (!loadFileStat(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file last accessed date because it does not exist.");
+    RETURN_INT(self->fsStat->statbuf.st_atim.tv_sec);
 }
 
 LOX_METHOD(File, lastModified) {
     ASSERT_ARG_COUNT("File::lastModified()", 0);
     ObjFile* self = AS_FILE(receiver);
-    uv_fs_t fStat;
-    if (!loadFileStat(vm, self, &fStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file last modified date because it does not exist.");
-    int fModifiedTime = fStat.statbuf.st_mtim.tv_sec;
-    uv_fs_req_cleanup(&fStat);
-    RETURN_INT(fModifiedTime);
+    if (!loadFileStat(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file last modified date because it does not exist.");
+    RETURN_INT(self->fsStat->statbuf.st_mtim.tv_sec);
 }
 
 LOX_METHOD(File, mkdir) {
     ASSERT_ARG_COUNT("File::mkdir()", 0);
     ObjFile* self = AS_FILE(receiver);
-    if (fileExists(vm, self)) RETURN_FALSE;
-    RETURN_BOOL(_mkdir(self->name->chars) == 0);
+    if (fileExists(vm, self)) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot create directory as it already exists in the file system.");
+    uv_fs_t fsMkdir;
+    bool created = (uv_fs_mkdir(vm->eventLoop, &fsMkdir, self->name->chars, S_IREAD | S_IWRITE | S_IEXEC, NULL) == 0);
+    uv_fs_req_cleanup(&fsMkdir);
+    RETURN_BOOL(created);
 }
 
 LOX_METHOD(File, name) {
@@ -275,15 +257,18 @@ LOX_METHOD(File, rename) {
     ASSERT_ARG_COUNT("File::rename(name)", 1);
     ASSERT_ARG_TYPE("File::rename(name)", 0, String);
     ObjFile* self = AS_FILE(receiver);
-    if (!fileExists(vm, self)) RETURN_FALSE;
+    if (!fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot rename file as it does not exist in the file system.");
     RETURN_BOOL(rename(self->name->chars, AS_STRING(args[0])->chars) == 0);
 }
 
 LOX_METHOD(File, rmdir) {
     ASSERT_ARG_COUNT("File::rmdir()", 0);
     ObjFile* self = AS_FILE(receiver);
-    if (!fileExists(vm, self)) RETURN_FALSE;
-    RETURN_BOOL(_rmdir(self->name->chars) == 0);
+    if (!loadFileStat(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot remote directory as it does not exist in the file system.");
+    uv_fs_t fsRmdir;
+    bool deleted = (uv_fs_rmdir(vm->eventLoop, &fsRmdir, self->name->chars, NULL) == 0);
+    uv_fs_req_cleanup(&fsRmdir);
+    RETURN_BOOL(deleted);
 }
 
 LOX_METHOD(File, setExecutable) {
@@ -316,11 +301,8 @@ LOX_METHOD(File, setWritable) {
 LOX_METHOD(File, size) {
     ASSERT_ARG_COUNT("File::size()", 0);
     ObjFile* self = AS_FILE(receiver);
-    uv_fs_t fStat;
-    if (!loadFileStat(vm, self, &fStat)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file size because it does not exist.");
-    int fSize = fStat.statbuf.st_size;
-    uv_fs_req_cleanup(&fStat);
-    RETURN_NUMBER(fSize);
+    if (!loadFileStat(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file size because it does not exist.");
+    RETURN_NUMBER(self->fsStat->statbuf.st_size);
 }
 
 LOX_METHOD(File, toString) {
