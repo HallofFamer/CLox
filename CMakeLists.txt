@@ -133,6 +133,8 @@ set(Source_Files__vm
     "src/vm/common.h"
     "src/vm/compiler.c"
     "src/vm/compiler.h"
+    "src/vm/date.c"
+    "src/vm/date.h"
     "src/vm/debug.c"
     "src/vm/debug.h"
     "src/vm/dict.c"
