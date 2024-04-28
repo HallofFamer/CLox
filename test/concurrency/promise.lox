@@ -3,11 +3,11 @@ using clox.std.util.Promise;
 using clox.std.util.Timer;
 
 val promise = Promise({|fulfill, reject|
-    Timer.timeout({ fulfill("hello world"); }, 1000);
+    Timer.timeout({ fulfill("hello world"); }, 2000);
 });
 
 val promise2 = Promise({|fulfill, reject|
-    Timer.timeout({ fulfill("hello world 2"); }, 500);
+    Timer.timeout({ fulfill("hello world 2"); }, 1000);
 });
 
 println("Promise created: ${promise}");

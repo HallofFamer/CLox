@@ -3,15 +3,21 @@ using clox.std.util.Promise;
 using clox.std.util.Timer;
 
 val promise = Promise({|fulfill, reject|
-    Timer.timeout({ fulfill("hello world"); }, 1000);
+    Timer.timeout({ fulfill("Hello."); }, 500);
 });
 
 println("Promise created: ${promise}");
-promise.then(fun(value) { 
-           println("Promise fulfilled: ${value}"); 
-           return Promise(fun(fulfill, reject){ 
-               Timer.timeout({ fulfill("hello world again"); }, 2000);
-           });
+promise.then({|value| 
+           println("First Promise fulfilled: ${value}"); 
+           Promise({|fulfill, reject| Timer.timeout({ fulfill("Nice to meet you."); }, 1000); })
        })
-       .then({|value| println("Promise fulfilled: ${value}"); })
+       .then({|value| 
+           println("Second Promise fulfilled: ${value}");
+           Promise({|fulfill, reject| Timer.timeout({ fulfill("How are you doing?"); }, 1500); })
+       })
+       .then({|value| 
+           println("Third Promise fulfilled: ${value}");
+           Promise({|fulfill, reject| Timer.timeout({ fulfill("Goodbye."); }, 2000); })
+       })
+       .then({|value| println("Last Promise fulfilled: ${value}"); })
        .catch({|exception| println("promise failed: ${exception.message}") });
