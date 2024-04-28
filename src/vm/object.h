@@ -139,10 +139,10 @@ typedef Value (*NativeMethod)(VM* vm, Value receiver, int argCount, Value* args)
 typedef void (*MarkFunction)(void* data);
 typedef void (*FreeFunction)(void* data);
 
-typedef struct {
+struct ObjInstance {
     Obj obj;
     ValueArray fields;
-} ObjInstance;
+};
 
 typedef struct {
     Obj obj;

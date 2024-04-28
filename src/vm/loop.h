@@ -3,7 +3,6 @@
 #define clox_loop_h
 
 #include <stdio.h>
-#include <sys/stat.h>
 #include <uv.h>
 
 #include "common.h"

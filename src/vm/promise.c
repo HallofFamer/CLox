@@ -11,6 +11,7 @@ ObjPromise* promiseAll(VM* vm, ObjClass* klass, ObjArray* promises) {
     ObjPromise* allPromise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
     allPromise->obj.klass = klass;
     push(vm, OBJ_VAL(allPromise));
+
     if (remainingCount == 0) allPromise->state = PROMISE_FULFILLED;
     else {
         ObjArray* results = newArray(vm);
@@ -38,13 +39,14 @@ ObjPromise* promiseAll(VM* vm, ObjClass* klass, ObjArray* promises) {
             callReentrantMethod(vm, OBJ_VAL(promise), catch, OBJ_VAL(catchAllMethod));
         }
     }
+
     pop(vm);
     return allPromise;
 }
 
 bool promiseCapture(VM* vm, ObjPromise* promise, const char* name, Value value) {
     ObjString* key = newString(vm, name);
-    return dictSet(vm, promise->captures, key, value);
+    return dictSet(vm, promise->captures, OBJ_VAL(key), value);
 }
 
 void promiseExecute(VM* vm, ObjPromise* promise) {
@@ -68,7 +70,7 @@ void promiseFulfill(VM* vm, ObjPromise* promise, Value value) {
 Value promiseLoad(VM* vm, ObjPromise* promise, const char* name) {
     ObjString* key = newString(vm, name);
     Value value;
-    if (!dictGet(promise->captures, key, &value)) return NIL_VAL;
+    if (!dictGet(promise->captures, OBJ_VAL(key), &value)) return NIL_VAL;
     else return value;
 }
 

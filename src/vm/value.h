@@ -12,6 +12,7 @@ typedef struct ObjClass ObjClass;
 typedef struct ObjClosure ObjClosure;
 typedef struct ObjException ObjException;
 typedef struct ObjGenerator ObjGenerator;
+typedef struct ObjInstance ObjInstance;
 typedef struct ObjModule ObjModule;
 typedef struct ObjNamespace ObjNamespace;
 typedef struct ObjPromise ObjPromise;

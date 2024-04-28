@@ -29,6 +29,7 @@ void timerRun(uv_timer_t* timer) {
     if (data->interval == 0) uv_close((uv_handle_t*)timer, timerClose);
     push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
     data->vm->frameCount++;
+
     switch (data->closure->function->arity) {
         case 0:
             callReentrantMethod(data->vm, data->receiver, OBJ_VAL(data->closure));
