@@ -9,7 +9,7 @@ var fileIn = File("test/others/file_input.txt");
 println(fileIn);
 println("Creating a read stream for input file.");
 var fileReader = FileReadStream(fileIn);
-println("The first character of the file is: " + fileReader.peek());
+println("The first character of the file is: ${fileReader.peek()}");
 println("");
 
 println("Now reading the entire file:");
@@ -20,8 +20,7 @@ while(!fileReader.isAtEnd()){
 println("");
 
 println("");
-print("File stream is at end: ");
-println(fileReader.isAtEnd());
+println("File stream is at end: ${fileReader.isAtEnd()}");
 println("Closing read stream for file.");
 fileReader.close();
 
