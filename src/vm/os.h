@@ -29,6 +29,8 @@
 #define _strdup(str1) strdup(str1)
 #define SOCKET int
 #define INVALID_SOCKET (SOCKET)(~0)
+#define O_BINARY 0
+#define O_TEXT 0
 
 void _itoa_s(int value, char buffer[], size_t bufsz, int radix);
 #endif

@@ -361,10 +361,7 @@ LOX_METHOD(FileClass, open) {
         pop(vm);
         RETURN_OBJ(fileWriteStream);
     }
-    else {
-        raiseError(vm, "Invalid file open mode specified.");
-        RETURN_NIL;
-    }
+    else THROW_EXCEPTION(clox.std.io.IOException, "Invalid file open mode specified.");
 }
 
 LOX_METHOD(FileReadStream, __init__) {

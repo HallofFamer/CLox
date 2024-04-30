@@ -17,12 +17,12 @@ println("");
 while(!fileReader.isAtEnd()){
     print(fileReader.nextLine());
 }
-println("");
+println("\n");
 
-println("");
 println("File stream is at end: ${fileReader.isAtEnd()}");
 println("Closing read stream for file.");
 fileReader.close();
+println("");
 
 var fileOut = File("test/others/file_output.txt");
 println(fileOut);
@@ -51,8 +51,8 @@ while(!binaryReader.isAtEnd()){
     print(binaryReader.next());
     print(" ");
 }
-println("");
 binaryReader.close();
+println("");
 
 println("");
 var fileBinaryOut = File("test/others/file_binary.bin");
