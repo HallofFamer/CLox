@@ -278,10 +278,24 @@ static void freeObject(VM* vm, Obj* object) {
         }
         case OBJ_FILE: {
             ObjFile* file = (ObjFile*)object;
-            if (file->file != NULL && file->isOpen) fclose(file->file);
+            if (file->file != NULL && file->isOpen) {
+                fclose(file->file);
+            }
             if (file->fsStat != NULL) {
                 uv_fs_req_cleanup(file->fsStat);
                 free(file->fsStat);
+            }
+            if (file->fsOpen != NULL) {
+                uv_fs_req_cleanup(file->fsOpen);
+                free(file->fsOpen);
+            }
+            if (file->fsRead != NULL) {
+                uv_fs_req_cleanup(file->fsRead);
+                free(file->fsRead);
+            }
+            if (file->fsWrite != NULL) {
+                uv_fs_req_cleanup(file->fsWrite);
+                free(file->fsWrite);
             }
             FREE(ObjFile, object);
             break;

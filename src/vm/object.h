@@ -185,6 +185,9 @@ typedef struct {
     bool isOpen;
     FILE* file;
     uv_fs_t* fsStat;
+    uv_fs_t* fsOpen;
+    uv_fs_t* fsRead;
+    uv_fs_t* fsWrite;
 } ObjFile;
 
 typedef struct {
