@@ -12,11 +12,57 @@
 #include "../vm/string.h"
 #include "../vm/vm.h"
 
+static bool fileClose(VM* vm, ObjFile* file) {
+    if (file->isOpen) {
+        uv_fs_t fsClose;
+        int closed = uv_fs_close(vm->eventLoop, &fsClose, file->fsOpen->result, NULL);
+        uv_fs_req_cleanup(&fsClose);
+        return (closed == 0);
+    }
+    return false;
+}
+
 static bool fileExists(VM* vm, ObjFile* file) {
     uv_fs_t fsAccess;
     bool exists = (uv_fs_access(vm->eventLoop, &fsAccess, file->name->chars, F_OK, NULL) == 0);
     uv_fs_req_cleanup(&fsAccess);
     return exists;
+}
+
+static bool fileFlush(VM* vm, ObjFile* file) {
+    if (file->isOpen) {
+        uv_fs_t fsSync;
+        int flushed = uv_fs_fsync(vm->eventLoop, &fsSync, file->fsOpen->result, NULL);
+        uv_fs_req_cleanup(&fsSync);
+        return (flushed == 0);
+    }
+    return false;
+}
+
+static int fileMode(const char* mode) {
+    int length = strlen(mode);
+    switch (length) {
+        case 1: 
+            if (strcmp(mode, "r") == 0) return O_RDONLY;
+            else if (strcmp(mode, "w") == 0) return O_WRONLY | O_TRUNC;
+            else if (strcmp(mode, "a") == 0) return O_WRONLY | O_APPEND;
+            else return -1;
+        case 2: 
+            if (strcmp(mode, "rb") == 0) return O_RDONLY | O_BINARY;
+            else if (strcmp(mode, "wb") == 0) return O_WRONLY | O_TRUNC | O_BINARY;
+            else if (strcmp(mode, "ab") == 0) return O_WRONLY | O_APPEND | O_BINARY;
+            else if (strcmp(mode, "r+") == 0) return O_RDWR;
+            else if (strcmp(mode, "w+") == 0) return O_RDWR | O_TRUNC;
+            else if (strcmp(mode, "a+") == 0) return O_RDWR | O_APPEND;
+            else return -1;
+        case 3: 
+            if (strcmp(mode, "rb+") == 0) return O_RDWR | O_BINARY;
+            else if (strcmp(mode, "wb+") == 0) return O_RDWR | O_TRUNC | O_BINARY;
+            else if (strcmp(mode, "ab+") == 0) return O_RDWR | O_APPEND | O_BINARY;
+            else return -1;
+        default: 
+            return -1;
+    }
 }
 
 static ObjFile* getFileArgument(VM* vm, Value arg) {
@@ -26,8 +72,14 @@ static ObjFile* getFileArgument(VM* vm, Value arg) {
     return file;
 }
 
-static ObjFile* getFileProperty(VM* vm, ObjInstance* object, char* field) {
+static ObjFile* getFileProperty(VM* vm, ObjInstance* object, const char* field) {
     return AS_FILE(getObjProperty(vm, object, field));
+}
+
+static bool loadFileRead(VM* vm, ObjFile* file) {
+    if (file->isOpen == false) return false;
+    if (file->fsRead == NULL) file->fsRead = ALLOCATE_STRUCT(uv_fs_t);
+    return true;
 }
 
 static bool loadFileStat(VM* vm, ObjFile* file) {
@@ -35,9 +87,11 @@ static bool loadFileStat(VM* vm, ObjFile* file) {
     return (uv_fs_stat(vm->eventLoop, file->fsStat, file->name->chars, NULL) == 0);
 }
 
-static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, char* mode) {
+static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, const char* mode) {
     fopen_s(&file->file, file->name->chars, mode);
-    if (file->file == NULL) return false;
+    if (file->fsOpen == NULL) file->fsOpen = ALLOCATE_STRUCT(uv_fs_t);
+    int descriptor = uv_fs_open(vm->eventLoop, file->fsOpen, file->name->chars, fileMode(mode), 0, NULL);
+    if (file->file == NULL || descriptor == -1) return false;
     file->isOpen = true;
     file->mode = newString(vm, mode);
     setObjProperty(vm, object, "file", OBJ_VAL(file));
@@ -52,6 +106,7 @@ LOX_METHOD(BinaryReadStream, __init__) {
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "rb")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create BinaryReadStream, file either does not exist or require additional permission to access.");
     }
+    if(!loadFileRead(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to read binary stream.");
     RETURN_OBJ(self);
 }
 
@@ -59,13 +114,14 @@ LOX_METHOD(BinaryReadStream, next) {
     ASSERT_ARG_COUNT("BinaryReadStream::next()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
+    if (file->fsOpen == NULL || file->fsRead == NULL) RETURN_NIL;
     else {
         unsigned char byte;
-        if (fread(&byte, sizeof(char), 1, file->file) > 0) {
-            RETURN_INT((int)byte);
-        }
-        RETURN_NIL;
+        uv_buf_t uvBuf = uv_buf_init(&byte, 1);
+        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        if (numRead == 0) RETURN_NIL;
+        file->offset += 1;
+        RETURN_INT((int)byte);
     }
     RETURN_NIL;
 }
@@ -78,13 +134,16 @@ LOX_METHOD(BinaryReadStream, nextBytes) {
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
+    if (file->fsOpen == NULL || file->fsRead == NULL) RETURN_NIL;
     else {
         ObjArray* bytes = newArray(vm);
         push(vm, OBJ_VAL(bytes));
-        for (int i = 0; i < length; i++) {
-            unsigned char byte;
-            if (fread(&byte, sizeof(char), 1, file->file) == 0) break;
+        unsigned char buffer[UINT8_MAX];
+        uv_buf_t uvBuf = uv_buf_init(bytes, length);
+        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+
+        for (int i = 0; i < numRead; i++, file->offset++) {
+            unsigned char byte = (unsigned char)uvBuf.base[i];
             valueArrayWrite(vm, &bytes->elements, INT_VAL((int)byte));
         }
         pop(vm);
@@ -475,7 +534,8 @@ LOX_METHOD(IOStream, close) {
     ASSERT_ARG_COUNT("IOStream::close()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     file->isOpen = false;
-    RETURN_BOOL(fclose(file->file) == 0);
+    fclose(file->file);
+    RETURN_BOOL(fileClose(vm, file));
 }
 
 LOX_METHOD(IOStream, file) {
@@ -487,15 +547,15 @@ LOX_METHOD(IOStream, getPosition) {
     ASSERT_ARG_COUNT("IOStream::getPosition()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot get stream position because file is already closed.");
-    if (file->file == NULL) RETURN_INT(0);
-    else RETURN_INT(ftell(file->file));
+    if (file->fsOpen == NULL) RETURN_INT(0);
+    RETURN_INT(file->offset);
 }
 
 LOX_METHOD(IOStream, reset) {
     ASSERT_ARG_COUNT("IOStream::reset()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot reset stream because file is already closed.");
-    if (file->file != NULL) rewind(file->file);
+    file->offset = 0;
     RETURN_NIL;
 }
 
@@ -509,9 +569,10 @@ LOX_METHOD(ReadStream, isAtEnd) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen || file->file == NULL) RETURN_FALSE;
     else {
-        int c = getc(file->file);
-        ungetc(c, file->file);
-        RETURN_BOOL(c == EOF);
+        unsigned char c;
+        uv_buf_t uvBuf = uv_buf_init(&c, 1);
+        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);       
+        RETURN_BOOL(numRead == 0);
     }
 }
 
@@ -526,7 +587,8 @@ LOX_METHOD(ReadStream, skip) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot skip stream by offset because file is already closed.");
     if (file->file == NULL) RETURN_FALSE;
-    RETURN_BOOL(fseek(file->file, (long)AS_INT(args[0]), SEEK_CUR));
+    file->offset += AS_INT(args[0]);
+    RETURN_TRUE;
 }
 
 LOX_METHOD(TClosable, close) {
@@ -544,7 +606,7 @@ LOX_METHOD(WriteStream, flush) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot flush stream because file is already closed.");
     if (file->file == NULL) RETURN_FALSE;
-    RETURN_BOOL(fflush(file->file) == 0);
+    RETURN_BOOL(fileFlush(vm, file));
 }
 
 LOX_METHOD(WriteStream, put) {

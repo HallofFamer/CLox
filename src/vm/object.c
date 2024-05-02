@@ -102,6 +102,7 @@ ObjFile* newFile(VM* vm, ObjString* name) {
     file->name = name;
     file->mode = emptyString(vm);
     file->isOpen = false;
+    file->offset = 0;
     file->fsStat = NULL;
     file->fsOpen = NULL;
     file->fsRead = NULL;
