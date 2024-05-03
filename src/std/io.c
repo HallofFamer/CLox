@@ -49,11 +49,11 @@ static int fileMode(const char* mode) {
             else return -1;
         case 2: 
             if (strcmp(mode, "rb") == 0) return O_RDONLY | O_BINARY;
-            else if (strcmp(mode, "wb") == 0) return O_WRONLY | O_TRUNC | O_BINARY;
-            else if (strcmp(mode, "ab") == 0) return O_WRONLY | O_APPEND | O_BINARY;
+            else if (strcmp(mode, "wb") == 0) return O_WRONLY | O_TRUNC | O_CREAT | O_BINARY;
+            else if (strcmp(mode, "ab") == 0) return O_WRONLY | O_APPEND | O_CREAT | O_BINARY;
             else if (strcmp(mode, "r+") == 0) return O_RDWR;
-            else if (strcmp(mode, "w+") == 0) return O_RDWR | O_TRUNC;
-            else if (strcmp(mode, "a+") == 0) return O_RDWR | O_APPEND;
+            else if (strcmp(mode, "w+") == 0) return O_RDWR | O_CREAT | O_TRUNC;
+            else if (strcmp(mode, "a+") == 0) return O_RDWR | O_CREAT | O_APPEND;
             else return -1;
         case 3: 
             if (strcmp(mode, "rb+") == 0) return O_RDWR | O_BINARY;
@@ -87,11 +87,16 @@ static bool loadFileStat(VM* vm, ObjFile* file) {
     return (uv_fs_stat(vm->eventLoop, file->fsStat, file->name->chars, NULL) == 0);
 }
 
+static bool loadFileWrite(VM* vm, ObjFile* file) {
+    if (file->isOpen == false) return false;
+    if (file->fsWrite == NULL) file->fsWrite = ALLOCATE_STRUCT(uv_fs_t);
+    return true;
+}
+
 static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, const char* mode) {
-    fopen_s(&file->file, file->name->chars, mode);
     if (file->fsOpen == NULL) file->fsOpen = ALLOCATE_STRUCT(uv_fs_t);
     int descriptor = uv_fs_open(vm->eventLoop, file->fsOpen, file->name->chars, fileMode(mode), 0, NULL);
-    if (file->file == NULL || descriptor == -1) return false;
+    if (file->file == NULL || descriptor < 0) return false;
     file->isOpen = true;
     file->mode = newString(vm, mode);
     setObjProperty(vm, object, "file", OBJ_VAL(file));
@@ -106,7 +111,7 @@ LOX_METHOD(BinaryReadStream, __init__) {
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "rb")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create BinaryReadStream, file either does not exist or require additional permission to access.");
     }
-    if(!loadFileRead(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to read binary stream.");
+    if(!loadFileRead(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to read from binary stream.");
     RETURN_OBJ(self);
 }
 
@@ -138,14 +143,16 @@ LOX_METHOD(BinaryReadStream, nextBytes) {
     else {
         ObjArray* bytes = newArray(vm);
         push(vm, OBJ_VAL(bytes));
-        unsigned char buffer[UINT8_MAX];
-        uv_buf_t uvBuf = uv_buf_init(bytes, length);
+        unsigned char* buffer = (unsigned char*)malloc(length);
+        uv_buf_t uvBuf = uv_buf_init(buffer, length);
         int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
 
         for (int i = 0; i < numRead; i++, file->offset++) {
             unsigned char byte = (unsigned char)uvBuf.base[i];
             valueArrayWrite(vm, &bytes->elements, INT_VAL((int)byte));
         }
+
+        free(buffer);
         pop(vm);
         RETURN_OBJ(bytes);
     }
@@ -159,21 +166,25 @@ LOX_METHOD(BinaryWriteStream, __init__) {
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "wb")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create BinaryWriteStream, file either does not exist or require additional permission to access.");
     }
+    if (!loadFileWrite(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to write to binary stream.");
     RETURN_OBJ(self);
 }
 
 LOX_METHOD(BinaryWriteStream, put) {
     ASSERT_ARG_COUNT("BinaryWriteStream::put(byte)", 1);
     ASSERT_ARG_TYPE("BinaryWriteStream::put(byte)", 0, Int);
-    int byte = AS_INT(args[0]);
-    ASSERT_INDEX_WITHIN_BOUNDS("BinaryWriteStream::put(byte)", byte, 0, 255, 0);
+    int arg = AS_INT(args[0]);
+    ASSERT_INDEX_WITHIN_BOUNDS("BinaryWriteStream::put(byte)", arg, 0, 255, 0);
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write byte to stream because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
+    if (file->fsOpen == NULL || file->fsWrite == NULL) RETURN_NIL;
     else {
-        unsigned char bytes[1] = { (unsigned char)byte };
-        fwrite(bytes, sizeof(char), 1, file->file);
+        unsigned char byte = (unsigned char)arg;
+        uv_buf_t uvBuf = uv_buf_init(&byte, 1);
+        uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        if (numWrite > 0) file->offset += 1;
         RETURN_NIL;
     }
 }
@@ -186,7 +197,7 @@ LOX_METHOD(BinaryWriteStream, putBytes) {
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write bytes to stream because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
+    if (file->fsOpen == NULL || file->fsWrite == NULL) RETURN_NIL;
     else {
         unsigned char* byteArray = (unsigned char*)malloc(bytes->elements.count);
         if (byteArray != NULL) {
@@ -195,7 +206,10 @@ LOX_METHOD(BinaryWriteStream, putBytes) {
                 int byte = AS_INT(bytes->elements.values[i]);
                 byteArray[i] = (unsigned char)byte;
             }
-            fwrite(byteArray, sizeof(char), (size_t)bytes->elements.count, file->file);
+
+            uv_buf_t uvBuf = uv_buf_init(byteArray, bytes->elements.count);
+            int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+            if (numWrite > 0) file->offset += numWrite;
             free(byteArray);
         }
         RETURN_NIL;
@@ -406,7 +420,7 @@ LOX_METHOD(FileClass, open) {
 
     if (mode->chars == "r") {
         ObjInstance* fileReadStream = newInstance(vm, getNativeClass(vm, "clox.std.io.FileReadStream"));
-        if (!setFileProperty(vm, fileReadStream, file, "r")) {
+        if (!setFileProperty(vm, fileReadStream, file, mode->chars)) {
             THROW_EXCEPTION(clox.std.io.IOException, "Cannot open FileReadStream, file either does not exist or require additional permission to access.");
         }
         pop(vm);
@@ -414,7 +428,7 @@ LOX_METHOD(FileClass, open) {
     }
     else if (mode->chars == "w") {
         ObjInstance* fileWriteStream = newInstance(vm, getNativeClass(vm, "clox.std.io.FileWriteStream"));
-        if (!setFileProperty(vm, fileWriteStream, file, "w")) {
+        if (!setFileProperty(vm, fileWriteStream, file, mode->chars)) {
             THROW_EXCEPTION(clox.std.io.IOException, "Cannot open FileWriteStream, file either does not exist or require additional permission to access.");
         }
         pop(vm);
@@ -534,7 +548,6 @@ LOX_METHOD(IOStream, close) {
     ASSERT_ARG_COUNT("IOStream::close()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     file->isOpen = false;
-    fclose(file->file);
     RETURN_BOOL(fileClose(vm, file));
 }
 

@@ -5,6 +5,7 @@ using clox.std.io.File;
 using clox.std.io.FileReadStream;
 using clox.std.io.FileWriteStream;
 
+/*
 var fileIn = File("test/others/file_input.txt");
 println(fileIn);
 println("Creating a read stream for input file.");
@@ -41,8 +42,9 @@ fileWriter.putString("Hello World!");
 println("Close write stream for file.");
 fileWriter.close();
 println("");
+*/
 
-var binaryFileIn = File("test/others/file_binary.bin");
+var binaryFileIn = File("test/others/binary_input.bin");
 println(binaryFileIn);
 println("Creating a binary read stream.");
 println("Now read the binary file to the screen:");
@@ -55,10 +57,10 @@ binaryReader.close();
 println("");
 
 println("");
-var fileBinaryOut = File("test/others/file_binary.bin");
+var fileBinaryOut = File("test/others/binary_output.bin");
 println(fileBinaryOut);
 println("Creating a binary write stream.");
-print("Now write to a binary file with the following bytes: ");
+println("Now write to a binary file with the following bytes: ");
 var binaryWriter = BinaryWriteStream(fileBinaryOut);
 var bytes = [5, 37, 0, 88, 255, 12];
 println(bytes);
