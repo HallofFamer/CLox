@@ -44,8 +44,8 @@ static int fileMode(const char* mode) {
     switch (length) {
         case 1: 
             if (strcmp(mode, "r") == 0) return O_RDONLY;
-            else if (strcmp(mode, "w") == 0) return O_WRONLY | O_TRUNC;
-            else if (strcmp(mode, "a") == 0) return O_WRONLY | O_APPEND;
+            else if (strcmp(mode, "w") == 0) return O_WRONLY | O_CREAT | O_TRUNC;
+            else if (strcmp(mode, "a") == 0) return O_WRONLY | O_CREAT | O_APPEND;
             else return -1;
         case 2: 
             if (strcmp(mode, "rb") == 0) return O_RDONLY | O_BINARY;
@@ -63,6 +63,23 @@ static int fileMode(const char* mode) {
         default: 
             return -1;
     }
+}
+
+static char* fileRead(VM* vm, ObjFile* file, bool isPeek) {
+    int c = 0;
+    uv_buf_t uvBuf = uv_buf_init(&c, 1);
+    int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+    if (numRead == 0) return NULL;
+    if (!isPeek) file->offset += 1;
+    char ch[2] = { c, '\0' };
+    return ch;
+}
+
+static void fileWrite(VM* vm, ObjFile* file, char c) {
+    uv_buf_t uvBuf = uv_buf_init(&c, 1);
+    uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+    int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+    if (numWrite > 0) file->offset += 1;
 }
 
 static ObjFile* getFileArgument(VM* vm, Value arg) {
@@ -96,7 +113,7 @@ static bool loadFileWrite(VM* vm, ObjFile* file) {
 static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, const char* mode) {
     if (file->fsOpen == NULL) file->fsOpen = ALLOCATE_STRUCT(uv_fs_t);
     int descriptor = uv_fs_open(vm->eventLoop, file->fsOpen, file->name->chars, fileMode(mode), 0, NULL);
-    if (file->file == NULL || descriptor < 0) return false;
+    if (descriptor < 0) return false;
     file->isOpen = true;
     file->mode = newString(vm, mode);
     setObjProperty(vm, object, "file", OBJ_VAL(file));
@@ -121,12 +138,12 @@ LOX_METHOD(BinaryReadStream, next) {
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
     if (file->fsOpen == NULL || file->fsRead == NULL) RETURN_NIL;
     else {
-        unsigned char byte;
-        uv_buf_t uvBuf = uv_buf_init(&byte, 1);
+        unsigned char ub;
+        uv_buf_t uvBuf = uv_buf_init(&ub, 1);
         int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         if (numRead == 0) RETURN_NIL;
         file->offset += 1;
-        RETURN_INT((int)byte);
+        RETURN_INT((int)ub);
     }
     RETURN_NIL;
 }
@@ -178,15 +195,14 @@ LOX_METHOD(BinaryWriteStream, put) {
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write byte to stream because file is already closed.");
-    if (file->fsOpen == NULL || file->fsWrite == NULL) RETURN_NIL;
-    else {
+    if (file->fsOpen != NULL && file->fsWrite != NULL) {
         unsigned char byte = (unsigned char)arg;
         uv_buf_t uvBuf = uv_buf_init(&byte, 1);
         uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         if (numWrite > 0) file->offset += 1;
-        RETURN_NIL;
     }
+    RETURN_NIL;
 }
 
 LOX_METHOD(BinaryWriteStream, putBytes) {
@@ -197,8 +213,7 @@ LOX_METHOD(BinaryWriteStream, putBytes) {
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write bytes to stream because file is already closed.");
-    if (file->fsOpen == NULL || file->fsWrite == NULL) RETURN_NIL;
-    else {
+    if (file->fsOpen != NULL && file->fsWrite != NULL) {
         unsigned char* byteArray = (unsigned char*)malloc(bytes->elements.count);
         if (byteArray != NULL) {
             for (int i = 0; i < bytes->elements.count; i++) {
@@ -212,8 +227,8 @@ LOX_METHOD(BinaryWriteStream, putBytes) {
             if (numWrite > 0) file->offset += numWrite;
             free(byteArray);
         }
-        RETURN_NIL;
     }
+    RETURN_NIL;
 }
 
 LOX_METHOD(File, __init__) {
@@ -445,6 +460,7 @@ LOX_METHOD(FileReadStream, __init__) {
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "r")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create FileReadStream, file either does not exist or require additional permission to access.");
     }
+    if (!loadFileRead(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to read from file stream.");
     RETURN_OBJ(self);
 }
 
@@ -452,11 +468,10 @@ LOX_METHOD(FileReadStream, next) {
     ASSERT_ARG_COUNT("FileReadStream::next()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next char because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
+    if (file->fsOpen == NULL) RETURN_NIL;
     else {
-        int c = fgetc(file->file);
-        if (c == EOF) RETURN_NIL;
-        char ch[2] = { c, '\0' };
+        char* ch = fileRead(vm, file, false);
+        if (ch == NULL) RETURN_NIL;
         RETURN_STRING(ch, 1);
     }
 }
@@ -465,11 +480,26 @@ LOX_METHOD(FileReadStream, nextLine) {
     ASSERT_ARG_COUNT("FileReadStream::nextLine()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next line because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
+    if (file->fsOpen == NULL) RETURN_NIL;
     else {
-        char line[UINT8_MAX];
-        if (fgets(line, sizeof line, file->file) == NULL) RETURN_NIL;
-        RETURN_STRING(line, (int)strlen(line));
+        char chars[UINT8_MAX];
+        uv_buf_t uvBuf = uv_buf_init(chars, UINT8_MAX);
+        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        if (numRead == 0) RETURN_NIL;
+
+        size_t lineOffset = 0;
+        while (lineOffset < numRead) {
+            if (uvBuf.base[lineOffset++] == '\n') break;
+        }
+
+        char* line = (char*)malloc(lineOffset + 1);
+        if (line != NULL) {
+            memcpy(line, uvBuf.base, lineOffset);
+            line[lineOffset] = '\0';
+            file->offset += lineOffset;
+            RETURN_STRING(line, lineOffset);
+        }
+        else THROW_EXCEPTION(clox.std.lang.OutOfMemoryException, "Not enough memory to allocate for next line read.");
     }
 }
 
@@ -477,12 +507,10 @@ LOX_METHOD(FileReadStream, peek) {
     ASSERT_ARG_COUNT("FileReadStream::peek()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot peek the next char because file is already closed.");
-    if (file->file == NULL) RETURN_NIL;
+    if (file->fsOpen == NULL) RETURN_NIL;
     else {
-        int c = fgetc(file->file);
-        ungetc(c, file->file);
-        if (c == EOF) RETURN_NIL;
-        char ch[2] = { c, '\0' };
+        char* ch = fileRead(vm, file, true);
+        if (ch == NULL) RETURN_NIL;
         RETURN_STRING(ch, 1);
     }
 }
@@ -495,6 +523,7 @@ LOX_METHOD(FileWriteStream, __init__) {
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "w")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create FileWriteStream, file either does not exist or require additional permission to access.");
     }
+    if (!loadFileWrite(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to write to file stream.");
     RETURN_OBJ(self);
 }
 
@@ -503,10 +532,10 @@ LOX_METHOD(FileWriteStream, put) {
     ASSERT_ARG_TYPE("FileWriteStream::put(char)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write character to stream because file is already closed.");
-    if (file->file != NULL) {
+    if (file->fsOpen != NULL && file->fsWrite != NULL) {
         ObjString* character = AS_STRING(args[0]);
-        if (character->length != 1) raiseError(vm, "Method FileWriteStream::put(char) expects argument 1 to be a character(string of length 1)");
-        fputc(character->chars[0], file->file);
+        if (character->length != 1) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Method FileWriteStream::put(char) expects argument 1 to be a character(string of length 1)");
+        fileWrite(vm, file, character->chars[0]);
     }
     RETURN_NIL;
 }
@@ -515,7 +544,7 @@ LOX_METHOD(FileWriteStream, putLine) {
     ASSERT_ARG_COUNT("FileWriteStream::putLine()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write new line to stream because file is already closed.");
-    if (file->file != NULL) fputc('\n', file->file);
+    if (file->fsOpen != NULL && file->fsWrite != NULL) fileWrite(vm, file, '\n');
     RETURN_NIL;
 }
 
@@ -523,7 +552,7 @@ LOX_METHOD(FileWriteStream, putSpace) {
     ASSERT_ARG_COUNT("FileWriteStream::putSpace()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write empty space to stream because file is already closed.");
-    if (file->file != NULL) fputc(' ', file->file);
+    if (file->fsOpen != NULL && file->fsWrite != NULL) fileWrite(vm, file, ' ');
     RETURN_NIL;
 }
 
@@ -532,9 +561,12 @@ LOX_METHOD(FileWriteStream, putString) {
     ASSERT_ARG_TYPE("FileWriteStream::putString(string)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write string to stream because file is already closed.");
-    if (file->file != NULL) {
+    if (file->fsOpen != NULL && file->fsWrite != NULL) {
         ObjString* string = AS_STRING(args[0]);
-        fputs(string->chars, file->file);
+        uv_buf_t uvBuf = uv_buf_init(string->chars, string->length);
+        uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        if (numWrite > 0) file->offset += string->length;
     }
     RETURN_NIL;
 }
@@ -580,7 +612,7 @@ LOX_METHOD(ReadStream, __init__) {
 LOX_METHOD(ReadStream, isAtEnd) {
     ASSERT_ARG_COUNT("ReadStream::next()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen || file->file == NULL) RETURN_FALSE;
+    if (!file->isOpen) RETURN_FALSE;
     else {
         unsigned char c;
         uv_buf_t uvBuf = uv_buf_init(&c, 1);
@@ -590,8 +622,7 @@ LOX_METHOD(ReadStream, isAtEnd) {
 }
 
 LOX_METHOD(ReadStream, next) {
-    raiseError(vm, "Cannot call method ReadStream::next(), it must be implemented by subclasses.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 LOX_METHOD(ReadStream, skip) {
@@ -599,7 +630,7 @@ LOX_METHOD(ReadStream, skip) {
     ASSERT_ARG_TYPE("ReadStream::skip(offset)", 0, Int);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot skip stream by offset because file is already closed.");
-    if (file->file == NULL) RETURN_FALSE;
+    if (file->fsOpen == NULL) RETURN_FALSE;
     file->offset += AS_INT(args[0]);
     RETURN_TRUE;
 }
@@ -618,13 +649,12 @@ LOX_METHOD(WriteStream, flush) {
     ASSERT_ARG_COUNT("WriteStream::flush()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot flush stream because file is already closed.");
-    if (file->file == NULL) RETURN_FALSE;
+    if (file->fsOpen == NULL) RETURN_FALSE;
     RETURN_BOOL(fileFlush(vm, file));
 }
 
 LOX_METHOD(WriteStream, put) {
-    raiseError(vm, "Cannot call method WriteStream::put(param), it must be implemented by subclasses.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
 void registerIOPackage(VM* vm) {
