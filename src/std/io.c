@@ -93,6 +93,14 @@ static ObjFile* getFileProperty(VM* vm, ObjInstance* object, const char* field) 
     return AS_FILE(getObjProperty(vm, object, field));
 }
 
+static char* getIOStreamClassName(const char* mode) {
+    if (strcmp(mode, "r") == 0) return "clox.std.io.FileReadStream";
+    if (strcmp(mode, "w") == 0 || strcmp(mode, "a") == 0) return "clox.std.io.FileWriteStream";
+    if (strcmp(mode, "rb") == 0) return "clox.std.io.BinaryReadStream";
+    if (strcmp(mode, "wb") == 0 || strcmp(mode, "ab") == 0) return "clox.std.io.BinaryWriteStream";
+    return NULL;
+}
+
 static bool loadFileRead(VM* vm, ObjFile* file) {
     if (file->isOpen == false) return false;
     if (file->fsRead == NULL) file->fsRead = ALLOCATE_STRUCT(uv_fs_t);
@@ -112,7 +120,8 @@ static bool loadFileWrite(VM* vm, ObjFile* file) {
 
 static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, const char* mode) {
     if (file->fsOpen == NULL) file->fsOpen = ALLOCATE_STRUCT(uv_fs_t);
-    int descriptor = uv_fs_open(vm->eventLoop, file->fsOpen, file->name->chars, fileMode(mode), 0, NULL);
+    int flags = (strcmp(mode, "w") == 0 || strcmp(mode, "wb") == 0) ? S_IWRITE : 0;
+    int descriptor = uv_fs_open(vm->eventLoop, file->fsOpen, file->name->chars, fileMode(mode), flags, NULL);
     if (descriptor < 0) return false;
     file->isOpen = true;
     file->mode = newString(vm, mode);
@@ -429,27 +438,19 @@ LOX_METHOD(FileClass, open) {
     ASSERT_ARG_COUNT("File class::open(pathname, mode)", 2);
     ASSERT_ARG_TYPE("File class::open(pathname, mode)", 0, String);
     ASSERT_ARG_TYPE("File class::open(pathname, mode)", 1, String);
-    ObjString* mode = AS_STRING(args[1]);
+    char* mode = AS_CSTRING(args[1]);
     ObjFile* file = newFile(vm, AS_STRING(args[0]));
-    push(vm, OBJ_VAL(file));
 
-    if (mode->chars == "r") {
-        ObjInstance* fileReadStream = newInstance(vm, getNativeClass(vm, "clox.std.io.FileReadStream"));
-        if (!setFileProperty(vm, fileReadStream, file, mode->chars)) {
-            THROW_EXCEPTION(clox.std.io.IOException, "Cannot open FileReadStream, file either does not exist or require additional permission to access.");
-        }
-        pop(vm);
-        RETURN_OBJ(fileReadStream);
-    }
-    else if (mode->chars == "w") {
-        ObjInstance* fileWriteStream = newInstance(vm, getNativeClass(vm, "clox.std.io.FileWriteStream"));
-        if (!setFileProperty(vm, fileWriteStream, file, mode->chars)) {
-            THROW_EXCEPTION(clox.std.io.IOException, "Cannot open FileWriteStream, file either does not exist or require additional permission to access.");
-        }
-        pop(vm);
-        RETURN_OBJ(fileWriteStream);
-    }
-    else THROW_EXCEPTION(clox.std.io.IOException, "Invalid file open mode specified.");
+    push(vm, OBJ_VAL(file));
+    char* streamClassName = getIOStreamClassName(mode);
+    if (streamClassName == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Invalid file open mode specified.");
+    ObjInstance* stream = newInstance(vm, getNativeClass(vm, streamClassName));
+    if (!setFileProperty(vm, stream, file, mode)) THROW_EXCEPTION(clox.std.io.IOException, "Cannot open IO stream, file either does not exist or require additional permission to access.");
+    
+    if (strcmp(mode, "r") == 0 || strcmp(mode, "rb") == 0) loadFileRead(vm, file);
+    else if (strcmp(mode, "w") == 0 || strcmp(mode, "a") == 0 || strcmp(mode, "wb") == 0 || strcmp(mode, "ab") == 0) loadFileWrite(vm, file);
+    pop(vm);
+    RETURN_OBJ(stream);
 }
 
 LOX_METHOD(FileReadStream, __init__) {
