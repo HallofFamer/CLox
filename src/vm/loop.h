@@ -10,6 +10,12 @@
 
 typedef struct {
     VM* vm;
+    ObjFile* file;
+    ObjPromise* promise;
+} FileData;
+
+typedef struct {
+    VM* vm;
     Value receiver;
     ObjClosure* closure;
     int delay;
@@ -18,6 +24,7 @@ typedef struct {
 
 void initLoop(VM* vm);
 void freeLoop(VM* vm);
+void fileOpen(uv_fs_t* fsRequest);
 void timerClose(uv_handle_t* handle);
 void timerRun(uv_timer_t* timer);
 

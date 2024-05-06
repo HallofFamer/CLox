@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "memory.h"
+#include "native.h"
 #include "object.h"
 #include "vm.h"
 
@@ -17,6 +18,16 @@ void freeLoop(VM* vm) {
         uv_loop_close(vm->eventLoop);
         free(vm->eventLoop);
     }
+}
+
+void fileOpen(uv_fs_t* fsRequest) {
+    FileData* data = (FileData*)fsRequest->data;
+    data->file->fsOpen = true;
+    ObjClass* streamClass = getNativeClass(data->vm, "clox.std.io.BinaryReadStream");
+    ObjInstance* stream = newInstance(data->vm, streamClass);
+    setObjProperty(data->vm, stream, "file", OBJ_VAL(data->file));
+    promiseFulfill(data->vm, data->promise, OBJ_VAL(stream));
+    free(data);
 }
 
 void timerClose(uv_handle_t* handle) {

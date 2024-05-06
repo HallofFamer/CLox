@@ -118,10 +118,21 @@ static bool loadFileWrite(VM* vm, ObjFile* file) {
     return true;
 }
 
-static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, const char* mode) {
+static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, const char* mode, uv_fs_cb callback) {
     if (file->fsOpen == NULL) file->fsOpen = ALLOCATE_STRUCT(uv_fs_t);
-    int flags = (strcmp(mode, "w") == 0 || strcmp(mode, "wb") == 0) ? S_IWRITE : 0;
-    int descriptor = uv_fs_open(vm->eventLoop, file->fsOpen, file->name->chars, fileMode(mode), flags, NULL);
+    int openMode = fileMode(mode);
+    int openFlag = (strcmp(mode, "w") == 0 || strcmp(mode, "wb") == 0) ? S_IWRITE : 0;
+    if (callback != NULL) {
+        FileData* data = ALLOCATE_STRUCT(FileData);
+        if (data != NULL) {
+            data->vm = vm;
+            data->file = file;
+            data->promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+            if(file->fsOpen != NULL) file->fsOpen->data = data;
+        }
+    }
+
+    int descriptor = uv_fs_open(vm->eventLoop, file->fsOpen, file->name->chars, openMode, openFlag, callback);
     if (descriptor < 0) return false;
     file->isOpen = true;
     file->mode = newString(vm, mode);
@@ -134,7 +145,7 @@ LOX_METHOD(BinaryReadStream, __init__) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
     if (file == NULL) raiseError(vm, "Method BinaryReadStream::__init__(file) expects argument 1 to be a string or file.");
-    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "rb")) {
+    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "rb", NULL)) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create BinaryReadStream, file either does not exist or require additional permission to access.");
     }
     if(!loadFileRead(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to read from binary stream.");
@@ -189,7 +200,7 @@ LOX_METHOD(BinaryWriteStream, __init__) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
     if (file == NULL) raiseError(vm, "Method BinaryWriteStream::__init__(file) expects argument 1 to be a string or file.");
-    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "wb")) {
+    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "wb", NULL)) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create BinaryWriteStream, file either does not exist or require additional permission to access.");
     }
     if (!loadFileWrite(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to write to binary stream.");
@@ -445,7 +456,7 @@ LOX_METHOD(FileClass, open) {
     char* streamClassName = getIOStreamClassName(mode);
     if (streamClassName == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Invalid file open mode specified.");
     ObjInstance* stream = newInstance(vm, getNativeClass(vm, streamClassName));
-    if (!setFileProperty(vm, stream, file, mode)) THROW_EXCEPTION(clox.std.io.IOException, "Cannot open IO stream, file either does not exist or require additional permission to access.");
+    if (!setFileProperty(vm, stream, file, mode, NULL)) THROW_EXCEPTION(clox.std.io.IOException, "Cannot open IO stream, file either does not exist or require additional permission to access.");
     
     if (strcmp(mode, "r") == 0 || strcmp(mode, "rb") == 0) loadFileRead(vm, file);
     else if (strcmp(mode, "w") == 0 || strcmp(mode, "a") == 0 || strcmp(mode, "wb") == 0 || strcmp(mode, "ab") == 0) loadFileWrite(vm, file);
@@ -458,7 +469,7 @@ LOX_METHOD(FileReadStream, __init__) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
     if (file == NULL) raiseError(vm, "Method FileReadStream::__init__(file) expects argument 1 to be a string or file.");
-    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "r")) {
+    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "r", NULL)) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create FileReadStream, file either does not exist or require additional permission to access.");
     }
     if (!loadFileRead(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to read from file stream.");
@@ -521,7 +532,7 @@ LOX_METHOD(FileWriteStream, __init__) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
     if (file == NULL) raiseError(vm, "Method FileWriteStream::__init__(file) expects argument 1 to be a string or file.");
-    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "w")) {
+    if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "w", NULL)) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create FileWriteStream, file either does not exist or require additional permission to access.");
     }
     if (!loadFileWrite(vm, file)) THROW_EXCEPTION(clox.std.io.IOException, "Unable to write to file stream.");
