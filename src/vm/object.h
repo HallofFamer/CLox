@@ -178,7 +178,7 @@ typedef struct {
     ObjEntry* entries;
 } ObjDictionary;
 
-typedef struct {
+struct ObjFile{
     Obj obj;
     ObjString* name;
     ObjString* mode;
@@ -189,7 +189,7 @@ typedef struct {
     uv_fs_t* fsOpen;
     uv_fs_t* fsRead;
     uv_fs_t* fsWrite;
-} ObjFile;
+};
 
 typedef struct {
     Obj obj;
