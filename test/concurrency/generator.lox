@@ -1,4 +1,4 @@
-namespace test.features;
+namespace test.concurrency;
 
 fun fibonacci(){ 
     var last = 0;

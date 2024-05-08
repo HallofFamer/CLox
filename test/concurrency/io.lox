@@ -1,4 +1,4 @@
-namespace test.std;
+namespace test.concurrency;
 using clox.std.io.BinaryReadStream;
 using clox.std.io.BinaryWriteStream;
 using clox.std.io.File;

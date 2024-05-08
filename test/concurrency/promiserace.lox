@@ -1,4 +1,4 @@
-namespace test.std;
+namespace test.concurrency;
 using clox.std.util.Promise;
 using clox.std.util.Timer;
 
