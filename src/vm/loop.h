@@ -24,8 +24,12 @@ typedef struct {
 
 void initLoop(VM* vm);
 void freeLoop(VM* vm);
-void fileOpen(uv_fs_t* fsRequest);
+FileData* fileData(VM* vm, ObjFile* file, ObjPromise* promise);
+int fileMode(const char* mode);
+void fileOnOpen(uv_fs_t* fsRequest);
+char* streamClassName(const char* mode);
 void timerClose(uv_handle_t* handle);
+TimerData* timerData(VM* vm, ObjClosure* closure, int delay, int interval);
 void timerRun(uv_timer_t* timer);
 
 #endif // !clox_loop_h

@@ -141,6 +141,8 @@ set(Source_Files__vm
     "src/vm/dict.h"
     "src/vm/exception.c"
     "src/vm/exception.h"
+    "src/vm/file.c"
+    "src/vm/file.h"
     "src/vm/generator.c"
     "src/vm/generator.h"
     "src/vm/hash.c"

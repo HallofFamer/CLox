@@ -20,19 +20,87 @@ void freeLoop(VM* vm) {
     }
 }
 
-void fileOpen(uv_fs_t* fsRequest) {
+FileData* fileData(VM* vm, ObjFile* file, ObjPromise* promise) {
+    FileData* data = ALLOCATE_STRUCT(FileData);
+    if (data != NULL) {
+        data->vm = vm;
+        data->file = file;
+        data->promise = promise;
+    }
+    return data;
+}
+
+int fileMode(const char* mode) {
+    size_t length = strlen(mode);
+    switch (length) {
+        case 1:
+            if (mode[0] == 'r') return O_RDONLY;
+            else if (mode[0] == 'w') return O_WRONLY | O_CREAT | O_TRUNC;
+            else if (mode[0] == 'a') return O_WRONLY | O_CREAT | O_APPEND;
+            else return -1;
+        case 2:
+            if (mode[0] == 'r' && mode[1] == 'b') return O_RDONLY | O_BINARY;
+            else if (mode[0] == 'w' && mode[1] == 'b') return O_WRONLY | O_TRUNC | O_CREAT | O_BINARY;
+            else if (mode[0] == 'a' && mode[1] == 'b') return O_WRONLY | O_APPEND | O_CREAT | O_BINARY;
+            else if (mode[0] == 'r' && mode[1] == '+') return O_RDWR;
+            else if (mode[0] == 'w' && mode[1] == '+') return O_RDWR | O_CREAT | O_TRUNC;
+            else if (mode[0] == 'w' && mode[1] == '+') return O_RDWR | O_CREAT | O_APPEND;
+            else return -1;
+        case 3:
+            if (mode[0] == 'r' && mode[1] == 'b' && mode[2] == '+') return O_RDWR | O_BINARY;
+            else if (mode[0] == 'w' && mode[1] == 'b' && mode[2] == '+') return O_RDWR | O_TRUNC | O_BINARY;
+            else if (mode[0] == 'a' && mode[1] == 'b' && mode[2] == '+') return O_RDWR | O_APPEND | O_BINARY;
+            else return -1;
+        default: return -1;
+    }
+}
+
+void fileOnOpen(uv_fs_t* fsRequest) {
     FileData* data = (FileData*)fsRequest->data;
-    data->file->fsOpen = true;
-    ObjClass* streamClass = getNativeClass(data->vm, "clox.std.io.BinaryReadStream");
+    data->file->isOpen = true;
+    ObjClass* streamClass = getNativeClass(data->vm, streamClassName(data->file->mode->chars));
     ObjInstance* stream = newInstance(data->vm, streamClass);
     setObjProperty(data->vm, stream, "file", OBJ_VAL(data->file));
     promiseFulfill(data->vm, data->promise, OBJ_VAL(stream));
     free(data);
 }
 
+char* streamClassName(const char* mode) {
+    size_t length = strlen(mode);
+    switch (length) { 
+        case 1:
+            if (mode[0] == 'r') return "clox.std.io.FileReadStream";
+            else if (mode[0] == 'w' || mode[0] == 'a') return "clox.std.io.FileWriteStream";
+            else return NULL;
+        case 2:
+            if (mode[0] == 'r' && mode[1] == 'b') return "clox.std.io.BinaryReadStream";
+            else if ((mode[0] == 'w' || mode[1] == 'a') && mode[1] == 'b') return "clox.std.io.BinaryWriteStream";
+            else if (mode[0] == 'r' && mode[1] == '+') return "clox.std.io.FileReadStream";
+            else if ((mode[0] == 'w' || mode[1] == 'a') && mode[1] == '+') return "clox.std.io.FileWriteStream";
+            else return NULL;
+        case 3:
+            if (mode[0] == 'r' && mode[1] == 'b' && mode[2] == '+') return "clox.std.io.BinaryReadStream";
+            else if ((mode[0] == 'w' || mode[0] == 'a') && mode[1] == 'b' && mode[2] == '+') return "clox.std.io.BinaryWriteStream";
+            else return NULL;
+        default: return NULL;
+    }
+}
+
 void timerClose(uv_handle_t* handle) {
     free(handle->data);
     free(handle);
+}
+
+TimerData* timerData(VM* vm, ObjClosure* closure, int delay, int interval) {
+    TimerData* data = ALLOCATE_STRUCT(TimerData);
+    if (data != NULL) {
+        data->receiver = NIL_VAL;
+        data->vm = vm;
+        data->closure = closure;
+        data->delay = delay;
+        data->interval = interval;
+    }
+    return data;
 }
 
 void timerRun(uv_timer_t* timer) {
