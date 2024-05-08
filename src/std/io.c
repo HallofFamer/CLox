@@ -5,140 +5,13 @@
 #include "io.h"
 #include "../vm/assert.h"
 #include "../vm/date.h"
+#include "../vm/file.h"
 #include "../vm/memory.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
 #include "../vm/os.h"
 #include "../vm/string.h"
 #include "../vm/vm.h"
-
-static bool fileClose(VM* vm, ObjFile* file) {
-    if (file->isOpen) {
-        uv_fs_t fsClose;
-        int closed = uv_fs_close(vm->eventLoop, &fsClose, file->fsOpen->result, NULL);
-        uv_fs_req_cleanup(&fsClose);
-        return (closed == 0);
-    }
-    return false;
-}
-
-static bool fileExists(VM* vm, ObjFile* file) {
-    uv_fs_t fsAccess;
-    bool exists = (uv_fs_access(vm->eventLoop, &fsAccess, file->name->chars, F_OK, NULL) == 0);
-    uv_fs_req_cleanup(&fsAccess);
-    return exists;
-}
-
-static bool fileFlush(VM* vm, ObjFile* file) {
-    if (file->isOpen) {
-        uv_fs_t fsSync;
-        int flushed = uv_fs_fsync(vm->eventLoop, &fsSync, file->fsOpen->result, NULL);
-        uv_fs_req_cleanup(&fsSync);
-        return (flushed == 0);
-    }
-    return false;
-}
-
-static int fileMode(const char* mode) {
-    int length = strlen(mode);
-    switch (length) {
-        case 1: 
-            if (strcmp(mode, "r") == 0) return O_RDONLY;
-            else if (strcmp(mode, "w") == 0) return O_WRONLY | O_CREAT | O_TRUNC;
-            else if (strcmp(mode, "a") == 0) return O_WRONLY | O_CREAT | O_APPEND;
-            else return -1;
-        case 2: 
-            if (strcmp(mode, "rb") == 0) return O_RDONLY | O_BINARY;
-            else if (strcmp(mode, "wb") == 0) return O_WRONLY | O_TRUNC | O_CREAT | O_BINARY;
-            else if (strcmp(mode, "ab") == 0) return O_WRONLY | O_APPEND | O_CREAT | O_BINARY;
-            else if (strcmp(mode, "r+") == 0) return O_RDWR;
-            else if (strcmp(mode, "w+") == 0) return O_RDWR | O_CREAT | O_TRUNC;
-            else if (strcmp(mode, "a+") == 0) return O_RDWR | O_CREAT | O_APPEND;
-            else return -1;
-        case 3: 
-            if (strcmp(mode, "rb+") == 0) return O_RDWR | O_BINARY;
-            else if (strcmp(mode, "wb+") == 0) return O_RDWR | O_TRUNC | O_BINARY;
-            else if (strcmp(mode, "ab+") == 0) return O_RDWR | O_APPEND | O_BINARY;
-            else return -1;
-        default: 
-            return -1;
-    }
-}
-
-static char* fileRead(VM* vm, ObjFile* file, bool isPeek) {
-    int c = 0;
-    uv_buf_t uvBuf = uv_buf_init(&c, 1);
-    int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-    if (numRead == 0) return NULL;
-    if (!isPeek) file->offset += 1;
-    char ch[2] = { c, '\0' };
-    return ch;
-}
-
-static void fileWrite(VM* vm, ObjFile* file, char c) {
-    uv_buf_t uvBuf = uv_buf_init(&c, 1);
-    uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-    int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-    if (numWrite > 0) file->offset += 1;
-}
-
-static ObjFile* getFileArgument(VM* vm, Value arg) {
-    ObjFile* file = NULL;
-    if (IS_STRING(arg)) file = newFile(vm, AS_STRING(arg));
-    else if (IS_FILE(arg)) file = AS_FILE(arg);
-    return file;
-}
-
-static ObjFile* getFileProperty(VM* vm, ObjInstance* object, const char* field) {
-    return AS_FILE(getObjProperty(vm, object, field));
-}
-
-static char* getIOStreamClassName(const char* mode) {
-    if (strcmp(mode, "r") == 0) return "clox.std.io.FileReadStream";
-    if (strcmp(mode, "w") == 0 || strcmp(mode, "a") == 0) return "clox.std.io.FileWriteStream";
-    if (strcmp(mode, "rb") == 0) return "clox.std.io.BinaryReadStream";
-    if (strcmp(mode, "wb") == 0 || strcmp(mode, "ab") == 0) return "clox.std.io.BinaryWriteStream";
-    return NULL;
-}
-
-static bool loadFileRead(VM* vm, ObjFile* file) {
-    if (file->isOpen == false) return false;
-    if (file->fsRead == NULL) file->fsRead = ALLOCATE_STRUCT(uv_fs_t);
-    return true;
-}
-
-static bool loadFileStat(VM* vm, ObjFile* file) {
-    if (file->fsStat == NULL) file->fsStat = ALLOCATE_STRUCT(uv_fs_t);
-    return (uv_fs_stat(vm->eventLoop, file->fsStat, file->name->chars, NULL) == 0);
-}
-
-static bool loadFileWrite(VM* vm, ObjFile* file) {
-    if (file->isOpen == false) return false;
-    if (file->fsWrite == NULL) file->fsWrite = ALLOCATE_STRUCT(uv_fs_t);
-    return true;
-}
-
-static bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, const char* mode, uv_fs_cb callback) {
-    if (file->fsOpen == NULL) file->fsOpen = ALLOCATE_STRUCT(uv_fs_t);
-    int openMode = fileMode(mode);
-    int openFlag = (strcmp(mode, "w") == 0 || strcmp(mode, "wb") == 0) ? S_IWRITE : 0;
-    if (callback != NULL) {
-        FileData* data = ALLOCATE_STRUCT(FileData);
-        if (data != NULL) {
-            data->vm = vm;
-            data->file = file;
-            data->promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
-            if(file->fsOpen != NULL) file->fsOpen->data = data;
-        }
-    }
-
-    int descriptor = uv_fs_open(vm->eventLoop, file->fsOpen, file->name->chars, openMode, openFlag, callback);
-    if (descriptor < 0) return false;
-    file->isOpen = true;
-    file->mode = newString(vm, mode);
-    setObjProperty(vm, object, "file", OBJ_VAL(file));
-    return true;
-}
 
 LOX_METHOD(BinaryReadStream, __init__) {
     ASSERT_ARG_COUNT("BinaryReadStream::__init__(file)", 1);
@@ -160,7 +33,7 @@ LOX_METHOD(BinaryReadStream, next) {
     else {
         unsigned char ub;
         uv_buf_t uvBuf = uv_buf_init(&ub, 1);
-        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         if (numRead == 0) RETURN_NIL;
         file->offset += 1;
         RETURN_INT((int)ub);
@@ -182,7 +55,7 @@ LOX_METHOD(BinaryReadStream, nextBytes) {
         push(vm, OBJ_VAL(bytes));
         unsigned char* buffer = (unsigned char*)malloc(length);
         uv_buf_t uvBuf = uv_buf_init(buffer, length);
-        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
 
         for (int i = 0; i < numRead; i++, file->offset++) {
             unsigned char byte = (unsigned char)uvBuf.base[i];
@@ -218,8 +91,8 @@ LOX_METHOD(BinaryWriteStream, put) {
     if (file->fsOpen != NULL && file->fsWrite != NULL) {
         unsigned char byte = (unsigned char)arg;
         uv_buf_t uvBuf = uv_buf_init(&byte, 1);
-        uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-        int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         if (numWrite > 0) file->offset += 1;
     }
     RETURN_NIL;
@@ -243,7 +116,7 @@ LOX_METHOD(BinaryWriteStream, putBytes) {
             }
 
             uv_buf_t uvBuf = uv_buf_init(byteArray, bytes->elements.count);
-            int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+            int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
             if (numWrite > 0) file->offset += numWrite;
             free(byteArray);
         }
@@ -496,7 +369,7 @@ LOX_METHOD(FileReadStream, nextLine) {
     else {
         char chars[UINT8_MAX];
         uv_buf_t uvBuf = uv_buf_init(chars, UINT8_MAX);
-        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         if (numRead == 0) RETURN_NIL;
 
         size_t lineOffset = 0;
@@ -509,7 +382,7 @@ LOX_METHOD(FileReadStream, nextLine) {
             memcpy(line, uvBuf.base, lineOffset);
             line[lineOffset] = '\0';
             file->offset += lineOffset;
-            RETURN_STRING(line, lineOffset);
+            RETURN_STRING(line, (int)lineOffset);
         }
         else THROW_EXCEPTION(clox.std.lang.OutOfMemoryException, "Not enough memory to allocate for next line read.");
     }
@@ -576,8 +449,8 @@ LOX_METHOD(FileWriteStream, putString) {
     if (file->fsOpen != NULL && file->fsWrite != NULL) {
         ObjString* string = AS_STRING(args[0]);
         uv_buf_t uvBuf = uv_buf_init(string->chars, string->length);
-        uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-        int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         if (numWrite > 0) file->offset += string->length;
     }
     RETURN_NIL;
@@ -628,7 +501,7 @@ LOX_METHOD(ReadStream, isAtEnd) {
     else {
         unsigned char c;
         uv_buf_t uvBuf = uv_buf_init(&c, 1);
-        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, file->fsOpen->result, &uvBuf, 1, file->offset, NULL);       
+        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);       
         RETURN_BOOL(numRead == 0);
     }
 }

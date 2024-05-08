@@ -183,7 +183,6 @@ struct ObjFile{
     ObjString* name;
     ObjString* mode;
     bool isOpen;
-    FILE* file;
     size_t offset;
     uv_fs_t* fsStat;
     uv_fs_t* fsOpen;

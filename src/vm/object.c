@@ -262,22 +262,16 @@ ObjRecord* newRecord(VM* vm, void* data) {
 ObjTimer* newTimer(VM* vm, ObjClosure* closure, int delay, int interval) {
     ObjTimer* timer = ALLOCATE_OBJ(ObjTimer, OBJ_TIMER, vm->timerClass);
     TimerData* data = ALLOCATE_STRUCT(TimerData);
-    if (data != NULL) {
-        data->receiver = NIL_VAL;
-        data->vm = vm;
-        data->closure = closure;
-        data->delay = delay;
-        data->interval = interval;
-
-        timer->timer = ALLOCATE_STRUCT(uv_timer_t);
-        if (timer->timer != NULL) {
-            timer->timer->data = data;
-            timer->id = 0;
-            timer->isRunning = false;
+    timer->timer = ALLOCATE_STRUCT(uv_timer_t);
+    if (timer->timer != NULL) {
+        timer->timer->data = timerData(vm, closure, delay, interval);
+        if (timer->timer->data == NULL) {
+            throwNativeException(vm, "clox.std.lang.OutOfMemoryException", "Not enough memory to allocate timer data.");
         }
-        else throwNativeException(vm, "clox.std.lang.OutOfMemoryException", "Not enough memory to allocate timer object.");
+        timer->id = 0;
+        timer->isRunning = false;
     }
-    else throwNativeException(vm, "clox.std.lang.OutOfMemoryException", "Not enough memory to allocate timer data.");
+    else throwNativeException(vm, "clox.std.lang.OutOfMemoryException", "Not enough memory to allocate timer object.");
     return timer;
 }
 
