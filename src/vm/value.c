@@ -59,18 +59,14 @@ void valueArrayInsert(VM* vm, ValueArray* array, int index, Value value) {
 
 int valueArrayFirstIndex(VM* vm, ValueArray* array, Value value) {
     for (int i = 0; i < array->count; i++) {
-        if (valuesEqual(array->values[i], value)) {
-            return i;
-        }
+        if (valuesEqual(array->values[i], value)) return i;
     }
     return -1;
 }
 
 int valueArrayLastIndex(VM* vm, ValueArray* array, Value value) {
     for (int i = array->count - 1; i >= 0; i--) {
-        if (valuesEqual(array->values[i], value)) {
-            return i;
-        }
+        if (valuesEqual(array->values[i], value)) return i;
     }
     return -1;
 }
@@ -195,9 +191,7 @@ char* valueToString(VM* vm, Value value) {
     }
     else if (IS_OBJ(value)) {
         Obj* object = AS_OBJ(value);
-        if (IS_STRING(value)) {
-            return AS_CSTRING(value);
-        }
+        if (IS_STRING(value)) return AS_CSTRING(value);
         else {
             size_t size = (size_t)(9 + object->klass->name->length);
             char* chars = ALLOCATE(char, size);
@@ -205,7 +199,5 @@ char* valueToString(VM* vm, Value value) {
             return chars;
         }
     }
-    else {
-        return "undefined";
-    }
+    else return "undefined";
 }
