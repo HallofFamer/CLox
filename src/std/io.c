@@ -342,7 +342,7 @@ LOX_METHOD(FileClass, openAsync) {
     ASSERT_ARG_TYPE("File class::openAsync(pathname, mode)", 1, String);
     char* mode = AS_CSTRING(args[1]);
     ObjFile* file = newFile(vm, AS_STRING(args[0]));
-    ObjPromise* promise = setFilePropertyAsync(vm, NULL, file, mode, fileOnOpen);
+    ObjPromise* promise = fileOpenAsync(vm, NULL, file, mode, fileOnOpen);
     RETURN_OBJ(promise);
 }
 
@@ -582,6 +582,7 @@ void registerIOPackage(VM* vm) {
 
     ObjClass* fileMetaclass = vm->fileClass->obj.klass;
     DEF_METHOD(fileMetaclass, FileClass, open, 2);
+    DEF_METHOD(fileMetaclass, FileClass, openAsync, 2);
 
     ObjClass* closableTrait = defineNativeTrait(vm, "TClosable");
     DEF_METHOD(closableTrait, TClosable, close, 0);
