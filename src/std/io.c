@@ -342,7 +342,8 @@ LOX_METHOD(FileClass, openAsync) {
     ASSERT_ARG_TYPE("File class::openAsync(pathname, mode)", 1, String);
     char* mode = AS_CSTRING(args[1]);
     ObjFile* file = newFile(vm, AS_STRING(args[0]));
-    ObjPromise* promise = fileOpenAsync(vm, NULL, file, mode, fileOnOpen);
+    ObjPromise* promise = fileOpenAsync(vm, file, mode, fileOnOpen);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to open IO stream.");
     RETURN_OBJ(promise);
 }
 
@@ -477,6 +478,12 @@ LOX_METHOD(IOStream, close) {
     RETURN_BOOL(fileClose(vm, file));
 }
 
+LOX_METHOD(IOStream, closeAsync) {
+    ASSERT_ARG_COUNT("IOStream::close()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    RETURN_OBJ(fileCloseAsync(vm, file, fileOnClose));
+}
+
 LOX_METHOD(IOStream, file) {
     ASSERT_ARG_COUNT("IOStream::file()", 0);
     RETURN_OBJ(getFileProperty(vm, AS_INSTANCE(receiver), "file"));
@@ -592,6 +599,7 @@ void registerIOPackage(VM* vm) {
     bindTrait(vm, ioStreamClass, closableTrait);
     DEF_INTERCEPTOR(ioStreamClass, IOStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(ioStreamClass, IOStream, close, 0);
+    DEF_METHOD(ioStreamClass, IOStream, closeAsync, 0);
     DEF_METHOD(ioStreamClass, IOStream, file, 0);
     DEF_METHOD(ioStreamClass, IOStream, getPosition, 0);
     DEF_METHOD(ioStreamClass, IOStream, reset, 0);

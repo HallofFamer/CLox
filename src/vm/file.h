@@ -6,10 +6,11 @@
 #include "loop.h"
 
 bool fileClose(VM* vm, ObjFile* file);
+ObjPromise* fileCloseAsync(VM* vm, ObjFile* file, uv_fs_cb callback);
 bool fileExists(VM* vm, ObjFile* file);
 bool fileFlush(VM* vm, ObjFile* file);
 bool fileOpen(VM* vm, ObjFile* file, const char* mode);
-bool fileOpenAsync(VM* vm, ObjFile* file, const char* mode, uv_fs_cb callback);
+ObjPromise* fileOpenAsync(VM* vm, ObjFile* file, const char* mode, uv_fs_cb callback);
 ObjString* fileRead(VM* vm, ObjFile* file, bool isPeek);
 void fileWrite(VM* vm, ObjFile* file, char c);
 ObjFile* getFileArgument(VM* vm, Value arg);
