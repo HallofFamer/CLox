@@ -23,9 +23,12 @@ ObjPromise* fileCloseAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
     if (file->isOpen && file->fsOpen != NULL) {
         uv_fs_t* fsClose = ALLOCATE_STRUCT(uv_fs_t);
         ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
-        file->fsOpen->data = fileData(vm, file, promise);
-        uv_fs_close(vm->eventLoop, fsClose, (uv_file)file->fsOpen->result, callback);
-        return promise;
+        if (fsClose == NULL) return NULL;
+        else { 
+            fsClose->data = fileData(vm, file, promise);
+            uv_fs_close(vm->eventLoop, fsClose, (uv_file)file->fsOpen->result, callback);
+            return promise;
+        }
     }
     return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
 }

@@ -55,8 +55,17 @@ int fileMode(const char* mode) {
     }
 }
 
-void fileOnOpen(uv_fs_t* fsRequest) {
-    FileData* data = (FileData*)fsRequest->data;
+void fileOnClose(uv_fs_t* fsClose) {
+    FileData* data = (FileData*)fsClose->data;
+    data->file->isOpen = false;
+    promiseFulfill(data->vm, data->promise, NIL_VAL);
+    uv_fs_req_cleanup(fsClose);
+    free(data);
+    free(fsClose);
+}
+
+void fileOnOpen(uv_fs_t* fsOpen) {
+    FileData* data = (FileData*)fsOpen->data;
     data->file->isOpen = true;
     ObjClass* streamClass = getNativeClass(data->vm, streamClassName(data->file->mode->chars));
     ObjInstance* stream = newInstance(data->vm, streamClass);
