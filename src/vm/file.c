@@ -84,7 +84,6 @@ ObjString* fileRead(VM* vm, ObjFile* file, bool isPeek) {
     int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
     if (numRead == 0) return NULL;
     if (!isPeek) file->offset += 1;
-
     char ch[2] = { c, '\0' };
     return copyString(vm, ch, 2);
 }

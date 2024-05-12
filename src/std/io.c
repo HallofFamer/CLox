@@ -481,7 +481,9 @@ LOX_METHOD(IOStream, close) {
 LOX_METHOD(IOStream, closeAsync) {
     ASSERT_ARG_COUNT("IOStream::close()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    RETURN_OBJ(fileCloseAsync(vm, file, fileOnClose));
+    ObjPromise* promise = fileCloseAsync(vm, file, fileOnClose);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to close IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(IOStream, file) {
