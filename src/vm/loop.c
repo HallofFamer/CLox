@@ -57,8 +57,13 @@ int fileMode(const char* mode) {
 
 void fileOnClose(uv_fs_t* fsClose) {
     FileData* data = (FileData*)fsClose->data;
+    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
+    data->vm->frameCount++;
     data->file->isOpen = false;
     promiseFulfill(data->vm, data->promise, NIL_VAL);
+
+    pop(data->vm);
+    data->vm->frameCount--;
     uv_fs_req_cleanup(fsClose);
     free(data);
     free(fsClose);
@@ -66,11 +71,15 @@ void fileOnClose(uv_fs_t* fsClose) {
 
 void fileOnOpen(uv_fs_t* fsOpen) {
     FileData* data = (FileData*)fsOpen->data;
+    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
+    data->vm->frameCount++;
     data->file->isOpen = true;
     ObjClass* streamClass = getNativeClass(data->vm, streamClassName(data->file->mode->chars));
     ObjInstance* stream = newInstance(data->vm, streamClass);
     setObjProperty(data->vm, stream, "file", OBJ_VAL(data->file));
     promiseFulfill(data->vm, data->promise, OBJ_VAL(stream));
+    pop(data->vm);
+    data->vm->frameCount--;
     free(data);
 }
 

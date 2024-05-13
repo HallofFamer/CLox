@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "file.h"
 #include "memory.h"
 #include "native.h"
 #include "object.h"
 #include "os.h"
 #include "vm.h"
-#include "file.h"
 
 bool fileClose(VM* vm, ObjFile* file) {
     if (file->isOpen) {
