@@ -27,6 +27,7 @@ ObjPromise* fileCloseAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
         else { 
             fsClose->data = fileData(vm, file, promise);
             uv_fs_close(vm->eventLoop, fsClose, (uv_file)file->fsOpen->result, callback);
+            uv_fs_req_cleanup(fsClose);
             return promise;
         }
     }
@@ -85,7 +86,20 @@ ObjString* fileRead(VM* vm, ObjFile* file, bool isPeek) {
     if (numRead == 0) return NULL;
     if (!isPeek) file->offset += 1;
     char ch[2] = { c, '\0' };
-    return copyString(vm, ch, 2);
+    return copyString(vm, ch, 1);
+}
+
+ObjPromise* fileReadAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
+    if (file->isOpen && file->fsOpen != NULL && file->fsRead != NULL) {
+        ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        char c = 0;
+        FileData* data = fileData(vm, file, promise);
+        data->buffer = uv_buf_init(&c, 1);
+        file->fsRead->data = data;
+        uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &data->buffer, 1, file->offset, callback);
+        return promise;
+    }
+    return NULL;
 }
 
 void fileWrite(VM* vm, ObjFile* file, char c) {
