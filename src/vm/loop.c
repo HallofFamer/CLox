@@ -100,6 +100,21 @@ void fileOnRead(uv_fs_t* fsRead) {
     free(data);
 }
 
+void fileOnWrite(uv_fs_t* fsWrite) {
+    FileData* data = (FileData*)fsWrite->data;
+    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
+    data->vm->frameCount++;
+
+    int numWrite = (int)fsWrite->result;
+    if (numWrite > 0) data->file->offset++;
+    promiseFulfill(data->vm, data->promise, NIL_VAL);
+
+    pop(data->vm);
+    data->vm->frameCount--;
+    free(data->buffer.base);
+    free(data);
+}
+
 char* streamClassName(const char* mode) {
     size_t length = strlen(mode);
     switch (length) { 

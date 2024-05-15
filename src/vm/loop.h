@@ -30,6 +30,7 @@ int fileMode(const char* mode);
 void fileOnClose(uv_fs_t* fsClose);
 void fileOnOpen(uv_fs_t* fsOpen);
 void fileOnRead(uv_fs_t* fsRead);
+void fileOnWrite(uv_fs_t* fsWrite);
 char* streamClassName(const char* mode);
 void timerClose(uv_handle_t* handle);
 TimerData* timerData(VM* vm, ObjClosure* closure, int delay, int interval);

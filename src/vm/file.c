@@ -109,6 +109,20 @@ void fileWrite(VM* vm, ObjFile* file, char c) {
     if (numWrite > 0) file->offset += 1;
 }
 
+ObjPromise* fileWriteAsync(VM* vm, ObjFile* file, char c, uv_fs_cb callback) {
+    if (file->isOpen && file->fsOpen != NULL && file->fsWrite != NULL) {
+        ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        FileData* data = fileData(vm, file, promise);
+        char* ch = ALLOCATE_STRUCT(char);
+        ch[0] = c;
+        data->buffer = uv_buf_init(ch, 1);
+        file->fsWrite->data = data;
+        uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &data->buffer, 1, file->offset, callback);
+        return promise;
+    }
+    return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
+}
+
 ObjFile* getFileArgument(VM* vm, Value arg) {
     ObjFile* file = NULL;
     if (IS_STRING(arg)) file = newFile(vm, AS_STRING(arg));

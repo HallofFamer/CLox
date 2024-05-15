@@ -14,6 +14,7 @@ ObjPromise* fileOpenAsync(VM* vm, ObjFile* file, const char* mode, uv_fs_cb call
 ObjString* fileRead(VM* vm, ObjFile* file, bool isPeek);
 ObjPromise* fileReadAsync(VM* vm, ObjFile* file, uv_fs_cb callback);
 void fileWrite(VM* vm, ObjFile* file, char c);
+ObjPromise* fileWriteAsync(VM* vm, ObjFile* file, char c, uv_fs_cb callback);
 ObjFile* getFileArgument(VM* vm, Value arg);
 ObjFile* getFileProperty(VM* vm, ObjInstance* object, char* field);
 bool loadFileOperation(VM* vm, ObjFile* file, const char* streamClass);
