@@ -106,12 +106,11 @@ void fileOnWrite(uv_fs_t* fsWrite) {
     data->vm->frameCount++;
 
     int numWrite = (int)fsWrite->result;
-    if (numWrite > 0) data->file->offset++;
+    if (numWrite > 0) data->file->offset += numWrite;
     promiseFulfill(data->vm, data->promise, NIL_VAL);
 
     pop(data->vm);
     data->vm->frameCount--;
-    free(data->buffer.base);
     free(data);
 }
 
