@@ -2,7 +2,7 @@ FROM opensuse/leap:latest
 
 WORKDIR CLox-1.8.0
 
-RUN zypper install -y git gcc-c++ cmake libcurl-devel
+RUN zypper install -y git gcc-c++ cmake libcurl-devel libuv1.dev
 
 RUN git clone https://github.com/HallofFamer/CLox.git
 
