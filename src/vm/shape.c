@@ -43,7 +43,8 @@ static void createDefaultShapes(VM* vm) {
     int shapeIDException = createShapeFromParent(vm, shapeIDMessage, newString(vm, "stacktrace"));
     defaultShapeIDs[OBJ_EXCEPTION] = shapeIDException;
 
-    int shapeIDFile = createShapeFromParent(vm, shapeIDName, newString(vm, "mode"));
+    int shapeIDMode = createShapeFromParent(vm, shapeIDName, newString(vm, "mode"));
+    int shapeIDFile = createShapeFromParent(vm, shapeIDMode, newString(vm, "isOpen"));
     defaultShapeIDs[OBJ_FILE] = shapeIDFile;
     defaultShapeIDs[OBJ_FRAME] = -1;
     defaultShapeIDs[OBJ_FUNCTION] = -1;

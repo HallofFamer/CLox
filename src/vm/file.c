@@ -9,6 +9,29 @@
 #include "os.h"
 #include "vm.h"
 
+static FileData* fileLoadData(VM* vm, ObjFile* file, ObjPromise* promise) {
+    FileData* data = ALLOCATE_STRUCT(FileData);
+    if (data != NULL) {
+        data->vm = vm;
+        data->file = file;
+        data->promise = promise;
+    }
+    return data;
+}
+
+static void filePopData(FileData* data) {
+    pop(data->vm);
+    data->vm->frameCount--;
+    free(data);
+}
+
+static FileData* filePushData(uv_fs_t* fsRequest) {
+    FileData* data = (FileData*)fsRequest->data;
+    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
+    data->vm->frameCount++;
+    return data;
+}
+
 bool fileClose(VM* vm, ObjFile* file) {
     if (file->isOpen) {
         uv_fs_t fsClose;
@@ -24,24 +47,14 @@ ObjPromise* fileCloseAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
         uv_fs_t* fsClose = ALLOCATE_STRUCT(uv_fs_t);
         ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
         if (fsClose == NULL) return NULL;
-        else { 
-            fsClose->data = fileData(vm, file, promise);
+        else {
+            fsClose->data = fileLoadData(vm, file, promise);
             uv_fs_close(vm->eventLoop, fsClose, (uv_file)file->fsOpen->result, callback);
             uv_fs_req_cleanup(fsClose);
             return promise;
         }
     }
     return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
-}
-
-FileData* fileData(VM* vm, ObjFile* file, ObjPromise* promise) {
-    FileData* data = ALLOCATE_STRUCT(FileData);
-    if (data != NULL) {
-        data->vm = vm;
-        data->file = file;
-        data->promise = promise;
-    }
-    return data;
 }
 
 bool fileExists(VM* vm, ObjFile* file) {
@@ -87,9 +100,7 @@ int fileMode(const char* mode) {
 }
 
 void fileOnClose(uv_fs_t* fsClose) {
-    FileData* data = (FileData*)fsClose->data;
-    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
-    data->vm->frameCount++;
+    FileData* data = filePushData(fsClose);
     data->file->isOpen = false;
     promiseFulfill(data->vm, data->promise, NIL_VAL);
 
@@ -100,9 +111,7 @@ void fileOnClose(uv_fs_t* fsClose) {
 }
 
 void fileOnOpen(uv_fs_t* fsOpen) {
-    FileData* data = (FileData*)fsOpen->data;
-    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
-    data->vm->frameCount++;
+    FileData* data = filePushData(fsOpen);
     data->file->isOpen = true;
 
     ObjClass* streamClass = getNativeClass(data->vm, streamClassName(data->file->mode->chars));
@@ -116,33 +125,49 @@ void fileOnOpen(uv_fs_t* fsOpen) {
 }
 
 void fileOnRead(uv_fs_t* fsRead) {
-    FileData* data = (FileData*)fsRead->data;
-    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
-    data->vm->frameCount++;
-
+    FileData* data = filePushData(fsRead);
     int numRead = (int)fsRead->result;
     if (numRead > 0) data->file->offset++;
+
     char ch[2] = { data->buffer.base[0], '\0' };
     ObjString* character = copyString(data->vm, ch, 1);
     promiseFulfill(data->vm, data->promise, OBJ_VAL(character));
+    filePopData(data);
+}
 
-    pop(data->vm);
-    data->vm->frameCount--;
-    free(data);
+void fileOnReadLine(uv_fs_t* fsRead) {
+    FileData* data = filePushData(fsRead);
+    int numRead = (int)fsRead->result;
+    int numReadLine = 0;
+
+    if (numRead > 0) { 
+        while (numReadLine < numRead) {
+            if (data->buffer.base[numReadLine++] == '\n') break;
+        }
+        data->file->offset += numReadLine;
+    }
+
+    ObjString* string = takeString(data->vm, data->buffer.base, numReadLine);
+    promiseFulfill(data->vm, data->promise, OBJ_VAL(string));
+    filePopData(data);
+}
+
+void fileOnReadToEnd(uv_fs_t* fsRead) {
+    FileData* data = filePushData(fsRead);
+    int numRead = (int)fsRead->result;
+    if (numRead > 0) data->file->offset += numRead;
+    
+    ObjString* string = takeString(data->vm, data->buffer.base, numRead);
+    promiseFulfill(data->vm, data->promise, OBJ_VAL(string));
+    filePopData(data);
 }
 
 void fileOnWrite(uv_fs_t* fsWrite) {
-    FileData* data = (FileData*)fsWrite->data;
-    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
-    data->vm->frameCount++;
-
+    FileData* data = filePushData(fsWrite);
     int numWrite = (int)fsWrite->result;
     if (numWrite > 0) data->file->offset += numWrite;
     promiseFulfill(data->vm, data->promise, NIL_VAL);
-
-    pop(data->vm);
-    data->vm->frameCount--;
-    free(data);
+    filePopData(data);
 }
 
 bool fileOpen(VM* vm, ObjFile* file, const char* mode) {
@@ -165,7 +190,7 @@ ObjPromise* fileOpenAsync(VM* vm, ObjFile* file, const char* mode, uv_fs_cb call
         int openMode = fileMode(mode);
         int openFlags = (strcmp(mode, "w") == 0 || strcmp(mode, "wb") == 0) ? S_IWRITE : 0;
         ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
-        file->fsOpen->data = fileData(vm, file, promise);
+        file->fsOpen->data = fileLoadData(vm, file, promise);
         file->mode = newString(vm, mode);
         uv_fs_open(vm->eventLoop, file->fsOpen, file->name->chars, openMode, openFlags, callback);
         return promise;
@@ -187,11 +212,55 @@ ObjPromise* fileReadAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
     if (file->isOpen && file->fsOpen != NULL && file->fsRead != NULL) {
         ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
         char c = 0;
-        FileData* data = fileData(vm, file, promise);
+        FileData* data = fileLoadData(vm, file, promise);
         data->buffer = uv_buf_init(&c, 1);
         file->fsRead->data = data;
         uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &data->buffer, 1, file->offset, callback);
         return promise;
+    }
+    return NULL;
+}
+
+ObjString* fileReadLine(VM* vm, ObjFile* file) {
+    char chars[UINT8_MAX];
+    uv_buf_t uvBuf = uv_buf_init(chars, UINT8_MAX);
+    int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+    if (numRead == 0) return NULL;
+
+    size_t lineOffset = 0;
+    while (lineOffset < numRead) {
+        if (uvBuf.base[lineOffset++] == '\n') break;
+    }
+
+    char* line = (char*)malloc(lineOffset + 1);
+    if (line != NULL) {
+        memcpy(line, uvBuf.base, lineOffset);
+        line[lineOffset] = '\0';
+        file->offset += lineOffset;
+        return takeString(vm, line, (int)lineOffset);
+    }
+    else return NULL;
+}
+
+ObjString* fileReadString(VM* vm, ObjFile* file, size_t length) {
+    char* chars = (char*)malloc(length * sizeof(char));
+    uv_buf_t uvBuf = uv_buf_init(chars, UINT8_MAX);
+    int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+    if (numRead == 0) return NULL;
+    return takeString(vm, chars, (int)numRead);
+}
+
+ObjPromise* fileReadStringAsync(VM* vm, ObjFile* file, size_t length, uv_fs_cb callback) {
+    if (file->isOpen && file->fsOpen != NULL && file->fsRead != NULL) {
+        ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        FileData* data = fileLoadData(vm, file, promise);
+        char* string = (char*)malloc(length * sizeof(char));
+        if (string != NULL) {
+            data->buffer = uv_buf_init(string, (int)length);
+            file->fsRead->data = data;
+            uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &data->buffer, 1, file->offset, callback);
+            return promise;
+        }
     }
     return NULL;
 }
@@ -206,7 +275,7 @@ void fileWrite(VM* vm, ObjFile* file, char c) {
 ObjPromise* fileWriteAsync(VM* vm, ObjFile* file, ObjString* string, uv_fs_cb callback) {
     if (file->isOpen && file->fsOpen != NULL && file->fsWrite != NULL) {
         ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
-        FileData* data = fileData(vm, file, promise);
+        FileData* data = fileLoadData(vm, file, promise);
         data->buffer = uv_buf_init(string->chars, string->length);
         file->fsWrite->data = data;
         uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &data->buffer, 1, file->offset, callback);

@@ -14,19 +14,22 @@ typedef struct {
 
 bool fileClose(VM* vm, ObjFile* file);
 ObjPromise* fileCloseAsync(VM* vm, ObjFile* file, uv_fs_cb callback);
-FileData* fileData(VM* vm, ObjFile* file, ObjPromise* promise);
 bool fileExists(VM* vm, ObjFile* file);
 bool fileFlush(VM* vm, ObjFile* file);
 int fileMode(const char* mode);
 void fileOnClose(uv_fs_t* fsClose);
 void fileOnOpen(uv_fs_t* fsOpen);
 void fileOnRead(uv_fs_t* fsRead);
+void fileOnReadLine(uv_fs_t* fsRead);
+void fileOnReadToEnd(uv_fs_t* fsRead);
 void fileOnWrite(uv_fs_t* fsWrite);
-char* streamClassName(const char* mode);
 bool fileOpen(VM* vm, ObjFile* file, const char* mode);
 ObjPromise* fileOpenAsync(VM* vm, ObjFile* file, const char* mode, uv_fs_cb callback);
 ObjString* fileRead(VM* vm, ObjFile* file, bool isPeek);
 ObjPromise* fileReadAsync(VM* vm, ObjFile* file, uv_fs_cb callback);
+ObjString* fileReadLine(VM* vm, ObjFile* file);
+ObjString* fileReadString(VM* vm, ObjFile* file, size_t length);
+ObjPromise* fileReadStringAsync(VM* vm, ObjFile* file, size_t length, uv_fs_cb callback);
 void fileWrite(VM* vm, ObjFile* file, char c);
 ObjPromise* fileWriteAsync(VM* vm, ObjFile* file, ObjString* string, uv_fs_cb callback);
 ObjFile* getFileArgument(VM* vm, Value arg);

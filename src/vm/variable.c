@@ -138,6 +138,7 @@ static bool getGenericInstanceVariableByIndex(VM* vm, Obj* object, int index) {
             ObjFile* file = (ObjFile*)object;
             if (index == 0) push(vm, OBJ_VAL(file->name));
             else if (index == 1) push(vm, OBJ_VAL(file->mode));
+            else if (index == 2) push(vm, OBJ_VAL(file->isOpen));
             else getAndPushGenericInstanceVariableByIndex(vm, object, index);
             return true;
         }
@@ -270,6 +271,7 @@ static bool getGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             ObjFile* file = (ObjFile*)object;
             if (matchVariableName(name, "name", 4)) push(vm, OBJ_VAL(file->name));
             else if (matchVariableName(name, "mode", 4)) push(vm, OBJ_VAL(file->mode));
+            else if (matchVariableName(name, "isOpen", 6)) push(vm, BOOL_VAL(file->isOpen));
             else return getAndPushGenericInstanceVariableByName(vm, object, name);
             return true;
         }
@@ -538,6 +540,10 @@ static bool setGenericInstanceVariableByIndex(VM* vm, Obj* object, int index, Va
             ObjFile* file = (ObjFile*)object;
             if (index == 0 && IS_STRING(value)) file->name = AS_STRING(value);
             else if (index == 1 && IS_STRING(value)) file->mode = AS_STRING(value);
+            else if (index == 2) {
+                runtimeError(vm, "Cannot set property isOpen on Object File.");
+                exit(70);
+            }
             else return setAndPushGenericInstanceVariableByIndex(vm, object, index, value);
 
             push(vm, value);
@@ -697,6 +703,10 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
             ObjFile* file = (ObjFile*)object;
             if (matchVariableName(name, "name", 4) && IS_STRING(value)) file->name = AS_STRING(value);
             else if (matchVariableName(name, "mode", 4) && IS_STRING(value)) file->mode = AS_STRING(value);
+            else if (matchVariableName(name, "isOpen", 6)) {
+                runtimeError(vm, "Cannot set property isOpen on Object File.");
+                exit(70);
+            }
             else return setAndPushGenericInstanceVariableByName(vm, object, name, value);
 
             push(vm, value);
@@ -897,7 +907,7 @@ int getOffsetForGenericObject(Obj* object) {
         case OBJ_DICTIONARY: return 1;
         case OBJ_ENTRY: return 2;
         case OBJ_EXCEPTION: return 2;
-        case OBJ_FILE: return 2;
+        case OBJ_FILE: return 3;
         case OBJ_GENERATOR: return 3;
         case OBJ_METHOD: return 3;
         case OBJ_NODE: return 3;

@@ -25,8 +25,8 @@ LOX_METHOD(BinaryReadStream, __init__) {
     RETURN_OBJ(self);
 }
 
-LOX_METHOD(BinaryReadStream, next) {
-    ASSERT_ARG_COUNT("BinaryReadStream::next()", 0);
+LOX_METHOD(BinaryReadStream, read) {
+    ASSERT_ARG_COUNT("BinaryReadStream::read()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
     if (file->fsOpen == NULL || file->fsRead == NULL) RETURN_NIL;
@@ -41,9 +41,9 @@ LOX_METHOD(BinaryReadStream, next) {
     RETURN_NIL;
 }
 
-LOX_METHOD(BinaryReadStream, nextBytes) {
-    ASSERT_ARG_COUNT("BinaryReadStream::nextBytes(length)", 1);
-    ASSERT_ARG_TYPE("BinaryReadStream::nextBytes(length)", 0, Int);
+LOX_METHOD(BinaryReadStream, readBytes) {
+    ASSERT_ARG_COUNT("BinaryReadStream::readBytes(length)", 1);
+    ASSERT_ARG_TYPE("BinaryReadStream::readBytes(length)", 0, Int);
     int length = AS_INT(args[0]);
     if (length < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method BinaryReadStream::nextBytes(length) expects argument 1 to be a positive integer but got %g.", length);
 
@@ -80,11 +80,11 @@ LOX_METHOD(BinaryWriteStream, __init__) {
     RETURN_OBJ(self);
 }
 
-LOX_METHOD(BinaryWriteStream, put) {
-    ASSERT_ARG_COUNT("BinaryWriteStream::put(byte)", 1);
-    ASSERT_ARG_TYPE("BinaryWriteStream::put(byte)", 0, Int);
+LOX_METHOD(BinaryWriteStream, write) {
+    ASSERT_ARG_COUNT("BinaryWriteStream::write(byte)", 1);
+    ASSERT_ARG_TYPE("BinaryWriteStream::write(byte)", 0, Int);
     int arg = AS_INT(args[0]);
-    ASSERT_INDEX_WITHIN_BOUNDS("BinaryWriteStream::put(byte)", arg, 0, 255, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("BinaryWriteStream::write(byte)", arg, 0, 255, 0);
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write byte to stream because file is already closed.");
@@ -98,9 +98,9 @@ LOX_METHOD(BinaryWriteStream, put) {
     RETURN_NIL;
 }
 
-LOX_METHOD(BinaryWriteStream, putBytes) {
-    ASSERT_ARG_COUNT("BinaryWriteStream::put(bytes)", 1);
-    ASSERT_ARG_TYPE("BinaryWriteStream::put(bytes)", 0, Array);
+LOX_METHOD(BinaryWriteStream, writeBytes) {
+    ASSERT_ARG_COUNT("BinaryWriteStream::writeBytes(bytes)", 1);
+    ASSERT_ARG_TYPE("BinaryWriteStream::writeBytes(bytes)", 0, Array);
     ObjArray* bytes = AS_ARRAY(args[0]);
     if (bytes->elements.count == 0) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write empty byte array to stream.");
 
@@ -359,8 +359,20 @@ LOX_METHOD(FileReadStream, __init__) {
     RETURN_OBJ(self);
 }
 
-LOX_METHOD(FileReadStream, next) {
-    ASSERT_ARG_COUNT("FileReadStream::next()", 0);
+LOX_METHOD(FileReadStream, peek) {
+    ASSERT_ARG_COUNT("FileReadStream::peek()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot peek the next char because file is already closed.");
+    if (file->fsOpen == NULL) RETURN_NIL;
+    else {
+        ObjString* ch = fileRead(vm, file, true);
+        if (ch == NULL) RETURN_NIL;
+        RETURN_OBJ(ch);
+    }
+}
+
+LOX_METHOD(FileReadStream, read) {
+    ASSERT_ARG_COUNT("FileReadStream::read()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next char because file is already closed.");
     if (file->fsOpen == NULL) RETURN_NIL;
@@ -371,8 +383,8 @@ LOX_METHOD(FileReadStream, next) {
     }
 }
 
-LOX_METHOD(FileReadStream, nextAsync) {
-    ASSERT_ARG_COUNT("FileReadStream::nextAsync()", 0);
+LOX_METHOD(FileReadStream, readAsync) {
+    ASSERT_ARG_COUNT("FileReadStream::readAsync()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next char because file is already closed.");
     loadFileRead(vm, file);
@@ -385,43 +397,30 @@ LOX_METHOD(FileReadStream, nextAsync) {
     RETURN_NIL;
 }
 
-LOX_METHOD(FileReadStream, nextLine) {
-    ASSERT_ARG_COUNT("FileReadStream::nextLine()", 0);
+LOX_METHOD(FileReadStream, readLine) {
+    ASSERT_ARG_COUNT("FileReadStream::readLine()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next line because file is already closed.");
     if (file->fsOpen == NULL) RETURN_NIL;
     else {
-        char chars[UINT8_MAX];
-        uv_buf_t uvBuf = uv_buf_init(chars, UINT8_MAX);
-        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-        if (numRead == 0) RETURN_NIL;
-
-        size_t lineOffset = 0;
-        while (lineOffset < numRead) {
-            if (uvBuf.base[lineOffset++] == '\n') break;
-        }
-
-        char* line = (char*)malloc(lineOffset + 1);
-        if (line != NULL) {
-            memcpy(line, uvBuf.base, lineOffset);
-            line[lineOffset] = '\0';
-            file->offset += lineOffset;
-            RETURN_STRING(line, (int)lineOffset);
-        }
-        else THROW_EXCEPTION(clox.std.lang.OutOfMemoryException, "Not enough memory to allocate for next line read.");
+        ObjString* line = fileReadLine(vm, file);
+        if (line == NULL) THROW_EXCEPTION(clox.std.lang.OutOfMemoryException, "Not enough memory to allocate for next line read.");
+        RETURN_OBJ(line);
     }
 }
 
-LOX_METHOD(FileReadStream, peek) {
-    ASSERT_ARG_COUNT("FileReadStream::peek()", 0);
+LOX_METHOD(FileReadStream, readLineAsync) {
+    ASSERT_ARG_COUNT("FileReadStream::readLineAsync()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot peek the next char because file is already closed.");
-    if (file->fsOpen == NULL) RETURN_NIL;
-    else {
-        ObjString* ch = fileRead(vm, file, true);
-        if (ch == NULL) RETURN_NIL;
-        RETURN_OBJ(ch);
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next line because file is already closed.");
+    loadFileRead(vm, file);
+
+    if (file->fsOpen != NULL && file->fsRead != NULL) {
+        ObjPromise* promise = fileReadStringAsync(vm, file, UINT8_MAX, fileOnReadLine);
+        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read line from IO stream.");
+        RETURN_OBJ(promise);
     }
+    RETURN_NIL;
 }
 
 LOX_METHOD(FileWriteStream, __init__) {
@@ -436,9 +435,9 @@ LOX_METHOD(FileWriteStream, __init__) {
     RETURN_OBJ(self);
 }
 
-LOX_METHOD(FileWriteStream, put) {
-    ASSERT_ARG_COUNT("FileWriteStream::put(char)", 1);
-    ASSERT_ARG_TYPE("FileWriteStream::put(char)", 0, String);
+LOX_METHOD(FileWriteStream, write) {
+    ASSERT_ARG_COUNT("FileWriteStream::write(char)", 1);
+    ASSERT_ARG_TYPE("FileWriteStream::write(char)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write character to stream because file is already closed.");
     if (file->fsOpen != NULL && file->fsWrite != NULL) {
@@ -449,9 +448,9 @@ LOX_METHOD(FileWriteStream, put) {
     RETURN_NIL;
 }
 
-LOX_METHOD(FileWriteStream, putAsync) {
-    ASSERT_ARG_COUNT("FileWriteStream::putAsync(char)", 1);
-    ASSERT_ARG_TYPE("FileWriteStream::putAsync(char)", 0, String);
+LOX_METHOD(FileWriteStream, writeAsync) {
+    ASSERT_ARG_COUNT("FileWriteStream::writeAsync(char)", 1);
+    ASSERT_ARG_TYPE("FileWriteStream::writeAsync(char)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write character to stream because file is already closed.");
     loadFileWrite(vm, file);
@@ -465,16 +464,16 @@ LOX_METHOD(FileWriteStream, putAsync) {
     RETURN_NIL;
 }
 
-LOX_METHOD(FileWriteStream, putLine) {
-    ASSERT_ARG_COUNT("FileWriteStream::putLine()", 0);
+LOX_METHOD(FileWriteStream, writeLine) {
+    ASSERT_ARG_COUNT("FileWriteStream::writeLine()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write new line to stream because file is already closed.");
     if (file->fsOpen != NULL && file->fsWrite != NULL) fileWrite(vm, file, '\n');
     RETURN_NIL;
 }
 
-LOX_METHOD(FileWriteStream, putLineAsync) {
-    ASSERT_ARG_COUNT("FileWriteStream::putLineAsync(char)", 0);
+LOX_METHOD(FileWriteStream, writeLineAsync) {
+    ASSERT_ARG_COUNT("FileWriteStream::writeLineAsync(char)", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write line to stream because file is already closed.");
     loadFileWrite(vm, file);
@@ -486,16 +485,16 @@ LOX_METHOD(FileWriteStream, putLineAsync) {
     RETURN_NIL;
 }
 
-LOX_METHOD(FileWriteStream, putSpace) {
-    ASSERT_ARG_COUNT("FileWriteStream::putSpace()", 0);
+LOX_METHOD(FileWriteStream, writeSpace) {
+    ASSERT_ARG_COUNT("FileWriteStream::writeSpace()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write empty space to stream because file is already closed.");
     if (file->fsOpen != NULL && file->fsWrite != NULL) fileWrite(vm, file, ' ');
     RETURN_NIL;
 }
 
-LOX_METHOD(FileWriteStream, putSpaceAsync) {
-    ASSERT_ARG_COUNT("FileWriteStream::putSpaceAsync(char)", 0);
+LOX_METHOD(FileWriteStream, writeSpaceAsync) {
+    ASSERT_ARG_COUNT("FileWriteStream::writeSpaceAsync(char)", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write space to stream because file is already closed.");
     loadFileWrite(vm, file);
@@ -507,9 +506,9 @@ LOX_METHOD(FileWriteStream, putSpaceAsync) {
     RETURN_NIL;
 }
 
-LOX_METHOD(FileWriteStream, putString) {
-    ASSERT_ARG_COUNT("FileWriteStream::putString(string)", 1);
-    ASSERT_ARG_TYPE("FileWriteStream::putString(string)", 0, String);
+LOX_METHOD(FileWriteStream, writeString) {
+    ASSERT_ARG_COUNT("FileWriteStream::writeString(string)", 1);
+    ASSERT_ARG_TYPE("FileWriteStream::writeString(string)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write string to stream because file is already closed.");
     if (file->fsOpen != NULL && file->fsWrite != NULL) {
@@ -522,9 +521,9 @@ LOX_METHOD(FileWriteStream, putString) {
     RETURN_NIL;
 }
 
-LOX_METHOD(FileWriteStream, putStringAsync) {
-    ASSERT_ARG_COUNT("FileWriteStream::putStringAsync(char)", 1);
-    ASSERT_ARG_TYPE("FileWriteStream::putStringAsync(char)", 0, String);
+LOX_METHOD(FileWriteStream, writeStringAsync) {
+    ASSERT_ARG_COUNT("FileWriteStream::writeStringAsync(char)", 1);
+    ASSERT_ARG_TYPE("FileWriteStream::writeStringAsync(char)", 0, String);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write string to stream because file is already closed.");
     loadFileWrite(vm, file);
@@ -584,7 +583,7 @@ LOX_METHOD(ReadStream, __init__) {
 }
 
 LOX_METHOD(ReadStream, isAtEnd) {
-    ASSERT_ARG_COUNT("ReadStream::next()", 0);
+    ASSERT_ARG_COUNT("ReadStream::isAtEnd()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) RETURN_FALSE;
     else {
@@ -595,7 +594,7 @@ LOX_METHOD(ReadStream, isAtEnd) {
     }
 }
 
-LOX_METHOD(ReadStream, next) {
+LOX_METHOD(ReadStream, read) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
@@ -627,7 +626,7 @@ LOX_METHOD(WriteStream, flush) {
     RETURN_BOOL(fileFlush(vm, file));
 }
 
-LOX_METHOD(WriteStream, put) {
+LOX_METHOD(WriteStream, write) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
@@ -681,46 +680,47 @@ void registerIOPackage(VM* vm) {
     bindSuperclass(vm, readStreamClass, ioStreamClass);
     DEF_INTERCEPTOR(readStreamClass, ReadStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(readStreamClass, ReadStream, isAtEnd, 0);
-    DEF_METHOD(readStreamClass, ReadStream, next, 0);
+    DEF_METHOD(readStreamClass, ReadStream, read, 0);
     DEF_METHOD(readStreamClass, ReadStream, skip, 1);
 
     ObjClass* writeStreamClass = defineNativeClass(vm, "WriteStream");
     bindSuperclass(vm, writeStreamClass, ioStreamClass);
     DEF_INTERCEPTOR(writeStreamClass, WriteStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(writeStreamClass, WriteStream, flush, 0);
-    DEF_METHOD(writeStreamClass, WriteStream, put, 1);
+    DEF_METHOD(writeStreamClass, WriteStream, write, 1);
 
     ObjClass* binaryReadStreamClass = defineNativeClass(vm, "BinaryReadStream");
     bindSuperclass(vm, binaryReadStreamClass, readStreamClass);
     DEF_INTERCEPTOR(binaryReadStreamClass, BinaryReadStream, INTERCEPTOR_INIT, __init__, 1);
-    DEF_METHOD(binaryReadStreamClass, BinaryReadStream, next, 0);
-    DEF_METHOD(binaryReadStreamClass, BinaryReadStream, nextBytes, 1);
+    DEF_METHOD(binaryReadStreamClass, BinaryReadStream, read, 0);
+    DEF_METHOD(binaryReadStreamClass, BinaryReadStream, readBytes, 1);
 
     ObjClass* binaryWriteStreamClass = defineNativeClass(vm, "BinaryWriteStream");
     bindSuperclass(vm, binaryWriteStreamClass, writeStreamClass);
     DEF_INTERCEPTOR(binaryWriteStreamClass, BinaryWriteStream, INTERCEPTOR_INIT, __init__, 1);
-    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, put, 1);
-    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, putBytes, 1);
+    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, write, 1);
+    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeBytes, 1);
 
     ObjClass* fileReadStreamClass = defineNativeClass(vm, "FileReadStream");
     bindSuperclass(vm, fileReadStreamClass, readStreamClass);
     DEF_INTERCEPTOR(fileReadStreamClass, FileReadStream, INTERCEPTOR_INIT, __init__, 1);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, next, 0);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, nextAsync, 0);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, nextLine, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, peek, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, read, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, readAsync, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, readLine, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, readLineAsync, 0);
 
     ObjClass* fileWriteStreamClass = defineNativeClass(vm, "FileWriteStream");
     bindSuperclass(vm, fileWriteStreamClass, writeStreamClass);
     DEF_INTERCEPTOR(fileWriteStreamClass, FileWriteStream, INTERCEPTOR_INIT, __init__, 1);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, put, 1);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putAsync, 1);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putLine, 0);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putLineAsync, 0);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putSpace, 0);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putSpaceAsync, 0);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putString, 1);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, putStringAsync, 1);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, write, 1);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeAsync, 1);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeLine, 0);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeLineAsync, 0);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeSpace, 0);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeSpaceAsync, 0);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeString, 1);
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeStringAsync, 1);
 
     ObjClass* ioExceptionClass = defineNativeException(vm, "IOException", vm->exceptionClass);
     defineNativeException(vm, "EOFException", ioExceptionClass);
