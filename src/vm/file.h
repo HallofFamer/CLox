@@ -5,10 +5,24 @@
 #include "common.h"
 #include "loop.h"
 
+typedef struct {
+    VM* vm;
+    ObjFile* file;
+    ObjPromise* promise;
+    uv_buf_t buffer;
+} FileData;
+
 bool fileClose(VM* vm, ObjFile* file);
 ObjPromise* fileCloseAsync(VM* vm, ObjFile* file, uv_fs_cb callback);
+FileData* fileData(VM* vm, ObjFile* file, ObjPromise* promise);
 bool fileExists(VM* vm, ObjFile* file);
 bool fileFlush(VM* vm, ObjFile* file);
+int fileMode(const char* mode);
+void fileOnClose(uv_fs_t* fsClose);
+void fileOnOpen(uv_fs_t* fsOpen);
+void fileOnRead(uv_fs_t* fsRead);
+void fileOnWrite(uv_fs_t* fsWrite);
+char* streamClassName(const char* mode);
 bool fileOpen(VM* vm, ObjFile* file, const char* mode);
 ObjPromise* fileOpenAsync(VM* vm, ObjFile* file, const char* mode, uv_fs_cb callback);
 ObjString* fileRead(VM* vm, ObjFile* file, bool isPeek);
@@ -22,5 +36,6 @@ bool loadFileRead(VM* vm, ObjFile* file);
 bool loadFileStat(VM* vm, ObjFile* file);
 bool loadFileWrite(VM* vm, ObjFile* file);
 bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, const char* mode);
+char* streamClassName(const char* mode);
 
 #endif // !clox_file_h

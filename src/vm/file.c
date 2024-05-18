@@ -34,6 +34,16 @@ ObjPromise* fileCloseAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
     return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
 }
 
+FileData* fileData(VM* vm, ObjFile* file, ObjPromise* promise) {
+    FileData* data = ALLOCATE_STRUCT(FileData);
+    if (data != NULL) {
+        data->vm = vm;
+        data->file = file;
+        data->promise = promise;
+    }
+    return data;
+}
+
 bool fileExists(VM* vm, ObjFile* file) {
     uv_fs_t fsAccess;
     bool exists = (uv_fs_access(vm->eventLoop, &fsAccess, file->name->chars, F_OK, NULL) == 0);
@@ -49,6 +59,90 @@ bool fileFlush(VM* vm, ObjFile* file) {
         return (flushed == 0);
     }
     return false;
+}
+
+int fileMode(const char* mode) {
+    size_t length = strlen(mode);
+    switch (length) {
+        case 1:
+            if (mode[0] == 'r') return O_RDONLY;
+            else if (mode[0] == 'w') return O_WRONLY | O_CREAT | O_TRUNC;
+            else if (mode[0] == 'a') return O_WRONLY | O_CREAT | O_APPEND;
+            else return -1;
+        case 2:
+            if (mode[0] == 'r' && mode[1] == 'b') return O_RDONLY | O_BINARY;
+            else if (mode[0] == 'w' && mode[1] == 'b') return O_WRONLY | O_TRUNC | O_CREAT | O_BINARY;
+            else if (mode[0] == 'a' && mode[1] == 'b') return O_WRONLY | O_APPEND | O_CREAT | O_BINARY;
+            else if (mode[0] == 'r' && mode[1] == '+') return O_RDWR;
+            else if (mode[0] == 'w' && mode[1] == '+') return O_RDWR | O_CREAT | O_TRUNC;
+            else if (mode[0] == 'w' && mode[1] == '+') return O_RDWR | O_CREAT | O_APPEND;
+            else return -1;
+        case 3:
+            if (mode[0] == 'r' && mode[1] == 'b' && mode[2] == '+') return O_RDWR | O_BINARY;
+            else if (mode[0] == 'w' && mode[1] == 'b' && mode[2] == '+') return O_RDWR | O_TRUNC | O_BINARY;
+            else if (mode[0] == 'a' && mode[1] == 'b' && mode[2] == '+') return O_RDWR | O_APPEND | O_BINARY;
+            else return -1;
+        default: return -1;
+    }
+}
+
+void fileOnClose(uv_fs_t* fsClose) {
+    FileData* data = (FileData*)fsClose->data;
+    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
+    data->vm->frameCount++;
+    data->file->isOpen = false;
+    promiseFulfill(data->vm, data->promise, NIL_VAL);
+
+    pop(data->vm);
+    uv_fs_req_cleanup(fsClose);
+    free(data);
+    free(fsClose);
+}
+
+void fileOnOpen(uv_fs_t* fsOpen) {
+    FileData* data = (FileData*)fsOpen->data;
+    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
+    data->vm->frameCount++;
+    data->file->isOpen = true;
+
+    ObjClass* streamClass = getNativeClass(data->vm, streamClassName(data->file->mode->chars));
+    ObjInstance* stream = newInstance(data->vm, streamClass);
+    setObjProperty(data->vm, stream, "file", OBJ_VAL(data->file));
+    promiseFulfill(data->vm, data->promise, OBJ_VAL(stream));
+
+    pop(data->vm);
+    data->vm->frameCount--;
+    free(data);
+}
+
+void fileOnRead(uv_fs_t* fsRead) {
+    FileData* data = (FileData*)fsRead->data;
+    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
+    data->vm->frameCount++;
+
+    int numRead = (int)fsRead->result;
+    if (numRead > 0) data->file->offset++;
+    char ch[2] = { data->buffer.base[0], '\0' };
+    ObjString* character = copyString(data->vm, ch, 1);
+    promiseFulfill(data->vm, data->promise, OBJ_VAL(character));
+
+    pop(data->vm);
+    data->vm->frameCount--;
+    free(data);
+}
+
+void fileOnWrite(uv_fs_t* fsWrite) {
+    FileData* data = (FileData*)fsWrite->data;
+    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
+    data->vm->frameCount++;
+
+    int numWrite = (int)fsWrite->result;
+    if (numWrite > 0) data->file->offset += numWrite;
+    promiseFulfill(data->vm, data->promise, NIL_VAL);
+
+    pop(data->vm);
+    data->vm->frameCount--;
+    free(data);
 }
 
 bool fileOpen(VM* vm, ObjFile* file, const char* mode) {
@@ -163,4 +257,25 @@ bool setFileProperty(VM* vm, ObjInstance* object, ObjFile* file, const char* mod
     if(!fileOpen(vm, file, mode)) return false;
     setObjProperty(vm, object, "file", OBJ_VAL(file));
     return true;
+}
+
+char* streamClassName(const char* mode) {
+    size_t length = strlen(mode);
+    switch (length) {
+        case 1:
+            if (mode[0] == 'r') return "clox.std.io.FileReadStream";
+            else if (mode[0] == 'w' || mode[0] == 'a') return "clox.std.io.FileWriteStream";
+            else return NULL;
+        case 2:
+            if (mode[0] == 'r' && mode[1] == 'b') return "clox.std.io.BinaryReadStream";
+            else if ((mode[0] == 'w' || mode[1] == 'a') && mode[1] == 'b') return "clox.std.io.BinaryWriteStream";
+            else if (mode[0] == 'r' && mode[1] == '+') return "clox.std.io.FileReadStream";
+            else if ((mode[0] == 'w' || mode[1] == 'a') && mode[1] == '+') return "clox.std.io.FileWriteStream";
+            else return NULL;
+        case 3:
+            if (mode[0] == 'r' && mode[1] == 'b' && mode[2] == '+') return "clox.std.io.BinaryReadStream";
+            else if ((mode[0] == 'w' || mode[0] == 'a') && mode[1] == 'b' && mode[2] == '+') return "clox.std.io.BinaryWriteStream";
+            else return NULL;
+        default: return NULL;
+    }
 }
