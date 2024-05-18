@@ -635,9 +635,7 @@ LOX_METHOD(IPAddress, __init__) {
 
     if (ipIsV4(address)) version = 4;
     else if (ipIsV6(address)) version = 6;
-    else {
-        THROW_EXCEPTION(clox.std.network.IPAddressException, "Invalid IP address specified.");
-    }
+    else THROW_EXCEPTION(clox.std.network.IPAddressException, "Invalid IP address specified.");
 
     setObjProperty(vm, self, "address", args[0]);
     setObjProperty(vm, self, "version", INT_VAL(version));
@@ -651,9 +649,7 @@ LOX_METHOD(IPAddress, domain) {
 
     int status = -1;
     ObjString* domain = dnsGetDomainFromIPAddress(vm, address->chars, &status);
-    if (status) {
-        THROW_EXCEPTION(clox.std.network.DomainHostException, "Failed to get domain information for IP Address.");
-    }
+    if (status) THROW_EXCEPTION(clox.std.network.DomainHostException, "Failed to get domain information for IP Address.");
     RETURN_OBJ(domain);
 }
 
@@ -695,11 +691,9 @@ LOX_METHOD(Socket, __init__) {
     ASSERT_ARG_TYPE("Socket::__init__(addressFamily, socketType, protocolType)", 2, Int);
 
     SOCKET descriptor = socket(AS_INT(args[0]), AS_INT(args[1]), AS_INT(args[2]));
-    if (descriptor == INVALID_SOCKET) {
-        THROW_EXCEPTION(clox.std.network.SocketException, "Socket creation failed...");
-    }
-
+    if (descriptor == INVALID_SOCKET) THROW_EXCEPTION(clox.std.network.SocketException, "Socket creation failed...");
     ObjInstance* self = AS_INSTANCE(receiver);
+
     setObjProperty(vm, self, "addressFamily", args[0]);
     setObjProperty(vm, self, "socketType", args[1]);
     setObjProperty(vm, self, "protocolType", args[2]);
@@ -906,6 +900,7 @@ LOX_METHOD(URL, pathArray) {
             ObjString* subPath = newString(vm, paths[i]);
             valueArrayWrite(vm, &pathArray->elements, OBJ_VAL(subPath));
         }
+
         pop(vm);
         RETURN_OBJ(pathArray);
     }
@@ -919,12 +914,10 @@ LOX_METHOD(URL, queryDict) {
     else {
         struct yuarel_param params[UINT4_MAX];
         int length = yuarel_parse_query(query->chars, '&', params, UINT4_MAX);
-        if (length == -1) {
-            THROW_EXCEPTION(clox.std.network.URLException, "Failed to parse query parameters from URL.");
-        }
-
+        if (length == -1) THROW_EXCEPTION(clox.std.network.URLException, "Failed to parse query parameters from URL.");
         ObjDictionary* queryDict = newDictionary(vm);
         push(vm, OBJ_VAL(queryDict));
+
         for (int i = 0; i < length; i++) {
             ObjString* key = newString(vm, params[i].key);
             ObjString* value = newString(vm, params[i].val);
@@ -941,10 +934,10 @@ LOX_METHOD(URL, relativize) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* url = AS_INSTANCE(args[0]);
     if (urlIsAbsolute(vm, self) || urlIsAbsolute(vm, url)) RETURN_OBJ(url);
-
     ObjString* urlString = AS_STRING(getObjProperty(vm, self, "raw"));
     ObjString* urlString2 = urlToString(vm, url);
     int index = searchString(vm, urlString, urlString2, 0);
+
     if (index == 0) {
         ObjInstance* relativized = newInstance(vm, self->obj.klass);
         ObjString* relativizedURL = subString(vm, urlString, urlString2->length, urlString->length); 

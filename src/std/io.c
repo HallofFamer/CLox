@@ -423,6 +423,32 @@ LOX_METHOD(FileReadStream, readLineAsync) {
     RETURN_NIL;
 }
 
+LOX_METHOD(FileReadStream, readToEnd) {
+    ASSERT_ARG_COUNT("FileReadStream::readToEnd()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read to the end of file because file is already closed.");
+    if (file->fsOpen == NULL || !loadFileStat(vm, file)) RETURN_NIL;
+    else {
+        ObjString* string = fileReadString(vm, file, file->fsStat->statbuf.st_size);
+        if (string == NULL) THROW_EXCEPTION(clox.std.lang.OutOfMemoryException, "Not enough memory to allocate to read to end end of file.");
+        RETURN_OBJ(string);
+    }
+}
+
+LOX_METHOD(FileReadStream, readToEndAsync) {
+    ASSERT_ARG_COUNT("FileReadStream::readToEndAsync()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read to the end of file because file is already closed.");
+    loadFileRead(vm, file);
+
+    if (file->fsOpen != NULL && file->fsRead != NULL && loadFileStat(vm, file)) {
+        ObjPromise* promise = fileReadStringAsync(vm, file, file->fsStat->statbuf.st_size, fileOnReadToEnd);
+        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read to the end of file from IO stream.");
+        RETURN_OBJ(promise);
+    }
+    RETURN_NIL;
+}
+
 LOX_METHOD(FileWriteStream, __init__) {
     ASSERT_ARG_COUNT("FileWriteStream::__init__(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -709,6 +735,8 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(fileReadStreamClass, FileReadStream, readAsync, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, readLine, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, readLineAsync, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, readToEnd, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, readToEndAsync, 0);
 
     ObjClass* fileWriteStreamClass = defineNativeClass(vm, "FileWriteStream");
     bindSuperclass(vm, fileWriteStreamClass, writeStreamClass);

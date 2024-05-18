@@ -746,7 +746,7 @@ LOX_METHOD(Regex, toString) {
 
 LOX_METHOD(Timer, __init__) {
     ASSERT_ARG_COUNT("Timer::__init__(closure, delay, interval)", 3);
-    ASSERT_ARG_TYPE("Timer::__init__(closure, delay, interval)", 0, Closure);
+    ASSERT_ARG_INSTANCE_OF("Timer::__init__(closure, delay, interval)", 0, clox.std.lang.TCallable);
     ASSERT_ARG_TYPE("Timer::__init__(closure, delay, interval)", 1, Int);
     ASSERT_ARG_TYPE("Timer::__init__(closure, delay, interval)", 2, Int);
     ObjTimer* self = AS_TIMER(receiver);
@@ -794,7 +794,7 @@ LOX_METHOD(Timer, toString) {
 
 LOX_METHOD(TimerClass, interval) {
     ASSERT_ARG_COUNT("Timer class::interval(closure, interval)", 2);
-    ASSERT_ARG_TYPE("Timer class::interval(closure, interval)", 0, Closure);
+    ASSERT_ARG_INSTANCE_OF("Timer class::interval(closure, interval)", 0, clox.std.lang.TCallable);
     ASSERT_ARG_TYPE("Timer class::interval(closure, interval)", 1, Int);
 
     ObjClass* self = AS_CLASS(receiver);
@@ -810,7 +810,7 @@ LOX_METHOD(TimerClass, interval) {
 
 LOX_METHOD(TimerClass, timeout) {
     ASSERT_ARG_COUNT("Timer class::timeout(closure, delay)", 2);
-    ASSERT_ARG_TYPE("Timer class::timeout(closure, delay)", 0, Closure);
+    ASSERT_ARG_INSTANCE_OF("Timer class::timeout(closure, delay)", 0, clox.std.lang.TCallable);
     ASSERT_ARG_TYPE("Timer class::timeout(closure, delay)", 1, Int);
 
     ObjClass* self = AS_CLASS(receiver);
