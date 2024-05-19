@@ -427,7 +427,9 @@ LOX_METHOD(FileReadStream, readToEnd) {
     ASSERT_ARG_COUNT("FileReadStream::readToEnd()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read to the end of file because file is already closed.");
-    if (file->fsOpen == NULL || !loadFileStat(vm, file)) RETURN_NIL;
+    loadFileStat(vm, file);
+    
+    if (file->fsOpen == NULL) RETURN_NIL;
     else {
         ObjString* string = fileReadString(vm, file, file->fsStat->statbuf.st_size);
         if (string == NULL) THROW_EXCEPTION(clox.std.lang.OutOfMemoryException, "Not enough memory to allocate to read to end end of file.");
@@ -439,9 +441,10 @@ LOX_METHOD(FileReadStream, readToEndAsync) {
     ASSERT_ARG_COUNT("FileReadStream::readToEndAsync()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read to the end of file because file is already closed.");
+    loadFileStat(vm, file);
     loadFileRead(vm, file);
 
-    if (file->fsOpen != NULL && file->fsRead != NULL && loadFileStat(vm, file)) {
+    if (file->fsOpen != NULL && file->fsRead != NULL) {
         ObjPromise* promise = fileReadStringAsync(vm, file, file->fsStat->statbuf.st_size, fileOnReadToEnd);
         if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read to the end of file from IO stream.");
         RETURN_OBJ(promise);
