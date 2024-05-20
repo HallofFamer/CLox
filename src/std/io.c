@@ -45,7 +45,7 @@ LOX_METHOD(BinaryReadStream, readBytes) {
     ASSERT_ARG_COUNT("BinaryReadStream::readBytes(length)", 1);
     ASSERT_ARG_TYPE("BinaryReadStream::readBytes(length)", 0, Int);
     int length = AS_INT(args[0]);
-    if (length < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method BinaryReadStream::nextBytes(length) expects argument 1 to be a positive integer but got %g.", length);
+    if (length < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "Method BinaryReadStream::readBytes(length) expects argument 1 to be a positive integer but got %g.", length);
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
@@ -423,6 +423,38 @@ LOX_METHOD(FileReadStream, readLineAsync) {
     RETURN_NIL;
 }
 
+LOX_METHOD(FileReadStream, readString) {
+    ASSERT_ARG_COUNT("FileReadStream::readString(length)", 1);
+    ASSERT_ARG_TYPE("FileReadStream::readString(length)", 0, Int);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    int length = AS_INT(args[0]);
+    if (length < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "Method FileReadStream::readString(length) expects argument 1 to be a positive integer but got %g.", length);
+
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next line because file is already closed.");
+    if (file->fsOpen == NULL) RETURN_NIL;
+    else {
+        ObjString* string = fileReadString(vm, file, length);
+        if (string == NULL) THROW_EXCEPTION(clox.std.lang.OutOfMemoryException, "Not enough memory to allocate for next line read.");
+        RETURN_OBJ(string);
+    }
+}
+
+LOX_METHOD(FileReadStream, readStringAsync) {
+    ASSERT_ARG_COUNT("FileReadStream::readStringAsync(length)", 1);
+    ASSERT_ARG_TYPE("FileReadStream::readString(length)", 0, Int);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    int length = AS_INT(args[0]);
+    if (length < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "Method FileReadStream::readStringAsync(length) expects argument 1 to be a positive integer but got %g.", length);
+    loadFileRead(vm, file);
+
+    if (file->fsOpen != NULL && file->fsRead != NULL) {
+        ObjPromise* promise = fileReadStringAsync(vm, file, (size_t)length, fileOnReadString);
+        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read line from IO stream.");
+        RETURN_OBJ(promise);
+    }
+    RETURN_NIL;
+}
+
 LOX_METHOD(FileReadStream, readToEnd) {
     ASSERT_ARG_COUNT("FileReadStream::readToEnd()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
@@ -445,7 +477,7 @@ LOX_METHOD(FileReadStream, readToEndAsync) {
     loadFileRead(vm, file);
 
     if (file->fsOpen != NULL && file->fsRead != NULL) {
-        ObjPromise* promise = fileReadStringAsync(vm, file, file->fsStat->statbuf.st_size, fileOnReadToEnd);
+        ObjPromise* promise = fileReadStringAsync(vm, file, file->fsStat->statbuf.st_size, fileOnReadString);
         if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read to the end of file from IO stream.");
         RETURN_OBJ(promise);
     }
@@ -738,6 +770,8 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(fileReadStreamClass, FileReadStream, readAsync, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, readLine, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, readLineAsync, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, readString, 0);
+    DEF_METHOD(fileReadStreamClass, FileReadStream, readStringAsync, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, readToEnd, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, readToEndAsync, 0);
 

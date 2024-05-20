@@ -103,32 +103,25 @@ void fileOnClose(uv_fs_t* fsClose) {
     FileData* data = filePushData(fsClose);
     data->file->isOpen = false;
     promiseFulfill(data->vm, data->promise, NIL_VAL);
-
-    pop(data->vm);
     uv_fs_req_cleanup(fsClose);
-    free(data);
     free(fsClose);
+    filePopData(data);
 }
 
 void fileOnOpen(uv_fs_t* fsOpen) {
     FileData* data = filePushData(fsOpen);
     data->file->isOpen = true;
-
     ObjClass* streamClass = getNativeClass(data->vm, streamClassName(data->file->mode->chars));
     ObjInstance* stream = newInstance(data->vm, streamClass);
     setObjProperty(data->vm, stream, "file", OBJ_VAL(data->file));
     promiseFulfill(data->vm, data->promise, OBJ_VAL(stream));
-
-    pop(data->vm);
-    data->vm->frameCount--;
-    free(data);
+    filePopData(data);
 }
 
 void fileOnRead(uv_fs_t* fsRead) {
     FileData* data = filePushData(fsRead);
     int numRead = (int)fsRead->result;
     if (numRead > 0) data->file->offset++;
-
     char ch[2] = { data->buffer.base[0], '\0' };
     ObjString* character = copyString(data->vm, ch, 1);
     promiseFulfill(data->vm, data->promise, OBJ_VAL(character));
@@ -152,7 +145,7 @@ void fileOnReadLine(uv_fs_t* fsRead) {
     filePopData(data);
 }
 
-void fileOnReadToEnd(uv_fs_t* fsRead) {
+void fileOnReadString(uv_fs_t* fsRead) {
     FileData* data = filePushData(fsRead);
     int numRead = (int)fsRead->result;
     if (numRead > 0) data->file->offset += numRead;

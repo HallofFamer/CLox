@@ -21,7 +21,7 @@ void fileOnClose(uv_fs_t* fsClose);
 void fileOnOpen(uv_fs_t* fsOpen);
 void fileOnRead(uv_fs_t* fsRead);
 void fileOnReadLine(uv_fs_t* fsRead);
-void fileOnReadToEnd(uv_fs_t* fsRead);
+void fileOnReadString(uv_fs_t* fsRead);
 void fileOnWrite(uv_fs_t* fsWrite);
 bool fileOpen(VM* vm, ObjFile* file, const char* mode);
 ObjPromise* fileOpenAsync(VM* vm, ObjFile* file, const char* mode, uv_fs_cb callback);
