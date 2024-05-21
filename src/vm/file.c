@@ -50,7 +50,6 @@ ObjPromise* fileCloseAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
         else {
             fsClose->data = fileLoadData(vm, file, promise);
             uv_fs_close(vm->eventLoop, fsClose, (uv_file)file->fsOpen->result, callback);
-            uv_fs_req_cleanup(fsClose);
             return promise;
         }
     }
@@ -72,6 +71,21 @@ bool fileFlush(VM* vm, ObjFile* file) {
         return (flushed == 0);
     }
     return false;
+}
+
+ObjPromise* fileFlushAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
+    if (file->isOpen && file->fsOpen != NULL && file->fsWrite == NULL) {
+        uv_fs_t* fsSync = ALLOCATE_STRUCT(uv_fs_t);
+        ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        if (fsSync == NULL) return NULL;
+        else {
+            fsSync->data = fileLoadData(vm, file, promise);
+            uv_fs_fsync(vm->eventLoop, fsSync, (uv_file)file->fsOpen->result, callback);
+            uv_fs_req_cleanup(fsSync);
+            return promise;
+        }
+    }
+    return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
 }
 
 int fileMode(const char* mode) {
@@ -105,6 +119,15 @@ void fileOnClose(uv_fs_t* fsClose) {
     promiseFulfill(data->vm, data->promise, NIL_VAL);
     uv_fs_req_cleanup(fsClose);
     free(fsClose);
+    filePopData(data);
+}
+
+void fileOnFlush(uv_fs_t* fsSync) {
+    FileData* data = filePushData(fsSync);
+    data->file->isOpen = false;
+    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsSync->result == 0));
+    uv_fs_req_cleanup(fsSync);
+    free(fsSync);
     filePopData(data);
 }
 

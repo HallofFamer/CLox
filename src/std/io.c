@@ -682,9 +682,19 @@ LOX_METHOD(WriteStream, __init__) {
 LOX_METHOD(WriteStream, flush) {
     ASSERT_ARG_COUNT("WriteStream::flush()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot flush stream because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot flush write stream because file is already closed.");
     if (file->fsOpen == NULL) RETURN_FALSE;
     RETURN_BOOL(fileFlush(vm, file));
+}
+
+LOX_METHOD(WriteStream, flushAsync) {
+    ASSERT_ARG_COUNT("WriteStream::flushAsync()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot flush write stream because file is already closed.");
+    loadFileWrite(vm, file);
+    ObjPromise* promise = fileFlushAsync(vm, file, fileOnFlush);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to flush write stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(WriteStream, write) {
@@ -748,6 +758,7 @@ void registerIOPackage(VM* vm) {
     bindSuperclass(vm, writeStreamClass, ioStreamClass);
     DEF_INTERCEPTOR(writeStreamClass, WriteStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(writeStreamClass, WriteStream, flush, 0);
+    DEF_METHOD(writeStreamClass, WriteStream, flushAsync, 0);
     DEF_METHOD(writeStreamClass, WriteStream, write, 1);
 
     ObjClass* binaryReadStreamClass = defineNativeClass(vm, "BinaryReadStream");
