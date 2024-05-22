@@ -22,6 +22,8 @@ void fileOnClose(uv_fs_t* fsClose);
 void fileOnFlush(uv_fs_t* fsSync);
 void fileOnOpen(uv_fs_t* fsOpen);
 void fileOnRead(uv_fs_t* fsRead);
+void fileOnReadByte(uv_fs_t* fsRead);
+void fileOnReadBytes(uv_fs_t* fsRead);
 void fileOnReadLine(uv_fs_t* fsRead);
 void fileOnReadString(uv_fs_t* fsRead);
 void fileOnWrite(uv_fs_t* fsWrite);

@@ -145,9 +145,35 @@ void fileOnRead(uv_fs_t* fsRead) {
     FileData* data = filePushData(fsRead);
     int numRead = (int)fsRead->result;
     if (numRead > 0) data->file->offset++;
-    char ch[2] = { data->buffer.base[0], '\0' };
-    ObjString* character = copyString(data->vm, ch, 1);
+    ObjString* character = takeString(data->vm, data->buffer.base, 1);
     promiseFulfill(data->vm, data->promise, OBJ_VAL(character));
+    filePopData(data);
+}
+
+void fileOnReadByte(uv_fs_t* fsRead) {
+    FileData* data = filePushData(fsRead);
+    int numRead = (int)fsRead->result;
+    if (numRead > 0) data->file->offset++;
+    uint8_t byte = (uint8_t)data->buffer.base[0];
+    promiseFulfill(data->vm, data->promise, INT_VAL(byte));
+    free(data->buffer.base);
+    filePopData(data);
+}
+
+void fileOnReadBytes(uv_fs_t* fsRead) {
+    FileData* data = filePushData(fsRead);
+    int numRead = (int)fsRead->result;
+    if (numRead > 0) data->file->offset += numRead;
+
+    ObjArray* bytes = newArray(data->vm);
+    push(data->vm, OBJ_VAL(bytes));
+    for (int i = 0; i < numRead; i++) {
+        uint8_t byte = (uint8_t)data->buffer.base[i];
+        valueArrayWrite(data->vm, &bytes->elements, INT_VAL(byte));
+    }
+
+    pop(data->vm);
+    promiseFulfill(data->vm, data->promise, OBJ_VAL(bytes));
     filePopData(data);
 }
 
@@ -227,9 +253,9 @@ ObjString* fileRead(VM* vm, ObjFile* file, bool isPeek) {
 ObjPromise* fileReadAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
     if (file->isOpen && file->fsOpen != NULL && file->fsRead != NULL) {
         ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
-        char c = 0;
+        char* c = ALLOCATE_STRUCT(char);
         FileData* data = fileLoadData(vm, file, promise);
-        data->buffer = uv_buf_init(&c, 1);
+        data->buffer = uv_buf_init(c, 1);
         file->fsRead->data = data;
         uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &data->buffer, 1, file->offset, callback);
         return promise;

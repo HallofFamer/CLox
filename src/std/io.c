@@ -31,14 +31,25 @@ LOX_METHOD(BinaryReadStream, read) {
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
     if (file->fsOpen == NULL || file->fsRead == NULL) RETURN_NIL;
     else {
-        unsigned char ub;
-        uv_buf_t uvBuf = uv_buf_init(&ub, 1);
+        uint8_t byte;
+        uv_buf_t uvBuf = uv_buf_init(&byte, 1);
         int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         if (numRead == 0) RETURN_NIL;
-        file->offset += 1;
-        RETURN_INT((int)ub);
+        file->offset++;
+        RETURN_INT(byte);
     }
     RETURN_NIL;
+}
+
+LOX_METHOD(BinaryReadStream, readAsync) {
+    ASSERT_ARG_COUNT("BinaryReadStream::readAsync()", 0);
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
+    loadFileRead(vm, file);
+
+    ObjPromise* promise = fileReadAsync(vm, file, fileOnReadByte);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read byte from IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(BinaryReadStream, readBytes) {
@@ -48,24 +59,39 @@ LOX_METHOD(BinaryReadStream, readBytes) {
     if (length < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "Method BinaryReadStream::readBytes(length) expects argument 1 to be a positive integer but got %g.", length);
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
-    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next bytes because file is already closed.");
     if (file->fsOpen == NULL || file->fsRead == NULL) RETURN_NIL;
     else {
         ObjArray* bytes = newArray(vm);
         push(vm, OBJ_VAL(bytes));
-        unsigned char* buffer = (unsigned char*)malloc(length);
+        uint8_t* buffer = (uint8_t*)malloc(length);
         uv_buf_t uvBuf = uv_buf_init(buffer, length);
         int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
 
         for (int i = 0; i < numRead; i++, file->offset++) {
-            unsigned char byte = (unsigned char)uvBuf.base[i];
-            valueArrayWrite(vm, &bytes->elements, INT_VAL((int)byte));
+            uint8_t byte = (uint8_t)uvBuf.base[i];
+            valueArrayWrite(vm, &bytes->elements, INT_VAL(byte));
         }
 
         free(buffer);
         pop(vm);
         RETURN_OBJ(bytes);
     }
+}
+
+LOX_METHOD(BinaryReadStream, readBytesAsync) {
+    ASSERT_ARG_COUNT("BinaryReadStream::readBytesAsync(length)", 1);
+    ASSERT_ARG_TYPE("BinaryReadStream::readBytesAsync(length)", 0, Int);
+    int length = AS_INT(args[0]);
+    if (length < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "Method BinaryReadStream::readBytesAsync(length) expects argument 1 to be a positive integer but got %g.", length);
+
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next bytes because file is already closed.");
+    loadFileRead(vm, file);
+
+    ObjPromise* promise = fileReadStringAsync(vm, file, (size_t)length, fileOnReadBytes);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read byte from IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(BinaryWriteStream, __init__) {
@@ -765,7 +791,9 @@ void registerIOPackage(VM* vm) {
     bindSuperclass(vm, binaryReadStreamClass, readStreamClass);
     DEF_INTERCEPTOR(binaryReadStreamClass, BinaryReadStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(binaryReadStreamClass, BinaryReadStream, read, 0);
+    DEF_METHOD(binaryReadStreamClass, BinaryReadStream, readAsync, 0);
     DEF_METHOD(binaryReadStreamClass, BinaryReadStream, readBytes, 1);
+    DEF_METHOD(binaryReadStreamClass, BinaryReadStream, readBytesAsync, 1);
 
     ObjClass* binaryWriteStreamClass = defineNativeClass(vm, "BinaryWriteStream");
     bindSuperclass(vm, binaryWriteStreamClass, writeStreamClass);
