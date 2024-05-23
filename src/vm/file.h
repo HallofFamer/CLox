@@ -36,6 +36,8 @@ ObjString* fileReadString(VM* vm, ObjFile* file, size_t length);
 ObjPromise* fileReadStringAsync(VM* vm, ObjFile* file, size_t length, uv_fs_cb callback);
 void fileWrite(VM* vm, ObjFile* file, char c);
 ObjPromise* fileWriteAsync(VM* vm, ObjFile* file, ObjString* string, uv_fs_cb callback);
+ObjPromise* fileWriteByteAsync(VM* vm, ObjFile* file, uint8_t byte, uv_fs_cb callback);
+ObjPromise* fileWriteBytesAsync(VM* vm, ObjFile* file, ObjArray* bytes, uv_fs_cb callback);
 ObjFile* getFileArgument(VM* vm, Value arg);
 ObjFile* getFileProperty(VM* vm, ObjInstance* object, char* field);
 bool loadFileOperation(VM* vm, ObjFile* file, const char* streamClass);

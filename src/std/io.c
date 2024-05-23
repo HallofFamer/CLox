@@ -115,11 +115,30 @@ LOX_METHOD(BinaryWriteStream, write) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write byte to stream because file is already closed.");
     if (file->fsOpen != NULL && file->fsWrite != NULL) {
-        unsigned char byte = (unsigned char)arg;
+        char byte = (char)arg;
         uv_buf_t uvBuf = uv_buf_init(&byte, 1);
         uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
         if (numWrite > 0) file->offset += 1;
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(BinaryWriteStream, writeAsync) {
+    ASSERT_ARG_COUNT("BinaryWriteStream::writeAsync(byte)", 1);
+    ASSERT_ARG_TYPE("BinaryWriteStream::writeAsync(byte)", 0, Int);
+    int arg = AS_INT(args[0]);
+    ASSERT_INDEX_WITHIN_BOUNDS("BinaryWriteStream::writeAsync(byte)", arg, 0, 255, 0);
+
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write byte to stream because file is already closed.");
+    loadFileWrite(vm, file);
+
+    if (file->fsOpen != NULL && file->fsWrite != NULL) {
+        uint8_t byte = (uint8_t)arg;
+        ObjPromise* promise = fileWriteByteAsync(vm, file, byte, fileOnWrite);
+        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write byte to IO stream.");
+        RETURN_OBJ(promise);
     }
     RETURN_NIL;
 }
@@ -146,6 +165,24 @@ LOX_METHOD(BinaryWriteStream, writeBytes) {
             if (numWrite > 0) file->offset += numWrite;
             free(byteArray);
         }
+    }
+    RETURN_NIL;
+}
+
+LOX_METHOD(BinaryWriteStream, writeBytesAsync) {
+    ASSERT_ARG_COUNT("BinaryWriteStream::writeBytesAsync(bytes)", 1);
+    ASSERT_ARG_TYPE("BinaryWriteStream::writeBytesAsync(bytes)", 0, Array);
+    ObjArray* bytes = AS_ARRAY(args[0]);
+    if (bytes->elements.count == 0) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write empty byte array to stream.");
+
+    ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
+    if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write bytes to stream because file is already closed.");
+    loadFileWrite(vm, file);
+
+    if (file->fsOpen != NULL && file->fsWrite != NULL) {
+        ObjPromise* promise = fileWriteBytesAsync(vm, file, bytes, fileOnWrite);
+        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
+        RETURN_OBJ(promise);
     }
     RETURN_NIL;
 }
@@ -541,6 +578,7 @@ LOX_METHOD(FileWriteStream, writeAsync) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write character to stream because file is already closed.");
     loadFileWrite(vm, file);
+
     if (file->fsOpen != NULL && file->fsWrite != NULL) {
         ObjString* character = AS_STRING(args[0]);
         if (character->length != 1) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Method FileWriteStream::putAsync(char) expects argument 1 to be a character(string of length 1)");
@@ -614,6 +652,7 @@ LOX_METHOD(FileWriteStream, writeStringAsync) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write string to stream because file is already closed.");
     loadFileWrite(vm, file);
+
     if (file->fsOpen != NULL && file->fsWrite != NULL) {
         ObjString* string = AS_STRING(args[0]);
         ObjPromise* promise = fileWriteAsync(vm, file, string, fileOnWrite);
@@ -799,7 +838,9 @@ void registerIOPackage(VM* vm) {
     bindSuperclass(vm, binaryWriteStreamClass, writeStreamClass);
     DEF_INTERCEPTOR(binaryWriteStreamClass, BinaryWriteStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, write, 1);
+    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeAsync, 1);
     DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeBytes, 1);
+    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeBytesAsync, 1);
 
     ObjClass* fileReadStreamClass = defineNativeClass(vm, "FileReadStream");
     bindSuperclass(vm, fileReadStreamClass, readStreamClass);

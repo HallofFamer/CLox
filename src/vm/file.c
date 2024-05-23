@@ -326,6 +326,41 @@ ObjPromise* fileWriteAsync(VM* vm, ObjFile* file, ObjString* string, uv_fs_cb ca
     return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
 }
 
+ObjPromise* fileWriteByteAsync(VM* vm, ObjFile* file, uint8_t byte, uv_fs_cb callback) {
+    if (file->isOpen && file->fsOpen != NULL && file->fsWrite != NULL) {
+        ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        FileData* data = fileLoadData(vm, file, promise);
+        char* byteString = ALLOCATE_STRUCT(char);
+        if (byteString != NULL) {
+            byteString[0] = (char)byte;
+            data->buffer = uv_buf_init(byteString, 1);
+            file->fsWrite->data = data;
+            uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &data->buffer, 1, file->offset, callback);
+            return promise;
+        }
+    }
+    return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
+}
+
+ObjPromise* fileWriteBytesAsync(VM* vm, ObjFile* file, ObjArray* bytes, uv_fs_cb callback) {
+    if (file->isOpen && file->fsOpen != NULL && file->fsWrite != NULL) {
+        ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        FileData* data = fileLoadData(vm, file, promise);
+        int length = bytes->elements.count;
+        char* bytesString = (char*)malloc(bytes->elements.count * sizeof(char));
+        if (bytesString != NULL) {
+            for (int i = 0; i < length; i++) {
+                bytesString[i] = (char)AS_INT(bytes->elements.values[i]);
+            }
+            data->buffer = uv_buf_init(bytesString, length);
+            file->fsWrite->data = data;
+            uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &data->buffer, 1, file->offset, callback);
+            return promise;
+        }
+    }
+    return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
+}
+
 ObjFile* getFileArgument(VM* vm, Value arg) {
     ObjFile* file = NULL;
     if (IS_STRING(arg)) file = newFile(vm, AS_STRING(arg));
