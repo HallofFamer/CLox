@@ -29,15 +29,7 @@ LOX_METHOD(BinaryReadStream, read) {
     ASSERT_ARG_COUNT("BinaryReadStream::read()", 0);
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
-    if (file->fsOpen == NULL || file->fsRead == NULL) RETURN_NIL;
-    else {
-        uint8_t byte;
-        uv_buf_t uvBuf = uv_buf_init(&byte, 1);
-        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-        if (numRead == 0) RETURN_NIL;
-        file->offset++;
-        RETURN_INT(byte);
-    }
+    if (file->fsOpen != NULL && file->fsRead != NULL) RETURN_INT(fileReadByte(vm, file));
     RETURN_NIL;
 }
 
@@ -60,23 +52,12 @@ LOX_METHOD(BinaryReadStream, readBytes) {
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next bytes because file is already closed.");
-    if (file->fsOpen == NULL || file->fsRead == NULL) RETURN_NIL;
-    else {
-        ObjArray* bytes = newArray(vm);
-        push(vm, OBJ_VAL(bytes));
-        uint8_t* buffer = (uint8_t*)malloc(length);
-        uv_buf_t uvBuf = uv_buf_init(buffer, length);
-        int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-
-        for (int i = 0; i < numRead; i++, file->offset++) {
-            uint8_t byte = (uint8_t)uvBuf.base[i];
-            valueArrayWrite(vm, &bytes->elements, INT_VAL(byte));
-        }
-
-        free(buffer);
-        pop(vm);
+    if (file->fsOpen != NULL && file->fsRead != NULL) {
+        ObjArray* bytes = fileReadBytes(vm, file, length);
+        if (bytes == NULL) THROW_EXCEPTION_FMT(clox.std.lang.OutOfMemoryException, "Not enough memory to read the next %d bytes.", length);
         RETURN_OBJ(bytes);
     }
+    RETURN_NIL;
 }
 
 LOX_METHOD(BinaryReadStream, readBytesAsync) {
@@ -114,13 +95,7 @@ LOX_METHOD(BinaryWriteStream, write) {
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write byte to stream because file is already closed.");
-    if (file->fsOpen != NULL && file->fsWrite != NULL) {
-        char byte = (char)arg;
-        uv_buf_t uvBuf = uv_buf_init(&byte, 1);
-        uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-        int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-        if (numWrite > 0) file->offset += 1;
-    }
+    if (file->fsOpen != NULL && file->fsWrite != NULL) fileWriteByte(vm, file, (uint8_t)arg);
     RETURN_NIL;
 }
 
@@ -134,13 +109,10 @@ LOX_METHOD(BinaryWriteStream, writeAsync) {
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write byte to stream because file is already closed.");
     loadFileWrite(vm, file);
 
-    if (file->fsOpen != NULL && file->fsWrite != NULL) {
-        uint8_t byte = (uint8_t)arg;
-        ObjPromise* promise = fileWriteByteAsync(vm, file, byte, fileOnWrite);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write byte to IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+    uint8_t byte = (uint8_t)arg;
+    ObjPromise* promise = fileWriteByteAsync(vm, file, byte, fileOnWrite);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write byte to IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(BinaryWriteStream, writeBytes) {
@@ -151,21 +123,7 @@ LOX_METHOD(BinaryWriteStream, writeBytes) {
 
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write bytes to stream because file is already closed.");
-    if (file->fsOpen != NULL && file->fsWrite != NULL) {
-        unsigned char* byteArray = (unsigned char*)malloc(bytes->elements.count);
-        if (byteArray != NULL) {
-            for (int i = 0; i < bytes->elements.count; i++) {
-                if (!IS_INT(bytes->elements.values[i])) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write bytes to stream because data is corrupted.");
-                int byte = AS_INT(bytes->elements.values[i]);
-                byteArray[i] = (unsigned char)byte;
-            }
-
-            uv_buf_t uvBuf = uv_buf_init(byteArray, bytes->elements.count);
-            int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
-            if (numWrite > 0) file->offset += numWrite;
-            free(byteArray);
-        }
-    }
+    if (file->fsOpen != NULL && file->fsWrite != NULL) fileWriteBytes(vm, file, bytes);
     RETURN_NIL;
 }
 
@@ -179,12 +137,9 @@ LOX_METHOD(BinaryWriteStream, writeBytesAsync) {
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write bytes to stream because file is already closed.");
     loadFileWrite(vm, file);
 
-    if (file->fsOpen != NULL && file->fsWrite != NULL) {
-        ObjPromise* promise = fileWriteBytesAsync(vm, file, bytes, fileOnWrite);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+    ObjPromise* promise = fileWriteBytesAsync(vm, file, bytes, fileOnWrite);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(File, __init__) {
@@ -404,6 +359,7 @@ LOX_METHOD(FileClass, openAsync) {
     ASSERT_ARG_TYPE("File class::openAsync(pathname, mode)", 0, String);
     ASSERT_ARG_TYPE("File class::openAsync(pathname, mode)", 1, String);
     char* mode = AS_CSTRING(args[1]);
+
     ObjFile* file = newFile(vm, AS_STRING(args[0]));
     ObjPromise* promise = fileOpenAsync(vm, file, mode, fileOnOpen);
     if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to open IO stream.");
@@ -452,12 +408,9 @@ LOX_METHOD(FileReadStream, readAsync) {
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next char because file is already closed.");
     loadFileRead(vm, file);
 
-    if (file->fsOpen != NULL && file->fsRead != NULL) {
-        ObjPromise* promise = fileReadAsync(vm, file, fileOnRead);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read char from IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+    ObjPromise* promise = fileReadAsync(vm, file, fileOnRead);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read char from IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(FileReadStream, readLine) {
@@ -478,12 +431,9 @@ LOX_METHOD(FileReadStream, readLineAsync) {
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot read the next line because file is already closed.");
     loadFileRead(vm, file);
 
-    if (file->fsOpen != NULL && file->fsRead != NULL) {
-        ObjPromise* promise = fileReadStringAsync(vm, file, UINT8_MAX, fileOnReadLine);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read line from IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+    ObjPromise* promise = fileReadStringAsync(vm, file, UINT8_MAX, fileOnReadLine);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read line from IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(FileReadStream, readString) {
@@ -510,12 +460,9 @@ LOX_METHOD(FileReadStream, readStringAsync) {
     if (length < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "Method FileReadStream::readStringAsync(length) expects argument 1 to be a positive integer but got %g.", length);
     loadFileRead(vm, file);
 
-    if (file->fsOpen != NULL && file->fsRead != NULL) {
-        ObjPromise* promise = fileReadStringAsync(vm, file, (size_t)length, fileOnReadString);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read line from IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+    ObjPromise* promise = fileReadStringAsync(vm, file, (size_t)length, fileOnReadString);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read line from IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(FileReadStream, readToEnd) {
@@ -526,7 +473,7 @@ LOX_METHOD(FileReadStream, readToEnd) {
     
     if (file->fsOpen == NULL) RETURN_NIL;
     else {
-        ObjString* string = fileReadString(vm, file, file->fsStat->statbuf.st_size);
+        ObjString* string = fileReadString(vm, file, (int)file->fsStat->statbuf.st_size);
         if (string == NULL) THROW_EXCEPTION(clox.std.lang.OutOfMemoryException, "Not enough memory to allocate to read to end end of file.");
         RETURN_OBJ(string);
     }
@@ -539,12 +486,9 @@ LOX_METHOD(FileReadStream, readToEndAsync) {
     loadFileStat(vm, file);
     loadFileRead(vm, file);
 
-    if (file->fsOpen != NULL && file->fsRead != NULL) {
-        ObjPromise* promise = fileReadStringAsync(vm, file, file->fsStat->statbuf.st_size, fileOnReadString);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read to the end of file from IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+    ObjPromise* promise = fileReadStringAsync(vm, file, file->fsStat->statbuf.st_size, fileOnReadString);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to read to the end of file from IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(FileWriteStream, __init__) {
@@ -579,14 +523,11 @@ LOX_METHOD(FileWriteStream, writeAsync) {
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write character to stream because file is already closed.");
     loadFileWrite(vm, file);
 
-    if (file->fsOpen != NULL && file->fsWrite != NULL) {
-        ObjString* character = AS_STRING(args[0]);
-        if (character->length != 1) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Method FileWriteStream::putAsync(char) expects argument 1 to be a character(string of length 1)");
-        ObjPromise* promise = fileWriteAsync(vm, file, character, fileOnWrite);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+    ObjString* character = AS_STRING(args[0]);
+    if (character->length != 1) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Method FileWriteStream::putAsync(char) expects argument 1 to be a character(string of length 1)");
+    ObjPromise* promise = fileWriteAsync(vm, file, character, fileOnWrite);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(FileWriteStream, writeLine) {
@@ -602,12 +543,9 @@ LOX_METHOD(FileWriteStream, writeLineAsync) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write line to stream because file is already closed.");
     loadFileWrite(vm, file);
-    if (file->fsOpen != NULL && file->fsWrite != NULL) {
-        ObjPromise* promise = fileWriteAsync(vm, file, copyString(vm, "\n", 1), fileOnWrite);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+    ObjPromise* promise = fileWriteAsync(vm, file, copyString(vm, "\n", 1), fileOnWrite);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(FileWriteStream, writeSpace) {
@@ -623,12 +561,10 @@ LOX_METHOD(FileWriteStream, writeSpaceAsync) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write space to stream because file is already closed.");
     loadFileWrite(vm, file);
-    if (file->fsOpen != NULL && file->fsWrite != NULL) {
-        ObjPromise* promise = fileWriteAsync(vm, file, copyString(vm, " ", 1), fileOnWrite);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+
+    ObjPromise* promise = fileWriteAsync(vm, file, copyString(vm, " ", 1), fileOnWrite);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(FileWriteStream, writeString) {
@@ -653,13 +589,10 @@ LOX_METHOD(FileWriteStream, writeStringAsync) {
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot write string to stream because file is already closed.");
     loadFileWrite(vm, file);
 
-    if (file->fsOpen != NULL && file->fsWrite != NULL) {
-        ObjString* string = AS_STRING(args[0]);
-        ObjPromise* promise = fileWriteAsync(vm, file, string, fileOnWrite);
-        if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
-        RETURN_OBJ(promise);
-    }
-    RETURN_NIL;
+    ObjString* string = AS_STRING(args[0]);
+    ObjPromise* promise = fileWriteAsync(vm, file, string, fileOnWrite);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to write to IO stream.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(IOStream, __init__) {
@@ -757,6 +690,7 @@ LOX_METHOD(WriteStream, flushAsync) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot flush write stream because file is already closed.");
     loadFileWrite(vm, file);
+
     ObjPromise* promise = fileFlushAsync(vm, file, fileOnFlush);
     if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to flush write stream.");
     RETURN_OBJ(promise);

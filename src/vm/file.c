@@ -263,6 +263,34 @@ ObjPromise* fileReadAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
     return NULL;
 }
 
+uint8_t fileReadByte(VM* vm, ObjFile* file) {
+    uint8_t byte = 0;
+    uv_buf_t uvBuf = uv_buf_init(&byte, 1);
+    int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+    if (numRead == 0) return -1;
+    file->offset++;
+    return byte;
+}
+
+ObjArray* fileReadBytes(VM* vm, ObjFile* file, int length) {
+    ObjArray* bytes = newArray(vm);
+    push(vm, OBJ_VAL(bytes));
+    uint8_t* buffer = (uint8_t*)malloc((size_t)length);
+    if (buffer == NULL) return NULL;
+    uv_buf_t uvBuf = uv_buf_init(buffer, length);
+    int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+
+    for (int i = 0; i < numRead; i++, file->offset++) {
+        uint8_t byte = (uint8_t)uvBuf.base[i];
+        valueArrayWrite(vm, &bytes->elements, INT_VAL(byte));
+    }
+    file->offset += numRead;
+    
+    free(buffer);
+    pop(vm);
+    return bytes;
+}
+
 ObjString* fileReadLine(VM* vm, ObjFile* file) {
     char chars[UINT8_MAX];
     uv_buf_t uvBuf = uv_buf_init(chars, UINT8_MAX);
@@ -284,9 +312,9 @@ ObjString* fileReadLine(VM* vm, ObjFile* file) {
     else return NULL;
 }
 
-ObjString* fileReadString(VM* vm, ObjFile* file, size_t length) {
-    char* chars = (char*)malloc(length * sizeof(char));
-    uv_buf_t uvBuf = uv_buf_init(chars, UINT8_MAX);
+ObjString* fileReadString(VM* vm, ObjFile* file, int length) {
+    char* chars = (char*)malloc((size_t)length * sizeof(char));
+    uv_buf_t uvBuf = uv_buf_init(chars, length);
     int numRead = uv_fs_read(vm->eventLoop, file->fsRead, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
     if (numRead == 0) return NULL;
     return takeString(vm, chars, (int)numRead);
@@ -326,6 +354,14 @@ ObjPromise* fileWriteAsync(VM* vm, ObjFile* file, ObjString* string, uv_fs_cb ca
     return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
 }
 
+void fileWriteByte(VM* vm, ObjFile* file, uint8_t byte){
+    char byteChar = (char)byte;
+    uv_buf_t uvBuf = uv_buf_init(&byteChar, 1);
+    uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+    int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+    if (numWrite > 0) file->offset += 1;
+}
+
 ObjPromise* fileWriteByteAsync(VM* vm, ObjFile* file, uint8_t byte, uv_fs_cb callback) {
     if (file->isOpen && file->fsOpen != NULL && file->fsWrite != NULL) {
         ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
@@ -340,6 +376,22 @@ ObjPromise* fileWriteByteAsync(VM* vm, ObjFile* file, uint8_t byte, uv_fs_cb cal
         }
     }
     return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
+}
+
+void fileWriteBytes(VM* vm, ObjFile* file, ObjArray* bytes) {
+    char* byteArray = (char*)malloc(bytes->elements.count);
+    if (byteArray != NULL) {
+        for (int i = 0; i < bytes->elements.count; i++) {
+            if (!IS_INT(bytes->elements.values[i])) return;
+            int byte = AS_INT(bytes->elements.values[i]);
+            byteArray[i] = (char)byte;
+        }
+
+        uv_buf_t uvBuf = uv_buf_init(byteArray, bytes->elements.count);
+        int numWrite = uv_fs_write(vm->eventLoop, file->fsWrite, (uv_file)file->fsOpen->result, &uvBuf, 1, file->offset, NULL);
+        if (numWrite > 0) file->offset += numWrite;
+        free(byteArray);
+    }
 }
 
 ObjPromise* fileWriteBytesAsync(VM* vm, ObjFile* file, ObjArray* bytes, uv_fs_cb callback) {
