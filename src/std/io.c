@@ -156,28 +156,32 @@ LOX_METHOD(File, create) {
     ASSERT_ARG_COUNT("File::create()", 0);
     ObjFile* self = AS_FILE(receiver);
     if (fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.IOException, "Cannot create new file because it already exists");
+    RETURN_BOOL(fileCreate(vm, self));
+}
 
-    uv_fs_t fsOpen;
-    int created = uv_fs_open(vm->eventLoop, &fsOpen, self->name->chars, O_CREAT, 0, NULL);
-    if (created == 0) {
-        uv_fs_t fsClose;
-        uv_fs_close(vm->eventLoop, &fsClose, (uv_file)fsOpen.result, NULL);
-        uv_fs_req_cleanup(&fsClose);
-    }
-
-    uv_fs_req_cleanup(&fsOpen);
-    RETURN_BOOL(created == 0);
+LOX_METHOD(File, createAsync) {
+    ASSERT_ARG_COUNT("File::createAsync()", 0);
+    ObjFile* self = AS_FILE(receiver);
+    if (fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.IOException, "Cannot create new file because it already exists");
+    ObjPromise* promise = fileCreateAsync(vm, self, fileOnCreate);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to create file because of system runs out of memory.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(File, delete) {
     ASSERT_ARG_COUNT("File::delete()", 0);
     ObjFile* self = AS_FILE(receiver);
     if (!fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.IOException, "Cannot delete file because it does not exist.");
-    
-    uv_fs_t fsUnlink;
-    int unlinked = uv_fs_unlink(vm->eventLoop, &fsUnlink, self->name->chars, NULL);
-    uv_fs_req_cleanup(&fsUnlink);
-    RETURN_BOOL(unlinked == 0);
+    RETURN_BOOL(fileDelete(vm, self));
+}
+
+LOX_METHOD(File, deleteAsync) {
+    ASSERT_ARG_COUNT("File::deleteAsync()", 0);
+    ObjFile* self = AS_FILE(receiver);
+    if (!fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.IOException, "Cannot delete file because it does not exist.");
+    ObjPromise* promise = fileDeleteAsync(vm, self, fileOnDelete);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to delete file because of system runs out of memory.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(File, exists) {
@@ -270,11 +274,18 @@ LOX_METHOD(File, rename) {
     ASSERT_ARG_TYPE("File::rename(name)", 0, String);
     ObjFile* self = AS_FILE(receiver);
     if (!fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot rename file as it does not exist.");
-    
-    uv_fs_t fsRename;
-    int renamed = uv_fs_rename(vm->eventLoop, &fsRename, self->name->chars, AS_CSTRING(args[0]), NULL);
-    uv_fs_req_cleanup(&fsRename);
-    RETURN_BOOL(renamed == 0);
+    RETURN_BOOL(fileRename(vm, self, AS_STRING(args[0])));
+}
+
+LOX_METHOD(File, renameAsync) {
+    ASSERT_ARG_COUNT("File::renameAsync(name)", 1);
+    ASSERT_ARG_TYPE("File::renameAsync(name)", 0, String);
+    ObjFile* self = AS_FILE(receiver);
+    if (!fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot rename file as it does not exist.");
+
+    ObjPromise* promise = fileRenameAsync(vm, self, AS_STRING(args[0]), fileOnRename);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to rename file because of system runs out of memory.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(File, rmdir) {
@@ -709,7 +720,9 @@ void registerIOPackage(VM* vm) {
     vm->fileClass->classType = OBJ_FILE;
     DEF_INTERCEPTOR(vm->fileClass, File, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->fileClass, File, create, 0);
+    DEF_METHOD(vm->fileClass, File, createAsync, 0);
     DEF_METHOD(vm->fileClass, File, delete, 0);
+    DEF_METHOD(vm->fileClass, File, deleteAsync, 0);
     DEF_METHOD(vm->fileClass, File, exists, 0);
     DEF_METHOD(vm->fileClass, File, getAbsolutePath, 0);
     DEF_METHOD(vm->fileClass, File, isDirectory, 0);
@@ -722,6 +735,7 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(vm->fileClass, File, mkdir, 0);
     DEF_METHOD(vm->fileClass, File, name, 0);
     DEF_METHOD(vm->fileClass, File, rename, 1);
+    DEF_METHOD(vm->fileClass, File, renameAsync, 1);
     DEF_METHOD(vm->fileClass, File, rmdir, 0);
     DEF_METHOD(vm->fileClass, File, setExecutable, 1);
     DEF_METHOD(vm->fileClass, File, setReadable, 1);

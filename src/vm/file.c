@@ -56,6 +56,48 @@ ObjPromise* fileCloseAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
     return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
 }
 
+bool fileCreate(VM* vm, ObjFile* file) {
+    uv_fs_t fsOpen;
+    int created = uv_fs_open(vm->eventLoop, &fsOpen, file->name->chars, O_CREAT, 0, NULL);
+    if (created == 0) {
+        uv_fs_t fsClose;
+        uv_fs_close(vm->eventLoop, &fsClose, (uv_file)fsOpen.result, NULL);
+        uv_fs_req_cleanup(&fsClose);
+    }
+
+    uv_fs_req_cleanup(&fsOpen);
+    return (created == 0);
+}
+
+ObjPromise* fileCreateAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
+    uv_fs_t* fsOpen = ALLOCATE_STRUCT(uv_fs_t);
+    ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+    if (fsOpen == NULL) return NULL;
+    else {
+        fsOpen->data = fileLoadData(vm, file, promise);
+        uv_fs_open(vm->eventLoop, &fsOpen, file->name->chars, O_CREAT, 0, callback);
+        return promise;
+    }
+}
+
+bool fileDelete(VM* vm, ObjFile* file) {
+    uv_fs_t fsUnlink;
+    int unlinked = uv_fs_unlink(vm->eventLoop, &fsUnlink, file->name->chars, NULL);
+    uv_fs_req_cleanup(&fsUnlink);
+    return (unlinked == 0);
+}
+
+ObjPromise* fileDeleteAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
+    uv_fs_t* fsUnlink = ALLOCATE_STRUCT(uv_fs_t);
+    ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+    if (fsUnlink == NULL) return NULL;
+    else {
+        fsUnlink->data = fileLoadData(vm, file, promise);
+        uv_fs_unlink(vm->eventLoop, fsUnlink, file->name->chars, callback);
+        return promise;
+    }
+}
+
 bool fileExists(VM* vm, ObjFile* file) {
     uv_fs_t fsAccess;
     bool exists = (uv_fs_access(vm->eventLoop, &fsAccess, file->name->chars, F_OK, NULL) == 0);
@@ -119,6 +161,27 @@ void fileOnClose(uv_fs_t* fsClose) {
     promiseFulfill(data->vm, data->promise, NIL_VAL);
     uv_fs_req_cleanup(fsClose);
     free(fsClose);
+    filePopData(data);
+}
+
+void fileOnCreate(uv_fs_t* fsOpen) {
+    FileData* data = filePushData(fsOpen);
+    if (fsOpen->result == 0) {
+        uv_fs_t fsClose;
+        uv_fs_close(data->vm->eventLoop, &fsClose, (uv_file)fsOpen->result, NULL);
+        uv_fs_req_cleanup(&fsClose);
+    }
+    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsOpen->result == 0));
+    uv_fs_req_cleanup(fsOpen);
+    free(fsOpen);
+    filePopData(data);
+}
+
+void fileOnDelete(uv_fs_t* fsUnlink) {
+    FileData* data = filePushData(fsUnlink);
+    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsUnlink->result == 0));
+    uv_fs_req_cleanup(fsUnlink);
+    free(fsUnlink);
     filePopData(data);
 }
 
@@ -201,6 +264,14 @@ void fileOnReadString(uv_fs_t* fsRead) {
     
     ObjString* string = takeString(data->vm, data->buffer.base, numRead);
     promiseFulfill(data->vm, data->promise, OBJ_VAL(string));
+    filePopData(data);
+}
+
+void fileOnRename(uv_fs_t* fsRename) {
+    FileData* data = filePushData(fsRename);
+    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsRename->result == 0));
+    uv_fs_req_cleanup(fsRename);
+    free(fsRename);
     filePopData(data);
 }
 
@@ -333,6 +404,24 @@ ObjPromise* fileReadStringAsync(VM* vm, ObjFile* file, size_t length, uv_fs_cb c
         }
     }
     return NULL;
+}
+
+bool fileRename(VM* vm, ObjFile* file, ObjString* name) {
+    uv_fs_t fsRename;
+    int renamed = uv_fs_rename(vm->eventLoop, &fsRename, file->name->chars, name->chars, NULL);
+    uv_fs_req_cleanup(&fsRename);
+    return (renamed == 0);
+}
+
+ObjPromise* fileRenameAsync(VM* vm, ObjFile* file, ObjString* name, uv_fs_cb callback) {
+    uv_fs_t* fsRename = ALLOCATE_STRUCT(uv_fs_t);
+    ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+    if (fsRename == NULL) return NULL;
+    else {
+        fsRename->data = fileLoadData(vm, file, promise);
+        uv_fs_rename(vm->eventLoop, fsRename, file->name->chars, name->chars, callback);
+        return promise;
+    }
 }
 
 void fileWrite(VM* vm, ObjFile* file, char c) {
