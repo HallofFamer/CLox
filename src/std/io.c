@@ -257,11 +257,16 @@ LOX_METHOD(File, mkdir) {
     ASSERT_ARG_COUNT("File::mkdir()", 0);
     ObjFile* self = AS_FILE(receiver);
     if (fileExists(vm, self)) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot create directory as it already exists in the file system.");
-    
-    uv_fs_t fsMkdir;
-    int created = uv_fs_mkdir(vm->eventLoop, &fsMkdir, self->name->chars, S_IREAD | S_IWRITE | S_IEXEC, NULL);
-    uv_fs_req_cleanup(&fsMkdir);
-    RETURN_BOOL(created == 0);
+    RETURN_BOOL(fileMkdir(vm, self));
+}
+
+LOX_METHOD(File, mkdirAsync) {
+    ASSERT_ARG_COUNT("File::mkdirAsync()", 0);
+    ObjFile* self = AS_FILE(receiver);
+    if (fileExists(vm, self)) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot create directory as it already exists in the file system.");
+    ObjPromise* promise = FileMkdirAsync(vm, self, fileOnMkdir);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to create directory because of system runs out of memory.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(File, name) {
@@ -292,11 +297,16 @@ LOX_METHOD(File, rmdir) {
     ASSERT_ARG_COUNT("File::rmdir()", 0);
     ObjFile* self = AS_FILE(receiver);
     if (!loadFileStat(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot remove directory as it does not exist.");
-    
-    uv_fs_t fsRmdir;
-    bool removed = uv_fs_rmdir(vm->eventLoop, &fsRmdir, self->name->chars, NULL);
-    uv_fs_req_cleanup(&fsRmdir);
-    RETURN_BOOL(removed == 0);
+    RETURN_BOOL(fileRmdir(vm, self));
+}
+
+LOX_METHOD(File, rmdirAsync) {
+    ASSERT_ARG_COUNT("File::rmdir()", 0);
+    ObjFile* self = AS_FILE(receiver);
+    if (!loadFileStat(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot remove directory as it does not exist.");
+    ObjPromise* promise = fileRmdirAsync(vm, self, fileOnRmdir);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to delete directory because of system runs out of memory.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(File, setExecutable) {
@@ -733,10 +743,12 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(vm->fileClass, File, lastAccessed, 0);
     DEF_METHOD(vm->fileClass, File, lastModified, 0);
     DEF_METHOD(vm->fileClass, File, mkdir, 0);
+    DEF_METHOD(vm->fileClass, File, mkdirAsync, 0);
     DEF_METHOD(vm->fileClass, File, name, 0);
     DEF_METHOD(vm->fileClass, File, rename, 1);
     DEF_METHOD(vm->fileClass, File, renameAsync, 1);
     DEF_METHOD(vm->fileClass, File, rmdir, 0);
+    DEF_METHOD(vm->fileClass, File, rmdirAsync, 0);
     DEF_METHOD(vm->fileClass, File, setExecutable, 1);
     DEF_METHOD(vm->fileClass, File, setReadable, 1);
     DEF_METHOD(vm->fileClass, File, setWritable, 1);

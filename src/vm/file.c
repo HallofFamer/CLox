@@ -75,7 +75,7 @@ ObjPromise* fileCreateAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
     if (fsOpen == NULL) return NULL;
     else {
         fsOpen->data = fileLoadData(vm, file, promise);
-        uv_fs_open(vm->eventLoop, &fsOpen, file->name->chars, O_CREAT, 0, callback);
+        uv_fs_open(vm->eventLoop, fsOpen, file->name->chars, O_CREAT, 0, callback);
         return promise;
     }
 }
@@ -128,6 +128,24 @@ ObjPromise* fileFlushAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
         }
     }
     return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
+}
+
+bool fileMkdir(VM* vm, ObjFile* file) {
+    uv_fs_t fsMkdir;
+    int created = uv_fs_mkdir(vm->eventLoop, &fsMkdir, file->name->chars, S_IREAD | S_IWRITE | S_IEXEC, NULL);
+    uv_fs_req_cleanup(&fsMkdir);
+    return (created == 0);
+}
+
+ObjPromise* FileMkdirAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
+    uv_fs_t* fsMkdir = ALLOCATE_STRUCT(uv_fs_t);
+    ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+    if (fsMkdir == NULL) return NULL;
+    else {
+        fsMkdir->data = fileLoadData(vm, file, promise);
+        uv_fs_mkdir(vm->eventLoop, fsMkdir, file->name->chars, S_IREAD | S_IWRITE | S_IEXEC, callback);
+        return promise;
+    }
 }
 
 int fileMode(const char* mode) {
@@ -191,6 +209,14 @@ void fileOnFlush(uv_fs_t* fsSync) {
     promiseFulfill(data->vm, data->promise, BOOL_VAL(fsSync->result == 0));
     uv_fs_req_cleanup(fsSync);
     free(fsSync);
+    filePopData(data);
+}
+
+void fileOnMkdir(uv_fs_t* fsMkdir) {
+    FileData* data = filePushData(fsMkdir);
+    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsMkdir->result == 0));
+    uv_fs_req_cleanup(fsMkdir);
+    free(fsMkdir);
     filePopData(data);
 }
 
@@ -272,6 +298,14 @@ void fileOnRename(uv_fs_t* fsRename) {
     promiseFulfill(data->vm, data->promise, BOOL_VAL(fsRename->result == 0));
     uv_fs_req_cleanup(fsRename);
     free(fsRename);
+    filePopData(data);
+}
+
+void fileOnRmdir(uv_fs_t* fsRmdir) {
+    FileData* data = filePushData(fsRmdir);
+    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsRmdir->result == 0));
+    uv_fs_req_cleanup(fsRmdir);
+    free(fsRmdir);
     filePopData(data);
 }
 
@@ -420,6 +454,24 @@ ObjPromise* fileRenameAsync(VM* vm, ObjFile* file, ObjString* name, uv_fs_cb cal
     else {
         fsRename->data = fileLoadData(vm, file, promise);
         uv_fs_rename(vm->eventLoop, fsRename, file->name->chars, name->chars, callback);
+        return promise;
+    }
+}
+
+bool fileRmdir(VM* vm, ObjFile* file) {
+    uv_fs_t fsRmdir;
+    bool removed = uv_fs_rmdir(vm->eventLoop, &fsRmdir, file->name->chars, NULL);
+    uv_fs_req_cleanup(&fsRmdir);
+    return (removed == 0);
+}
+
+ObjPromise* fileRmdirAsync(VM* vm, ObjFile* file, uv_fs_cb callback)  {
+    uv_fs_t* fsRmdir = ALLOCATE_STRUCT(uv_fs_t);
+    ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+    if (fsRmdir == NULL) return NULL;
+    else {
+        fsRmdir->data = fileLoadData(vm, file, promise);
+        uv_fs_rmdir(vm->eventLoop, fsRmdir, file->name->chars, callback);
         return promise;
     }
 }
