@@ -144,7 +144,6 @@ void initVM(VM* vm) {
     vm->grayCount = 0;
     vm->grayCapacity = 0;
     vm->grayStack = NULL;
-
     vm->behaviorCount = 0;
     vm->namespaceCount = 0;
     vm->moduleCount = 1;
