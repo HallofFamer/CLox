@@ -10,27 +10,30 @@
 #include "vm.h"
 
 struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
-    struct addrinfo hints, * result;
+    struct addrinfo hints;
     void* ptr = NULL;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags |= AI_CANONNAME;
 
-    *status = getaddrinfo(domainName, NULL, &hints, &result);
-    return result;
+    uv_getaddrinfo_t netGetAddrInfo;
+    *status = uv_getaddrinfo(vm->eventLoop, &netGetAddrInfo, NULL, domainName, "80", &hints);
+    return netGetAddrInfo.addrinfo;
+
 }
 
 ObjString* dnsGetDomainFromIPAddress(VM* vm, const char* ipAddress, int* status) {
     struct sockaddr_in socketAddress;
-    char domainString[NI_MAXHOST];
-    memset(&socketAddress, 0, sizeof socketAddress);
+    memset(&socketAddress, 0, sizeof(socketAddress));
     socketAddress.sin_family = AF_INET;
     inet_pton(AF_INET, ipAddress, &socketAddress.sin_addr);
 
-    *status = getnameinfo((struct sockaddr*)&socketAddress, sizeof(socketAddress), domainString, NI_MAXHOST, NULL, 0, 0);
-    return newString(vm, domainString);
+    uv_getnameinfo_t netGetNameInfo;
+    *status = uv_getnameinfo(vm->eventLoop, &netGetNameInfo, NULL, (struct sockaddr*)&socketAddress, 0);
+    return newString(vm, netGetNameInfo.host);
 }
 
 ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
@@ -42,12 +45,12 @@ ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
     while (result) {
         inet_ntop(result->ai_family, result->ai_addr->sa_data, ipString, 100);
         switch (result->ai_family) {
-        case AF_INET:
-            source = &((struct sockaddr_in*)result->ai_addr)->sin_addr;
-            break;
-        case AF_INET6:
-            source = &((struct sockaddr_in6*)result->ai_addr)->sin6_addr;
-            break;
+            case AF_INET:
+                source = &((struct sockaddr_in*)result->ai_addr)->sin_addr;
+                break;
+            case AF_INET6:
+                source = &((struct sockaddr_in6*)result->ai_addr)->sin6_addr;
+                break;
         }
 
         if (source != NULL) {

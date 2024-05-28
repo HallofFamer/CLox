@@ -95,7 +95,7 @@ https://github.com/munificent/craftinginterpreters
 
 ### CLox 1.6.0
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
-- Refactor the existing standard library with namespaces(in `clox.std` parent package), add new package `clox.std.network`.
+- Refactor the existing standard library with namespaces(in `clox.std` parent package), add new package `clox.std.net`.
 - Fix reentrancy problem with CLox, calling Lox closures from within C API becomes possible.
 - Cross-platform build with Cmake, as well as package manager with vcpkg(windows only).
 
@@ -115,7 +115,7 @@ https://github.com/munificent/craftinginterpreters
 - Generator functions/methods which can yield control back to the caller and resume at a later point of execution.
 - Add class `Promise` to the standard library(`clox.std.util`), which uses libuv to handle async tasks that completes in future. 
 - Introduction of async and await keywords, which allows C#/JS style of concurrency.
-- Refactoring package `clox.std.io` and `clox.std.network` to use async non-blocking calls, add new package `clox.std.sql`.
+- Refactoring package `clox.std.io` and `clox.std.net` to use async non-blocking calls, add new package `clox.std.sql`.
 
 ### CLox 2.0.0
 - Multi-pass compiler with abstract syntax tree, type checker, and generation of IR. 

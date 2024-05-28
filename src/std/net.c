@@ -28,12 +28,13 @@ LOX_METHOD(Domain, ipAddresses) {
 
     int status = -1;
     struct addrinfo* result = dnsGetDomainInfo(vm, name->chars, &status);
+    if (result == NULL) printf("unable to get domain info.");
     if (status) {
         THROW_EXCEPTION(clox.std.network.IPAddressException, "Failed to get IP address information for domain.");
     }
 
     ObjArray* ipAddresses = dnsGetIPAddressesFromDomain(vm, result);
-    freeaddrinfo(result);
+    uv_freeaddrinfo(result);
     RETURN_OBJ(ipAddresses);
 }
 
