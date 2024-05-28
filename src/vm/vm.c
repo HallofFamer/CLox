@@ -21,7 +21,7 @@
 #include "../std/collection.h"
 #include "../std/io.h"
 #include "../std/lang.h"
-#include "../std/network.h"
+#include "../std/net.h"
 #include "../std/util.h"
 
 static void resetCallFrame(VM* vm, int index) {
@@ -144,6 +144,7 @@ void initVM(VM* vm) {
     vm->grayCount = 0;
     vm->grayCapacity = 0;
     vm->grayStack = NULL;
+
     vm->behaviorCount = 0;
     vm->namespaceCount = 0;
     vm->moduleCount = 1;
@@ -163,7 +164,7 @@ void initVM(VM* vm) {
     registerLangPackage(vm);
     registerCollectionPackage(vm);
     registerIOPackage(vm);
-    registerNetworkPackage(vm);
+    registerNetPackage(vm);
     registerUtilPackage(vm);
     registerNativeFunctions(vm);
 }
