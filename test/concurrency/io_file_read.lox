@@ -1,0 +1,21 @@
+namespace test.concurrency;
+using clox.std.io.File;
+using clox.std.io.FileReadStream;
+
+println("Creating a read stream for input file.");
+File.openAsync("test/others/file_input.txt", "r")
+    .then({|fileReader|
+        print("Successfully opened: ");
+        println(fileReader);
+        println("Now reading the entire file: ");
+        println("");
+        fileReader.readToEndAsync().then({|text|
+            println(text);
+            println("");
+            println("Closing read stream for file.");
+            fileReader.closeAsync()
+        }).then({ 
+            println("Read stream has been closed.");
+        });
+    })
+    .catch({|exception| println("Error: ${exception.message}"); });

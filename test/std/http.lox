@@ -1,7 +1,7 @@
 namespace test.lang;
-using clox.std.network.HTTPClient;
-using clox.std.network.HTTPRequest;
-using clox.std.network.URL;
+using clox.std.net.HTTPClient;
+using clox.std.net.HTTPRequest;
+using clox.std.net.URL;
 
 val client = HTTPClient();
 print("Initializing HTTP Client: ");

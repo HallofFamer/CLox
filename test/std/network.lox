@@ -1,27 +1,26 @@
 namespace test.std;
-using clox.std.network;
-using clox.std.network;
+using clox.std.net;
 
-val ip = network.IPAddress("127.0.0.1");
+val ip = net.IPAddress("127.0.0.1");
 println("IP Address: " + ip.toString());
 println("IP is v4: " + ip.isIPV4().toString());
 print("IP to array: ");
 println(ip.toArray());
 
-val ip2 = network.IPAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
+val ip2 = net.IPAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
 println("IP2 Address: " + ip2.toString());
 println("IP2 is v6: " + ip2.isIPV6().toString());
 print("IP2 to array: ");
 println(ip2.toArray());
 println("");
 
-val domain = network.Domain("google.com");
+val domain = net.Domain("google.com");
 print("Domain name: ");
 println(domain.toString());
 print("Domain IPs: ");
 println(domain.ipAddresses());
 
-val ip3 = network.IPAddress("204.15.11.70");
+val ip3 = net.IPAddress("204.15.11.70");
 println("IP3 address: " + ip3.toString());
 print("IP3 host: ");
 println(ip3.domain());

@@ -1,9 +1,9 @@
 namespace test.std;
-using clox.std.network.IPAddress;
-using clox.std.network.Socket;
-using clox.std.network.SocketAddress;
-using clox.std.network.SocketClient;
-using clox.std.network.SocketServer;
+using clox.std.net.IPAddress;
+using clox.std.net.Socket;
+using clox.std.net.SocketAddress;
+using clox.std.net.SocketClient;
+using clox.std.net.SocketServer;
 
 print("Using socket address: ");
 val socketAddress = SocketAddress("127.0.0.1", Socket.afINET, 2000);

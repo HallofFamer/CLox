@@ -1,0 +1,27 @@
+namespace test.concurrency;
+using clox.std.io.BinaryReadStream;
+using clox.std.io.File;
+
+println("Creating a binary read stream.");
+File.openAsync("test/others/binary_input.bin", "rb")
+    .then({|binaryReader|
+        print("Successfully opened: ");
+        println(binaryReader);
+        print("Now reading next bytes: ");
+        binaryReader.readAsync().then({|byte|
+            println(byte);
+            print("Then read next 2 bytes: ");
+            binaryReader.readBytesAsync(2)
+        }).then({|bytes|
+            println(bytes);
+            print("Then read last 3 bytes: ");
+            binaryReader.readBytesAsync(3)
+        }).then({|bytes| 
+            println(bytes);
+            println("Closing read stream for file.");
+            binaryReader.closeAsync()
+        }).then({ 
+            println("Read stream has been closed.");
+        });
+    })
+    .catch({|exception| println("Error: ${exception.message}"); });

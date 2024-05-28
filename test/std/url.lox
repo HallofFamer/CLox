@@ -1,5 +1,5 @@
 namespace test.std;
-using clox.std.network.URL;
+using clox.std.net.URL;
 
 val url = URL("https", "google.com", 0, "", "", "");
 println("URL is " + url.toString());

@@ -1,0 +1,30 @@
+namespace test.concurrency;
+using clox.std.io.File;
+using clox.std.io.FileWriteStream;
+
+println("Creating a write stream for output file.");
+File.openAsync("test/others/file_output.txt", "w")
+    .then({|fileWriter|
+        print("Successfully opened: ");
+        println(fileWriter);
+        println("Now write character 'B' to file.");
+        fileWriter.writeAsync("B").then({ 
+            println("Then write a new line.");
+            fileWriter.writeLineAsync()
+        }).then({ 
+            println("Then write string 'x = 32'");
+            fileWriter.writeStringAsync("x = 32")
+        }).then({ 
+            println("Then write a new line.");
+            fileWriter.writeLineAsync()
+        }).then({
+            println("Last write string 'Hello World!'");
+            fileWriter.writeStringAsync("Hello World!")
+        }).then({ 
+            println("Closing write stream for file.");
+            fileWriter.closeAsync()
+        }).then({ 
+            println("Write stream has been closed.");
+        })
+    })
+    .catch({|exception| println("Error: ${exception.message}"); });
