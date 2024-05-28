@@ -179,7 +179,7 @@ LOX_METHOD(File, deleteAsync) {
     ASSERT_ARG_COUNT("File::deleteAsync()", 0);
     ObjFile* self = AS_FILE(receiver);
     if (!fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.IOException, "Cannot delete file because it does not exist.");
-    ObjPromise* promise = fileDeleteAsync(vm, self, fileOnDelete);
+    ObjPromise* promise = fileDeleteAsync(vm, self, fileOnHandle);
     if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to delete file because of system runs out of memory.");
     RETURN_OBJ(promise);
 }
@@ -192,13 +192,8 @@ LOX_METHOD(File, exists) {
 LOX_METHOD(File, getAbsolutePath) {
     ASSERT_ARG_COUNT("File::getAbsolutePath()", 0);
     ObjFile* self = AS_FILE(receiver);
-    uv_fs_t fRealPath;
-    if (uv_fs_realpath(vm->eventLoop, &fRealPath, self->name->chars, NULL) != 0) {
-        THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file absolute path because it does not exist.");
-    }
-
-    ObjString* realPath = newString(vm, (const char*)fRealPath.ptr);
-    uv_fs_req_cleanup(&fRealPath);
+    ObjString* realPath = fileGetAbsolutePath(vm, self);
+    if (realPath == NULL) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot get file absolute path because it does not exist.");
     RETURN_OBJ(realPath);
 }
 
@@ -264,7 +259,7 @@ LOX_METHOD(File, mkdirAsync) {
     ASSERT_ARG_COUNT("File::mkdirAsync()", 0);
     ObjFile* self = AS_FILE(receiver);
     if (fileExists(vm, self)) THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot create directory as it already exists in the file system.");
-    ObjPromise* promise = FileMkdirAsync(vm, self, fileOnMkdir);
+    ObjPromise* promise = FileMkdirAsync(vm, self, fileOnHandle);
     if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to create directory because of system runs out of memory.");
     RETURN_OBJ(promise);
 }
@@ -288,7 +283,7 @@ LOX_METHOD(File, renameAsync) {
     ObjFile* self = AS_FILE(receiver);
     if (!fileExists(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot rename file as it does not exist.");
 
-    ObjPromise* promise = fileRenameAsync(vm, self, AS_STRING(args[0]), fileOnRename);
+    ObjPromise* promise = fileRenameAsync(vm, self, AS_STRING(args[0]), fileOnHandle);
     if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to rename file because of system runs out of memory.");
     RETURN_OBJ(promise);
 }
@@ -304,7 +299,7 @@ LOX_METHOD(File, rmdirAsync) {
     ASSERT_ARG_COUNT("File::rmdir()", 0);
     ObjFile* self = AS_FILE(receiver);
     if (!loadFileStat(vm, self)) THROW_EXCEPTION(clox.std.io.FileNotFoundException, "Cannot remove directory as it does not exist.");
-    ObjPromise* promise = fileRmdirAsync(vm, self, fileOnRmdir);
+    ObjPromise* promise = fileRmdirAsync(vm, self, fileOnHandle);
     if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to delete directory because of system runs out of memory.");
     RETURN_OBJ(promise);
 }

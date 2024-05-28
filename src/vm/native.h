@@ -31,10 +31,6 @@
 #define THROW_EXCEPTION(klass, message) return OBJ_VAL(throwException(vm, getNativeClass(vm, #klass), message))
 #define THROW_EXCEPTION_FMT(klass, message, ...) return OBJ_VAL(throwException(vm, getNativeClass(vm, #klass), message, __VA_ARGS__))
 
-static inline double currentTimeInSec() {
-    return (double)clock() / CLOCKS_PER_SEC;
-}
-
 ObjClass* defineNativeClass(VM* vm, const char* name);
 void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction function);
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, NativeMethod method);
@@ -48,5 +44,9 @@ ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name);
 ObjNamespace* getNativeNamespace(VM* vm, const char* name);
 void loadSourceFile(VM* vm, const char* filePath);
 void registerNativeFunctions(VM* vm);
+
+static inline double currentTimeInSec() {
+    return (double)clock() / CLOCKS_PER_SEC;
+}
 
 #endif // !clox_native_h

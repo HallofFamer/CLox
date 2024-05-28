@@ -130,6 +130,14 @@ ObjPromise* fileFlushAsync(VM* vm, ObjFile* file, uv_fs_cb callback) {
     return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
 }
 
+ObjString* fileGetAbsolutePath(VM* vm, ObjFile* file) {
+    uv_fs_t fRealPath;
+    if (uv_fs_realpath(vm->eventLoop, &fRealPath, file->name->chars, NULL) != 0) return NULL;
+    ObjString* realPath = newString(vm, (const char*)fRealPath.ptr);
+    uv_fs_req_cleanup(&fRealPath);
+    return realPath;
+}
+
 bool fileMkdir(VM* vm, ObjFile* file) {
     uv_fs_t fsMkdir;
     int created = uv_fs_mkdir(vm->eventLoop, &fsMkdir, file->name->chars, S_IREAD | S_IWRITE | S_IEXEC, NULL);
@@ -195,14 +203,6 @@ void fileOnCreate(uv_fs_t* fsOpen) {
     filePopData(data);
 }
 
-void fileOnDelete(uv_fs_t* fsUnlink) {
-    FileData* data = filePushData(fsUnlink);
-    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsUnlink->result == 0));
-    uv_fs_req_cleanup(fsUnlink);
-    free(fsUnlink);
-    filePopData(data);
-}
-
 void fileOnFlush(uv_fs_t* fsSync) {
     FileData* data = filePushData(fsSync);
     data->file->isOpen = false;
@@ -212,11 +212,11 @@ void fileOnFlush(uv_fs_t* fsSync) {
     filePopData(data);
 }
 
-void fileOnMkdir(uv_fs_t* fsMkdir) {
-    FileData* data = filePushData(fsMkdir);
-    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsMkdir->result == 0));
-    uv_fs_req_cleanup(fsMkdir);
-    free(fsMkdir);
+void fileOnHandle(uv_fs_t* fsHandle) {
+    FileData* data = filePushData(fsHandle);
+    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsHandle->result == 0));
+    uv_fs_req_cleanup(fsHandle);
+    free(fsHandle);
     filePopData(data);
 }
 
@@ -290,22 +290,6 @@ void fileOnReadString(uv_fs_t* fsRead) {
     
     ObjString* string = takeString(data->vm, data->buffer.base, numRead);
     promiseFulfill(data->vm, data->promise, OBJ_VAL(string));
-    filePopData(data);
-}
-
-void fileOnRename(uv_fs_t* fsRename) {
-    FileData* data = filePushData(fsRename);
-    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsRename->result == 0));
-    uv_fs_req_cleanup(fsRename);
-    free(fsRename);
-    filePopData(data);
-}
-
-void fileOnRmdir(uv_fs_t* fsRmdir) {
-    FileData* data = filePushData(fsRmdir);
-    promiseFulfill(data->vm, data->promise, BOOL_VAL(fsRmdir->result == 0));
-    uv_fs_req_cleanup(fsRmdir);
-    free(fsRmdir);
     filePopData(data);
 }
 

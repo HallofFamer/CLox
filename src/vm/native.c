@@ -52,7 +52,7 @@ LOX_FUNCTION(read) {
     ASSERT_ARG_COUNT("read()", 0);
     uint64_t inputSize = 128;
     char* line = malloc(inputSize);
-    if (line == NULL) exit(1);
+    if (line == NULL) exit(74);
 
     int c = EOF;
     uint64_t i = 0;
