@@ -305,7 +305,6 @@ LOX_METHOD(IPAddress, __init__) {
     if (ipIsV4(address)) version = 4;
     else if (ipIsV6(address)) version = 6;
     else THROW_EXCEPTION(clox.std.network.IPAddressException, "Invalid IP address specified.");
-
     setObjProperty(vm, self, "address", args[0]);
     setObjProperty(vm, self, "version", INT_VAL(version));
     RETURN_OBJ(self);
@@ -383,6 +382,7 @@ LOX_METHOD(Socket, receive) {
     ObjInstance* self = AS_INSTANCE(receiver);
     int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
     char message[UINT8_MAX] = "";
+
     if (recv(descriptor, message, UINT8_MAX, 0) < 0) {
         THROW_EXCEPTION(clox.std.network.SocketException, "Failed to receive message from socket.");
     }
@@ -394,6 +394,7 @@ LOX_METHOD(Socket, send) {
     ASSERT_ARG_TYPE("Socket::send(message)", 0, String);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjString* message = AS_STRING(args[0]);
+
     int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
     if (send(descriptor, message->chars, message->length, 0) < 0) {
         THROW_EXCEPTION(clox.std.network.SocketException, "Failed to send message to socket.");
