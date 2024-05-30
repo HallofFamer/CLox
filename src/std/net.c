@@ -310,8 +310,8 @@ LOX_METHOD(IPAddress, __init__) {
     RETURN_OBJ(self);
 }
 
-LOX_METHOD(IPAddress, domain) {
-    ASSERT_ARG_COUNT("IPAddress::domain", 0);
+LOX_METHOD(IPAddress, getDomain) {
+    ASSERT_ARG_COUNT("IPAddress::getDomain()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjString* address = AS_STRING(getObjProperty(vm, self, "address"));
 
@@ -682,7 +682,7 @@ void registerNetPackage(VM* vm) {
     ObjClass* ipAddressClass = defineNativeClass(vm, "IPAddress");
     bindSuperclass(vm, ipAddressClass, vm->objectClass);
     DEF_INTERCEPTOR(ipAddressClass, IPAddress, INTERCEPTOR_INIT, __init__, 1);
-    DEF_METHOD(ipAddressClass, IPAddress, domain, 0);
+    DEF_METHOD(ipAddressClass, IPAddress, getDomain, 0);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV4, 0);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV6, 0);
     DEF_METHOD(ipAddressClass, IPAddress, toArray, 0);

@@ -23,4 +23,4 @@ println(domain.ipAddresses());
 val ip3 = net.IPAddress("204.15.11.70");
 println("IP3 address: " + ip3.toString());
 print("IP3 host: ");
-println(ip3.domain());
+println(ip3.getDomain());

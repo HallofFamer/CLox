@@ -12,8 +12,8 @@
 struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     struct addrinfo hints;
     void* ptr = NULL;
-
     memset(&hints, 0, sizeof(hints));
+
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
@@ -30,7 +30,6 @@ ObjString* dnsGetDomainFromIPAddress(VM* vm, const char* ipAddress, int* status)
     memset(&socketAddress, 0, sizeof(socketAddress));
     socketAddress.sin_family = AF_INET;
     inet_pton(AF_INET, ipAddress, &socketAddress.sin_addr);
-
     uv_getnameinfo_t netGetNameInfo;
     *status = uv_getnameinfo(vm->eventLoop, &netGetNameInfo, NULL, (struct sockaddr*)&socketAddress, 0);
     return newString(vm, netGetNameInfo.host);
