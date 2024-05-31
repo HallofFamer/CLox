@@ -9,6 +9,27 @@
 #include "os.h"
 #include "vm.h"
 
+static NetworkData* networkLoadData(VM* vm, ObjInstance* network, ObjPromise* promise) {
+    NetworkData* data = ALLOCATE_STRUCT(NetworkData);
+    if (data != NULL) {
+        data->vm = vm;
+        data->network = network;
+        data->promise = promise;
+    }
+    return data;
+}
+
+static void networkPopData(NetworkData* data) {
+    pop(data->vm);
+    data->vm->frameCount--;
+    free(data);
+}
+
+static void networkPushData(NetworkData* data) {
+    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
+    data->vm->frameCount++;
+}
+
 struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     struct addrinfo hints;
     void* ptr = NULL;
@@ -33,6 +54,23 @@ ObjString* dnsGetDomainFromIPAddress(VM* vm, const char* ipAddress, int* status)
     uv_getnameinfo_t netGetNameInfo;
     *status = uv_getnameinfo(vm->eventLoop, &netGetNameInfo, NULL, (struct sockaddr*)&socketAddress, 0);
     return newString(vm, netGetNameInfo.host);
+}
+
+ObjPromise* dnsGetDomainFromIPAddressAsync(VM* vm, ObjInstance* ipAddress, uv_getnameinfo_cb callback) {
+    uv_getnameinfo_t* netGetNameInfo = ALLOCATE_STRUCT(uv_getnameinfo_t);
+    ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+    if (netGetNameInfo == NULL) return NULL;
+    else {
+        netGetNameInfo->data = networkLoadData(vm, ipAddress, promise);
+        char* address = AS_CSTRING(getObjProperty(vm, ipAddress, "address"));
+        struct sockaddr_in socketAddress;
+        memset(&socketAddress, 0, sizeof(socketAddress));
+        socketAddress.sin_family = AF_INET;
+        inet_pton(AF_INET, address, &socketAddress.sin_addr);
+        uv_getnameinfo(vm->eventLoop, netGetNameInfo, callback, (struct sockaddr*)&socketAddress, 0);
+        return promise;
+    }
+    return newPromise(vm, PROMISE_FULFILLED, NIL_VAL, NIL_VAL);
 }
 
 ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
@@ -61,6 +99,15 @@ ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
 
     pop(vm);
     return ipAddresses;
+}
+
+void dnsOnGetNameInfo(uv_getnameinfo_t* netGetNameInfo, int status, const char* hostName, const char* service) {
+    NetworkData* data = netGetNameInfo->data;
+    networkPushData(data);
+    ObjString* domain = newString(data->vm, netGetNameInfo->host);
+    promiseFulfill(data->vm, data->promise, OBJ_VAL(domain));
+    free(netGetNameInfo);
+    networkPopData(data);
 }
 
 ObjArray* httpCreateCookies(VM* vm, CURL* curl) {

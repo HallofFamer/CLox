@@ -27,9 +27,17 @@ typedef enum HTTPMethod {
     HTTP_QUERY
 } HTTPMethod;
 
+typedef struct NetworkData {
+    VM* vm;
+    ObjInstance* network;
+    ObjPromise* promise;
+} NetworkData;
+
 struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status);
 ObjString* dnsGetDomainFromIPAddress(VM* vm, const char* ipAddress, int* status);
+ObjPromise* dnsGetDomainFromIPAddressAsync(VM* vm, ObjInstance* ipAddress, uv_getnameinfo_cb callback);
 ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result);
+void dnsOnGetNameInfo(uv_getnameinfo_t* netGetNameInfo, int status, const char* hostName, const char* service);
 ObjArray* httpCreateCookies(VM* vm, CURL* curl);
 ObjArray* httpCreateHeaders(VM* vm, CURLResponse curlResponse);
 ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse curlResponse);

@@ -321,6 +321,14 @@ LOX_METHOD(IPAddress, getDomain) {
     RETURN_OBJ(domain);
 }
 
+LOX_METHOD(IPAddress, getDomainAsync) {
+    ASSERT_ARG_COUNT("IPAddress::getDomainAsync()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjPromise* promise = dnsGetDomainFromIPAddressAsync(vm, self, dnsOnGetNameInfo);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.net.IPAddressException, "Failed to get domain name from IP Address.");
+    RETURN_OBJ(promise);
+}
+
 LOX_METHOD(IPAddress, isIPV4) {
     ASSERT_ARG_COUNT("IPAddress::isIPV4()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -683,6 +691,7 @@ void registerNetPackage(VM* vm) {
     bindSuperclass(vm, ipAddressClass, vm->objectClass);
     DEF_INTERCEPTOR(ipAddressClass, IPAddress, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(ipAddressClass, IPAddress, getDomain, 0);
+    DEF_METHOD(ipAddressClass, IPAddress, getDomainAsync, 0);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV4, 0);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV6, 0);
     DEF_METHOD(ipAddressClass, IPAddress, toArray, 0);
