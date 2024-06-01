@@ -43,7 +43,6 @@ struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     uv_getaddrinfo_t netGetAddrInfo;
     *status = uv_getaddrinfo(vm->eventLoop, &netGetAddrInfo, NULL, domainName, "80", &hints);
     return netGetAddrInfo.addrinfo;
-
 }
 
 ObjString* dnsGetDomainFromIPAddress(VM* vm, const char* ipAddress, int* status) {
@@ -142,6 +141,7 @@ ObjArray* httpCreateHeaders(VM* vm, CURLResponse curlResponse) {
             startIndex = i + 1;
         }
     }
+
     pop(vm);
     return headers;
 }
@@ -333,7 +333,7 @@ void ipWriteByteArray(VM* vm, ObjArray* array, ObjString* address, int radix) {
 
 bool urlIsAbsolute(VM* vm, ObjInstance* url) {
     ObjString* host = AS_STRING(getObjProperty(vm, url, "host"));
-    return host->length > 0;
+    return (host->length > 0);
 }
 
 ObjString* urlToString(VM* vm, ObjInstance* url) {

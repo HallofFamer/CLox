@@ -18,7 +18,7 @@ val domain = net.Domain("google.com");
 print("Domain name: ");
 println(domain.toString());
 print("Domain IPs: ");
-println(domain.ipAddresses());
+println(domain.getIPAddresses());
 
 val ip3 = net.IPAddress("204.15.11.70");
 println("IP3 address: " + ip3.toString());
