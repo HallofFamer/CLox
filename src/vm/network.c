@@ -32,7 +32,6 @@ static void networkPushData(NetworkData* data) {
 
 struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     struct addrinfo hints;
-    void* ptr = NULL;
     memset(&hints, 0, sizeof(hints));
 
     hints.ai_family = PF_UNSPEC;
@@ -43,6 +42,26 @@ struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     uv_getaddrinfo_t netGetAddrInfo;
     *status = uv_getaddrinfo(vm->eventLoop, &netGetAddrInfo, NULL, domainName, "80", &hints);
     return netGetAddrInfo.addrinfo;
+}
+
+ObjPromise* dnsGetDomainInfoAsync(VM* vm, ObjInstance* domain, uv_getaddrinfo_cb callback) {
+    uv_getaddrinfo_t* netGetAddrInfo = ALLOCATE_STRUCT(uv_getaddrinfo_t);
+    ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+    if (netGetAddrInfo == NULL) return NULL;
+    else {
+        netGetAddrInfo->data = networkLoadData(vm, domain, promise);
+        char* domainName = AS_CSTRING(getObjProperty(vm, domain, "name"));
+        struct addrinfo hints;
+        memset(&hints, 0, sizeof(hints));
+
+        hints.ai_family = PF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_protocol = IPPROTO_TCP;
+        hints.ai_flags |= AI_CANONNAME;
+
+        uv_getaddrinfo(vm->eventLoop, netGetAddrInfo, callback, domainName, "80", &hints);
+        return promise;
+    }
 }
 
 ObjString* dnsGetDomainFromIPAddress(VM* vm, const char* ipAddress, int* status) {
@@ -100,10 +119,30 @@ ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
     return ipAddresses;
 }
 
+void dnsOnGetAddrInfo(uv_getaddrinfo_t* netGetAddrInfo, int status, struct addrinfo* result) {
+    NetworkData* data = netGetAddrInfo->data;
+    networkPushData(data);
+
+    if (status < 0) {
+        ObjString* exceptionMessage = newString(data->vm, "Failed to resolve IP addresses for domain.");
+        ObjClass* exceptionClass = getNativeClass(data->vm, "clox.std.net.DomainHostException");
+        promiseReject(data->vm, data->promise, OBJ_VAL(newException(data->vm, exceptionMessage, exceptionClass)));
+    }
+    else {
+        ObjArray* ipAddresses = dnsGetIPAddressesFromDomain(data->vm, result);
+        promiseFulfill(data->vm, data->promise, OBJ_VAL(ipAddresses));
+    }
+
+    uv_freeaddrinfo(result);
+    free(netGetAddrInfo);
+    networkPopData(data);
+}
+
 void dnsOnGetNameInfo(uv_getnameinfo_t* netGetNameInfo, int status, const char* hostName, const char* service) {
     NetworkData* data = netGetNameInfo->data;
     networkPushData(data);
     ObjString* domain = newString(data->vm, netGetNameInfo->host);
+
     promiseFulfill(data->vm, data->promise, OBJ_VAL(domain));
     free(netGetNameInfo);
     networkPopData(data);

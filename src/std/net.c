@@ -38,6 +38,14 @@ LOX_METHOD(Domain, getIPAddresses) {
     RETURN_OBJ(ipAddresses);
 }
 
+LOX_METHOD(Domain, getIPAddressesAsync) {
+    ASSERT_ARG_COUNT("Domain::getIPAddressesAsync()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjPromise* promise = dnsGetDomainInfoAsync(vm, self, dnsOnGetAddrInfo);
+    if (promise == NULL) THROW_EXCEPTION(clox.std.net.DomainHostException, "Failed to get IP Addresses from Domain.");
+    RETURN_OBJ(promise);
+}
+
 LOX_METHOD(Domain, toString) {
     ASSERT_ARG_COUNT("Domain::toString()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
@@ -685,6 +693,7 @@ void registerNetPackage(VM* vm) {
     bindSuperclass(vm, domainClass, vm->objectClass);
     DEF_INTERCEPTOR(domainClass, Domain, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(domainClass, Domain, getIPAddresses, 0);
+    DEF_METHOD(domainClass, Domain, getIPAddressesAsync, 0);
     DEF_METHOD(domainClass, Domain, toString, 0);
 
     ObjClass* ipAddressClass = defineNativeClass(vm, "IPAddress");
