@@ -190,7 +190,7 @@ ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse
     char* contentType;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &statusCode);
     curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &contentType);
-    ObjInstance* httpResponse = newInstance(vm, getNativeClass(vm, "clox.std.network.HTTPResponse"));
+    ObjInstance* httpResponse = newInstance(vm, getNativeClass(vm, "clox.std.net.HTTPResponse"));
     push(vm, OBJ_VAL(httpResponse));
 
     setObjProperty(vm, httpResponse, "content", OBJ_VAL(copyString(vm, curlResponse.content, (int)curlResponse.cSize)));
