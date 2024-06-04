@@ -40,8 +40,7 @@ TimerData* timerData(VM* vm, ObjClosure* closure, int delay, int interval) {
 void timerRun(uv_timer_t* timer) {
     TimerData* data = (TimerData*)timer->data;
     if (data->interval == 0) uv_close((uv_handle_t*)timer, timerClose);
-    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
-    data->vm->frameCount++;
+    LOOP_PUSH_DATA(data);
 
     switch (data->closure->function->arity) {
         case 0:
@@ -53,6 +52,7 @@ void timerRun(uv_timer_t* timer) {
         default:
             throwNativeException(data->vm, "clox.std.lang.IllegalArgumentException", "timer callback closure may accept only 0 or 1 argument");
     }
+
     pop(data->vm);
     data->vm->frameCount--;
 }

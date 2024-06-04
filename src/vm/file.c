@@ -19,19 +19,6 @@ static FileData* fileLoadData(VM* vm, ObjFile* file, ObjPromise* promise) {
     return data;
 }
 
-static void filePopData(FileData* data) {
-    pop(data->vm);
-    data->vm->frameCount--;
-    free(data);
-}
-
-static FileData* filePushData(uv_fs_t* fsRequest) {
-    FileData* data = (FileData*)fsRequest->data;
-    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
-    data->vm->frameCount++;
-    return data;
-}
-
 bool fileClose(VM* vm, ObjFile* file) {
     if (file->isOpen) {
         uv_fs_t fsClose;
@@ -182,16 +169,18 @@ int fileMode(const char* mode) {
 }
 
 void fileOnClose(uv_fs_t* fsClose) {
-    FileData* data = filePushData(fsClose);
+    FileData* data = (FileData*)fsClose->data;
+    LOOP_PUSH_DATA(data);
     data->file->isOpen = false;
     promiseFulfill(data->vm, data->promise, NIL_VAL);
     uv_fs_req_cleanup(fsClose);
     free(fsClose);
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnCreate(uv_fs_t* fsOpen) {
-    FileData* data = filePushData(fsOpen);
+    FileData* data = (FileData*)fsOpen->data;
+    LOOP_PUSH_DATA(data);
     if (fsOpen->result == 0) {
         uv_fs_t fsClose;
         uv_fs_close(data->vm->eventLoop, &fsClose, (uv_file)fsOpen->result, NULL);
@@ -200,57 +189,63 @@ void fileOnCreate(uv_fs_t* fsOpen) {
     promiseFulfill(data->vm, data->promise, BOOL_VAL(fsOpen->result == 0));
     uv_fs_req_cleanup(fsOpen);
     free(fsOpen);
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnFlush(uv_fs_t* fsSync) {
-    FileData* data = filePushData(fsSync);
+    FileData* data = (FileData*)fsSync->data;
+    LOOP_PUSH_DATA(data);
     data->file->isOpen = false;
     promiseFulfill(data->vm, data->promise, BOOL_VAL(fsSync->result == 0));
     uv_fs_req_cleanup(fsSync);
     free(fsSync);
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnHandle(uv_fs_t* fsHandle) {
-    FileData* data = filePushData(fsHandle);
+    FileData* data = (FileData*)fsHandle->data;
+    LOOP_PUSH_DATA(data);
     promiseFulfill(data->vm, data->promise, BOOL_VAL(fsHandle->result == 0));
     uv_fs_req_cleanup(fsHandle);
     free(fsHandle);
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnOpen(uv_fs_t* fsOpen) {
-    FileData* data = filePushData(fsOpen);
+    FileData* data = (FileData*)fsOpen->data;
+    LOOP_PUSH_DATA(data);
     data->file->isOpen = true;
     ObjClass* streamClass = getNativeClass(data->vm, streamClassName(data->file->mode->chars));
     ObjInstance* stream = newInstance(data->vm, streamClass);
     setObjProperty(data->vm, stream, "file", OBJ_VAL(data->file));
     promiseFulfill(data->vm, data->promise, OBJ_VAL(stream));
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnRead(uv_fs_t* fsRead) {
-    FileData* data = filePushData(fsRead);
+    FileData* data = (FileData*)fsRead->data;
+    LOOP_PUSH_DATA(data);
     int numRead = (int)fsRead->result;
     if (numRead > 0) data->file->offset++;
     ObjString* character = takeString(data->vm, data->buffer.base, 1);
     promiseFulfill(data->vm, data->promise, OBJ_VAL(character));
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnReadByte(uv_fs_t* fsRead) {
-    FileData* data = filePushData(fsRead);
+    FileData* data = (FileData*)fsRead->data;
+    LOOP_PUSH_DATA(data);
     int numRead = (int)fsRead->result;
     if (numRead > 0) data->file->offset++;
     uint8_t byte = (uint8_t)data->buffer.base[0];
     promiseFulfill(data->vm, data->promise, INT_VAL(byte));
     free(data->buffer.base);
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnReadBytes(uv_fs_t* fsRead) {
-    FileData* data = filePushData(fsRead);
+    FileData* data = (FileData*)fsRead->data;
+    LOOP_PUSH_DATA(data);
     int numRead = (int)fsRead->result;
     if (numRead > 0) data->file->offset += numRead;
 
@@ -263,11 +258,12 @@ void fileOnReadBytes(uv_fs_t* fsRead) {
 
     pop(data->vm);
     promiseFulfill(data->vm, data->promise, OBJ_VAL(bytes));
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnReadLine(uv_fs_t* fsRead) {
-    FileData* data = filePushData(fsRead);
+    FileData* data = (FileData*)fsRead->data;
+    LOOP_PUSH_DATA(data);
     int numRead = (int)fsRead->result;
     int numReadLine = 0;
 
@@ -280,25 +276,27 @@ void fileOnReadLine(uv_fs_t* fsRead) {
 
     ObjString* string = takeString(data->vm, data->buffer.base, numReadLine);
     promiseFulfill(data->vm, data->promise, OBJ_VAL(string));
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnReadString(uv_fs_t* fsRead) {
-    FileData* data = filePushData(fsRead);
+    FileData* data = (FileData*)fsRead->data;
+    LOOP_PUSH_DATA(data);
     int numRead = (int)fsRead->result;
     if (numRead > 0) data->file->offset += numRead;
     
     ObjString* string = takeString(data->vm, data->buffer.base, numRead);
     promiseFulfill(data->vm, data->promise, OBJ_VAL(string));
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void fileOnWrite(uv_fs_t* fsWrite) {
-    FileData* data = filePushData(fsWrite);
+    FileData* data = (FileData*)fsWrite->data;
+    LOOP_PUSH_DATA(data);
     int numWrite = (int)fsWrite->result;
     if (numWrite > 0) data->file->offset += numWrite;
     promiseFulfill(data->vm, data->promise, NIL_VAL);
-    filePopData(data);
+    LOOP_POP_DATA(data);
 }
 
 bool fileOpen(VM* vm, ObjFile* file, const char* mode) {
