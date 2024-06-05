@@ -1,5 +1,6 @@
 namespace test.concurrency;
 using clox.std.net;
+using clox.std.util.Promise;
 
 val ip = net.IPAddress("127.0.0.1");
 println("IP Address: " + ip.toString());
@@ -16,11 +17,17 @@ println("");
 
 val domain = net.Domain("google.com");
 println("Domain name: ${domain.toString()}");
-domain.getIPAddressesAsync()
-      .then({|ipAddresses| 
-          println("Domain IPs: ${ipAddresses}");
-      })
-      .catch({|exception| println("Error: ${exception.message}"); });
+val domain2 = net.Domain("facebook.com");
+println("Domain2 name: ${domain2.toString()}");
+val promiseD1 = domain.getIPAddressesAsync();
+val promiseD2 = domain2.getIPAddressesAsync();
+Promise.all([promiseD1, promiseD2])
+       .then({|addresses| 
+           addresses.eachIndex({|index, address| 
+               println("Domain IPs for Domain ${index + 1}: ${address}");
+           })
+       })
+       .catch({|exception| println("promise all failed: ${exception.message}") });
 
 val ip3 = net.IPAddress("204.15.11.70");
 println("IP3 address: ${ip3.toString()}");

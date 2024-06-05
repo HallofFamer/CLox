@@ -19,17 +19,6 @@ static NetworkData* networkLoadData(VM* vm, ObjInstance* network, ObjPromise* pr
     return data;
 }
 
-static void networkPopData(NetworkData* data) {
-    pop(data->vm);
-    data->vm->frameCount--;
-    free(data);
-}
-
-static void networkPushData(NetworkData* data) {
-    push(data->vm, OBJ_VAL(data->vm->currentModule->closure));
-    data->vm->frameCount++;
-}
-
 struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -121,7 +110,7 @@ ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result) {
 
 void dnsOnGetAddrInfo(uv_getaddrinfo_t* netGetAddrInfo, int status, struct addrinfo* result) {
     NetworkData* data = netGetAddrInfo->data;
-    networkPushData(data);
+    LOOP_PUSH_DATA(data);
 
     if (status < 0) {
         ObjString* exceptionMessage = newString(data->vm, "Failed to resolve IP addresses for domain.");
@@ -135,17 +124,17 @@ void dnsOnGetAddrInfo(uv_getaddrinfo_t* netGetAddrInfo, int status, struct addri
 
     uv_freeaddrinfo(result);
     free(netGetAddrInfo);
-    networkPopData(data);
+    LOOP_POP_DATA(data);
 }
 
 void dnsOnGetNameInfo(uv_getnameinfo_t* netGetNameInfo, int status, const char* hostName, const char* service) {
     NetworkData* data = netGetNameInfo->data;
-    networkPushData(data);
+    LOOP_PUSH_DATA(data);
     ObjString* domain = newString(data->vm, netGetNameInfo->host);
 
     promiseFulfill(data->vm, data->promise, OBJ_VAL(domain));
     free(netGetNameInfo);
-    networkPopData(data);
+    LOOP_POP_DATA(data);
 }
 
 ObjArray* httpCreateCookies(VM* vm, CURL* curl) {

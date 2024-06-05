@@ -29,9 +29,7 @@ LOX_METHOD(Domain, getIPAddresses) {
     int status = -1;
     struct addrinfo* result = dnsGetDomainInfo(vm, name->chars, &status);
     if (result == NULL) THROW_EXCEPTION(clox.std.net.DomainHostException, "Unable to get domain info due to out of memory.");
-    if (status) {
-        THROW_EXCEPTION(clox.std.net.IPAddressException, "Failed to get IP address information for domain.");
-    }
+    if (status) THROW_EXCEPTION(clox.std.net.IPAddressException, "Failed to get IP address information for domain.");
 
     ObjArray* ipAddresses = dnsGetIPAddressesFromDomain(vm, result);
     uv_freeaddrinfo(result);
@@ -69,11 +67,8 @@ LOX_METHOD(HTTPClient, delete) {
     ASSERT_ARG_COUNT("HTTPClient::delete(url)", 1);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::delete(url)", 0, clox.std.lang.String, clox.std.net.URL);
     ObjString* url = httpRawURL(vm, args[0]);
-
     CURL* curl = curl_easy_init();
-    if (curl == NULL) {
-        THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a DELETE request using CURL.");
-    }
+    if (curl == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a DELETE request using CURL.");
 
     CURLResponse curlResponse;
     CURLcode curlCode = httpSendRequest(vm, url, HTTP_DELETE, NULL, curl, &curlResponse);
@@ -91,11 +86,8 @@ LOX_METHOD(HTTPClient, get) {
     ASSERT_ARG_COUNT("HTTPClient::get(url)", 1);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::get(url)", 0, clox.std.lang.String, clox.std.net.URL);
     ObjString* url = httpRawURL(vm, args[0]);
-
     CURL* curl = curl_easy_init();
-    if (curl == NULL) {
-        THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a GET request using CURL.");
-    }
+    if (curl == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a GET request using CURL.");
 
     CURLResponse curlResponse;
     CURLcode curlCode = httpSendRequest(vm, url, HTTP_GET, NULL, curl, &curlResponse);
@@ -113,11 +105,8 @@ LOX_METHOD(HTTPClient, head) {
     ASSERT_ARG_COUNT("HTTPClient::head(url)", 1);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::head(url)", 0, clox.std.lang.String, clox.std.net.URL);
     ObjString* url = httpRawURL(vm, args[0]);
-
     CURL* curl = curl_easy_init();
-    if (curl == NULL) {
-        THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a HEAD request using CURL.");
-    }
+    if (curl == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a HEAD request using CURL.");
 
     CURLResponse curlResponse;
     CURLcode curlCode = httpSendRequest(vm, url, HTTP_HEAD, NULL, curl, &curlResponse);
@@ -135,11 +124,8 @@ LOX_METHOD(HTTPClient, options) {
     ASSERT_ARG_COUNT("HTTPClient::options(url)", 1);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::options(url)", 0, clox.std.lang.String, clox.std.net.URL);
     ObjString* url = httpRawURL(vm, args[0]);
-
     CURL* curl = curl_easy_init();
-    if (curl == NULL) {
-        THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate an OPTIONS request using CURL.");
-    }
+    if (curl == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate an OPTIONS request using CURL.");
 
     CURLResponse curlResponse;
     CURLcode curlCode = httpSendRequest(vm, url, HTTP_OPTIONS, NULL, curl, &curlResponse);
@@ -161,10 +147,7 @@ LOX_METHOD(HTTPClient, patch) {
     ObjDictionary* data = AS_DICTIONARY(args[1]);
 
     CURL* curl = curl_easy_init();
-    if (curl == NULL) {
-        THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a PATCH request using CURL.");
-    }
-
+    if (curl == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a PATCH request using CURL.");
     CURLResponse curlResponse;
     CURLcode curlCode = httpSendRequest(vm, url, HTTP_PATCH, data, curl, &curlResponse);
     if (curlCode != CURLE_OK) {
@@ -185,10 +168,7 @@ LOX_METHOD(HTTPClient, post) {
     ObjDictionary* data = AS_DICTIONARY(args[1]);
 
     CURL* curl = curl_easy_init();
-    if (curl == NULL) {
-        THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a POST request using CURL.");
-    }
-
+    if (curl == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a POST request using CURL.");
     CURLResponse curlResponse;
     CURLcode curlCode = httpSendRequest(vm, url, HTTP_POST, data, curl, &curlResponse);
     if (curlCode != CURLE_OK) {
@@ -209,10 +189,7 @@ LOX_METHOD(HTTPClient, put) {
     ObjDictionary* data = AS_DICTIONARY(args[1]);
 
     CURL* curl = curl_easy_init();
-    if (curl == NULL) {
-        THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a PUT request using CURL.");
-    }
-
+    if (curl == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a PUT request using CURL.");
     CURLResponse curlResponse;
     CURLcode curlCode = httpSendRequest(vm, url, HTTP_PUT, data, curl, &curlResponse);
     if (curlCode != CURLE_OK) {
@@ -228,11 +205,8 @@ LOX_METHOD(HTTPClient, put) {
 LOX_METHOD(HTTPClient, send) {
     ASSERT_ARG_COUNT("HTTPClient::send(request)", 1);
     ASSERT_ARG_INSTANCE_OF("HTTPClient::send(request)", 0, clox.std.net.HTTPRequest);
-
     CURL* curl = curl_easy_init();
-    if (curl == NULL) {
-        THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate an HTTP request using CURL.");
-    }
+    if (curl == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate an HTTP request using CURL.");
 
     ObjInstance* request = AS_INSTANCE(args[0]);
     ObjString* url = AS_STRING(getObjProperty(vm, request, "url"));
@@ -399,9 +373,7 @@ LOX_METHOD(Socket, receive) {
     int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
     char message[UINT8_MAX] = "";
 
-    if (recv(descriptor, message, UINT8_MAX, 0) < 0) {
-        THROW_EXCEPTION(clox.std.net.SocketException, "Failed to receive message from socket.");
-    }
+    if (recv(descriptor, message, UINT8_MAX, 0) < 0) THROW_EXCEPTION(clox.std.net.SocketException, "Failed to receive message from socket.");
     RETURN_STRING(message, (int)strlen(message));
 }
 
@@ -532,9 +504,7 @@ LOX_METHOD(SocketServer, listen) {
     ObjInstance* self = AS_INSTANCE(receiver);
     int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
 
-    if (listen(descriptor, 1) < 0) {
-        THROW_EXCEPTION(clox.std.net.SocketException, "Failed to listen for incoming connections.");
-    }
+    if (listen(descriptor, 1) < 0) THROW_EXCEPTION(clox.std.net.SocketException, "Failed to listen for incoming connections.");
     RETURN_NIL;
 }
 
