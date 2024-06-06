@@ -14,6 +14,7 @@ typedef struct {
 bool propagateException(VM* vm);
 void pushExceptionHandler(VM* vm, ObjClass* exceptionClass, uint16_t handlerAddress, uint16_t finallyAddress);
 ObjArray* getStackTrace(VM* vm);
+ObjException* createException(VM* vm, ObjClass* exceptionClass, const char* format, ...);
 ObjException* throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...);
 ObjException* throwNativeException(VM* vm, const char* exceptionClassName, const char* format, ...);
 

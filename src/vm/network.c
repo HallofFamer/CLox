@@ -113,9 +113,8 @@ void dnsOnGetAddrInfo(uv_getaddrinfo_t* netGetAddrInfo, int status, struct addri
     LOOP_PUSH_DATA(data);
 
     if (status < 0) {
-        ObjString* exceptionMessage = newString(data->vm, "Failed to resolve IP addresses for domain.");
-        ObjClass* exceptionClass = getNativeClass(data->vm, "clox.std.net.DomainHostException");
-        promiseReject(data->vm, data->promise, OBJ_VAL(newException(data->vm, exceptionMessage, exceptionClass)));
+        ObjException* exception = createException(data->vm, getNativeClass(data->vm, "clox.std.net.DomainHostException"), "Failed to resolve IP addresses for domain.");
+        promiseReject(data->vm, data->promise, OBJ_VAL(exception));
     }
     else {
         ObjArray* ipAddresses = dnsGetIPAddressesFromDomain(data->vm, result);
@@ -130,9 +129,16 @@ void dnsOnGetAddrInfo(uv_getaddrinfo_t* netGetAddrInfo, int status, struct addri
 void dnsOnGetNameInfo(uv_getnameinfo_t* netGetNameInfo, int status, const char* hostName, const char* service) {
     NetworkData* data = netGetNameInfo->data;
     LOOP_PUSH_DATA(data);
-    ObjString* domain = newString(data->vm, netGetNameInfo->host);
 
-    promiseFulfill(data->vm, data->promise, OBJ_VAL(domain));
+    if (status < 0) {
+        ObjException* exception = createException(data->vm, getNativeClass(data->vm, "clox.std.net.IPAddressException"), "Failed to get domain name for IP Address.");
+        promiseReject(data->vm, data->promise, OBJ_VAL(exception));
+    }
+    else {
+        ObjString* domain = newString(data->vm, netGetNameInfo->host);
+        promiseFulfill(data->vm, data->promise, OBJ_VAL(domain));
+    }
+
     free(netGetNameInfo);
     LOOP_POP_DATA(data);
 }
