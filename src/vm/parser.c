@@ -208,6 +208,7 @@ void synchronize(Parser* parser) {
         if (parser->previous.type == TOKEN_SEMICOLON) return;
 
         switch (parser->current.type) {
+            case TOKEN_AWAIT:
             case TOKEN_CLASS:
             case TOKEN_FOR:
             case TOKEN_FROM:
@@ -223,7 +224,7 @@ void synchronize(Parser* parser) {
             case TOKEN_VAR:
             case TOKEN_WHILE:
             case TOKEN_YIELD:
-            return;
+                return;
 
             default:
             ;

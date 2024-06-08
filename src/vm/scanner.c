@@ -148,7 +148,11 @@ static TokenSymbol identifierType(Scanner* scanner) {
             if (scanner->current - scanner->start > 1) {
                 switch (scanner->start[1]) {
                     case 'n': return checkKeyword(scanner, 2, 1, "d", TOKEN_AND);
-                    case 's': return checkKeyword(scanner, 2, 0, "", TOKEN_AS);
+                    case 's': { 
+                        if (scanner->current - scanner->start > 2) return checkKeyword(scanner, 2, 3, "ync", TOKEN_ASYNC);
+                        else return checkKeyword(scanner, 2, 0, "", TOKEN_AS);
+                    }
+                    case 'w': return checkKeyword(scanner, 2, 3, "ait", TOKEN_AWAIT);
                 }
             }          
         case 'b': return checkKeyword(scanner, 1, 4, "reak", TOKEN_BREAK);

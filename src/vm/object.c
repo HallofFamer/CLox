@@ -133,6 +133,7 @@ ObjFunction* newFunction(VM* vm) {
     function->arity = 0;
     function->upvalueCount = 0;
     function->isGenerator = false;
+    function->isAsync = false;
     function->name = NULL;
     initChunk(&function->chunk);
     return function;

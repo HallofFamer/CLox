@@ -130,6 +130,7 @@ typedef struct {
     int arity;
     int upvalueCount;
     bool isGenerator;
+    bool isAsync;
     Chunk chunk;
     ObjString* name;
 } ObjFunction;
