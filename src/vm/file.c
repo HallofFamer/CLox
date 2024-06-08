@@ -186,6 +186,7 @@ void fileOnCreate(uv_fs_t* fsOpen) {
         uv_fs_close(data->vm->eventLoop, &fsClose, (uv_file)fsOpen->result, NULL);
         uv_fs_req_cleanup(&fsClose);
     }
+
     promiseFulfill(data->vm, data->promise, BOOL_VAL(fsOpen->result == 0));
     uv_fs_req_cleanup(fsOpen);
     free(fsOpen);

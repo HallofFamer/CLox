@@ -5,6 +5,7 @@
 
 #include "native.h"
 #include "vm.h"
+#include "exception.h"
 
 bool propagateException(VM* vm) {
     ObjException* exception = AS_EXCEPTION(peek(vm, 0));
@@ -76,6 +77,21 @@ ObjException* createException(VM* vm, ObjClass* exceptionClass, const char* form
     ObjString* message = copyString(vm, chars, length);
     ObjArray* stacktrace = getStackTrace(vm);
 
+    ObjException* exception = newException(vm, message, exceptionClass);
+    exception->stacktrace = stacktrace;
+    return exception;
+}
+
+ObjException* createNativeException(VM* vm, const char* exceptionClassName, const char* format, ...) {
+    char chars[UINT8_MAX];
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(chars, UINT8_MAX, format, args);
+    va_end(args);
+    ObjString* message = copyString(vm, chars, length);
+    ObjArray* stacktrace = getStackTrace(vm);
+
+    ObjClass* exceptionClass = getNativeClass(vm, exceptionClassName);
     ObjException* exception = newException(vm, message, exceptionClass);
     exception->stacktrace = stacktrace;
     return exception;
