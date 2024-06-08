@@ -237,7 +237,7 @@ static void expression(Compiler* compiler);
 static void statement(Compiler* compiler);
 static void block(Compiler* compiler);
 static void behavior(Compiler* compiler, BehaviorType type, Token name);
-static void function(Compiler* enclosing, FunctionType type);
+static void function(Compiler* enclosing, FunctionType type, bool isAsync);
 static void declaration(Compiler* compiler);
 static ParseRule* getRule(TokenSymbol type);
 static void parsePrecedence(Compiler* compiler, Precedence precedence);
@@ -717,11 +717,11 @@ static void collection(Compiler* compiler, bool canAssign) {
 }
 
 static void closure(Compiler* compiler, bool canAssign) {
-    function(compiler, TYPE_FUNCTION);
+    function(compiler, TYPE_FUNCTION, false);
 }
 
 static void lambda(Compiler* compiler, bool canAssign) {
-    function(compiler, TYPE_LAMBDA);
+    function(compiler, TYPE_LAMBDA, false);
 }
 
 static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
@@ -860,6 +860,14 @@ static void yield(Compiler* compiler, bool canAssign) {
     }
 }
 
+static void await(Compiler* compiler, bool canAssign) {
+    if (compiler->type != TYPE_SCRIPT && !compiler->function->isAsync) {
+        error(compiler->parser, "Cannot use await unless in top level code or inside async functions/methods.");
+    }
+    expression(compiler);
+    emitByte(compiler, OP_AWAIT);
+}
+
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN]       = {grouping,      call,        PREC_CALL},
     [TOKEN_RIGHT_PAREN]      = {NULL,          NULL,        PREC_NONE},
@@ -894,7 +902,9 @@ ParseRule rules[] = {
     [TOKEN_INT]              = {integer,       NULL,        PREC_NONE},
     [TOKEN_AND]              = {NULL,          and_,        PREC_AND},
     [TOKEN_AS]               = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_BREAK]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_ASYNC]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_AWAIT]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_BREAK]            = {await,          NULL,        PREC_NONE},
     [TOKEN_CASE]             = {NULL,          NULL,        PREC_NONE},
     [TOKEN_CATCH]            = {NULL,          NULL,        PREC_NONE},
     [TOKEN_CLASS]            = {klass,         NULL,        PREC_NONE},
@@ -993,7 +1003,7 @@ static uint8_t lambdaDepth(Compiler* compiler) {
     return depth;
 }
 
-static void function(Compiler* enclosing, FunctionType type) {
+static void function(Compiler* enclosing, FunctionType type, bool isAsync) {
     Compiler compiler;
     initCompiler(&compiler, enclosing->parser, enclosing, type);
     beginScope(&compiler);
@@ -1003,6 +1013,7 @@ static void function(Compiler* enclosing, FunctionType type) {
 
     block(&compiler);
     ObjFunction* function = endCompiler(&compiler);
+    function->isAsync = isAsync;
     emitBytes(enclosing, OP_CLOSURE, makeIdentifier(enclosing, OBJ_VAL(function)));
 
     for (int i = 0; i < function->upvalueCount; i++) {
@@ -1012,6 +1023,8 @@ static void function(Compiler* enclosing, FunctionType type) {
 }
 
 static void method(Compiler* compiler) {
+    bool isAsync = false;
+    if (match(compiler->parser, TOKEN_ASYNC)) isAsync = true;
     uint8_t opCode = match(compiler->parser, TOKEN_CLASS) ? OP_CLASS_METHOD : OP_INSTANCE_METHOD;
     uint8_t constant = propertyConstant(compiler, "Expect method name.");
 
@@ -1020,7 +1033,7 @@ static void method(Compiler* compiler) {
         type = TYPE_INITIALIZER;
     }
 
-    function(compiler, type);
+    function(compiler, type, isAsync);
     emitBytes(compiler, opCode, constant);
 }
 
@@ -1102,7 +1115,7 @@ static void classDeclaration(Compiler* compiler) {
 static void funDeclaration(Compiler* compiler) {
     uint8_t global = parseVariable(compiler, "Expect function name.");
     markInitialized(compiler, false);
-    function(compiler, TYPE_FUNCTION);
+    function(compiler, TYPE_FUNCTION, false);
     defineVariable(compiler, global, false);
 }
 
