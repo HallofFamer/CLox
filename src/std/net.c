@@ -546,9 +546,7 @@ LOX_METHOD(URL, pathArray) {
     else {
         char* paths[UINT4_MAX];
         int length = yuarel_split_path(path->chars, paths, 3);
-        if (length == -1) {
-            THROW_EXCEPTION(clox.std.net.URLException, "Failed to parse path from URL.");
-        }
+        if (length == -1) THROW_EXCEPTION(clox.std.net.URLException, "Failed to parse path from URL.");
 
         ObjArray* pathArray = newArray(vm);
         push(vm, OBJ_VAL(pathArray));

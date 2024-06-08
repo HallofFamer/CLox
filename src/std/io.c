@@ -386,7 +386,7 @@ LOX_METHOD(FileReadStream, __init__) {
     ASSERT_ARG_COUNT("FileReadStream::__init__(file)", 1);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjFile* file = getFileArgument(vm, args[0]);
-    if (file == NULL) raiseError(vm, "Method FileReadStream::__init__(file) expects argument 1 to be a string or file.");
+    if (file == NULL) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Method FileReadStream::__init__(file) expects argument 1 to be a string or file.");
     if (!setFileProperty(vm, AS_INSTANCE(receiver), file, "r")) {
         THROW_EXCEPTION(clox.std.io.IOException, "Cannot create FileReadStream, file either does not exist or require additional permission to access.");
     }
@@ -612,8 +612,7 @@ LOX_METHOD(FileWriteStream, writeStringAsync) {
 }
 
 LOX_METHOD(IOStream, __init__) {
-    raiseError(vm, "Cannot instantiate from class IOStream.");
-    RETURN_NIL;
+    THROW_EXCEPTION(clox.std.lang.UnsupportedOperationException, "Cannot instantiate from class IOStream.");
 }
 
 LOX_METHOD(IOStream, close) {

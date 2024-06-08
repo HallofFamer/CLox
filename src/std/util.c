@@ -672,20 +672,17 @@ LOX_METHOD(Random, getSeed) {
 
 LOX_METHOD(Random, nextBool) {
     ASSERT_ARG_COUNT("Random::nextBool()", 0);
-    bool value = pcg32_random_bool();
-    RETURN_BOOL(value);
+    RETURN_BOOL(pcg32_random_bool());
 }
 
 LOX_METHOD(Random, nextFloat) {
     ASSERT_ARG_COUNT("Random::nextFloat()", 0);
-    double value = pcg32_random_double();
-    RETURN_NUMBER(value);
+    RETURN_NUMBER(pcg32_random_double());
 }
 
 LOX_METHOD(Random, nextInt) {
     ASSERT_ARG_COUNT("Random::nextInt()", 0);
-    uint32_t value = pcg32_random_int();
-    RETURN_INT((int)value);
+    RETURN_INT((int)pcg32_random_int());
 }
 
 LOX_METHOD(Random, nextIntBounded) {
