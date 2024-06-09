@@ -219,6 +219,12 @@ LOX_METHOD(BoundMethod, clone) {
     RETURN_OBJ(receiver);
 }
 
+LOX_METHOD(BoundMethod, isAsync) {
+    ASSERT_ARG_COUNT("BoundMethod::isAsync()", 0);
+    Value method = AS_BOUND_METHOD(receiver)->method;
+    RETURN_BOOL(IS_NATIVE_METHOD(method) ? false : AS_CLOSURE(method)->function->isAsync);
+}
+
 LOX_METHOD(BoundMethod, isNative) { 
     ASSERT_ARG_COUNT("BoundMethod::isNative()", 0);
     RETURN_BOOL(AS_BOUND_METHOD(receiver)->isNative);
@@ -483,6 +489,12 @@ LOX_METHOD(Function, isAnonymous) {
     ASSERT_ARG_COUNT("Function::isAnonymous()", 0);
     if (IS_NATIVE_FUNCTION(receiver)) RETURN_FALSE;
     RETURN_BOOL(AS_CLOSURE(receiver)->function->name->length == 0);
+}
+
+LOX_METHOD(Function, isAsync) {
+    ASSERT_ARG_COUNT("Function::isAsync()", 0);
+    if (IS_NATIVE_FUNCTION(receiver)) RETURN_FALSE;
+    RETURN_BOOL(AS_CLOSURE(receiver)->function->isAsync);
 }
 
 LOX_METHOD(Function, isNative) {
@@ -1621,6 +1633,10 @@ LOX_METHOD(TCallable, arity) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
 
+LOX_METHOD(TCallable, isAsync) {
+    THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
+}
+
 LOX_METHOD(TCallable, isNative) {
     THROW_EXCEPTION(clox.std.lang.NotImplementedException, "Not implemented, subclass responsibility.");
 }
@@ -2046,6 +2062,7 @@ void registerLangPackage(VM* vm) {
 
     ObjClass* callableTrait = defineNativeTrait(vm, "TCallable");
     DEF_METHOD(callableTrait, TCallable, arity, 0);
+    DEF_METHOD(callableTrait, TCallable, isAsync, 0);
     DEF_METHOD(callableTrait, TCallable, isNative, 0);
     DEF_METHOD(callableTrait, TCallable, isVariadic, 0);
     DEF_METHOD(callableTrait, TCallable, name, 0);
@@ -2063,6 +2080,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->functionClass, Function, call2, 2);
     DEF_METHOD(vm->functionClass, Function, clone, 0);
     DEF_METHOD(vm->functionClass, Function, isAnonymous, 0);
+    DEF_METHOD(vm->functionClass, Function, isAsync, 0);
     DEF_METHOD(vm->functionClass, Function, isNative, 0);
     DEF_METHOD(vm->functionClass, Function, isVariadic, 0);
     DEF_METHOD(vm->functionClass, Function, name, 0);
@@ -2077,6 +2095,7 @@ void registerLangPackage(VM* vm) {
     DEF_INTERCEPTOR(vm->boundMethodClass, BoundMethod, INTERCEPTOR_INIT, __init__, 2);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, arity, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, clone, 0);
+    DEF_METHOD(vm->boundMethodClass, BoundMethod, isAsync, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, isNative, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, isVariadic, 0);
     DEF_METHOD(vm->boundMethodClass, BoundMethod, name, 0);
