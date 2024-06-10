@@ -405,9 +405,7 @@ LOX_METHOD(FloatClass, parse) {
 
     char* endPoint = NULL;
     double floatValue = strtod(floatString->chars, &endPoint);
-    if (floatValue == 0.0) {
-        THROW_EXCEPTION(clox.std.lang.FormatException, "Failed to parse float from input string.");
-    }
+    if (floatValue == 0.0) THROW_EXCEPTION(clox.std.lang.FormatException, "Failed to parse float from input string.");
     RETURN_NUMBER(floatValue);
 }
 
@@ -853,9 +851,7 @@ LOX_METHOD(IntClass, parse) {
 
     char* endPoint = NULL;
     int intValue = (int)strtol(intString->chars, &endPoint, 10);
-    if (intValue == 0) {
-        THROW_EXCEPTION(clox.std.lang.FormatException, "Failed to parse int from input string.");
-    }
+    if (intValue == 0) THROW_EXCEPTION(clox.std.lang.FormatException, "Failed to parse int from input string.");
     RETURN_INT(intValue);
 }
 

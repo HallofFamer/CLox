@@ -36,7 +36,7 @@ https://github.com/munificent/craftinginterpreters
 - Class methods in class declaration using `class` keyword, and trait declaration using `trait` keyword.
 - Anonymous classes/traits similar to anonymous functions/lambda.
 - Namespace as CLox's module system, allowing importing namespace and aliasing of imported classes, traits and functions.
-- CLox Standard Library for packages `lang`, `util`, `collection`, `io` and `network` in bullt-in namespace `clox.std`.
+- CLox Standard Library for packages `lang`, `util`, `collection`, `io` and `net` in bullt-in namespace `clox.std`.
 - Raise exception with `throw` keyword, and exception handling with try/catch/finally statement.
 - Interceptor methods which are invoked automatically when getting/setting properties, invoking methods or throwing exceptions.
 - Generator functions/methods which can yield control back to the caller and resume at a later point of execution.
@@ -135,7 +135,7 @@ cmake --build ./build --config Release
 ./x64/Release/CLox
 ```
 
-#### Linux(with git, cmake and curl, need to install one of the libcurl4-dev packages)
+#### Linux(with git, cmake, curl and libuv, need to install one of the libcurl4-dev and libuv1.dev packages)
 ```
 git clone -b master https://github.com/HallofFamer/CLox.git
 cd CLox
