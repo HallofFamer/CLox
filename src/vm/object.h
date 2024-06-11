@@ -155,6 +155,7 @@ typedef struct {
     Obj obj;
     ObjString* name;
     int arity;
+    bool isAsync;
     NativeFunction function;
 } ObjNativeFunction;
 
@@ -163,6 +164,7 @@ typedef struct {
     ObjClass* klass;
     ObjString* name;
     int arity;
+    bool isAsync;
     NativeMethod method;
 } ObjNativeMethod;
  
@@ -351,8 +353,8 @@ ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure);
 ObjModule* newModule(VM* vm, ObjString* path);
 void initNamespace(VM* vm, ObjNamespace* namespace, ObjString* shortName, ObjNamespace* enclosing);
 ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing);
-ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, NativeFunction function);
-ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, NativeMethod method);
+ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, bool isAsync, NativeFunction function);
+ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, bool isAsync, NativeMethod method);
 ObjNode* newNode(VM* vm, Value element, ObjNode* prev, ObjNode* next);
 ObjPromise* newPromise(VM* vm, PromiseState state, Value value, Value executor);
 ObjRange* newRange(VM* vm, int from, int to);

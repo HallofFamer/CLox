@@ -222,7 +222,7 @@ LOX_METHOD(BoundMethod, clone) {
 LOX_METHOD(BoundMethod, isAsync) {
     ASSERT_ARG_COUNT("BoundMethod::isAsync()", 0);
     Value method = AS_BOUND_METHOD(receiver)->method;
-    RETURN_BOOL(IS_NATIVE_METHOD(method) ? false : AS_CLOSURE(method)->function->isAsync);
+    RETURN_BOOL(IS_NATIVE_METHOD(method) ? AS_NATIVE_METHOD(method)->isAsync : AS_CLOSURE(method)->function->isAsync);
 }
 
 LOX_METHOD(BoundMethod, isNative) { 
