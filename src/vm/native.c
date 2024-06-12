@@ -86,19 +86,19 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     return nativeClass;
 }
 
-void defineNativeFunction(VM* vm, const char* name, int arity, NativeFunction function) {
+void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, NativeFunction function) {
     ObjString* functionName = newString(vm, name);
     push(vm, OBJ_VAL(functionName));
-    push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, function)));
+    push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, isAsync, function)));
     tableSet(vm, &vm->rootNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
 }
 
-void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, NativeMethod method) {
+void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bool isAsync, NativeMethod method) {
     ObjString* methodName = newString(vm, name);
     push(vm, OBJ_VAL(methodName));
-    ObjNativeMethod* nativeMethod = newNativeMethod(vm, klass, methodName, arity, method);
+    ObjNativeMethod* nativeMethod = newNativeMethod(vm, klass, methodName, arity, isAsync, method);
     push(vm, OBJ_VAL(nativeMethod));
     tableSet(vm, &klass->methods, methodName, OBJ_VAL(nativeMethod));
     pop(vm);
@@ -108,37 +108,37 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, Na
 void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int arity, NativeMethod method) {
     switch (type) {
         case INTERCEPTOR_INIT:
-            defineNativeMethod(vm, klass, "__init__", arity, method);
+            defineNativeMethod(vm, klass, "__init__", arity, false, method);
             break;
         case INTERCEPTOR_BEFORE_GET:
-            defineNativeMethod(vm, klass, "__beforeGet__", 1, method);
+            defineNativeMethod(vm, klass, "__beforeGet__", 1, false, method);
             break;
         case INTERCEPTOR_AFTER_GET:
-            defineNativeMethod(vm, klass, "__afterGet__", 2, method);
+            defineNativeMethod(vm, klass, "__afterGet__", 2, false, method);
             break;
         case INTERCEPTOR_BEFORE_SET:
-            defineNativeMethod(vm, klass, "__beforeSet__", 2, method);
+            defineNativeMethod(vm, klass, "__beforeSet__", 2, false, method);
             break;
         case INTERCEPTOR_AFTER_SET: 
-            defineNativeMethod(vm, klass, "__afterSet__", 2, method);
+            defineNativeMethod(vm, klass, "__afterSet__", 2, false, method);
             break;
         case INTERCEPTOR_ON_INVOKE:
-            defineNativeMethod(vm, klass, "__onInvoke__", 2, method);
+            defineNativeMethod(vm, klass, "__onInvoke__", 2, false, method);
             break;
         case INTERCEPTOR_ON_RETURN:
-            defineNativeMethod(vm, klass, "__onReturn__", 2, method);
+            defineNativeMethod(vm, klass, "__onReturn__", 2, false, method);
             break;
         case INTERCEPTOR_ON_THROW:
-            defineNativeMethod(vm, klass, "__onThrow__", 2, method);
+            defineNativeMethod(vm, klass, "__onThrow__", 2, false, method);
             break;
         case INTERCEPTOR_ON_YIELD:
-            defineNativeMethod(vm, klass, "__onYield__", 2, method);
+            defineNativeMethod(vm, klass, "__onYield__", 2, false, method);
             break;
         case INTERCEPTOR_UNDEFINED_GET:
-            defineNativeMethod(vm, klass, "__undefinedGet__", 1, method);
+            defineNativeMethod(vm, klass, "__undefinedGet__", 1, false, method);
             break;
         case INTERCEPTOR_UNDEFINED_INVOKE:
-            defineNativeMethod(vm, klass, "__undefinedInvoke__", 2, method);
+            defineNativeMethod(vm, klass, "__undefinedInvoke__", 2, false, method);
             break;
         default: 
             runtimeError(vm, "Unknown interceptor type %d.", type);
