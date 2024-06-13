@@ -722,9 +722,9 @@ void registerIOPackage(VM* vm) {
     vm->fileClass->classType = OBJ_FILE;
     DEF_INTERCEPTOR(vm->fileClass, File, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(vm->fileClass, File, create, 0);
-    DEF_METHOD(vm->fileClass, File, createAsync, 0);
+    DEF_METHOD_ASYNC(vm->fileClass, File, createAsync, 0);
     DEF_METHOD(vm->fileClass, File, delete, 0);
-    DEF_METHOD(vm->fileClass, File, deleteAsync, 0);
+    DEF_METHOD_ASYNC(vm->fileClass, File, deleteAsync, 0);
     DEF_METHOD(vm->fileClass, File, exists, 0);
     DEF_METHOD(vm->fileClass, File, getAbsolutePath, 0);
     DEF_METHOD(vm->fileClass, File, isDirectory, 0);
@@ -735,10 +735,10 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(vm->fileClass, File, lastAccessed, 0);
     DEF_METHOD(vm->fileClass, File, lastModified, 0);
     DEF_METHOD(vm->fileClass, File, mkdir, 0);
-    DEF_METHOD(vm->fileClass, File, mkdirAsync, 0);
+    DEF_METHOD_ASYNC(vm->fileClass, File, mkdirAsync, 0);
     DEF_METHOD(vm->fileClass, File, name, 0);
     DEF_METHOD(vm->fileClass, File, rename, 1);
-    DEF_METHOD(vm->fileClass, File, renameAsync, 1);
+    DEF_METHOD_ASYNC(vm->fileClass, File, renameAsync, 1);
     DEF_METHOD(vm->fileClass, File, rmdir, 0);
     DEF_METHOD(vm->fileClass, File, rmdirAsync, 0);
     DEF_METHOD(vm->fileClass, File, setExecutable, 1);
@@ -759,7 +759,7 @@ void registerIOPackage(VM* vm) {
     bindTrait(vm, ioStreamClass, closableTrait);
     DEF_INTERCEPTOR(ioStreamClass, IOStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(ioStreamClass, IOStream, close, 0);
-    DEF_METHOD(ioStreamClass, IOStream, closeAsync, 0);
+    DEF_METHOD_ASYNC(ioStreamClass, IOStream, closeAsync, 0);
     DEF_METHOD(ioStreamClass, IOStream, file, 0);
     DEF_METHOD(ioStreamClass, IOStream, getPosition, 0);
     DEF_METHOD(ioStreamClass, IOStream, reset, 0);
@@ -775,49 +775,49 @@ void registerIOPackage(VM* vm) {
     bindSuperclass(vm, writeStreamClass, ioStreamClass);
     DEF_INTERCEPTOR(writeStreamClass, WriteStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(writeStreamClass, WriteStream, flush, 0);
-    DEF_METHOD(writeStreamClass, WriteStream, flushAsync, 0);
+    DEF_METHOD_ASYNC(writeStreamClass, WriteStream, flushAsync, 0);
     DEF_METHOD(writeStreamClass, WriteStream, write, 1);
 
     ObjClass* binaryReadStreamClass = defineNativeClass(vm, "BinaryReadStream");
     bindSuperclass(vm, binaryReadStreamClass, readStreamClass);
     DEF_INTERCEPTOR(binaryReadStreamClass, BinaryReadStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(binaryReadStreamClass, BinaryReadStream, read, 0);
-    DEF_METHOD(binaryReadStreamClass, BinaryReadStream, readAsync, 0);
+    DEF_METHOD_ASYNC(binaryReadStreamClass, BinaryReadStream, readAsync, 0);
     DEF_METHOD(binaryReadStreamClass, BinaryReadStream, readBytes, 1);
-    DEF_METHOD(binaryReadStreamClass, BinaryReadStream, readBytesAsync, 1);
+    DEF_METHOD_ASYNC(binaryReadStreamClass, BinaryReadStream, readBytesAsync, 1);
 
     ObjClass* binaryWriteStreamClass = defineNativeClass(vm, "BinaryWriteStream");
     bindSuperclass(vm, binaryWriteStreamClass, writeStreamClass);
     DEF_INTERCEPTOR(binaryWriteStreamClass, BinaryWriteStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, write, 1);
-    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeAsync, 1);
+    DEF_METHOD_ASYNC(binaryWriteStreamClass, BinaryWriteStream, writeAsync, 1);
     DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeBytes, 1);
-    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeBytesAsync, 1);
+    DEF_METHOD_ASYNC(binaryWriteStreamClass, BinaryWriteStream, writeBytesAsync, 1);
 
     ObjClass* fileReadStreamClass = defineNativeClass(vm, "FileReadStream");
     bindSuperclass(vm, fileReadStreamClass, readStreamClass);
     DEF_INTERCEPTOR(fileReadStreamClass, FileReadStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(fileReadStreamClass, FileReadStream, peek, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, read, 0);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, readAsync, 0);
+    DEF_METHOD_ASYNC(fileReadStreamClass, FileReadStream, readAsync, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, readLine, 0);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, readLineAsync, 0);
+    DEF_METHOD_ASYNC(fileReadStreamClass, FileReadStream, readLineAsync, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, readString, 0);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, readStringAsync, 0);
+    DEF_METHOD_ASYNC(fileReadStreamClass, FileReadStream, readStringAsync, 0);
     DEF_METHOD(fileReadStreamClass, FileReadStream, readToEnd, 0);
-    DEF_METHOD(fileReadStreamClass, FileReadStream, readToEndAsync, 0);
+    DEF_METHOD_ASYNC(fileReadStreamClass, FileReadStream, readToEndAsync, 0);
 
     ObjClass* fileWriteStreamClass = defineNativeClass(vm, "FileWriteStream");
     bindSuperclass(vm, fileWriteStreamClass, writeStreamClass);
     DEF_INTERCEPTOR(fileWriteStreamClass, FileWriteStream, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, write, 1);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeAsync, 1);
+    DEF_METHOD_ASYNC(fileWriteStreamClass, FileWriteStream, writeAsync, 1);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeLine, 0);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeLineAsync, 0);
+    DEF_METHOD_ASYNC(fileWriteStreamClass, FileWriteStream, writeLineAsync, 0);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeSpace, 0);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeSpaceAsync, 0);
+    DEF_METHOD_ASYNC(fileWriteStreamClass, FileWriteStream, writeSpaceAsync, 0);
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeString, 1);
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeStringAsync, 1);
+    DEF_METHOD_ASYNC(fileWriteStreamClass, FileWriteStream, writeStringAsync, 1);
 
     ObjClass* ioExceptionClass = defineNativeException(vm, "IOException", vm->exceptionClass);
     defineNativeException(vm, "EOFException", ioExceptionClass);

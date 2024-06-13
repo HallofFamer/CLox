@@ -951,8 +951,13 @@ LOX_METHOD(Method, clone) {
     RETURN_OBJ(receiver);
 }
 
+LOX_METHOD(Method, isAsync) {
+    ASSERT_ARG_COUNT("Method::isAsync()", 0);
+    RETURN_BOOL(IS_NATIVE_METHOD(receiver) ? AS_NATIVE_METHOD(receiver)->isAsync : AS_METHOD(receiver)->closure->function->isAsync);
+}
+
 LOX_METHOD(Method, isNative) {
-    ASSERT_ARG_COUNT("method::isNative()", 0);
+    ASSERT_ARG_COUNT("Method::isNative()", 0);
     RETURN_BOOL(IS_NATIVE_METHOD(receiver));
 }
 
@@ -1877,6 +1882,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->methodClass, Method, behavior, 0);
     DEF_METHOD(vm->methodClass, Method, bind, 1);
     DEF_METHOD(vm->methodClass, Method, clone, 0);
+    DEF_METHOD(vm->methodClass, Method, isAsync, 0);
     DEF_METHOD(vm->methodClass, Method, isNative, 0);
     DEF_METHOD(vm->methodClass, Method, isVariadic, 0);
     DEF_METHOD(vm->methodClass, Method, name, 0);

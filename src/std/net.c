@@ -661,14 +661,14 @@ void registerNetPackage(VM* vm) {
     bindSuperclass(vm, domainClass, vm->objectClass);
     DEF_INTERCEPTOR(domainClass, Domain, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(domainClass, Domain, getIPAddresses, 0);
-    DEF_METHOD(domainClass, Domain, getIPAddressesAsync, 0);
+    DEF_METHOD_ASYNC(domainClass, Domain, getIPAddressesAsync, 0);
     DEF_METHOD(domainClass, Domain, toString, 0);
 
     ObjClass* ipAddressClass = defineNativeClass(vm, "IPAddress");
     bindSuperclass(vm, ipAddressClass, vm->objectClass);
     DEF_INTERCEPTOR(ipAddressClass, IPAddress, INTERCEPTOR_INIT, __init__, 1);
     DEF_METHOD(ipAddressClass, IPAddress, getDomain, 0);
-    DEF_METHOD(ipAddressClass, IPAddress, getDomainAsync, 0);
+    DEF_METHOD_ASYNC(ipAddressClass, IPAddress, getDomainAsync, 0);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV4, 0);
     DEF_METHOD(ipAddressClass, IPAddress, isIPV6, 0);
     DEF_METHOD(ipAddressClass, IPAddress, toArray, 0);
