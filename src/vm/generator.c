@@ -5,6 +5,25 @@
 #include "object.h"
 #include "vm.h"
 
+void initGenerator(VM* vm, ObjGenerator* generator, ObjClosure* closure, ObjArray* arguments) {
+    for (int i = 0; i < arguments->elements.count; i++) {
+        push(vm, arguments->elements.values[i]);
+    }
+
+    CallFrame callFrame = {
+        .closure = closure,
+        .ip = closure->function->chunk.code,
+        .slots = vm->stackTop - arguments->elements.count - 1
+    };
+    ObjFrame* frame = newFrame(vm, &callFrame);
+
+    generator->frame = frame;
+    generator->outer = vm->runningGenerator;
+    generator->inner = NULL;
+    generator->state = GENERATOR_START;
+    generator->value = NIL_VAL;
+}
+
 void resumeGenerator(VM* vm, ObjGenerator* generator) {
     vm->apiStackDepth++;
     Value result = callGenerator(vm, generator);

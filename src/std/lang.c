@@ -545,25 +545,7 @@ LOX_METHOD(Generator, __init__) {
     ASSERT_ARG_TYPE("Generator::__init__(closure, args)", 1, Array);
 
     ObjGenerator* self = AS_GENERATOR(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
-    ObjArray* arguments = AS_ARRAY(args[1]);
-
-    CallFrame callFrame = { 
-        .closure = closure, 
-        .ip = closure->function->chunk.code, 
-        .slots = vm->stackTop - arguments->elements.count - 1 
-    };
-    ObjFrame* frame = newFrame(vm, &callFrame);
-
-    for (int i = 0; i < arguments->elements.count; i++) {
-        push(vm, arguments->elements.values[i]);
-    }
-
-    self->frame = frame;
-    self->outer = vm->runningGenerator;
-    self->inner = NULL;
-    self->state = GENERATOR_START;
-    self->value = NIL_VAL;
+    initGenerator(vm, self, AS_CLOSURE(args[0]), AS_ARRAY(args[1]));
     RETURN_OBJ(self);
 }
 
@@ -642,6 +624,26 @@ LOX_METHOD(Generator, setReceiver) {
     RETURN_NIL;
 }
 
+LOX_METHOD(Generator, step) {
+    ASSERT_ARG_COUNT("Generator::step(argument)", 1);
+    ObjGenerator* self = AS_GENERATOR(receiver);
+    Value send = getObjMethod(vm, receiver, "send");
+    callReentrantMethod(vm, receiver, send, args[0]);
+
+    if (self->state == GENERATOR_RETURN && IS_PROMISE(self->value)) RETURN_VAL(self->value);
+    else {
+        Value fulfill = getObjMethod(vm, OBJ_VAL(vm->promiseClass), "fulfill");
+        Value promise = callReentrantMethod(vm, OBJ_VAL(vm->promiseClass), fulfill, self->value);
+        if (self->state == GENERATOR_RETURN) RETURN_VAL(promise);
+        else { 
+            Value step = getObjMethod(vm, receiver, "step");
+            ObjBoundMethod* stepMethod = newBoundMethod(vm, receiver, step);
+            Value then = getObjMethod(vm, promise, "then");
+            RETURN_OBJ(callReentrantMethod(vm, promise, then, OBJ_VAL(stepMethod)));
+        }
+    }
+}
+
 LOX_METHOD(Generator, throws) {
     ASSERT_ARG_COUNT("Generator::throws(exception)", 1);
     ASSERT_ARG_TYPE("Generator::throws(exception)", 0, Exception);
@@ -671,6 +673,21 @@ LOX_METHOD(Generator, __invoke__) {
         resumeGenerator(vm, self);
         RETURN_OBJ(self);
     }
+}
+
+LOX_METHOD(GeneratorClass, run) { 
+    ASSERT_ARG_COUNT("Generator class::run(callee, arguments)", 2);
+    ASSERT_ARG_INSTANCE_OF("Generator class::run(callee, arguments)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TYPE("Generator class::run(callee, arguments)", 1, Array);
+ 
+    ObjGenerator* generator = newGenerator(vm, NULL, NULL);
+    push(vm, OBJ_VAL(generator));    
+    initGenerator(vm, generator, AS_CLOSURE(args[0]), AS_ARRAY(args[1]));
+    pop(vm);
+
+    Value step = getObjMethod(vm, OBJ_VAL(generator), "step");
+    Value result = callReentrantMethod(vm, OBJ_VAL(generator), step, NIL_VAL);
+    RETURN_VAL(result);
 }
 
 LOX_METHOD(Int, __init__) {
@@ -2119,6 +2136,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->generatorClass, Generator, returns, 1);
     DEF_METHOD(vm->generatorClass, Generator, send, 1);
     DEF_METHOD(vm->generatorClass, Generator, setReceiver, 1);
+    DEF_METHOD(vm->generatorClass, Generator, step, 1);
     DEF_METHOD(vm->generatorClass, Generator, throws, 1);
     DEF_METHOD(vm->generatorClass, Generator, toString, 0);
     DEF_OPERATOR(vm->generatorClass, Generator, (), __invoke__, -1);
@@ -2130,6 +2148,7 @@ void registerLangPackage(VM* vm) {
     setClassProperty(vm, vm->generatorClass, "stateReturn", INT_VAL(GENERATOR_RETURN));
     setClassProperty(vm, vm->generatorClass, "stateThrow", INT_VAL(GENERATOR_THROW));
     setClassProperty(vm, vm->generatorClass, "stateError", INT_VAL(GENERATOR_ERROR));
+    DEF_METHOD(generatorMetaclass, GeneratorClass, run, 2);
 
     vm->exceptionClass = defineNativeClass(vm, "Exception");
     bindSuperclass(vm, vm->exceptionClass, vm->objectClass);
