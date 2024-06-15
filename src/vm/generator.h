@@ -14,7 +14,7 @@ typedef enum {
     GENERATOR_ERROR
 } GeneratorState;
 
-void initGenerator(VM* vm, ObjGenerator* generator, ObjClosure* closure, ObjArray* arguments);
+void initGenerator(VM* vm, ObjGenerator* generator, Value callee, ObjArray* arguments);
 void resumeGenerator(VM* vm, ObjGenerator* generator);
 void loadGeneratorFrame(VM* vm, ObjGenerator* generator);
 void saveGeneratorFrame(VM* vm, ObjGenerator* generator, CallFrame* frame, Value result);

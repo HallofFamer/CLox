@@ -5,10 +5,11 @@
 #include "object.h"
 #include "vm.h"
 
-void initGenerator(VM* vm, ObjGenerator* generator, ObjClosure* closure, ObjArray* arguments) {
+void initGenerator(VM* vm, ObjGenerator* generator, Value callee, ObjArray* arguments) {
+    ObjClosure* closure = AS_CLOSURE(IS_BOUND_METHOD(callee) ? AS_BOUND_METHOD(callee)->method : callee);
     for (int i = 0; i < arguments->elements.count; i++) {
         push(vm, arguments->elements.values[i]);
-    }
+    } 
 
     CallFrame callFrame = {
         .closure = closure,

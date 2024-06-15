@@ -540,12 +540,12 @@ LOX_METHOD(Function, __invoke__) {
 }
 
 LOX_METHOD(Generator, __init__) {
-    ASSERT_ARG_COUNT("Generator::__init__(closure, args)", 2);
-    ASSERT_ARG_TYPE("Generator::__init__(closure, args)", 0, Closure);
-    ASSERT_ARG_TYPE("Generator::__init__(closure, args)", 1, Array);
+    ASSERT_ARG_COUNT("Generator::__init__(callee, args)", 2);
+    ASSERT_ARG_INSTANCE_OF("Generator::__init__(callee, arguments)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TYPE("Generator::__init__(callee, args)", 1, Array);
 
     ObjGenerator* self = AS_GENERATOR(receiver);
-    initGenerator(vm, self, AS_CLOSURE(args[0]), AS_ARRAY(args[1]));
+    initGenerator(vm, self, args[0], AS_ARRAY(args[1]));
     RETURN_OBJ(self);
 }
 
@@ -682,7 +682,7 @@ LOX_METHOD(GeneratorClass, run) {
  
     ObjGenerator* generator = newGenerator(vm, NULL, NULL);
     push(vm, OBJ_VAL(generator));    
-    initGenerator(vm, generator, AS_CLOSURE(args[0]), AS_ARRAY(args[1]));
+    initGenerator(vm, generator, args[0], AS_ARRAY(args[1]));
     pop(vm);
 
     Value step = getObjMethod(vm, OBJ_VAL(generator), "step");
