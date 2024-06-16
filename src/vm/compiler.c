@@ -68,6 +68,7 @@ struct Compiler {
     int scopeDepth;
     int innermostLoopStart;
     int innermostLoopScopeDepth;
+    bool isAsync;
 };
 
 struct ClassCompiler {
@@ -166,7 +167,7 @@ static void endLoop(Compiler* compiler) {
     }
 }
 
-static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing, FunctionType type) {
+static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing, FunctionType type, bool isAsync) {
     compiler->parser = parser;
     compiler->enclosing = enclosing;
     compiler->function = NULL;
@@ -175,7 +176,9 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     compiler->scopeDepth = 0;
     compiler->innermostLoopStart = -1;
     compiler->innermostLoopScopeDepth = 0;
+    compiler->isAsync = isAsync;
     compiler->function = newFunction(parser->vm);
+    compiler->function->isAsync = isAsync;
 
     initIDMap(&compiler->indexes);
     parser->vm->currentCompiler = compiler;
@@ -861,9 +864,8 @@ static void yield(Compiler* compiler, bool canAssign) {
 }
 
 static void await(Compiler* compiler, bool canAssign) {
-    if (compiler->type != TYPE_SCRIPT && !compiler->function->isAsync) {
-        error(compiler->parser, "Cannot use await unless in top level code or inside async functions/methods.");
-    }
+    if (compiler->type == TYPE_SCRIPT) compiler->isAsync = true;
+    else if (!compiler->isAsync) error(compiler->parser, "Cannot use await unless in top level code or inside async functions/methods.");
     expression(compiler);
     emitByte(compiler, OP_AWAIT);
 }
@@ -903,8 +905,8 @@ ParseRule rules[] = {
     [TOKEN_AND]              = {NULL,          and_,        PREC_AND},
     [TOKEN_AS]               = {NULL,          NULL,        PREC_NONE},
     [TOKEN_ASYNC]            = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_AWAIT]            = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_BREAK]            = {await,          NULL,        PREC_NONE},
+    [TOKEN_AWAIT]            = {await,         NULL,        PREC_NONE},
+    [TOKEN_BREAK]            = {NULL,          NULL,        PREC_NONE},
     [TOKEN_CASE]             = {NULL,          NULL,        PREC_NONE},
     [TOKEN_CATCH]            = {NULL,          NULL,        PREC_NONE},
     [TOKEN_CLASS]            = {klass,         NULL,        PREC_NONE},
@@ -1005,7 +1007,7 @@ static uint8_t lambdaDepth(Compiler* compiler) {
 
 static void function(Compiler* enclosing, FunctionType type, bool isAsync) {
     Compiler compiler;
-    initCompiler(&compiler, enclosing->parser, enclosing, type);
+    initCompiler(&compiler, enclosing->parser, enclosing, type, isAsync);
     beginScope(&compiler);
 
     if (type == TYPE_LAMBDA) lambdaParameters(&compiler);
@@ -1013,7 +1015,6 @@ static void function(Compiler* enclosing, FunctionType type, bool isAsync) {
 
     block(&compiler);
     ObjFunction* function = endCompiler(&compiler);
-    function->isAsync = isAsync;
     emitBytes(enclosing, OP_CLOSURE, makeIdentifier(enclosing, OBJ_VAL(function)));
 
     for (int i = 0; i < function->upvalueCount; i++) {
@@ -1112,10 +1113,10 @@ static void classDeclaration(Compiler* compiler) {
     behavior(compiler, BEHAVIOR_CLASS, className);
 }
 
-static void funDeclaration(Compiler* compiler) {
+static void funDeclaration(Compiler* compiler, bool isAsync) {
     uint8_t global = parseVariable(compiler, "Expect function name.");
     markInitialized(compiler, false);
-    function(compiler, TYPE_FUNCTION, false);
+    function(compiler, TYPE_FUNCTION, isAsync);
     defineVariable(compiler, global, false);
 }
 
@@ -1158,6 +1159,14 @@ static void varDeclaration(Compiler* compiler, bool isMutable) {
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
 
     defineVariable(compiler, global, isMutable);
+}
+
+static void awaitStatement(Compiler* compiler) {
+    if (compiler->type == TYPE_SCRIPT) compiler->isAsync = true;
+    else if (!compiler->isAsync) error(compiler->parser, "Cannot use await unless in top level code or inside async functions/methods.");
+    expression(compiler);
+    consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after await value.");
+    emitBytes(compiler, OP_AWAIT, OP_POP);
 }
 
 static void breakStatement(Compiler* compiler) {
@@ -1498,13 +1507,18 @@ static void yieldStatement(Compiler* compiler) {
 }
 
 static void declaration(Compiler* compiler) {
-    if (check(compiler->parser, TOKEN_CLASS) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
+    if (check(compiler->parser, TOKEN_ASYNC) && checkNext(compiler->parser, TOKEN_FUN)) {
+        advance(compiler->parser);
+        advance(compiler->parser);
+        funDeclaration(compiler, true);
+    }
+    else if (check(compiler->parser, TOKEN_CLASS) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
         advance(compiler->parser);
         classDeclaration(compiler);
     }
     else if (check(compiler->parser, TOKEN_FUN) && checkNext(compiler->parser, TOKEN_IDENTIFIER)) {
         advance(compiler->parser);
-        funDeclaration(compiler);
+        funDeclaration(compiler, false);
     }
     else if (match(compiler->parser, TOKEN_NAMESPACE)) {
         namespaceDeclaration(compiler);
@@ -1526,7 +1540,10 @@ static void declaration(Compiler* compiler) {
 }
 
 static void statement(Compiler* compiler) {
-    if (match(compiler->parser, TOKEN_BREAK)) {
+    if (match(compiler->parser, TOKEN_AWAIT)) {
+        awaitStatement(compiler);
+    }
+    else if (match(compiler->parser, TOKEN_BREAK)) {
         breakStatement(compiler);
     }
     else if (match(compiler->parser, TOKEN_CONTINUE)) {
@@ -1580,7 +1597,7 @@ ObjFunction* compile(VM* vm, const char* source) {
     initParser(&parser, vm, &scanner);
 
     Compiler compiler;
-    initCompiler(&compiler, &parser, NULL, TYPE_SCRIPT);
+    initCompiler(&compiler, &parser, NULL, TYPE_SCRIPT, false);
 
     advance(&parser);
     advance(&parser);

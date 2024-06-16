@@ -324,6 +324,18 @@ static void createGeneratorFrame(VM* vm, ObjClosure* closure, int argCount) {
     push(vm, OBJ_VAL(generator));
 }
 
+static bool callClosureAsync(VM* vm, ObjClosure* closure, int argCount) {
+    Value run = getObjMethod(vm, OBJ_VAL(vm->generatorClass), "run");
+    makeArray(vm, argCount);
+    Value arguments = pop(vm);
+    pop(vm);
+
+    push(vm, OBJ_VAL(vm->generatorClass));
+    push(vm, OBJ_VAL(closure));
+    push(vm, arguments);
+    return callMethod(vm, run, 2);
+}
+
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
     if (closure->function->arity > 0 && argCount != closure->function->arity) {
         runtimeError(vm, "Expected %d arguments but got %d.", closure->function->arity, argCount);
@@ -340,6 +352,7 @@ bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
         argCount = 1;
     }
 
+    if (closure->function->isAsync) return callClosureAsync(vm, closure, argCount);
     if (closure->function->isGenerator) createGeneratorFrame(vm, closure, argCount);
     else createCallFrame(vm, closure, argCount);
     return true;
@@ -1285,7 +1298,7 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_CATCH:
-               frame->handlerCount--;
+                frame->handlerCount--;
                 break;
             case OP_FINALLY: {
                 frame->handlerCount--;
@@ -1300,7 +1313,10 @@ InterpretResult run(VM* vm) {
                 ObjString* name = frame->closure->function->name;
                 Value receiver = peek(vm, frame->closure->function->arity);
                 closeUpvalues(vm, frame->slots);
-                if (frame->closure->function->isGenerator) vm->runningGenerator->state = GENERATOR_RETURN;
+                if (frame->closure->function->isGenerator || frame->closure->function->isAsync) vm->runningGenerator->state = GENERATOR_RETURN;
+                if (frame->closure->function->isAsync && !IS_PROMISE(result)) {
+                    result = OBJ_VAL(promiseWithFulfilled(vm, result));
+                }
 
                 vm->frameCount--;
                 if (vm->frameCount == 0) {
@@ -1308,7 +1324,7 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_OK;
                 }
 
-                if (!frame->closure->function->isGenerator) vm->stackTop = frame->slots;
+                if (!frame->closure->function->isGenerator && !frame->closure->function->isAsync) vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
@@ -1325,7 +1341,10 @@ InterpretResult run(VM* vm) {
                 ObjString* name = frame->closure->function->name;
                 Value receiver = peek(vm, frame->closure->function->arity);
                 closeUpvalues(vm, frame->slots);
-                if (frame->closure->function->isGenerator) vm->runningGenerator->state = GENERATOR_RETURN;
+                if (frame->closure->function->isGenerator || frame->closure->function->isAsync) vm->runningGenerator->state = GENERATOR_RETURN;
+                if (frame->closure->function->isAsync && !IS_PROMISE(result)) {
+                    result = OBJ_VAL(promiseWithFulfilled(vm, result));
+                }
 
                 vm->frameCount -= depth + 1;
                 if (vm->frameCount == 0) {
@@ -1333,7 +1352,7 @@ InterpretResult run(VM* vm) {
                     return INTERPRET_OK;
                 }
 
-                if (!frame->closure->function->isGenerator) vm->stackTop = frame->slots;
+                if (!frame->closure->function->isGenerator && !frame->closure->function->isAsync) vm->stackTop = frame->slots;
                 push(vm, result);
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
                 LOAD_FRAME();
@@ -1378,6 +1397,18 @@ InterpretResult run(VM* vm) {
                     if (vm->apiStackDepth > 0) return INTERPRET_OK;
                     LOAD_FRAME();
                 }
+                break;
+            }
+            case OP_AWAIT: {
+                Value result = peek(vm, 0);
+                if (!IS_PROMISE(result)) {
+                    result = OBJ_VAL(promiseWithFulfilled(vm, result));
+                }
+                saveGeneratorFrame(vm, vm->runningGenerator, frame, result);
+
+                vm->frameCount--;
+                if (vm->apiStackDepth > 0) return INTERPRET_OK;
+                LOAD_FRAME();
                 break;
             }
         }
