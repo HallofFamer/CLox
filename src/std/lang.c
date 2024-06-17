@@ -681,8 +681,12 @@ LOX_METHOD(GeneratorClass, run) {
     ASSERT_ARG_TYPE("Generator class::run(callee, arguments)", 1, Array);
  
     ObjGenerator* generator = newGenerator(vm, NULL, NULL);
+    ObjArray* arguments = AS_ARRAY(args[1]);
     push(vm, OBJ_VAL(generator));    
-    initGenerator(vm, generator, args[0], AS_ARRAY(args[1]));
+    initGenerator(vm, generator, args[0], arguments);
+    for (int i = 0; i < arguments->elements.count; i++) {
+        pop(vm);
+    }
     pop(vm);
 
     Value step = getObjMethod(vm, OBJ_VAL(generator), "step");
@@ -2158,6 +2162,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->exceptionClass, Exception, toString, 0);
 
     ObjClass* runtimeExceptionClass = defineNativeException(vm, "RuntimeException", vm->exceptionClass);
+    defineNativeException(vm, "AssertionException", runtimeExceptionClass);
     defineNativeException(vm, "ArithmeticException", runtimeExceptionClass);
     defineNativeException(vm, "FormatException", runtimeExceptionClass);
     defineNativeException(vm, "IllegalArgumentException", runtimeExceptionClass);
