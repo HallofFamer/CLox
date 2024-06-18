@@ -298,7 +298,6 @@ static void freeObject(VM* vm, Obj* object) {
             break;
         }
         case OBJ_FRAME: {
-            ObjFrame* frame = (ObjFrame*)object;
             FREE(ObjFrame, object);
             break;
         }

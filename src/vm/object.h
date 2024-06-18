@@ -125,6 +125,17 @@ struct Obj {
     struct Obj* next;
 };
 
+struct ObjInstance {
+    Obj obj;
+    ValueArray fields;
+};
+
+typedef struct {
+    Obj obj;
+    Value value;
+    ValueArray fields;
+} ObjValueInstance;
+
 typedef struct {
     Obj obj;
     int arity;
@@ -139,17 +150,6 @@ typedef Value (*NativeFunction)(VM* vm, int argCount, Value* args);
 typedef Value (*NativeMethod)(VM* vm, Value receiver, int argCount, Value* args);
 typedef void (*MarkFunction)(void* data);
 typedef void (*FreeFunction)(void* data);
-
-struct ObjInstance {
-    Obj obj;
-    ValueArray fields;
-};
-
-typedef struct {
-    Obj obj;
-    Value value;
-    ValueArray fields;
-} ObjValueInstance;
 
 typedef struct {
     Obj obj;

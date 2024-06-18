@@ -238,7 +238,9 @@ ObjPromise* newPromise(VM* vm, PromiseState state, Value value, Value executor){
     promise->id = ++vm->promiseCount;
     promise->state = state;
     promise->value = value;
-    promise->exception = NULL;
+    if (state == PROMISE_REJECTED && IS_EXCEPTION(value)) promise->exception = AS_EXCEPTION(value);
+    else promise->exception = NULL;
+
     promise->executor = executor;
     promise->onCatch = NIL_VAL;
     promise->onFinally = NIL_VAL;
