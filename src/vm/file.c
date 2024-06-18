@@ -215,11 +215,19 @@ void fileOnHandle(uv_fs_t* fsHandle) {
 void fileOnOpen(uv_fs_t* fsOpen) {
     FileData* data = (FileData*)fsOpen->data;
     LOOP_PUSH_DATA(data);
-    data->file->isOpen = true;
-    ObjClass* streamClass = getNativeClass(data->vm, streamClassName(data->file->mode->chars));
-    ObjInstance* stream = newInstance(data->vm, streamClass);
-    setObjProperty(data->vm, stream, "file", OBJ_VAL(data->file));
-    promiseFulfill(data->vm, data->promise, OBJ_VAL(stream));
+
+    if (fsOpen->result < 0) {
+        ObjException* exception = createNativeException(data->vm, "clox.std.io.IOException", "Failed to open IO stream.");
+        promiseReject(data->vm, data->promise, OBJ_VAL(exception));
+    }
+    else { 
+        data->file->isOpen = true;
+        ObjClass* streamClass = getNativeClass(data->vm, streamClassName(data->file->mode->chars));
+        ObjInstance* stream = newInstance(data->vm, streamClass);
+        setObjProperty(data->vm, stream, "file", OBJ_VAL(data->file));
+        promiseFulfill(data->vm, data->promise, OBJ_VAL(stream));
+    }
+
     LOOP_POP_DATA(data);
 }
 

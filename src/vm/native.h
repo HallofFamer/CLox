@@ -27,7 +27,8 @@
 #define RETURN_NUMBER(value) return NUMBER_VAL(value)
 #define RETURN_OBJ(value) return OBJ_VAL(value)
 #define RETURN_PROMISE(state, value) return OBJ_VAL(newPromise(vm, state, value, NIL_VAL));
-#define RETURN_PROMISE_EX(state, value, executor) return OBJ_VAL(newPromise(vm, state, value, executor));
+#define RETURN_PROMISE_EX(klass, message) return OBJ_VAL(newPromise(vm, PROMISE_REJECTED, OBJ_VAL(createException(vm, getNativeClass(vm, #klass), message)), NIL_VAL))
+#define RETURN_PROMISE_EX_FMT(klass, message, ...) return OBJ_VAL(newPromise(vm, PROMISE_REJECTED, OBJ_VAL(createException(vm, getNativeClass(vm, #klass), message, __VA_ARGS__)), NIL_VAL))
 #define RETURN_STRING(chars, length) return OBJ_VAL(copyString(vm, chars, length))
 #define RETURN_STRING_FMT(...) return OBJ_VAL(formattedString(vm, __VA_ARGS__))
 #define THROW_EXCEPTION(klass, message) return OBJ_VAL(throwException(vm, getNativeClass(vm, #klass), message))

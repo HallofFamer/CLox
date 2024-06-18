@@ -12,10 +12,22 @@
        if (IS_STRING(message)) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
     } while (false)
 
+#define ASSERT_ARG_COUNT_ASYNC(method, expectedCount) \
+    do { \
+       Value message = assertArgCount(vm, method, expectedCount, argCount); \
+       if (IS_STRING(message)) RETURN_PROMISE_EX(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
+    } while (false)
+
 #define ASSERT_ARG_INSTANCE_OF(method, index, className) \
     do { \
         Value message = assertArgInstanceOf(vm, method, args, index, #className); \
         if (IS_STRING(message)) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
+    } while (false)
+
+#define ASSERT_ARG_INSTANCE_OF_ASYNC(method, index, className) \
+    do { \
+        Value message = assertArgInstanceOf(vm, method, args, index, #className); \
+        if (IS_STRING(message)) RETURN_PROMISE_EX(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
     } while (false)
 
 #define ASSERT_ARG_INSTANCE_OF_ANY(method, index, className, className2) \
@@ -24,16 +36,34 @@
         if (IS_STRING(message)) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
     } while (false)
 
+#define ASSERT_ARG_INSTANCE_OF_ANY_ASYNC(method, index, className, className2) \
+    do { \
+        Value message = assertArgInstanceOfAny(vm, method, args, index, #className, #className2); \
+        if (IS_STRING(message)) RETURN_PROMISE_EX(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
+    } while (false)
+
 #define ASSERT_ARG_TYPE(method, index, type) \
     do { \
         Value message = assertArgIs##type(vm, method, args, index); \
         if (IS_STRING(message)) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
     } while (false)
 
+#define ASSERT_ARG_TYPE_ASYNC(method, index, type) \
+    do { \
+        Value message = assertArgIs##type(vm, method, args, index); \
+        if (IS_STRING(message)) RETURN_PROMISE_EX(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
+    } while (false)
+
 #define ASSERT_INDEX_WITHIN_BOUNDS(method, value, min, max, index) \
     do { \
         Value message = assertIndexWithinBounds(vm, method, value, min, max, index); \
         if (IS_STRING(message)) THROW_EXCEPTION(clox.std.lang.IndexOutOfBoundsException, AS_CSTRING(message)); \
+    } while (false)
+
+#define ASSERT_INDEX_WITHIN_BOUNDS_ASYNC(method, value, min, max, index) \
+    do { \
+        Value message = assertIndexWithinBounds(vm, method, value, min, max, index); \
+        if (IS_STRING(message)) RETURN_PROMISE_EX(clox.std.lang.IndexOutOfBoundsException, AS_CSTRING(message)); \
     } while (false)
 
 Value assertArgCount(VM* vm, const char* method, int expectedCount, int actualCount);

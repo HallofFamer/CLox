@@ -11,7 +11,7 @@ LOX_FUNCTION(assert) {
     ASSERT_ARG_COUNT("assert(expression, message)", 2);
     ASSERT_ARG_TYPE("assert(expression, message)", 1, String);
     if (isFalsey(args[0])) {
-        raiseError(vm, AS_CSTRING(args[1]));
+        THROW_EXCEPTION(clox.std.lang.AssertionException, AS_CSTRING(args[1]));
     }
     RETURN_NIL;
 }
@@ -52,7 +52,7 @@ LOX_FUNCTION(read) {
     ASSERT_ARG_COUNT("read()", 0);
     uint64_t inputSize = 128;
     char* line = malloc(inputSize);
-    if (line == NULL) exit(74);
+    ABORT_IFNULL(line, "Not enough memory to read line.");
 
     int c = EOF;
     uint64_t i = 0;
