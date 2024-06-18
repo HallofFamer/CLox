@@ -1536,7 +1536,10 @@ static void declaration(Compiler* compiler) {
     else {
         statement(compiler);
     }
-    if (compiler->parser->panicMode) synchronize(compiler->parser);
+
+    if (compiler->parser->panicMode) {
+        synchronize(compiler->parser);
+    }
 }
 
 static void statement(Compiler* compiler) {

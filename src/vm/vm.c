@@ -1401,10 +1401,17 @@ InterpretResult run(VM* vm) {
             }
             case OP_AWAIT: {
                 Value result = peek(vm, 0);
+                ObjString* name = frame->closure->function->name;
+                Value receiver = vm->runningGenerator->frame->slots[0];
                 if (!IS_PROMISE(result)) {
                     result = OBJ_VAL(promiseWithFulfilled(vm, result));
                 }
                 saveGeneratorFrame(vm, vm->runningGenerator, frame, result);
+
+                if (CAN_INTERCEPT(receiver, INTERCEPTOR_ON_AWAIT, __onAwait__) && hasInterceptableMethod(vm, receiver, name)) {
+                    interceptOnAwait(vm, receiver, name, result);
+                    LOAD_FRAME();
+                }
 
                 vm->frameCount--;
                 if (vm->apiStackDepth > 0) return INTERPRET_OK;
