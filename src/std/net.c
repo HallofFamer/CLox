@@ -40,7 +40,7 @@ LOX_METHOD(Domain, getIPAddressesAsync) {
     ASSERT_ARG_COUNT("Domain::getIPAddressesAsync()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjPromise* promise = dnsGetDomainInfoAsync(vm, self, dnsOnGetAddrInfo);
-    if (promise == NULL) THROW_EXCEPTION(clox.std.net.DomainHostException, "Failed to get IP Addresses from Domain.");
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.DomainHostException, "Failed to get IP Addresses from Domain.");
     RETURN_OBJ(promise);
 }
 
@@ -307,7 +307,7 @@ LOX_METHOD(IPAddress, getDomainAsync) {
     ASSERT_ARG_COUNT("IPAddress::getDomainAsync()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjPromise* promise = dnsGetDomainFromIPAddressAsync(vm, self, dnsOnGetNameInfo);
-    if (promise == NULL) THROW_EXCEPTION(clox.std.net.IPAddressException, "Failed to get domain name from IP Address.");
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.IPAddressException, "Failed to get domain name from IP Address.");
     RETURN_OBJ(promise);
 }
 
@@ -503,7 +503,6 @@ LOX_METHOD(SocketServer, listen) {
     ASSERT_ARG_COUNT("SocketServer::listen()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
-
     if (listen(descriptor, 1) < 0) THROW_EXCEPTION(clox.std.net.SocketException, "Failed to listen for incoming connections.");
     RETURN_NIL;
 }
@@ -623,12 +622,10 @@ LOX_METHOD(URLClass, parse) {
     ASSERT_ARG_COUNT("URL class::parse(url)", 1);
     ASSERT_ARG_TYPE("URL class::parse(url)", 0, String);
     ObjInstance* instance = newInstance(vm, AS_CLASS(receiver));
+    push(vm, OBJ_VAL(instance));
     ObjString* url = AS_STRING(args[0]);
-
     struct yuarel component;
-    if (yuarel_parse(&component, url->chars) == -1) {
-        THROW_EXCEPTION(clox.std.net.URLException, "Failed to parse the supplied url.");
-    }
+    if (yuarel_parse(&component, url->chars) == -1) THROW_EXCEPTION(clox.std.net.URLException, "Failed to parse the supplied url.");
 
     setObjProperty(vm, instance, "scheme", OBJ_VAL(newString(vm, component.scheme != NULL ? component.scheme : "")));
     setObjProperty(vm, instance, "host", OBJ_VAL(newString(vm, component.host != NULL ? component.host : "")));
@@ -637,6 +634,7 @@ LOX_METHOD(URLClass, parse) {
     setObjProperty(vm, instance, "query", OBJ_VAL(newString(vm, component.query != NULL ? component.query : "")));
     setObjProperty(vm, instance, "fragment", OBJ_VAL(newString(vm, component.fragment != NULL ? component.fragment : "")));
     setObjProperty(vm, instance, "raw", OBJ_VAL(urlToString(vm, instance)));
+    pop(vm);
     RETURN_OBJ(instance);
 }
 

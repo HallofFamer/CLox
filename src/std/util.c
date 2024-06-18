@@ -171,9 +171,7 @@ LOX_METHOD(DateClass, parse) {
         pop(vm);
         RETURN_OBJ(instance);
     }
-    else {
-        THROW_EXCEPTION(clox.std.util.DateFormatException, "Failed to parse Date from input string, please make sure the date has format YYYY-MM-DD.");
-    }
+    else THROW_EXCEPTION(clox.std.util.DateFormatException, "Failed to parse Date from input string, please make sure the date has format YYYY-MM-DD.");
 }
 
 LOX_METHOD(DateTime, __init__) {
@@ -310,9 +308,7 @@ LOX_METHOD(DateTimeClass, parse) {
         pop(vm);
         RETURN_OBJ(instance);
     }
-    else {
-        THROW_EXCEPTION(clox.std.util.DateFormatException, "Failed to parse DateTime from input string, please make sure the date has format YYYY-MM-DD H:i:s.");
-    }
+    else THROW_EXCEPTION(clox.std.util.DateFormatException, "Failed to parse DateTime from input string, please make sure the date has format YYYY-MM-DD H:i:s.");
 }
 
 LOX_METHOD(Duration, __init__) {
@@ -689,7 +685,9 @@ LOX_METHOD(Random, nextIntBounded) {
     ASSERT_ARG_COUNT("Random::nextIntBounded(bound)", 1);
     ASSERT_ARG_TYPE("Random::nextIntBounded(bound)", 0, Int);
     int bound = AS_INT(args[0]);
-    if (bound < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Random::nextIntBounded(bound) expects argument 1 to be a non negative integer but got %d.", bound);
+    if (bound < 0) {
+        THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Random::nextIntBounded(bound) expects argument 1 to be a non negative integer but got %d.", bound);
+    }
     uint32_t value = pcg32_random_int_bounded((uint32_t)AS_INT(args[0]));
     RETURN_INT((int)value);
 }
@@ -698,7 +696,9 @@ LOX_METHOD(Random, setSeed) {
     ASSERT_ARG_COUNT("Random::setSeed(seed)", 1);
     ASSERT_ARG_TYPE("Random::setSeed(seed)", 0, Int);
     int seed = AS_INT(args[0]);
-    if (seed < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Random::setSeed(seed) expects argument 1 to be a non negative integer but got %d.", seed);
+    if (seed < 0) {
+        THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Random::setSeed(seed) expects argument 1 to be a non negative integer but got %d.", seed);
+    }
     pcg32_seed((uint64_t)AS_INT(args[0]));
     setObjProperty(vm, AS_INSTANCE(receiver), "seed", args[0]);
     RETURN_NIL;
