@@ -1163,7 +1163,7 @@ static void varDeclaration(Compiler* compiler, bool isMutable) {
 
 static void awaitStatement(Compiler* compiler) {
     if (compiler->type == TYPE_SCRIPT) compiler->isAsync = true;
-    else if (!compiler->isAsync) error(compiler->parser, "Cannot use await unless in top level code or inside async functions/methods.");
+    else if (!compiler->isAsync) error(compiler->parser, "Can only use 'await' in async methods or top level code.");
     expression(compiler);
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after await value.");
     emitBytes(compiler, OP_AWAIT, OP_POP);
