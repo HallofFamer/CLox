@@ -44,6 +44,7 @@ void loadGeneratorFrame(VM* vm, ObjGenerator* generator) {
     for (int i = 1; i < generator->frame->slotCount; i++) {
         push(vm, generator->frame->slots[i]);
     }
+
     if (generator->state != GENERATOR_START) push(vm, generator->value);
     generator->state = GENERATOR_RESUME;
 }
@@ -74,6 +75,7 @@ void yieldFromInnerGenerator(VM* vm, ObjGenerator* generator) {
     vm->runningGenerator->frame->ip--;
     vm->runningGenerator->inner = generator;
     Value result = callGenerator(vm, generator);
+
     for (int i = 0; i < generator->frame->closure->function->arity + 1; i++) {
         pop(vm);
     }

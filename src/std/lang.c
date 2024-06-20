@@ -680,10 +680,10 @@ LOX_METHOD(GeneratorClass, run) {
     ASSERT_ARG_COUNT("Generator class::run(callee, arguments)", 2);
     ASSERT_ARG_INSTANCE_OF("Generator class::run(callee, arguments)", 0, clox.std.lang.TCallable);
     ASSERT_ARG_TYPE("Generator class::run(callee, arguments)", 1, Array);
- 
     ObjGenerator* generator = newGenerator(vm, NULL, NULL);
     ObjArray* arguments = AS_ARRAY(args[1]);
     push(vm, OBJ_VAL(generator));    
+
     initGenerator(vm, generator, args[0], arguments);
     for (int i = 0; i < arguments->elements.count; i++) {
         pop(vm);
