@@ -1441,7 +1441,9 @@ InterpretResult interpret(VM* vm, const char* source) {
     ObjClosure* closure = newClosure(vm, function);
     vm->currentModule->closure = closure;
     pop(vm);
+
     push(vm, OBJ_VAL(closure));
-    callClosure(vm, closure, 0);
-    return run(vm);
+    bool result = callClosure(vm, closure, 0);
+    if (closure->function->isAsync) return result ? INTERPRET_OK : INTERPRET_RUNTIME_ERROR;
+    else return run(vm);
 }
