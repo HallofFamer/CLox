@@ -10,9 +10,7 @@
 LOX_FUNCTION(assert) {
     ASSERT_ARG_COUNT("assert(expression, message)", 2);
     ASSERT_ARG_TYPE("assert(expression, message)", 1, String);
-    if (isFalsey(args[0])) {
-        THROW_EXCEPTION(clox.std.lang.AssertionException, AS_CSTRING(args[1]));
-    }
+    if (isFalsey(args[0])) THROW_EXCEPTION(clox.std.lang.AssertionException, AS_CSTRING(args[1]));
     RETURN_NIL;
 }
 
@@ -78,6 +76,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     ObjClass* nativeClass = newClass(vm, className, OBJ_INSTANCE);
     nativeClass->isNative = true;
     nativeClass->obj.klass->isNative = true;
+
     push(vm, OBJ_VAL(nativeClass));
     tableSet(vm, &vm->classes, nativeClass->fullName, OBJ_VAL(nativeClass));
     tableSet(vm, &vm->currentNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]); 
@@ -133,6 +132,9 @@ void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int 
             break;
         case INTERCEPTOR_ON_YIELD:
             defineNativeMethod(vm, klass, "__onYield__", 2, false, method);
+            break;
+        case INTERCEPTOR_ON_AWAIT:
+            defineNativeMethod(vm, klass, "__onAwait__", 2, false, method);
             break;
         case INTERCEPTOR_UNDEFINED_GET:
             defineNativeMethod(vm, klass, "__undefinedGet__", 1, false, method);

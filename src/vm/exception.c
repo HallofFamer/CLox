@@ -42,6 +42,7 @@ void pushExceptionHandler(VM* vm, ObjClass* exceptionClass, uint16_t handlerAddr
         runtimeError(vm, "Too many nested exception handlers.");
         exit(70);
     }
+
     frame->handlerStack[frame->handlerCount].handlerAddress = handlerAddress;
     frame->handlerStack[frame->handlerCount].exceptionClass = exceptionClass;
     frame->handlerStack[frame->handlerCount].finallyAddress = finallyAddress;
