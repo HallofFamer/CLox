@@ -863,6 +863,18 @@ static void yield(Compiler* compiler, bool canAssign) {
     }
 }
 
+static void async(Compiler* compiler, bool canAssign) {
+    if (match(compiler->parser, TOKEN_FUN)) {
+        function(compiler, TYPE_FUNCTION, true);
+    }
+    else if (match(compiler->parser, TOKEN_LEFT_BRACE)) {
+        function(compiler, TYPE_LAMBDA, true);
+    }
+    else {
+        error(compiler->parser, "Can only use async as expression modifier for anonymous functions or lambda.");
+    }
+}
+
 static void await(Compiler* compiler, bool canAssign) {
     if (compiler->type == TYPE_SCRIPT) compiler->isAsync = true;
     else if (!compiler->isAsync) error(compiler->parser, "Cannot use await unless in top level code or inside async functions/methods.");
@@ -904,7 +916,7 @@ ParseRule rules[] = {
     [TOKEN_INT]              = {integer,       NULL,        PREC_NONE},
     [TOKEN_AND]              = {NULL,          and_,        PREC_AND},
     [TOKEN_AS]               = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_ASYNC]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_ASYNC]            = {async,         NULL,        PREC_NONE},
     [TOKEN_AWAIT]            = {await,         NULL,        PREC_NONE},
     [TOKEN_BREAK]            = {NULL,          NULL,        PREC_NONE},
     [TOKEN_CASE]             = {NULL,          NULL,        PREC_NONE},

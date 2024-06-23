@@ -143,6 +143,7 @@ void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);
 bool bindMethod(VM* vm, ObjClass* klass, ObjString* name);
 InterpretResult run(VM* vm);
+InterpretResult runModule(VM* vm, ObjModule* module);
 InterpretResult interpret(VM* vm, const char* source);
 
 #endif // !clox_vm_h
