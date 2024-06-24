@@ -1403,6 +1403,7 @@ InterpretResult run(VM* vm) {
                 Value result = peek(vm, 0);
                 ObjString* name = frame->closure->function->name;
                 Value receiver = vm->runningGenerator->frame->slots[0];
+
                 if (!IS_PROMISE(result)) {
                     result = OBJ_VAL(promiseWithFulfilled(vm, result));
                 }

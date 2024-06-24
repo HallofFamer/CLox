@@ -42,6 +42,18 @@
         if (IS_STRING(message)) RETURN_PROMISE_EX(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
     } while (false)
 
+#define ASSERT_ARG_TCALLABLE(method, index, type) \
+    do { \
+        Value message = assertArgIsCallable(vm, method, args, index); \
+        if (IS_STRING(message)) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
+    } while (false)
+
+#define ASSERT_ARG_TCALLABLE_ASYNC(method, index, type) \
+    do { \
+        Value message = assertArgIsCallable(vm, method, args, index); \
+        if (IS_STRING(message)) RETURN_PROMISE_EX(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
+    } while (false)
+
 #define ASSERT_ARG_TYPE(method, index, type) \
     do { \
         Value message = assertArgIs##type(vm, method, args, index); \
@@ -71,6 +83,7 @@ Value assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, co
 Value assertArgInstanceOfAny(VM* vm, const char* method, Value* args, int index, const char* className, const char* className2);
 Value assertArgIsArray(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsBool(VM* vm, const char* method, Value* args, int index);
+Value assertArgIsCallable(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsClass(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsClosure(VM* vm, const char* method, Value* args, int index);
 Value assertArgIsDictionary(VM* vm, const char* method, Value* args, int index);

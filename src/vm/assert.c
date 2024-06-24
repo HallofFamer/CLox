@@ -14,7 +14,7 @@ Value assertArgCount(VM* vm, const char* method, int expectedCount, int actualCo
 
 Value assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, const char* className) {
     if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, className))) {
-        RETURN_STRING_FMT("method %s expects argument %d to be an instance of class %s but got %s.",
+        RETURN_STRING_FMT("method %s expects argument %d to be an instance of class/trait %s but got %s.",
             method, index + 1, className, getObjClass(vm, args[index])->name->chars);
     }
     RETURN_NIL;
@@ -22,7 +22,7 @@ Value assertArgInstanceOf(VM* vm, const char* method, Value* args, int index, co
 
 Value assertArgInstanceOfAny(VM* vm, const char* method, Value* args, int index, const char* className, const char* className2) {
     if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, className)) && !isObjInstanceOf(vm, args[index], getNativeClass(vm, className2))) {
-        RETURN_STRING_FMT("method %s expects argument %d to be an instance of class %s or %s but got %s.",
+        RETURN_STRING_FMT("method %s expects argument %d to be an instance of class/trait %s or %s but got %s.",
             method, index + 1, className, className2, getObjClass(vm, args[index])->name->chars);
     }   
     RETURN_NIL;
@@ -38,6 +38,14 @@ Value assertArgIsArray(VM* vm, const char* method, Value* args, int index) {
 Value assertArgIsBool(VM* vm, const char* method, Value* args, int index) {
     if (!IS_BOOL(args[index]) && !isObjInstanceOf(vm, args[index], vm->boolClass)) {
         RETURN_STRING_FMT("method %s expects argument %d to be a boolean value.", method, index + 1);
+    }
+    RETURN_NIL;
+}
+
+Value assertArgIsCallable(VM* vm, const char* method, Value* args, int index) {
+    if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, "clox.std.lang.TCallable"))) {
+        RETURN_STRING_FMT("method %s expects argument %d to an instance of trait TCallable(ie. Closure) but got %s.",
+            method, index + 1, getObjClass(vm, args[index])->name->chars);
     }
     RETURN_NIL;
 }
