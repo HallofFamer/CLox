@@ -81,3 +81,18 @@ void yieldFromInnerGenerator(VM* vm, ObjGenerator* generator) {
     }
     if (generator->state != GENERATOR_RETURN) push(vm, result);
 }
+
+Value runGeneratorAsync(VM* vm, Value callee, ObjArray* arguments) {
+    ObjGenerator* generator = newGenerator(vm, NULL, NULL);
+    push(vm, OBJ_VAL(generator));
+    initGenerator(vm, generator, callee, arguments);
+
+    for (int i = 0; i < arguments->elements.count; i++) {
+        pop(vm);
+    }
+    pop(vm);
+
+    Value step = getObjMethod(vm, OBJ_VAL(generator), "step");
+    Value result = callReentrantMethod(vm, OBJ_VAL(generator), step, NIL_VAL);
+    return result;
+}
