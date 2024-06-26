@@ -1436,9 +1436,14 @@ InterpretResult run(VM* vm) {
 
 InterpretResult runModule(VM* vm, ObjModule* module) {
     push(vm, OBJ_VAL(module->closure));
-    bool result = callClosure(vm, module->closure, 0);
-    if (module->closure->function->isAsync) return result ? INTERPRET_OK : INTERPRET_RUNTIME_ERROR;
-    else return run(vm);
+    if (module->closure->function->isAsync) {
+        Value result = runGeneratorAsync(vm, OBJ_VAL(module->closure), newArray(vm));
+        return result ? INTERPRET_OK : INTERPRET_RUNTIME_ERROR;
+    }
+    else {
+        callClosure(vm, module->closure, 0);
+        return run(vm);
+    }
 }
 
 InterpretResult interpret(VM* vm, const char* source) {

@@ -441,9 +441,11 @@ void printObject(Value value) {
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value));
             break;
-        case OBJ_GENERATOR:
-            printf("<generator %s>", AS_GENERATOR(value)->frame->closure->function->name->chars);
+        case OBJ_GENERATOR: { 
+            ObjFunction* function = AS_GENERATOR(value)->frame->closure->function;
+            printf("<generator %s>", (function->name == NULL) ? "script" : function->name->chars);
             break;
+        }
         case OBJ_INSTANCE:
             printf("<object %s>", AS_OBJ(value)->klass->name->chars);
             break;
