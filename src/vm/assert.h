@@ -42,13 +42,13 @@
         if (IS_STRING(message)) RETURN_PROMISE_EX(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
     } while (false)
 
-#define ASSERT_ARG_TCALLABLE(method, index, type) \
+#define ASSERT_ARG_TCALLABLE(method, index) \
     do { \
         Value message = assertArgIsCallable(vm, method, args, index); \
         if (IS_STRING(message)) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
     } while (false)
 
-#define ASSERT_ARG_TCALLABLE_ASYNC(method, index, type) \
+#define ASSERT_ARG_TCALLABLE_ASYNC(method, index) \
     do { \
         Value message = assertArgIsCallable(vm, method, args, index); \
         if (IS_STRING(message)) RETURN_PROMISE_EX(clox.std.lang.IllegalArgumentException, AS_CSTRING(message)); \
