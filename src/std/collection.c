@@ -439,12 +439,12 @@ LOX_METHOD(Array, collect) {
     ASSERT_ARG_COUNT("Array::collect(closure)", 1);
     ASSERT_ARG_TCALLABLE("Array::collect(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
 
     ObjArray* collected = newArray(vm);
     push(vm, OBJ_VAL(collected));
     for (int i = 0; i < self->elements.count; i++) {
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), self->elements.values[i]);
+        Value result = callReentrantMethod(vm, receiver, closure, self->elements.values[i]);
         valueArrayWrite(vm, &collected->elements, result);
     }
     pop(vm);
@@ -460,10 +460,10 @@ LOX_METHOD(Array, detect) {
     ASSERT_ARG_COUNT("Array::detect(closure)", 1);
     ASSERT_ARG_TCALLABLE("Array::detect(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
 
     for (int i = 0; i < self->elements.count; i++) {
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), self->elements.values[i]);
+        Value result = callReentrantMethod(vm, receiver, closure, self->elements.values[i]);
         if (!isFalsey(result)) RETURN_VAL(self->elements.values[i]);
     }
     RETURN_NIL;
@@ -473,10 +473,10 @@ LOX_METHOD(Array, each) {
     ASSERT_ARG_COUNT("Array::each(closure)", 1);
     ASSERT_ARG_TCALLABLE("Array::each(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
 
     for (int i = 0; i < self->elements.count; i++) {
-        callReentrantMethod(vm, receiver, OBJ_VAL(closure), self->elements.values[i]);
+        callReentrantMethod(vm, receiver, closure, self->elements.values[i]);
     }
     RETURN_NIL;
 }
@@ -485,10 +485,10 @@ LOX_METHOD(Array, eachIndex) {
     ASSERT_ARG_COUNT("Array::eachIndex(closure)", 1);
     ASSERT_ARG_TCALLABLE("Array::eachIndex(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     
     for (int i = 0; i < self->elements.count; i++) {
-        callReentrantMethod(vm, receiver, OBJ_VAL(closure), INT_VAL(i), self->elements.values[i]);
+        callReentrantMethod(vm, receiver, closure, INT_VAL(i), self->elements.values[i]);
     }
     RETURN_NIL;
 }
@@ -588,12 +588,12 @@ LOX_METHOD(Array, reject) {
     ASSERT_ARG_COUNT("Array::reject(closure)", 1);
     ASSERT_ARG_TCALLABLE("Array::reject(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
 
     ObjArray* rejected = newArray(vm);
     push(vm, OBJ_VAL(rejected));
     for (int i = 0; i < self->elements.count; i++) {
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), self->elements.values[i]);
+        Value result = callReentrantMethod(vm, receiver, closure, self->elements.values[i]);
         if (isFalsey(result)) valueArrayWrite(vm, &rejected->elements, self->elements.values[i]);
     }
     pop(vm);
@@ -623,12 +623,12 @@ LOX_METHOD(Array, select) {
     ASSERT_ARG_COUNT("Array::select(closure)", 1);
     ASSERT_ARG_TCALLABLE("Array::select(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
 
     ObjArray* selected = newArray(vm);
     push(vm, OBJ_VAL(selected));
     for (int i = 0; i < self->elements.count; i++) {
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), self->elements.values[i]);
+        Value result = callReentrantMethod(vm, receiver, closure, self->elements.values[i]);
         if (!isFalsey(result)) valueArrayWrite(vm, &selected->elements, self->elements.values[i]);
     }
     pop(vm);
@@ -866,7 +866,7 @@ LOX_METHOD(Dictionary, collect) {
     ASSERT_ARG_COUNT("Dictionary::collect(closure)", 1);
     ASSERT_ARG_TCALLABLE("Dictionary::collect(closure)", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
     Value key = callReentrantMethod(vm, receiver, nextMethod, NIL_VAL);
@@ -875,7 +875,7 @@ LOX_METHOD(Dictionary, collect) {
     push(vm, OBJ_VAL(collected));
     while (key != NIL_VAL) {
         Value value = callReentrantMethod(vm, receiver, nextValueMethod, key);
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), key, value);
+        Value result = callReentrantMethod(vm, receiver, closure, key, value);
         dictSet(vm, collected, key, result);
         key = callReentrantMethod(vm, receiver, nextMethod, key);
     }
@@ -897,14 +897,14 @@ LOX_METHOD(Dictionary, detect) {
     ASSERT_ARG_COUNT("Dictionary::detect(closure)", 1);
     ASSERT_ARG_TCALLABLE("Dictionary::detect(closure)", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
     Value key = callReentrantMethod(vm, receiver, nextMethod, NIL_VAL);
 
     while (key != NIL_VAL) {
         Value value = callReentrantMethod(vm, receiver, nextValueMethod, key);
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), key, value);
+        Value result = callReentrantMethod(vm, receiver, closure, key, value);
         if (!isFalsey(result)) RETURN_VAL(value);
         key = callReentrantMethod(vm, receiver, nextMethod, key);
     }
@@ -914,14 +914,14 @@ LOX_METHOD(Dictionary, detect) {
 LOX_METHOD(Dictionary, each) {
     ASSERT_ARG_COUNT("Dictionary::each(closure)", 1);
     ASSERT_ARG_TCALLABLE("Dictionary::each(closure)", 0);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
     Value key = callReentrantMethod(vm, receiver, nextMethod, NIL_VAL);
 
     while (key != NIL_VAL) {
         Value value = callReentrantMethod(vm, receiver, nextValueMethod, key);
-        callReentrantMethod(vm, receiver, OBJ_VAL(closure), key, value);
+        callReentrantMethod(vm, receiver, closure, key, value);
         key = callReentrantMethod(vm, receiver, nextMethod, key);
     }
     RETURN_NIL;
@@ -946,14 +946,14 @@ LOX_METHOD(Dictionary, eachKey) {
 LOX_METHOD(Dictionary, eachValue) {
     ASSERT_ARG_COUNT("Dictionary::each(closure)", 1);
     ASSERT_ARG_TCALLABLE("Dictionary::each(closure)", 0);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
     Value key = callReentrantMethod(vm, receiver, nextMethod, NIL_VAL);
 
     while (key != NIL_VAL) {
         Value value = callReentrantMethod(vm, receiver, nextValueMethod, key);
-        callReentrantMethod(vm, receiver, OBJ_VAL(closure), value);
+        callReentrantMethod(vm, receiver, closure, value);
         key = callReentrantMethod(vm, receiver, nextMethod, key);
     }
     RETURN_NIL;
@@ -1060,7 +1060,7 @@ LOX_METHOD(Dictionary, reject) {
     ASSERT_ARG_COUNT("Dictionary::reject(closure)", 1);
     ASSERT_ARG_TCALLABLE("Dictionary::reject(closure)", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
     Value key = callReentrantMethod(vm, receiver, nextMethod, NIL_VAL);
@@ -1069,7 +1069,7 @@ LOX_METHOD(Dictionary, reject) {
     push(vm, OBJ_VAL(rejected));
     while (key != NIL_VAL) {
         Value value = callReentrantMethod(vm, receiver, nextValueMethod, key);
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), key, value);
+        Value result = callReentrantMethod(vm, receiver, closure, key, value);
         if (isFalsey(result)) dictSet(vm, rejected, key, value);
         key = callReentrantMethod(vm, receiver, nextMethod, key);
     }
@@ -1093,7 +1093,7 @@ LOX_METHOD(Dictionary, select) {
     ASSERT_ARG_COUNT("Dictionary::select(closure)", 1);
     ASSERT_ARG_TCALLABLE("Dictionary::select(closure)", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
     Value key = callReentrantMethod(vm, receiver, nextMethod, NIL_VAL);
@@ -1102,7 +1102,7 @@ LOX_METHOD(Dictionary, select) {
     push(vm, OBJ_VAL(selected));
     while (key != NIL_VAL) {
         Value value = callReentrantMethod(vm, receiver, nextValueMethod, key);
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), key, value);
+        Value result = callReentrantMethod(vm, receiver, closure, key, value);
         if (!isFalsey(result)) dictSet(vm, selected, key, value);
         key = callReentrantMethod(vm, receiver, nextMethod, key);
     }

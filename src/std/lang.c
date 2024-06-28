@@ -715,10 +715,10 @@ LOX_METHOD(Int, downTo) {
     ASSERT_ARG_TCALLABLE("Int::downTo(to, closure)", 1);
     int self = AS_INT_INSTANCE(receiver);
     int to = AS_INT_INSTANCE(args[0]);
-    ObjClosure* closure = AS_CLOSURE(args[1]);
+    Value closure = args[1];
 
     for (int i = self; i >= to; i--) {
-        callReentrantMethod(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
+        callReentrantMethod(vm, receiver, closure, INT_VAL(i));
     }
     RETURN_NIL;
 }
@@ -762,10 +762,10 @@ LOX_METHOD(Int, timesRepeat) {
     ASSERT_ARG_COUNT("Int::timesRepeat(closure)", 1);
     ASSERT_ARG_TCALLABLE("Int::timesRepeat(closure)", 0);
     int self = AS_INT_INSTANCE(receiver);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
 
     for (int i = 0; i < self; i++) {
-        callReentrantMethod(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
+        callReentrantMethod(vm, receiver, closure, INT_VAL(i));
     }
     RETURN_NIL;
 }
@@ -810,10 +810,10 @@ LOX_METHOD(Int, upTo) {
     ASSERT_ARG_TCALLABLE("Int::upTo(to, closure)", 1);
     int self = AS_INT_INSTANCE(receiver);
     int to = AS_INT_INSTANCE(args[0]);
-    ObjClosure* closure = AS_CLOSURE(args[1]);
+    Value closure = args[1];
 
     for (int i = self; i <= to; i++) {
-        callReentrantMethod(vm, receiver, OBJ_VAL(closure), INT_VAL(i));
+        callReentrantMethod(vm, receiver, closure, INT_VAL(i));
     }
     RETURN_NIL;
 }
@@ -1231,20 +1231,18 @@ LOX_METHOD(Number, step) {
     double self = AS_NUMBER_INSTANCE(receiver);
     double to = AS_NUMBER_INSTANCE(args[0]);
     double by = AS_NUMBER_INSTANCE(args[1]);
-    ObjClosure* closure = AS_CLOSURE(args[2]);
+    Value closure = args[2];
 
-    if (by == 0) {
-        THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Step size cannot be 0.");
-    }
+    if (by == 0) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Step size cannot be 0.");
     else {
         if (by > 0) {
             for (double num = self; num <= to; num += by) {
-                callReentrantMethod(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
+                callReentrantMethod(vm, receiver, closure, NUMBER_VAL(num));
             }
         }
         else {
             for (double num = self; num >= to; num += by) {
-                callReentrantMethod(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
+                callReentrantMethod(vm, receiver, closure, NUMBER_VAL(num));
             }
         }
     }

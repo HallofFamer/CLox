@@ -78,6 +78,14 @@ Value assertArgIsEntry(VM* vm, const char* method, Value* args, int index) {
     RETURN_NIL;
 }
 
+Value assertArgIsEnumerable(VM* vm, const char* method, Value* args, int index) {
+    if (!isObjInstanceOf(vm, args[index], getNativeClass(vm, "clox.std.lang.TEnumerable"))) {
+        RETURN_STRING_FMT("method %s expects argument %d to an instance of trait TEnumrable(ie. Collection) but got %s.",
+            method, index + 1, getObjClass(vm, args[index])->name->chars);
+    }
+    RETURN_NIL;
+}
+
 Value assertArgIsException(VM* vm, const char* method, Value* args, int index) {
     if (!IS_EXCEPTION(args[index]) && !isObjInstanceOf(vm, args[index], vm->exceptionClass)) {
         RETURN_STRING_FMT("method %s expects argument %d to be an exception.", method, index + 1);
