@@ -1434,18 +1434,6 @@ InterpretResult run(VM* vm) {
 #undef RUNTIME_ERROR
 }
 
-InterpretResult runModule(VM* vm, ObjModule* module) {
-    push(vm, OBJ_VAL(module->closure));
-    if (module->closure->function->isAsync) {
-        Value result = runGeneratorAsync(vm, OBJ_VAL(module->closure), newArray(vm));
-        return result ? INTERPRET_OK : INTERPRET_RUNTIME_ERROR;
-    }
-    else {
-        callClosure(vm, module->closure, 0);
-        return run(vm);
-    }
-}
-
 InterpretResult interpret(VM* vm, const char* source) {
     ObjFunction* function = compile(vm, source);
     if (function == NULL) return INTERPRET_COMPILE_ERROR;
@@ -1453,5 +1441,5 @@ InterpretResult interpret(VM* vm, const char* source) {
     ObjClosure* closure = newClosure(vm, function);
     vm->currentModule->closure = closure;
     pop(vm);
-    return runModule(vm, vm->currentModule);
+    return runModule(vm, vm->currentModule, true);
 }

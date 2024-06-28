@@ -119,11 +119,11 @@ struct VM {
     Obj** grayStack;
 };
 
-typedef enum {
+enum InterpretResult {
     INTERPRET_OK,
     INTERPRET_COMPILE_ERROR,
     INTERPRET_RUNTIME_ERROR
-} InterpretResult;
+};
 
 static inline bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
@@ -143,7 +143,6 @@ void runtimeError(VM* vm, const char* format, ...);
 char* readFile(const char* path);
 bool bindMethod(VM* vm, ObjClass* klass, ObjString* name);
 InterpretResult run(VM* vm);
-InterpretResult runModule(VM* vm, ObjModule* module);
 InterpretResult interpret(VM* vm, const char* source);
 
 #endif // !clox_vm_h

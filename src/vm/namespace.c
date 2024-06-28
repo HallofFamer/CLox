@@ -106,24 +106,35 @@ ObjString* resolveSourceDirectory(VM* vm, ObjString* shortName, ObjNamespace* en
     return takeString(vm, heapChars, length);
 }
 
+InterpretResult runModule(VM* vm, ObjModule* module, bool isRootModule) {
+    push(vm, OBJ_VAL(module->closure));
+    if (module->closure->function->isAsync) {
+        Value result = runGeneratorAsync(vm, OBJ_VAL(module->closure), newArray(vm));
+        return result ? INTERPRET_OK : INTERPRET_RUNTIME_ERROR;
+    }
+    else {
+        callClosure(vm, module->closure, 0);
+        if (!isRootModule) vm->apiStackDepth++;
+        InterpretResult result = run(vm);
+        if (!isRootModule) vm->apiStackDepth--;
+        return result;
+    }
+}
+
+
 bool loadModule(VM* vm, ObjString* path) {
     ObjModule* lastModule = vm->currentModule;
     vm->currentModule = newModule(vm, path);
 
     char* source = readFile(path->chars);
     ObjFunction* function = compile(vm, source);
+    free(source);
     if (function == NULL) return false;
     push(vm, OBJ_VAL(function));
 
-    ObjClosure* closure = newClosure(vm, function);
+    vm->currentModule->closure = newClosure(vm, function);
     pop(vm);
-    push(vm, OBJ_VAL(closure));
-    callClosure(vm, closure, 0);
-    free(source);
-
-    vm->apiStackDepth++;
-    run(vm);
-    vm->apiStackDepth--;
+    InterpretResult result = runModule(vm, vm->currentModule, false);
     vm->currentModule = lastModule;
     return true;
 }
