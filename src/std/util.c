@@ -461,7 +461,7 @@ LOX_METHOD(DurationClass, ofSeconds) {
 
 LOX_METHOD(Promise, __init__) {
     ASSERT_ARG_COUNT("Promise::__init__(executor)", 1);
-    ASSERT_ARG_INSTANCE_OF("Promise::__init__(executor)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TCALLABLE("Promise::__init__(executor)", 0);
     ObjPromise* self = AS_PROMISE(receiver);
     self->executor = args[0];
     promiseExecute(vm, self);
@@ -470,7 +470,7 @@ LOX_METHOD(Promise, __init__) {
 
 LOX_METHOD(Promise, catch) {
     ASSERT_ARG_COUNT("Promise::catch(closure)", 1);
-    ASSERT_ARG_INSTANCE_OF("Promise::catch(closure)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TCALLABLE("Promise::catch(closure)", 0);
     ObjPromise* self = AS_PROMISE(receiver);
     if (self->state == PROMISE_REJECTED) callReentrantMethod(vm, OBJ_VAL(self), args[0], OBJ_VAL(self->exception));
     else self->onCatch = args[0];
@@ -492,7 +492,7 @@ LOX_METHOD(Promise, catchAll) {
 
 LOX_METHOD(Promise, finally) {
     ASSERT_ARG_COUNT("Promise::finally(closure)", 1);
-    ASSERT_ARG_INSTANCE_OF("Promise::finally(closure)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TCALLABLE("Promise::finally(closure)", 0);
     ObjPromise* self = AS_PROMISE(receiver);
     if (self->state == PROMISE_FULFILLED || self->state == PROMISE_REJECTED) callReentrantMethod(vm, OBJ_VAL(self), args[0], self->value);
     else self->onFinally = args[0];
@@ -536,7 +536,7 @@ LOX_METHOD(Promise, reject) {
 
 LOX_METHOD(Promise, then) {
     ASSERT_ARG_COUNT("Promise::then(onFulfilled)", 1);
-    ASSERT_ARG_INSTANCE_OF("Promise::then(onFulfilled)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TCALLABLE("Promise::then(onFulfilled)", 0);
     ObjPromise* self = AS_PROMISE(receiver);
     if (self->state == PROMISE_FULFILLED) {
         self->value = callReentrantMethod(vm, OBJ_VAL(self), args[0], self->value);
@@ -743,7 +743,7 @@ LOX_METHOD(Regex, toString) {
 
 LOX_METHOD(Timer, __init__) {
     ASSERT_ARG_COUNT("Timer::__init__(closure, delay, interval)", 3);
-    ASSERT_ARG_INSTANCE_OF("Timer::__init__(closure, delay, interval)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TCALLABLE("Timer::__init__(closure, delay, interval)", 0);
     ASSERT_ARG_TYPE("Timer::__init__(closure, delay, interval)", 1, Int);
     ASSERT_ARG_TYPE("Timer::__init__(closure, delay, interval)", 2, Int);
     ObjTimer* self = AS_TIMER(receiver);
@@ -807,7 +807,7 @@ LOX_METHOD(TimerClass, interval) {
 
 LOX_METHOD(TimerClass, timeout) {
     ASSERT_ARG_COUNT("Timer class::timeout(closure, delay)", 2);
-    ASSERT_ARG_INSTANCE_OF("Timer class::timeout(closure, delay)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TCALLABLE("Timer class::timeout(closure, delay)", 0);
     ASSERT_ARG_TYPE("Timer class::timeout(closure, delay)", 1, Int);
 
     ObjClass* self = AS_CLASS(receiver);

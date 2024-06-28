@@ -158,7 +158,7 @@ LOX_METHOD(Bool, __init__) {
 }
 
 LOX_METHOD(Bool, clone) {
-    ASSERT_ARG_COUNT("BOOL::clone()", 0);
+    ASSERT_ARG_COUNT("Bool::clone()", 0);
     if (IS_BOOL(receiver)) RETURN_VAL(receiver);
     else {
         ObjValueInstance* self = AS_VALUE_INSTANCE(receiver);
@@ -541,7 +541,7 @@ LOX_METHOD(Function, __invoke__) {
 
 LOX_METHOD(Generator, __init__) {
     ASSERT_ARG_COUNT("Generator::__init__(callee, args)", 2);
-    ASSERT_ARG_INSTANCE_OF("Generator::__init__(callee, arguments)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TCALLABLE("Generator::__init__(callee, args)", 0);
     ASSERT_ARG_TYPE("Generator::__init__(callee, args)", 1, Array);
 
     ObjGenerator* self = AS_GENERATOR(receiver);
@@ -712,7 +712,7 @@ LOX_METHOD(Int, clone) {
 LOX_METHOD(Int, downTo) {
     ASSERT_ARG_COUNT("Int::downTo(to, closure)", 2);
     ASSERT_ARG_TYPE("Int::downTo(to, closure)", 0, Int);
-    ASSERT_ARG_TYPE("Int::downTo(to, closure)", 1, Closure);
+    ASSERT_ARG_TCALLABLE("Int::downTo(to, closure)", 1);
     int self = AS_INT_INSTANCE(receiver);
     int to = AS_INT_INSTANCE(args[0]);
     ObjClosure* closure = AS_CLOSURE(args[1]);
@@ -760,7 +760,7 @@ LOX_METHOD(Int, objectID) {
 
 LOX_METHOD(Int, timesRepeat) {
     ASSERT_ARG_COUNT("Int::timesRepeat(closure)", 1);
-    ASSERT_ARG_TYPE("Int::timesRepeat(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Int::timesRepeat(closure)", 0);
     int self = AS_INT_INSTANCE(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
 
@@ -807,7 +807,7 @@ LOX_METHOD(Int, toString) {
 LOX_METHOD(Int, upTo) {
     ASSERT_ARG_COUNT("Int::upTo(to, closure)", 2);
     ASSERT_ARG_TYPE("Int::upTo(to, closure)", 0, Int);
-    ASSERT_ARG_TYPE("Int::upTo(to, closure)", 1, Closure);
+    ASSERT_ARG_TCALLABLE("Int::upTo(to, closure)", 1);
     int self = AS_INT_INSTANCE(receiver);
     int to = AS_INT_INSTANCE(args[0]);
     ObjClosure* closure = AS_CLOSURE(args[1]);
@@ -1227,7 +1227,7 @@ LOX_METHOD(Number, step) {
     ASSERT_ARG_COUNT("Number::step(to, by, closure)", 3);
     ASSERT_ARG_TYPE("Number::step(to, by, closure)", 0, Number);
     ASSERT_ARG_TYPE("Number::step(to, by, closure)", 1, Number);
-    ASSERT_ARG_TYPE("Number::step(to, by, closure)", 2, Closure);
+    ASSERT_ARG_TCALLABLE("Number::step(to, by, closure)", 2);
     double self = AS_NUMBER_INSTANCE(receiver);
     double to = AS_NUMBER_INSTANCE(args[0]);
     double by = AS_NUMBER_INSTANCE(args[1]);

@@ -437,7 +437,7 @@ LOX_METHOD(Array, clone) {
 
 LOX_METHOD(Array, collect) {
     ASSERT_ARG_COUNT("Array::collect(closure)", 1);
-    ASSERT_ARG_TYPE("Array::collect(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Array::collect(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
 
@@ -458,7 +458,7 @@ LOX_METHOD(Array, contains) {
 
 LOX_METHOD(Array, detect) {
     ASSERT_ARG_COUNT("Array::detect(closure)", 1);
-    ASSERT_ARG_TYPE("Array::detect(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Array::detect(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
 
@@ -471,7 +471,7 @@ LOX_METHOD(Array, detect) {
 
 LOX_METHOD(Array, each) {
     ASSERT_ARG_COUNT("Array::each(closure)", 1);
-    ASSERT_ARG_TYPE("Array::each(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Array::each(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
 
@@ -483,7 +483,7 @@ LOX_METHOD(Array, each) {
 
 LOX_METHOD(Array, eachIndex) { 
     ASSERT_ARG_COUNT("Array::eachIndex(closure)", 1);
-    ASSERT_ARG_TYPE("Array::eachIndex(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Array::eachIndex(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     
@@ -586,7 +586,7 @@ LOX_METHOD(Array, putAt) {
 
 LOX_METHOD(Array, reject) {
     ASSERT_ARG_COUNT("Array::reject(closure)", 1);
-    ASSERT_ARG_TYPE("Array::reject(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Array::reject(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
 
@@ -621,7 +621,7 @@ LOX_METHOD(Array, removeAt) {
 
 LOX_METHOD(Array, select) {
     ASSERT_ARG_COUNT("Array::select(closure)", 1);
-    ASSERT_ARG_TYPE("Array::select(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Array::select(closure)", 0);
     ObjArray* self = AS_ARRAY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
 
@@ -709,7 +709,7 @@ LOX_METHOD(Collection, addAll) {
 
 LOX_METHOD(Collection, collect) {
     ASSERT_ARG_COUNT("Collection::collect(closure)", 1);
-    ASSERT_ARG_TYPE("Collection::collect(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Collection::collect(closure)", 0);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value addMethod = getObjMethod(vm, receiver, "add");
     Value nextMethod = getObjMethod(vm, receiver, "next");
@@ -730,7 +730,7 @@ LOX_METHOD(Collection, collect) {
 
 LOX_METHOD(Collection, detect) {
     ASSERT_ARG_COUNT("Collection::detect(closure)", 1);
-    ASSERT_ARG_TYPE("Collection::detect(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Collection::detect(closure)", 0);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
@@ -747,7 +747,7 @@ LOX_METHOD(Collection, detect) {
 
 LOX_METHOD(Collection, each) {
     ASSERT_ARG_COUNT("Collection::each(closure)", 1);
-    ASSERT_ARG_TYPE("Collection::each(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Collection::each(closure)", 0);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
@@ -783,7 +783,7 @@ LOX_METHOD(Collection, length) {
 
 LOX_METHOD(Collection, reject) {
     ASSERT_ARG_COUNT("Collection::reject(closure)", 1);
-    ASSERT_ARG_TYPE("Collection::reject(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Collection::reject(closure)", 0);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value addMethod = getObjMethod(vm, receiver, "add");
     Value nextMethod = getObjMethod(vm, receiver, "next");
@@ -804,7 +804,7 @@ LOX_METHOD(Collection, reject) {
 
 LOX_METHOD(Collection, select) {
     ASSERT_ARG_COUNT("Collection::select(closure)", 1);
-    ASSERT_ARG_TYPE("Collection::select(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Collection::select(closure)", 0);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value addMethod = getObjMethod(vm, receiver, "add");
     Value nextMethod = getObjMethod(vm, receiver, "next");
@@ -864,7 +864,7 @@ LOX_METHOD(Dictionary, clone) {
 
 LOX_METHOD(Dictionary, collect) {
     ASSERT_ARG_COUNT("Dictionary::collect(closure)", 1);
-    ASSERT_ARG_TYPE("Dictionary::collect(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Dictionary::collect(closure)", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value nextMethod = getObjMethod(vm, receiver, "next");
@@ -895,7 +895,7 @@ LOX_METHOD(Dictionary, containsValue) {
 
 LOX_METHOD(Dictionary, detect) {
     ASSERT_ARG_COUNT("Dictionary::detect(closure)", 1);
-    ASSERT_ARG_TYPE("Dictionary::detect(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Dictionary::detect(closure)", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value nextMethod = getObjMethod(vm, receiver, "next");
@@ -913,7 +913,7 @@ LOX_METHOD(Dictionary, detect) {
 
 LOX_METHOD(Dictionary, each) {
     ASSERT_ARG_COUNT("Dictionary::each(closure)", 1);
-    ASSERT_ARG_TYPE("Dictionary::each(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Dictionary::each(closure)", 0);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
@@ -929,7 +929,7 @@ LOX_METHOD(Dictionary, each) {
 
 LOX_METHOD(Dictionary, eachKey) {
     ASSERT_ARG_COUNT("Dictionary::each(closure)", 1);
-    ASSERT_ARG_TYPE("Dictionary::each(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Dictionary::each(closure)", 0);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
@@ -945,7 +945,7 @@ LOX_METHOD(Dictionary, eachKey) {
 
 LOX_METHOD(Dictionary, eachValue) {
     ASSERT_ARG_COUNT("Dictionary::each(closure)", 1);
-    ASSERT_ARG_TYPE("Dictionary::each(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Dictionary::each(closure)", 0);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
@@ -1058,7 +1058,7 @@ LOX_METHOD(Dictionary, putAt) {
 
 LOX_METHOD(Dictionary, reject) {
     ASSERT_ARG_COUNT("Dictionary::reject(closure)", 1);
-    ASSERT_ARG_TYPE("Dictionary::reject(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Dictionary::reject(closure)", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value nextMethod = getObjMethod(vm, receiver, "next");
@@ -1091,7 +1091,7 @@ LOX_METHOD(Dictionary, removeAt) {
 
 LOX_METHOD(Dictionary, select) {
     ASSERT_ARG_COUNT("Dictionary::select(closure)", 1);
-    ASSERT_ARG_TYPE("Dictionary::select(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("Dictionary::select(closure)", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value nextMethod = getObjMethod(vm, receiver, "next");
@@ -1408,7 +1408,7 @@ LOX_METHOD(LinkedList, toString) {
 
 LOX_METHOD(List, eachIndex) {
     ASSERT_ARG_COUNT("List::eachIndex(closure)", 1);
-    ASSERT_ARG_TYPE("List::eachIndex(closure)", 0, Closure);
+    ASSERT_ARG_TCALLABLE("List::eachIndex(closure)", 0);
     ObjClosure* closure = AS_CLOSURE(args[0]);
     Value index = INT_VAL(0);
     Value nextMethod = getObjMethod(vm, receiver, "next");
@@ -1737,7 +1737,7 @@ LOX_METHOD(Range, nextValue) {
 LOX_METHOD(Range, step) {
     ASSERT_ARG_COUNT("Range::step(by, closure)", 2);
     ASSERT_ARG_TYPE("Range::step(by, closure)", 0, Number);
-    ASSERT_ARG_TYPE("Range::step(by, closure)", 1, Closure);
+    ASSERT_ARG_TCALLABLE("Range::step(by, closure)", 1);
     ObjRange* self = AS_RANGE(receiver);
     double from = self->from;
     double to = self->to;

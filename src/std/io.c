@@ -282,7 +282,6 @@ LOX_METHOD(File, renameAsync) {
     ASSERT_ARG_TYPE("File::renameAsync(name)", 0, String);
     ObjFile* self = AS_FILE(receiver);
     if (!fileExists(vm, self)) RETURN_PROMISE_EX(clox.std.io.FileNotFoundException, "Cannot rename file as it does not exist.");
-
     ObjPromise* promise = fileRenameAsync(vm, self, AS_STRING(args[0]), fileOnHandle);
     if (promise == NULL) RETURN_PROMISE_EX(clox.std.io.IOException, "Failed to rename file because of system runs out of memory.");
     RETURN_OBJ(promise);
