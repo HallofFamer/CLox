@@ -1742,20 +1742,18 @@ LOX_METHOD(Range, step) {
     double from = self->from;
     double to = self->to;
     double by = AS_NUMBER(args[0]);
-    ObjClosure* closure = AS_CLOSURE(args[1]);
+    Value closure = args[1];
 
-    if (by == 0) { 
-        THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Step size cannot be 0.");
-    }
+    if (by == 0) THROW_EXCEPTION(clox.std.lang.IllegalArgumentException, "Step size cannot be 0.");
     else {
         if (by > 0) {
             for (double num = from; num <= to; num += by) {
-                callReentrantMethod(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
+                callReentrantMethod(vm, receiver, closure, NUMBER_VAL(num));
             }
         }
         else {
             for (double num = from; num >= to; num += by) {
-                callReentrantMethod(vm, receiver, OBJ_VAL(closure), NUMBER_VAL(num));
+                callReentrantMethod(vm, receiver, closure, NUMBER_VAL(num));
             }
         }
     }
