@@ -710,7 +710,7 @@ LOX_METHOD(Collection, addAll) {
 LOX_METHOD(Collection, collect) {
     ASSERT_ARG_COUNT("Collection::collect(closure)", 1);
     ASSERT_ARG_TCALLABLE("Collection::collect(closure)", 0);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value addMethod = getObjMethod(vm, receiver, "add");
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
@@ -720,7 +720,7 @@ LOX_METHOD(Collection, collect) {
     push(vm, collected);
     while (index != NIL_VAL) {
         Value element = callReentrantMethod(vm, receiver, nextValueMethod, index);
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), element);
+        Value result = callReentrantMethod(vm, receiver, closure, element);
         callReentrantMethod(vm, collected, addMethod, result);
         index = callReentrantMethod(vm, receiver, nextMethod, index);
     }
@@ -731,14 +731,14 @@ LOX_METHOD(Collection, collect) {
 LOX_METHOD(Collection, detect) {
     ASSERT_ARG_COUNT("Collection::detect(closure)", 1);
     ASSERT_ARG_TCALLABLE("Collection::detect(closure)", 0);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
     Value index = callReentrantMethod(vm, receiver, nextMethod, NIL_VAL);
 
     while (index != NIL_VAL) {
         Value element = callReentrantMethod(vm, receiver, nextValueMethod, index);
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), element);
+        Value result = callReentrantMethod(vm, receiver, closure, element);
         if (!isFalsey(result)) RETURN_VAL(element);
         index = callReentrantMethod(vm, receiver, nextMethod, index);
     }
@@ -748,14 +748,14 @@ LOX_METHOD(Collection, detect) {
 LOX_METHOD(Collection, each) {
     ASSERT_ARG_COUNT("Collection::each(closure)", 1);
     ASSERT_ARG_TCALLABLE("Collection::each(closure)", 0);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
     Value index = callReentrantMethod(vm, receiver, nextMethod, NIL_VAL);
 
     while (index != NIL_VAL) {
         Value element = callReentrantMethod(vm, receiver, nextValueMethod, index);
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), element);
+        Value result = callReentrantMethod(vm, receiver, closure, element);
         index = callReentrantMethod(vm, receiver, nextMethod, index);
     }
     RETURN_NIL;
@@ -784,7 +784,7 @@ LOX_METHOD(Collection, length) {
 LOX_METHOD(Collection, reject) {
     ASSERT_ARG_COUNT("Collection::reject(closure)", 1);
     ASSERT_ARG_TCALLABLE("Collection::reject(closure)", 0);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value addMethod = getObjMethod(vm, receiver, "add");
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
@@ -794,7 +794,7 @@ LOX_METHOD(Collection, reject) {
     push(vm, rejected);
     while (index != NIL_VAL) {
         Value element = callReentrantMethod(vm, receiver, nextValueMethod, index);
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), element);
+        Value result = callReentrantMethod(vm, receiver, closure, element);
         if(isFalsey(result)) callReentrantMethod(vm, rejected, addMethod, element);
         index = callReentrantMethod(vm, receiver, nextMethod, index);
     }
@@ -805,7 +805,7 @@ LOX_METHOD(Collection, reject) {
 LOX_METHOD(Collection, select) {
     ASSERT_ARG_COUNT("Collection::select(closure)", 1);
     ASSERT_ARG_TCALLABLE("Collection::select(closure)", 0);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value addMethod = getObjMethod(vm, receiver, "add");
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
@@ -815,7 +815,7 @@ LOX_METHOD(Collection, select) {
     push(vm, selected);
     while (index != NIL_VAL) {
         Value element = callReentrantMethod(vm, receiver, nextValueMethod, index);
-        Value result = callReentrantMethod(vm, receiver, OBJ_VAL(closure), element);
+        Value result = callReentrantMethod(vm, receiver, closure, element);
         if (!isFalsey(result)) callReentrantMethod(vm, selected, addMethod, element);
         index = callReentrantMethod(vm, receiver, nextMethod, index);
     }
@@ -824,8 +824,7 @@ LOX_METHOD(Collection, select) {
 }
 
 LOX_METHOD(Collection, toArray) {
-    ASSERT_ARG_COUNT("Collection::toArray(closure)", 1);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    ASSERT_ARG_COUNT("Collection::toArray()", 0);
     Value addMethod = getObjMethod(vm, receiver, "add");
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
@@ -1409,14 +1408,14 @@ LOX_METHOD(LinkedList, toString) {
 LOX_METHOD(List, eachIndex) {
     ASSERT_ARG_COUNT("List::eachIndex(closure)", 1);
     ASSERT_ARG_TCALLABLE("List::eachIndex(closure)", 0);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value index = INT_VAL(0);
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
 
     while (index != NIL_VAL) {
         Value element = callReentrantMethod(vm, receiver, nextValueMethod, index);
-        callReentrantMethod(vm, receiver, OBJ_VAL(closure), index, element);
+        callReentrantMethod(vm, receiver, closure, index, element);
         index = callReentrantMethod(vm, receiver, nextMethod, index);
     }
     RETURN_NIL;

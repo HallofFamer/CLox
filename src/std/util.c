@@ -791,7 +791,7 @@ LOX_METHOD(Timer, toString) {
 
 LOX_METHOD(TimerClass, interval) {
     ASSERT_ARG_COUNT("Timer class::interval(closure, interval)", 2);
-    ASSERT_ARG_INSTANCE_OF("Timer class::interval(closure, interval)", 0, clox.std.lang.TCallable);
+    ASSERT_ARG_TCALLABLE("Timer class::interval(closure, interval)", 0);
     ASSERT_ARG_TYPE("Timer class::interval(closure, interval)", 1, Int);
 
     ObjClass* self = AS_CLASS(receiver);

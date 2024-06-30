@@ -8,29 +8,29 @@ println("Iterating from Int 5 to 10: ");
 println("");
 println("");
 
-var list = [2, 3.5, true, "Hello World"];
-println("Enumerating list with each method: ");
-list.each({|element| println("Element: " + element.toString()) });
+var array = [2, 3.5, true, "Hello World"];
+println("Enumerating array with each method: ");
+array.each({|element| println("Element: " + element.toString()) });
 println("");
 
-var selected = list.select({|x| x.instanceOf(Number) });
+var selected = array.select({|x| x.instanceOf(Number) });
 println("Selecting elements that are numbers: ");
 println(selected);
 
-var rejected = list.reject({|x| x.instanceOf(Number) });
+var rejected = array.reject({|x| x.instanceOf(Number) });
 println("Rejecting elements that are numbers: ");
 println(rejected);
 println("");
 
-var list2 = [1, 2, 3, 4, 5];
-println("Enumerating a number list with index: ");
-list2.eachIndex({|index, element| println("Element " + index.toString() + ": " + element.toString())});
+var array2 = [1, 2, 3, 4, 5];
+println("Enumerating a number array with index: ");
+array2.eachIndex({|index, element| println("Element " + index.toString() + ": " + element.toString())});
 println("");
 
-println("Collect a number list by square: ");
-println(list2.collect({|x| x * x}));
+println("Collect a number array by square: ");
+println(array2.collect({|x| x * x}));
 println("Detecting first even number: ");
-println(list2.detect({|x| x.isEven() }));
+println(array2.detect({|x| x.isEven() }));
 println("");
 
 var dict = ["US": "United States", "CA": "Canada", "EU": "Europe", "JP": "Japan", "RU": "Russia"];
