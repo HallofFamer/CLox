@@ -49,7 +49,7 @@ void initTrait(VM* vm, ObjClass* trait, ObjString* name) {
     push(vm, OBJ_VAL(trait));
     trait->behaviorType = BEHAVIOR_TRAIT;
     trait->behaviorID = vm->behaviorCount++;
-    trait->name = name != NULL ? name : createBehaviorName(vm, BEHAVIOR_TRAIT, NULL);
+    trait->name = (name != NULL) ? name : createBehaviorName(vm, BEHAVIOR_TRAIT, NULL);
     trait->namespace = vm->currentNamespace;
     trait->superclass = NULL;
     trait->isNative = false;

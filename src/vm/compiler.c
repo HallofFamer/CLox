@@ -176,6 +176,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     compiler->scopeDepth = 0;
     compiler->innermostLoopStart = -1;
     compiler->innermostLoopScopeDepth = 0;
+
     compiler->isAsync = isAsync;
     compiler->function = newFunction(parser->vm);
     compiler->function->isAsync = isAsync;

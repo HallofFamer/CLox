@@ -325,15 +325,11 @@ static void createGeneratorFrame(VM* vm, ObjClosure* closure, int argCount) {
 }
 
 static bool callClosureAsync(VM* vm, ObjClosure* closure, int argCount) {
-    Value run = getObjMethod(vm, OBJ_VAL(vm->generatorClass), "run");
     makeArray(vm, argCount);
     Value arguments = pop(vm);
-    pop(vm);
-
-    push(vm, OBJ_VAL(vm->generatorClass));
-    push(vm, OBJ_VAL(closure));
-    push(vm, arguments);
-    return callMethod(vm, run, 2);
+    Value result = runGeneratorAsync(vm, OBJ_VAL(closure), AS_ARRAY(arguments));
+    push(vm, result);
+    return true;
 }
 
 bool callClosure(VM* vm, ObjClosure* closure, int argCount) {
