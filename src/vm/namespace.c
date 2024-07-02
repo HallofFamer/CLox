@@ -107,12 +107,12 @@ ObjString* resolveSourceDirectory(VM* vm, ObjString* shortName, ObjNamespace* en
 }
 
 InterpretResult runModule(VM* vm, ObjModule* module, bool isRootModule) {
-    push(vm, OBJ_VAL(module->closure));
     if (module->closure->function->isAsync) {
         Value result = runGeneratorAsync(vm, OBJ_VAL(module->closure), newArray(vm));
         return result ? INTERPRET_OK : INTERPRET_RUNTIME_ERROR;
     }
     else {
+        push(vm, OBJ_VAL(module->closure));
         callClosure(vm, module->closure, 0);
         if (!isRootModule) vm->apiStackDepth++;
         InterpretResult result = run(vm);

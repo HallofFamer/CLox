@@ -44,7 +44,6 @@ void loadGeneratorFrame(VM* vm, ObjGenerator* generator) {
     for (int i = 1; i < generator->frame->slotCount; i++) {
         push(vm, generator->frame->slots[i]);
     }
-
     if (generator->state != GENERATOR_START) push(vm, generator->value);
     generator->state = GENERATOR_RESUME;
 }
