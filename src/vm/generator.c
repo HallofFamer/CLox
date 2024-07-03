@@ -81,6 +81,25 @@ void yieldFromInnerGenerator(VM* vm, ObjGenerator* generator) {
     if (generator->state != GENERATOR_RETURN) push(vm, result);
 }
 
+Value stepGenerator(VM* vm, ObjGenerator* generator, Value arg) {
+    Value send = getObjMethod(vm, OBJ_VAL(generator), "send");
+    callReentrantMethod(vm, OBJ_VAL(generator), send, arg);
+
+    if (generator->state == GENERATOR_RETURN && IS_PROMISE(generator->value)) return generator->value;
+    else {
+        Value fulfill = getObjMethod(vm, OBJ_VAL(vm->promiseClass), "fulfill");
+        Value promise = callReentrantMethod(vm, OBJ_VAL(vm->promiseClass), fulfill, generator->value);
+
+        if (generator->state == GENERATOR_RETURN) return OBJ_VAL(promise);
+        else {
+            Value step = getObjMethod(vm, OBJ_VAL(generator), "step");
+            ObjBoundMethod* stepMethod = newBoundMethod(vm, OBJ_VAL(generator), step);
+            Value then = getObjMethod(vm, promise, "then");
+            return callReentrantMethod(vm, promise, then, OBJ_VAL(stepMethod));
+        }
+    }
+}
+
 Value runGeneratorAsync(VM* vm, Value callee, ObjArray* arguments) {
     ObjGenerator* generator = newGenerator(vm, NULL, NULL);
     push(vm, OBJ_VAL(generator));
@@ -90,8 +109,5 @@ Value runGeneratorAsync(VM* vm, Value callee, ObjArray* arguments) {
         pop(vm);
     }
     pop(vm);
-
-    Value step = getObjMethod(vm, OBJ_VAL(generator), "step");
-    Value result = callReentrantMethod(vm, OBJ_VAL(generator), step, NIL_VAL);
-    return result;
+    return stepGenerator(vm, generator, NIL_VAL);
 }

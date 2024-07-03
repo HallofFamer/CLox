@@ -627,22 +627,7 @@ LOX_METHOD(Generator, setReceiver) {
 LOX_METHOD(Generator, step) {
     ASSERT_ARG_COUNT("Generator::step(argument)", 1);
     ObjGenerator* self = AS_GENERATOR(receiver);
-    Value send = getObjMethod(vm, receiver, "send");
-    callReentrantMethod(vm, receiver, send, args[0]);
-
-    if (self->state == GENERATOR_RETURN && IS_PROMISE(self->value)) RETURN_VAL(self->value);
-    else {
-        Value fulfill = getObjMethod(vm, OBJ_VAL(vm->promiseClass), "fulfill");
-        Value promise = callReentrantMethod(vm, OBJ_VAL(vm->promiseClass), fulfill, self->value);
-
-        if (self->state == GENERATOR_RETURN) RETURN_VAL(promise);
-        else { 
-            Value step = getObjMethod(vm, receiver, "step");
-            ObjBoundMethod* stepMethod = newBoundMethod(vm, receiver, step);
-            Value then = getObjMethod(vm, promise, "then");
-            RETURN_VAL(callReentrantMethod(vm, promise, then, OBJ_VAL(stepMethod)));
-        }
-    }
+    RETURN_VAL(stepGenerator(vm, AS_GENERATOR(receiver), args[0]));
 }
 
 LOX_METHOD(Generator, throws) {
