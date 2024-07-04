@@ -236,14 +236,14 @@ typedef struct {
     ExceptionHandler handlerStack[UINT4_MAX];
 } ObjFrame;
 
-typedef struct ObjGenerator {
+struct ObjGenerator {
     Obj obj;
     ObjFrame* frame;
     struct ObjGenerator* outer;
     struct ObjGenerator* inner;
     GeneratorState state;
     Value value;
-} ObjGenerator;
+};
 
 typedef struct {
     Obj obj;

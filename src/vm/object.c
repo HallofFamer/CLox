@@ -402,7 +402,7 @@ static void printDictionary(ObjDictionary* dictionary) {
 
 static void printFunction(ObjFunction* function) {
     if (function->name == NULL) printf("<script>");
-    else if (function->name->length == 0) printf("<function>");
+    else if (function->name->length == 0 || function->name->chars[0] == '{') printf("<function>");
     else printf("<function %s>", function->name->chars);
 }
 

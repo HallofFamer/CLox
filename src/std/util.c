@@ -799,6 +799,7 @@ LOX_METHOD(TimerClass, interval) {
     TimerData* data = (TimerData*)timer->timer->data;
     timer->obj.klass = self;
     data->receiver = OBJ_VAL(timer);
+
     uv_timer_init(vm->eventLoop, timer->timer);
     uv_timer_start(timer->timer, timerRun, 0, (uint64_t)data->interval);
     timer->id = (int)timer->timer->start_id;
@@ -815,6 +816,7 @@ LOX_METHOD(TimerClass, timeout) {
     TimerData* data = (TimerData*)timer->timer->data;
     timer->obj.klass = self;
     data->receiver = OBJ_VAL(timer);
+
     uv_timer_init(vm->eventLoop, timer->timer);
     uv_timer_start(timer->timer, timerRun, (uint64_t)data->delay, 0);
     timer->id = (int)timer->timer->start_id;
