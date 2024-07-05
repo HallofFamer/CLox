@@ -372,7 +372,6 @@ LOX_METHOD(Socket, receive) {
     ObjInstance* self = AS_INSTANCE(receiver);
     int descriptor = AS_INT(getObjProperty(vm, self, "descriptor"));
     char message[UINT8_MAX] = "";
-
     if (recv(descriptor, message, UINT8_MAX, 0) < 0) THROW_EXCEPTION(clox.std.net.SocketException, "Failed to receive message from socket.");
     RETURN_STRING(message, (int)strlen(message));
 }
