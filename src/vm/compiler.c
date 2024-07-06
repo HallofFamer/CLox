@@ -194,6 +194,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     local->depth = 0;
     local->isCaptured = false;
     local->isMutable = false;
+
     if (type != TYPE_FUNCTION && type != TYPE_LAMBDA) {
         local->name.start = "this";
         local->name.length = 4;
@@ -1432,6 +1433,7 @@ static void tryStatement(Compiler* compiler) {
             uint8_t variable = resolveLocal(compiler, &compiler->parser->previous);
             emitBytes(compiler, OP_SET_LOCAL, variable);
         }
+
         consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after catch statement");
         emitByte(compiler, OP_CATCH);
         statement(compiler);

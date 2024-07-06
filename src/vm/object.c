@@ -476,7 +476,7 @@ void printObject(Value value) {
             break;
         case OBJ_RANGE: { 
             ObjRange* range = AS_RANGE(value);
-            printf("%d..%d", range->from, range->to);
+            printf("<%d..%d>", range->from, range->to);
             break;
         }
         case OBJ_RECORD:

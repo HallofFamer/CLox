@@ -641,11 +641,7 @@ InterpretResult run(VM* vm) {
 
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
-            case OP_CONSTANT: {
-                Value constant = READ_CONSTANT();
-                push(vm, constant);
-                break;
-            }
+            case OP_CONSTANT: push(vm, READ_CONSTANT()); break;
             case OP_NIL: push(vm, NIL_VAL); break;
             case OP_TRUE: push(vm, BOOL_VAL(true)); break;
             case OP_FALSE: push(vm, BOOL_VAL(false)); break;
