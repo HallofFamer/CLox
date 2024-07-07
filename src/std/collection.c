@@ -929,14 +929,14 @@ LOX_METHOD(Dictionary, each) {
 LOX_METHOD(Dictionary, eachKey) {
     ASSERT_ARG_COUNT("Dictionary::each(closure)", 1);
     ASSERT_ARG_TCALLABLE("Dictionary::each(closure)", 0);
-    ObjClosure* closure = AS_CLOSURE(args[0]);
+    Value closure = args[0];
     Value nextMethod = getObjMethod(vm, receiver, "next");
     Value nextValueMethod = getObjMethod(vm, receiver, "nextValue");
     Value key = callReentrantMethod(vm, receiver, nextMethod, NIL_VAL);
 
     while (key != NIL_VAL) {
         callReentrantMethod(vm, receiver, nextValueMethod, key);
-        callReentrantMethod(vm, receiver, OBJ_VAL(closure), key);
+        callReentrantMethod(vm, receiver, closure, key);
         key = callReentrantMethod(vm, receiver, nextMethod, key);
     }
     RETURN_NIL;
