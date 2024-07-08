@@ -223,8 +223,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return byteInstruction("OP_RETURN_NONLOCAL", chunk, offset);
         case OP_YIELD:
             return simpleInstruction("OP_YIELD", offset);
-        case OP_YIELD_FROM:
-            return simpleInstruction("OP_YIELD_FROM", offset);
+        case OP_YIELD_WITH:
+            return simpleInstruction("OP_YIELD_WITH", offset);
         case OP_AWAIT:
             return simpleInstruction("OP_AWAIT", offset);
         default:

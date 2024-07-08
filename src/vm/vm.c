@@ -1371,7 +1371,7 @@ InterpretResult run(VM* vm) {
                 LOAD_FRAME();
                 break;
             }
-            case OP_YIELD_FROM: {
+            case OP_YIELD_WITH: {
                 Value result = peek(vm, 0);
                 ObjString* name = frame->closure->function->name;
                 Value receiver = vm->runningGenerator->frame->slots[0];
