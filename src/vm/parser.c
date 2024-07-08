@@ -212,7 +212,6 @@ void synchronize(Parser* parser) {
             case TOKEN_AWAIT:
             case TOKEN_CLASS:
             case TOKEN_FOR:
-            case TOKEN_FROM:
             case TOKEN_FUN:
             case TOKEN_IF:
             case TOKEN_NAMESPACE:
@@ -224,6 +223,7 @@ void synchronize(Parser* parser) {
             case TOKEN_VAL:
             case TOKEN_VAR:
             case TOKEN_WHILE:
+            case TOKEN_WITH:
             case TOKEN_YIELD:
                 return;
 

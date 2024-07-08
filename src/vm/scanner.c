@@ -178,7 +178,6 @@ static TokenSymbol identifierType(Scanner* scanner) {
                     case 'a': return checkKeyword(scanner, 2, 3, "lse", TOKEN_FALSE);
                     case 'i': return checkKeyword(scanner, 2, 5, "nally", TOKEN_FINALLY);
                     case 'o': return checkKeyword(scanner, 2, 1, "r", TOKEN_FOR);
-                    case 'r': return checkKeyword(scanner, 2, 2, "om", TOKEN_FROM);
                     case 'u': return checkKeyword(scanner, 2, 1, "n", TOKEN_FUN);
                 }
             }

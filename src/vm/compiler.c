@@ -855,9 +855,9 @@ static void yield(Compiler* compiler, bool canAssign) {
     {
         emitBytes(compiler, OP_NIL, OP_YIELD);
     }
-    else if (match(compiler->parser, TOKEN_FROM)) {
+    else if (match(compiler->parser, TOKEN_WITH)) {
         expression(compiler);
-        emitByte(compiler, OP_YIELD_FROM);
+        emitByte(compiler, OP_YIELD_WITH);
     }
     else {
         expression(compiler);
@@ -930,7 +930,6 @@ ParseRule rules[] = {
     [TOKEN_FALSE]            = {literal,       NULL,        PREC_NONE},
     [TOKEN_FINALLY]          = {NULL,          NULL,        PREC_NONE},
     [TOKEN_FOR]              = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_FROM]             = {NULL,          NULL,        PREC_NONE},
     [TOKEN_FUN]              = {closure,       NULL,        PREC_NONE},
     [TOKEN_IF]               = {NULL,          NULL,        PREC_NONE},
     [TOKEN_NAMESPACE]        = {NULL,          NULL,        PREC_NONE},
@@ -1513,10 +1512,10 @@ static void yieldStatement(Compiler* compiler) {
     if (match(compiler->parser, TOKEN_SEMICOLON)) {
         emitBytes(compiler, OP_YIELD, OP_POP);
     }
-    else if (match(compiler->parser, TOKEN_FROM)) {
+    else if (match(compiler->parser, TOKEN_WITH)) {
         expression(compiler);
         consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after yield value.");
-        emitByte(compiler, OP_YIELD_FROM);
+        emitByte(compiler, OP_YIELD_WITH);
     }
     else {
         expression(compiler);
