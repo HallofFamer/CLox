@@ -287,6 +287,7 @@ LOX_METHOD(IPAddress, __init__) {
     if (ipIsV4(address)) version = 4;
     else if (ipIsV6(address)) version = 6;
     else THROW_EXCEPTION(clox.std.net.IPAddressException, "Invalid IP address specified.");
+
     setObjProperty(vm, self, "address", args[0]);
     setObjProperty(vm, self, "version", INT_VAL(version));
     RETURN_OBJ(self);

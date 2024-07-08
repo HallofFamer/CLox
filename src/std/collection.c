@@ -319,10 +319,12 @@ static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
         string[0] = '[';
         size_t offset = 1;
         ObjNode* node = AS_NODE(getObjProperty(vm, linkedList, "first"));
+
         for (int i = 0; i < size; i++) {
             char* chars = valueToString(vm, node->element);
             size_t length = strlen(chars);
             memcpy(string + offset, chars, length);
+
             if (i == size - 1) {
                 offset += length;
             }
@@ -332,6 +334,7 @@ static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
             }
             node = node->next;
         }
+
         string[offset] = ']';
         string[offset + 1] = '\0';
         return copyString(vm, string, (int)offset + 1);

@@ -1213,6 +1213,7 @@ LOX_METHOD(Number, step) {
     ASSERT_ARG_TYPE("Number::step(to, by, closure)", 0, Number);
     ASSERT_ARG_TYPE("Number::step(to, by, closure)", 1, Number);
     ASSERT_ARG_TCALLABLE("Number::step(to, by, closure)", 2);
+
     double self = AS_NUMBER_INSTANCE(receiver);
     double to = AS_NUMBER_INSTANCE(args[0]);
     double by = AS_NUMBER_INSTANCE(args[1]);

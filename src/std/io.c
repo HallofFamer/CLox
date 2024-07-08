@@ -701,7 +701,6 @@ LOX_METHOD(WriteStream, flushAsync) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) THROW_EXCEPTION(clox.std.io.IOException, "Cannot flush write stream because file is already closed.");
     loadFileWrite(vm, file);
-
     ObjPromise* promise = fileFlushAsync(vm, file, fileOnFlush);
     if (promise == NULL) THROW_EXCEPTION(clox.std.io.IOException, "Failed to flush write stream.");
     RETURN_OBJ(promise);
