@@ -3,28 +3,21 @@ using clox.std.io.File;
 using clox.std.io.FileWriteStream;
 
 println("Creating a write stream for output file.");
-File.openAsync("test/others/file_output.txt", "w")
-    .then({|fileWriter|
-        print("Successfully opened: ");
-        println(fileWriter);
-        println("Now write character 'B' to file.");
-        fileWriter.writeAsync("B").then({ 
-            println("Then write a new line.");
-            fileWriter.writeLineAsync()
-        }).then({ 
-            println("Then write string 'x = 32'");
-            fileWriter.writeStringAsync("x = 32")
-        }).then({ 
-            println("Then write a new line.");
-            fileWriter.writeLineAsync()
-        }).then({
-            println("Last write string 'Hello World!'");
-            fileWriter.writeStringAsync("Hello World!")
-        }).then({ 
-            println("Closing write stream for file.");
-            fileWriter.closeAsync()
-        }).then({ 
-            println("Write stream has been closed.");
-        })
-    })
-    .catch({|exception| println("Error: ${exception.message}"); });
+val fileWriter = await File.openAsync("test/others/file_output.txt", "w");
+print("Successfully opened: ");
+println(fileWriter);
+
+println("Now write character 'B' to file.");
+await fileWriter.writeAsync("B");
+println("Then write a new line.");
+await fileWriter.writeLineAsync();
+println("Then write string 'x = 32'");
+await fileWriter.writeStringAsync("x = 32");
+println("Then write a new line.");
+await fileWriter.writeLineAsync();
+println("Last write string 'Hello World!'");
+await fileWriter.writeStringAsync("Hello World!");
+
+println("Closing write stream for file.");
+await fileWriter.closeAsync();
+println("Write stream has been closed.");
