@@ -297,7 +297,6 @@ LOX_METHOD(IPAddress, getDomain) {
     ASSERT_ARG_COUNT("IPAddress::getDomain()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjString* address = AS_STRING(getObjProperty(vm, self, "address"));
-
     int status = -1;
     ObjString* domain = dnsGetDomainFromIPAddress(vm, address->chars, &status);
     if (status) THROW_EXCEPTION(clox.std.net.DomainHostException, "Failed to get domain information for IP Address.");

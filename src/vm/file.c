@@ -51,7 +51,6 @@ bool fileCreate(VM* vm, ObjFile* file) {
         uv_fs_close(vm->eventLoop, &fsClose, (uv_file)fsOpen.result, NULL);
         uv_fs_req_cleanup(&fsClose);
     }
-
     uv_fs_req_cleanup(&fsOpen);
     return (created == 0);
 }
