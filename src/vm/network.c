@@ -33,6 +33,11 @@ struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     return netGetAddrInfo.addrinfo;
 }
 
+static size_t httpCURLWriteFile(void* contents, size_t size, size_t nmemb, FILE* stream) {
+    size_t writtenSize = fwrite(contents, size, nmemb, stream);
+    return writtenSize;
+}
+
 ObjPromise* dnsGetDomainInfoAsync(VM* vm, ObjInstance* domain, uv_getaddrinfo_cb callback) {
     uv_getaddrinfo_t* netGetAddrInfo = ALLOCATE_STRUCT(uv_getaddrinfo_t);
     ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
@@ -224,6 +229,21 @@ size_t httpCURLResponse(void* contents, size_t size, size_t nmemb, void* userdat
     curlResponse->cSize += realsize;
     curlResponse->content[curlResponse->cSize] = 0;
     return realsize;
+}
+
+CURLcode httpDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURL* curl) {
+    curl_easy_setopt(curl, CURLOPT_URL, src->chars);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpCURLWriteFile);
+    FILE* file;
+    fopen_s(&file, dest->chars, "w");
+
+    if (file != NULL) {
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+        CURLcode code = curl_easy_perform(curl);
+        fclose(file);
+        return code;
+    }
+    return CURLE_FAILED_INIT;
 }
 
 struct curl_slist* httpParseHeaders(VM* vm, ObjDictionary* headers, CURL* curl) {

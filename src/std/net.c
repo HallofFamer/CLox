@@ -82,6 +82,25 @@ LOX_METHOD(HTTPClient, delete) {
     RETURN_OBJ(httpResponse);
 }
 
+LOX_METHOD(HTTPClient, download) {
+    ASSERT_ARG_COUNT("HTTPClient::download(src, dest)", 2);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::download(src, dest)", 0, clox.std.lang.String, clox.std.net.URL);
+    ASSERT_ARG_TYPE("HttpClient::download(src, dest)", 1, String);
+
+    ObjString* src = httpRawURL(vm, args[0]);
+    ObjString* dest = AS_STRING(args[1]);
+    CURL* curl = curl_easy_init();
+    if (curl == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a request to download file using CURL.");
+
+    CURLcode curlCode = httpDownloadFile(vm, src, dest, curl);
+    if (curlCode != CURLE_OK) {
+        curl_easy_cleanup(curl);
+        THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to download file from URL.");
+    }
+    curl_easy_cleanup(curl);
+    RETURN_NIL;
+}
+
 LOX_METHOD(HTTPClient, get) {
     ASSERT_ARG_COUNT("HTTPClient::get(url)", 1);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::get(url)", 0, clox.std.lang.String, clox.std.net.URL);
@@ -722,6 +741,7 @@ void registerNetPackage(VM* vm) {
     DEF_INTERCEPTOR(httpClientClass, HTTPClient, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(httpClientClass, HTTPClient, close, 0);
     DEF_METHOD(httpClientClass, HTTPClient, delete, 1);
+    DEF_METHOD(httpClientClass, HTTPClient, download, 2);
     DEF_METHOD(httpClientClass, HTTPClient, get, 1);
     DEF_METHOD(httpClientClass, HTTPClient, head, 1);
     DEF_METHOD(httpClientClass, HTTPClient, options, 1);

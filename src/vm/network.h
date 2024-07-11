@@ -45,6 +45,7 @@ ObjArray* httpCreateHeaders(VM* vm, CURLResponse curlResponse);
 ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse curlResponse);
 size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userdata);
 size_t httpCURLResponse(void* contents, size_t size, size_t nmemb, void* userdata);
+CURLcode httpDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURL* curl);
 struct curl_slist* httpParseHeaders(VM* vm, ObjDictionary* headers, CURL* curl);
 ObjString* httpParsePostData(VM* vm, ObjDictionary* postData);
 ObjString* httpRawURL(VM* vm, Value value);
