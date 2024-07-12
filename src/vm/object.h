@@ -204,6 +204,7 @@ typedef struct {
     void* data;
     MarkFunction markFunction;
     FreeFunction freeFunction;
+    bool shouldFree;
 } ObjRecord;
 
 typedef struct ObjUpvalue {

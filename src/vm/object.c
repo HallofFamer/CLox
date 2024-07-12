@@ -261,6 +261,7 @@ ObjRecord* newRecord(VM* vm, void* data) {
     record->data = data;
     record->markFunction = NULL;
     record->freeFunction = NULL;
+    record->shouldFree = true;
     return record;
 }
 
