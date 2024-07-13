@@ -54,11 +54,18 @@ LOX_METHOD(Domain, toString) {
 LOX_METHOD(HTTPClient, __init__) {
     ASSERT_ARG_COUNT("HTTPClient::__init__()", 0);
     curl_global_init(CURL_GLOBAL_ALL);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjRecord* curlM = newRecord(vm, curl_multi_init());
+    curlM->shouldFree = false;
+    setObjProperty(vm, self, "curlM", OBJ_VAL(curlM));
     RETURN_VAL(receiver);
 }
 
 LOX_METHOD(HTTPClient, close) {
     ASSERT_ARG_COUNT("HTTPClient::close()", 0);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjRecord* curlM = AS_RECORD(getObjProperty(vm, self, "curlM"));
+    curl_multi_cleanup((CURLM*)curlM->data);
     curl_global_cleanup();
     RETURN_NIL;
 }

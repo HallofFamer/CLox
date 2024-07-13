@@ -9,6 +9,10 @@
 #include "os.h"
 #include "vm.h"
 
+static size_t httpCURLWriteFile(void* contents, size_t size, size_t nmemb, FILE* stream) {
+    return fwrite(contents, size, nmemb, stream);
+}
+
 static NetworkData* networkLoadData(VM* vm, ObjInstance* network, ObjPromise* promise) {
     NetworkData* data = ALLOCATE_STRUCT(NetworkData);
     if (data != NULL) {
@@ -31,11 +35,6 @@ struct addrinfo* dnsGetDomainInfo(VM* vm, const char* domainName, int* status) {
     uv_getaddrinfo_t netGetAddrInfo;
     *status = uv_getaddrinfo(vm->eventLoop, &netGetAddrInfo, NULL, domainName, "80", &hints);
     return netGetAddrInfo.addrinfo;
-}
-
-static size_t httpCURLWriteFile(void* contents, size_t size, size_t nmemb, FILE* stream) {
-    size_t writtenSize = fwrite(contents, size, nmemb, stream);
-    return writtenSize;
 }
 
 ObjPromise* dnsGetDomainInfoAsync(VM* vm, ObjInstance* domain, uv_getaddrinfo_cb callback) {
