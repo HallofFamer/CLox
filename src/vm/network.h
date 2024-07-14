@@ -7,6 +7,13 @@
 #include "common.h"
 #include "loop.h"
 
+typedef struct CURLContext {
+    VM* vm;
+    CURLM* curlM;
+    uv_poll_t poll;
+    curl_socket_t socket;
+} CURLContext;
+
 typedef struct CURLResponse {
     char* headers;
     char* content;
@@ -41,13 +48,17 @@ ObjArray* dnsGetIPAddressesFromDomain(VM* vm, struct addrinfo* result);
 void dnsOnGetAddrInfo(uv_getaddrinfo_t* netGetAddrInfo, int status, struct addrinfo* result);
 void dnsOnGetNameInfo(uv_getnameinfo_t* netGetNameInfo, int status, const char* hostName, const char* service);
 ObjArray* httpCreateCookies(VM* vm, CURL* curl);
+CURLContext* httpCreateContext(VM* vm, curl_socket_t socket);
 ObjArray* httpCreateHeaders(VM* vm, CURLResponse curlResponse);
 ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse curlResponse);
-size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userdata);
-size_t httpCURLResponse(void* contents, size_t size, size_t nmemb, void* userdata);
+void httpCURLClose(CURLContext* context);
+size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userData);
+size_t httpCURLResponse(void* contents, size_t size, size_t nmemb, void* userData);
+int httpCURLStartTimeout(CURLM* curlM, long timeout, void* userData);
 CURLcode httpDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURL* curl);
 struct curl_slist* httpParseHeaders(VM* vm, ObjDictionary* headers, CURL* curl);
 ObjString* httpParsePostData(VM* vm, ObjDictionary* postData);
+bool httpPrepareDownloadFile(VM* vm, ObjString* url, ObjString* dest, CURLM* curlM);
 ObjString* httpRawURL(VM* vm, Value value);
 CURLcode httpSendRequest(VM* vm, ObjString* url, HTTPMethod method, ObjDictionary* data, CURL* curl, CURLResponse* curlResponse);
 bool ipIsV4(ObjString* address);
