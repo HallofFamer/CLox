@@ -168,6 +168,11 @@ typedef struct {
     NativeMethod method;
 } ObjNativeMethod;
  
+struct ObjArray {
+    Obj obj;
+    ValueArray elements;
+};
+
 typedef struct {
     Obj obj;
     Value key;
@@ -252,11 +257,6 @@ typedef struct {
     int id;
     bool isRunning;
 } ObjTimer;
-
-struct ObjArray {
-    Obj obj;
-    ValueArray elements;
-};
 
 struct ObjClass {
     Obj obj;

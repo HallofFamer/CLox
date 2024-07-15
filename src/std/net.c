@@ -53,7 +53,6 @@ LOX_METHOD(Domain, toString) {
 
 LOX_METHOD(HTTPClient, __init__) {
     ASSERT_ARG_COUNT("HTTPClient::__init__()", 0);
-    curl_global_init(CURL_GLOBAL_ALL);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjRecord* curlM = newRecord(vm, curl_multi_init());
     curlM->shouldFree = false;
@@ -66,7 +65,6 @@ LOX_METHOD(HTTPClient, close) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjRecord* curlM = AS_RECORD(getObjProperty(vm, self, "curlM"));
     curl_multi_cleanup((CURLM*)curlM->data);
-    curl_global_cleanup();
     RETURN_NIL;
 }
 
@@ -571,8 +569,8 @@ LOX_METHOD(URL, pathArray) {
         char* paths[UINT4_MAX];
         int length = yuarel_split_path(path->chars, paths, 3);
         if (length == -1) THROW_EXCEPTION(clox.std.net.URLException, "Failed to parse path from URL.");
-        ObjArray* pathArray = newArray(vm);
 
+        ObjArray* pathArray = newArray(vm);
         push(vm, OBJ_VAL(pathArray));
         for (int i = 0; i < length; i++) {
             ObjString* subPath = newString(vm, paths[i]);
