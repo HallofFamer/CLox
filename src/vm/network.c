@@ -214,18 +214,6 @@ ObjArray* httpCreateCookies(VM* vm, CURL* curl) {
     return cookieArray;
 }
 
-CURLContext* httpCreateContext(VM* vm, curl_socket_t socket) {
-    CURLContext* context;
-    context = ALLOCATE_STRUCT(CURLContext);
-    if (context != NULL) {
-        context->vm = vm;
-        context->socket = socket;
-        uv_poll_init_socket(vm->eventLoop, &context->poll, socket);
-        context->poll.data = context;
-    }
-    return context;
-}
-
 ObjArray* httpCreateHeaders(VM* vm, CURLResponse curlResponse) {
     ObjString* headerString = copyString(vm, curlResponse.headers, (int)curlResponse.hSize);
     ObjArray* headers = newArray(vm);
@@ -263,6 +251,18 @@ ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse
 
 void httpCURLClose(CURLContext* context) {
     uv_close((uv_handle_t*)&context->poll, httpCURLOnClose);
+    free(context);
+}
+
+CURLContext* httpCURLCreateContext(VM* vm, ObjPromise* promise) {
+    CURLContext* context;
+    context = ALLOCATE_STRUCT(CURLContext);
+    if (context != NULL) {
+        context->vm = vm;
+        context->promise = promise;
+        context->isInitialized = false;
+    }
+    return context;
 }
 
 size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userData) {
@@ -280,14 +280,23 @@ size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userData
     return realsize;
 }
 
+void httpCURLInitContext(CURLContext* context, curl_socket_t socket) {
+    context->socket = socket;
+    uv_poll_init_socket(context->vm->eventLoop, &context->poll, socket);
+    context->poll.data = context;
+    context->isInitialized = true;
+}
+
 int httpCURLPollSocket(CURL* curl, curl_socket_t socket, int action, void* userData, void* socketData) {
-    CURLContext* context = (CURLContext*)socketData;
+    CURLContext* context;
     int events = 0;
 
     switch (action) {
         case CURL_POLL_IN:
         case CURL_POLL_OUT:
         case CURL_POLL_INOUT:
+            curl_easy_getinfo(curl, CURLINFO_PRIVATE, &context);
+            if (!context->isInitialized) httpCURLInitContext(context, socket);
             curl_multi_assign(context->curlM, socket, (void*)context);
             if (action != CURL_POLL_IN) events |= UV_WRITABLE;
             if (action != CURL_POLL_OUT) events |= UV_READABLE;
@@ -299,6 +308,7 @@ int httpCURLPollSocket(CURL* curl, curl_socket_t socket, int action, void* userD
                 uv_poll_stop(&context->poll);
                 httpCURLClose(context);
                 curl_multi_assign(context->curlM, socket, NULL);
+                promiseFulfill(context->vm, context->promise, NIL_VAL);
             }
             break;
         default:
@@ -321,14 +331,10 @@ size_t httpCURLResponse(void* contents, size_t size, size_t nmemb, void* userDat
     return realsize;
 }
 
-int httpCURLStartTimeout(CURLM* curlM, long timeout, void* userData) {
+void httpCURLStartTimeout(CURLM* curlM, long timeout, void* userData) {
+    if (timeout <= 0) timeout = 1;
     uv_timer_t* timer = (uv_timer_t*)userData;
-    if (timeout < 0) uv_timer_stop(timer);
-    else {
-        if (timeout == 0) timeout = 1;
-        uv_timer_start(timer, httpCURLOnTimeout, timeout, 0);
-    }
-    return 0;
+    uv_timer_start(timer, httpCURLOnTimeout, timeout, 0);
 }
 
 CURLcode httpDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURL* curl) {
@@ -344,6 +350,12 @@ CURLcode httpDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURL* curl) {
         return code;
     }
     return CURLE_FAILED_INIT;
+}
+
+ObjPromise* httpDownloadFileAsync(VM* vm, ObjString* src, ObjString* dest, CURLM* curlM) {
+    ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+    if (!httpPrepareDownloadFile(vm, src, dest, curlM, promise)) return NULL;
+    return promise;
 }
 
 struct curl_slist* httpParseHeaders(VM* vm, ObjDictionary* headers, CURL* curl) {
@@ -412,14 +424,15 @@ ObjString* httpParsePostData(VM* vm, ObjDictionary* postData) {
     }
 }
 
-bool httpPrepareDownloadFile(VM* vm, ObjString* url, ObjString* dest, CURLM* curlM) {
+bool httpPrepareDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURLM* curlM, ObjPromise* promise) {
     FILE* file;
     fopen_s(&file, dest->chars, "w");
     if (file != NULL) {
         CURL* curl = curl_easy_init();
+        CURLContext* context = httpCURLCreateContext(vm, promise);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-        curl_easy_setopt(curl, CURLOPT_PRIVATE, file);
-        curl_easy_setopt(curl, CURLOPT_URL, url->chars);
+        curl_easy_setopt(curl, CURLOPT_PRIVATE, context);
+        curl_easy_setopt(curl, CURLOPT_URL, src->chars);
         curl_multi_add_handle(curlM, curl);
         return true;
     }
