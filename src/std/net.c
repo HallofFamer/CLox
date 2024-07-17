@@ -1,10 +1,11 @@
-#include <stdlib.h> 
+﻿#include <stdlib.h> 
 #include <string.h> 
 
 #include "net.h"
 #include "../inc/yuarel.h"
 #include "../vm/assert.h"
 #include "../vm/dict.h"
+#include "../vm/memory.h"
 #include "../vm/native.h"
 #include "../vm/network.h"
 #include "../vm/object.h"
@@ -56,7 +57,10 @@ LOX_METHOD(HTTPClient, __init__) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjRecord* curlM = newRecord(vm, curl_multi_init());
     curlM->shouldFree = false;
+    ObjRecord* timer = newRecord(vm, ALLOCATE_STRUCT(uv_timer_t));
+
     setObjProperty(vm, self, "curlM", OBJ_VAL(curlM));
+    setObjProperty(vm, self, "timer", OBJ_VAL(timer));
     RETURN_VAL(receiver);
 }
 
@@ -64,7 +68,9 @@ LOX_METHOD(HTTPClient, close) {
     ASSERT_ARG_COUNT("HTTPClient::close()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjRecord* curlM = AS_RECORD(getObjProperty(vm, self, "curlM"));
+    ObjRecord* timer = AS_RECORD(getObjProperty(vm, self, "timer"));
     curl_multi_cleanup((CURLM*)curlM->data);
+    free((uv_timer_t*)timer->data);
     RETURN_NIL;
 }
 
@@ -104,6 +110,30 @@ LOX_METHOD(HTTPClient, download) {
     }
     curl_easy_cleanup(curl);
     RETURN_NIL;
+}
+
+LOX_METHOD(HTTPClient, downloadAsync) {
+    ASSERT_ARG_COUNT("HTTPClient::downloadAsync(src, dest)", 2);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::downloadAsync(src, dest)", 0, clox.std.lang.String, clox.std.net.URL);
+    ASSERT_ARG_TYPE("HttpClient::downloadAsync(src, dest)", 1, String);
+
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* src = httpRawURL(vm, args[0]);
+    ObjString* dest = AS_STRING(args[1]);
+    ObjRecord* curlM = AS_RECORD(getObjProperty(vm, self, "curlM"));
+    ObjRecord* timer = AS_RECORD(getObjProperty(vm, self, "timer"));
+
+    CURLM* curlMultiHandle = (CURLM*)curlM->data;
+    uv_timer_t* timerHandle = (uv_timer_t*)timer->data;
+    timerHandle->data = curlMultiHandle;
+    uv_timer_init(vm->eventLoop, timerHandle);
+    curl_multi_setopt(curlMultiHandle, CURLMOPT_SOCKETFUNCTION, httpCURLPollSocket);
+    curl_multi_setopt(curlMultiHandle, CURLMOPT_TIMERFUNCTION, httpCURLStartTimeout);
+    curl_multi_setopt(curlMultiHandle, CURLMOPT_TIMERDATA, timerHandle);
+
+    ObjPromise* promise = httpDownloadFileAsync(vm, src, dest, (CURLM*)curlM->data);
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to download file via HTTPClient.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(HTTPClient, get) {
@@ -747,6 +777,7 @@ void registerNetPackage(VM* vm) {
     DEF_METHOD(httpClientClass, HTTPClient, close, 0);
     DEF_METHOD(httpClientClass, HTTPClient, delete, 1);
     DEF_METHOD(httpClientClass, HTTPClient, download, 2);
+    DEF_METHOD(httpClientClass, HTTPClient, downloadAsync, 2);
     DEF_METHOD(httpClientClass, HTTPClient, get, 1);
     DEF_METHOD(httpClientClass, HTTPClient, head, 1);
     DEF_METHOD(httpClientClass, HTTPClient, options, 1);
