@@ -147,6 +147,8 @@ set(Source_Files__vm
     "src/vm/generator.h"
     "src/vm/hash.c"
     "src/vm/hash.h"
+    "src/vm/http.c"
+    "src/vm/http.h"
     "src/vm/id.c"
     "src/vm/id.h"
     "src/vm/interceptor.c"

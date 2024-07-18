@@ -116,7 +116,7 @@ https://github.com/munificent/craftinginterpreters
 - Generator functions/methods which can yield control back to the caller and resume at a later point of execution.
 - Add class `Promise` to the standard library(`clox.std.util`), which uses libuv to handle async tasks that completes in future. 
 - Introduction of `async` and `await` keywords, which allows C#/JS style of concurrency.
-- Refactoring package `clox.std.io` and `clox.std.net` to use async non-blocking calls, add new package `clox.std.sql`.
+- Refactoring package `clox.std.io` and `clox.std.net` to use async non-blocking calls.
 
 ### CLox 2.0.0
 - Multi-pass compiler with abstract syntax tree, type checker, and generation of IR. 
