@@ -61,6 +61,7 @@ LOX_METHOD(Behavior, getMethod) {
     ASSERT_ARG_TYPE("Behavior::getMethod(method)", 0, String);
     ObjClass* self = AS_CLASS(receiver);
     Value value;
+
     if (tableGet(&self->methods, AS_STRING(args[0]), &value)) {
         if (IS_NATIVE_METHOD(value)) RETURN_OBJ(AS_NATIVE_METHOD(value));
         else if(IS_CLOSURE(value)) RETURN_OBJ(newMethod(vm, self, AS_CLOSURE(value)));
@@ -343,8 +344,9 @@ LOX_METHOD(Class, toString) {
 LOX_METHOD(Class, __invoke__) { 
     ObjClass* self = AS_CLASS(receiver);
     ObjInstance* instance = newInstance(vm, self);
-    push(vm, OBJ_VAL(instance));
     Value initMethod;
+    push(vm, OBJ_VAL(instance));
+
     if (tableGet(&self->methods, vm->initString, &initMethod)) {
         callReentrantMethod(vm, receiver, initMethod, args);
     }

@@ -127,6 +127,7 @@ LOX_METHOD(HTTPClient, downloadAsync) {
     uv_timer_t* timerHandle = (uv_timer_t*)timer->data;
     timerHandle->data = curlMultiHandle;
     uv_timer_init(vm->eventLoop, timerHandle);
+
     curl_multi_setopt(curlMultiHandle, CURLMOPT_SOCKETFUNCTION, httpCURLPollSocket);
     curl_multi_setopt(curlMultiHandle, CURLMOPT_TIMERFUNCTION, httpCURLStartTimeout);
     curl_multi_setopt(curlMultiHandle, CURLMOPT_TIMERDATA, timerHandle);

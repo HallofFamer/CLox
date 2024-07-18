@@ -508,7 +508,7 @@ LOX_METHOD(Promise, fulfill) {
 LOX_METHOD(Promise, isResolved) {
     ASSERT_ARG_COUNT("Promise::isResolved()", 0);
     ObjPromise* self = AS_PROMISE(receiver);
-    RETURN_BOOL(self->state == PROMISE_FULFILLED || self->state == PROMISE_REJECTED);
+    RETURN_BOOL(self->state != PROMISE_PENDING);
 }
 
 LOX_METHOD(Promise, raceAll) {

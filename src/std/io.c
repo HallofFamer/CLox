@@ -297,7 +297,7 @@ LOX_METHOD(File, rmdir) {
 }
 
 LOX_METHOD(File, rmdirAsync) {
-    ASSERT_ARG_COUNT("File::rmdir()", 0);
+    ASSERT_ARG_COUNT("File::rmdirAsync()", 0);
     ObjFile* self = AS_FILE(receiver);
     if (!loadFileStat(vm, self)) RETURN_PROMISE_EX(clox.std.io.FileNotFoundException, "Cannot remove directory as it does not exist.");
     ObjPromise* promise = fileRmdirAsync(vm, self, fileOnHandle);
