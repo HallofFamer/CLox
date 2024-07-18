@@ -5,6 +5,7 @@
 #include "../inc/yuarel.h"
 #include "../vm/assert.h"
 #include "../vm/dict.h"
+#include "../vm/http.h"
 #include "../vm/memory.h"
 #include "../vm/native.h"
 #include "../vm/network.h"
@@ -70,7 +71,6 @@ LOX_METHOD(HTTPClient, close) {
     ObjRecord* curlM = AS_RECORD(getObjProperty(vm, self, "curlM"));
     ObjRecord* timer = AS_RECORD(getObjProperty(vm, self, "timer"));
     curl_multi_cleanup((CURLM*)curlM->data);
-    free((uv_timer_t*)timer->data);
     RETURN_NIL;
 }
 

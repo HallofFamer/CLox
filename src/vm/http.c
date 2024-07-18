@@ -121,8 +121,7 @@ void httpCURLClose(CURLContext* context) {
 }
 
 CURLContext* httpCURLCreateContext(VM* vm, ObjPromise* promise) {
-    CURLContext* context;
-    context = ALLOCATE_STRUCT(CURLContext);
+    CURLContext* context = ALLOCATE_STRUCT(CURLContext);
     if (context != NULL) {
         context->vm = vm;
         context->promise = promise;
