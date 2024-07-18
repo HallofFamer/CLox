@@ -124,7 +124,6 @@ ObjFrame* newFrame(VM* vm, CallFrame* callFrame) {
     for (int i = 0; i < frame->handlerCount; i++) {
         frame->handlerStack[i] = callFrame->handlerStack[i];
     }
-
     return frame;
 }
 

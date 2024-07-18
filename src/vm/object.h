@@ -179,12 +179,12 @@ typedef struct {
     Value value;
 } ObjEntry;
 
-typedef struct {
+struct ObjDictionary {
     Obj obj;
     int capacity;
     int count;
     ObjEntry* entries;
-} ObjDictionary;
+};
 
 struct ObjFile{
     Obj obj;
