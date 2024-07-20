@@ -7,13 +7,18 @@
 #include "common.h"
 #include "loop.h"
 
-typedef struct CURLContext {
+typedef struct {
     VM* vm;
     CURLM* curlM;
+    uv_timer_t* timer;
     ObjPromise* promise;
-    bool isInitialized;
+} CURLData;
+
+typedef struct CURLContext {
     uv_poll_t poll;
     curl_socket_t socket;
+    CURLData* data;
+    bool isInitialized;
 } CURLContext;
 
 typedef struct CURLResponse {
@@ -40,7 +45,7 @@ ObjArray* httpCreateCookies(VM* vm, CURL* curl);
 ObjArray* httpCreateHeaders(VM* vm, CURLResponse curlResponse);
 ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse curlResponse);
 void httpCURLClose(CURLContext* context);
-CURLContext* httpCURLCreateContext(VM* vm, ObjPromise* promise);
+CURLContext* httpCURLCreateContext(CURLData* data);
 size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userData);
 void httpCURLInitContext(CURLContext* context, curl_socket_t socket);
 int httpCURLPollSocket(CURL* curl, curl_socket_t socket, int action, void* userData, void* socketData);

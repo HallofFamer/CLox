@@ -59,7 +59,6 @@ LOX_METHOD(HTTPClient, __init__) {
     ObjRecord* curlM = newRecord(vm, curl_multi_init());
     curlM->shouldFree = false;
     ObjRecord* timer = newRecord(vm, ALLOCATE_STRUCT(uv_timer_t));
-
     setObjProperty(vm, self, "curlM", OBJ_VAL(curlM));
     setObjProperty(vm, self, "timer", OBJ_VAL(timer));
     RETURN_VAL(receiver);

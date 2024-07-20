@@ -40,8 +40,8 @@ static void httpCURLPerform(uv_poll_t* poll, int status, int events) {
     if (events & UV_READABLE) flags |= CURL_CSELECT_IN;
     if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
     context = (CURLContext*)poll->data;
-    curl_multi_socket_action(context->curlM, context->socket, flags, &running);
-    httpCURLInfo(context->curlM);
+    curl_multi_socket_action(context->data->curlM, context->socket, flags, &running);
+    httpCURLInfo(context->data->curlM);
 }
 
 static size_t httpCURLWriteFile(void* contents, size_t size, size_t nmemb, FILE* stream) {
@@ -54,10 +54,10 @@ static void httpCURLOnClose(uv_handle_t* handle) {
 }
 
 static void httpCURLOnTimeout(uv_timer_t* timer) {
-    int running;
-    CURLM* curlM = (CURLM*)timer->data;
-    curl_multi_socket_action(curlM, CURL_SOCKET_TIMEOUT, 0, &running);
-    httpCURLInfo(curlM);
+    int numRunningHandles;
+    CURLData* curlData = (CURLData*)timer->data;
+    curl_multi_socket_action(curlData->curlM, CURL_SOCKET_TIMEOUT, 0, &numRunningHandles);
+    httpCURLInfo(curlData->curlM);
 }
 
 ObjArray* httpCreateCookies(VM* vm, CURL* curl) {
@@ -120,11 +120,10 @@ void httpCURLClose(CURLContext* context) {
     free(context);
 }
 
-CURLContext* httpCURLCreateContext(VM* vm, ObjPromise* promise) {
+CURLContext* httpCURLCreateContext(CURLData* data) {
     CURLContext* context = ALLOCATE_STRUCT(CURLContext);
     if (context != NULL) {
-        context->vm = vm;
-        context->promise = promise;
+        context->data = data;
         context->isInitialized = false;
     }
     return context;
@@ -147,13 +146,13 @@ size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userData
 
 void httpCURLInitContext(CURLContext* context, curl_socket_t socket) {
     context->socket = socket;
-    uv_poll_init_socket(context->vm->eventLoop, &context->poll, socket);
+    uv_poll_init_socket(context->data->vm->eventLoop, &context->poll, socket);
     context->poll.data = context;
     context->isInitialized = true;
 }
 
 int httpCURLPollSocket(CURL* curl, curl_socket_t socket, int action, void* userData, void* socketData) {
-    CURLContext* context;
+    CURLContext* context = NULL;
     int events = 0;
 
     switch (action) {
@@ -162,11 +161,12 @@ int httpCURLPollSocket(CURL* curl, curl_socket_t socket, int action, void* userD
         case CURL_POLL_INOUT:
             if (socketData) context = (CURLContext*)socketData;
             else {
-                curl_easy_getinfo(curl, CURLINFO_PRIVATE, &context);
+                CURLData* data = (CURLData*)userData;
+                context = httpCURLCreateContext(data);                
                 if (!context->isInitialized) httpCURLInitContext(context, socket);
             }
 
-            curl_multi_assign(context->curlM, socket, (void*)context);
+            curl_multi_assign(context->data->curlM, socket, (void*)context);
             if (action != CURL_POLL_IN) events |= UV_WRITABLE;
             if (action != CURL_POLL_OUT) events |= UV_READABLE;
             uv_poll_start(&context->poll, events, httpCURLPerform);
@@ -176,8 +176,8 @@ int httpCURLPollSocket(CURL* curl, curl_socket_t socket, int action, void* userD
                 context = (CURLContext*)socketData;
                 uv_poll_stop(&context->poll);
                 httpCURLClose(context);
-                curl_multi_assign(context->curlM, socket, NULL);
-                promiseFulfill(context->vm, context->promise, NIL_VAL);
+                curl_multi_assign(context->data->curlM, socket, NULL);
+                promiseFulfill(context->data->vm, context->data->promise, NIL_VAL);
             }
             break;
         default:
@@ -298,9 +298,13 @@ bool httpPrepareDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURLM* cur
     fopen_s(&file, dest->chars, "w");
     if (file != NULL) {
         CURL* curl = curl_easy_init();
-        CURLContext* context = httpCURLCreateContext(vm, promise);
+        CURLData* data = ALLOCATE_STRUCT(CURLData);
+        data->vm = vm;
+        data->curlM = curlM;
+        data->promise = promise;
+        CURLContext* context = httpCURLCreateContext(data);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-        curl_easy_setopt(curl, CURLOPT_PRIVATE, context);
+        curl_easy_setopt(curl, CURLOPT_PRIVATE, (void*)promise);
         curl_easy_setopt(curl, CURLOPT_URL, src->chars);
         curl_multi_add_handle(curlM, curl);
         return true;
