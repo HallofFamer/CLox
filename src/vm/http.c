@@ -129,6 +129,16 @@ CURLContext* httpCURLCreateContext(CURLData* data) {
     return context;
 }
 
+CURLData* httpCURLCreateData(VM* vm, CURLM* curlM, uv_timer_t* timer) {
+    CURLData* data = ALLOCATE_STRUCT(CURLData);
+    if (data != NULL) {
+        data->vm = vm;
+        data->curlM = curlM;
+        data->timer = timer;
+    }
+    return data;
+}
+
 size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userData) {
     size_t realsize = size * nitems;
     if (nitems != 2) {
@@ -221,9 +231,10 @@ CURLcode httpDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURL* curl) {
     return CURLE_FAILED_INIT;
 }
 
-ObjPromise* httpDownloadFileAsync(VM* vm, ObjString* src, ObjString* dest, CURLM* curlM) {
+ObjPromise* httpDownloadFileAsync(VM* vm, ObjString* src, ObjString* dest, CURLData* data) {
     ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
-    if (!httpPrepareDownloadFile(vm, src, dest, curlM, promise)) return NULL;
+    data->promise = promise;
+    if (!httpPrepareDownloadFile(vm, src, dest, data)) return NULL;
     return promise;
 }
 
@@ -293,20 +304,17 @@ ObjString* httpParsePostData(VM* vm, ObjDictionary* postData) {
     }
 }
 
-bool httpPrepareDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURLM* curlM, ObjPromise* promise) {
+bool httpPrepareDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURLData* data) {
     FILE* file;
     fopen_s(&file, dest->chars, "w");
     if (file != NULL) {
         CURL* curl = curl_easy_init();
-        CURLData* data = ALLOCATE_STRUCT(CURLData);
-        data->vm = vm;
-        data->curlM = curlM;
-        data->promise = promise;
+
         CURLContext* context = httpCURLCreateContext(data);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-        curl_easy_setopt(curl, CURLOPT_PRIVATE, (void*)promise);
+        curl_easy_setopt(curl, CURLOPT_PRIVATE, (void*)data->promise);
         curl_easy_setopt(curl, CURLOPT_URL, src->chars);
-        curl_multi_add_handle(curlM, curl);
+        curl_multi_add_handle(data->curlM, curl);
         return true;
     }
     return false;
