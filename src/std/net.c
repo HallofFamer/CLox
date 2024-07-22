@@ -56,9 +56,17 @@ LOX_METHOD(Domain, toString) {
 LOX_METHOD(HTTPClient, __init__) {
     ASSERT_ARG_COUNT("HTTPClient::__init__()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    CURLData* curlData = httpCURLCreateData(vm, curl_multi_init(), ALLOCATE_STRUCT(uv_timer_t));
-    if (curlData == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a HTTP Client.");
-    ObjRecord* data = newRecord(vm, curlData);
+    CURLMData* curlMData = httpCURLMData(vm, curl_multi_init(), ALLOCATE_STRUCT(uv_timer_t));
+    if (curlMData == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a HTTP Client.");
+
+    curlMData->timer->data = curlMData;
+    uv_timer_init(vm->eventLoop, curlMData->timer);
+    curl_multi_setopt(curlMData->curlM, CURLMOPT_SOCKETFUNCTION, httpCURLPollSocket);
+    curl_multi_setopt(curlMData->curlM, CURLMOPT_SOCKETDATA, (void*)curlMData);
+    curl_multi_setopt(curlMData->curlM, CURLMOPT_TIMERFUNCTION, httpCURLStartTimeout);
+    curl_multi_setopt(curlMData->curlM, CURLMOPT_TIMERDATA, (void*)curlMData);
+
+    ObjRecord* data = newRecord(vm, curlMData);
     setObjProperty(vm, self, "data", OBJ_VAL(data));
     RETURN_VAL(receiver);
 }
@@ -66,9 +74,9 @@ LOX_METHOD(HTTPClient, __init__) {
 LOX_METHOD(HTTPClient, close) {
     ASSERT_ARG_COUNT("HTTPClient::close()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjRecord* curlM = AS_RECORD(getObjProperty(vm, self, "curlM"));
-    ObjRecord* timer = AS_RECORD(getObjProperty(vm, self, "timer"));
-    curl_multi_cleanup((CURLM*)curlM->data);
+    ObjRecord* data = AS_RECORD(getObjProperty(vm, self, "data"));
+    CURLMData* curlMData = (CURLMData*)data->data;
+    curl_multi_cleanup(curlMData->curlM);
     RETURN_NIL;
 }
 
@@ -119,16 +127,9 @@ LOX_METHOD(HTTPClient, downloadAsync) {
     ObjString* src = httpRawURL(vm, args[0]);
     ObjString* dest = AS_STRING(args[1]);
     ObjRecord* data = AS_RECORD(getObjProperty(vm, self, "data"));
-    CURLData* curlData = (CURLData*)data->data;
-    curlData->timer->data = curlData;
-    uv_timer_init(vm->eventLoop, curlData->timer);
 
-    curl_multi_setopt(curlData->curlM, CURLMOPT_SOCKETFUNCTION, httpCURLPollSocket);
-    curl_multi_setopt(curlData->curlM, CURLMOPT_SOCKETDATA, (void*)curlData);
-    curl_multi_setopt(curlData->curlM, CURLMOPT_TIMERFUNCTION, httpCURLStartTimeout);
-    curl_multi_setopt(curlData->curlM, CURLMOPT_TIMERDATA, (void*)curlData);
-
-    ObjPromise* promise = httpDownloadFileAsync(vm, src, dest, curlData);
+    CURLMData* curlMData = (CURLMData*)data->data;
+    ObjPromise* promise = httpDownloadFileAsync(vm, src, dest, curlMData);
     if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to download file via HTTPClient.");
     RETURN_OBJ(promise);
 }
