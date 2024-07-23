@@ -76,7 +76,7 @@ LOX_METHOD(HTTPClient, close) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjRecord* data = AS_RECORD(getObjProperty(vm, self, "data"));
     CURLMData* curlMData = (CURLMData*)data->data;
-    curl_multi_cleanup(curlMData->curlM);
+    if(curlMData->curlM) curl_multi_cleanup(curlMData->curlM);
     RETURN_NIL;
 }
 

@@ -9,6 +9,12 @@
 
 typedef struct {
     VM* vm;
+    ObjPromise* promise;
+    FILE* file;
+} CURLData;
+
+typedef struct {
+    VM* vm;
     CURLM* curlM;
     uv_timer_t* timer;
 } CURLMData;
@@ -45,9 +51,10 @@ ObjArray* httpCreateHeaders(VM* vm, CURLResponse curlResponse);
 ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse curlResponse);
 void httpCURLClose(CURLContext* context);
 CURLContext* httpCURLCreateContext(CURLMData* data);
-CURLMData* httpCURLMData(VM* vm, CURLM* curlM, uv_timer_t* timer);
+CURLData* httpCURLData(VM* vm, ObjPromise* promise);
 size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userData);
 void httpCURLInitContext(CURLContext* context, curl_socket_t socket);
+CURLMData* httpCURLMData(VM* vm, CURLM* curlM, uv_timer_t* timer);
 int httpCURLPollSocket(CURL* curl, curl_socket_t socket, int action, void* userData, void* socketData);
 size_t httpCURLResponse(void* contents, size_t size, size_t nmemb, void* userData);
 void httpCURLStartTimeout(CURLM* curlM, long timeout, void* userData);
@@ -55,7 +62,6 @@ CURLcode httpDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURL* curl);
 ObjPromise* httpDownloadFileAsync(VM* vm, ObjString* src, ObjString* dest, CURLMData* curlMData);
 struct curl_slist* httpParseHeaders(VM* vm, ObjDictionary* headers, CURL* curl);
 ObjString* httpParsePostData(VM* vm, ObjDictionary* postData);
-bool httpPrepareDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURLMData* curlMata, ObjPromise* promise);
 ObjString* httpRawURL(VM* vm, Value value);
 CURLcode httpSendRequest(VM* vm, ObjString* url, HTTPMethod method, ObjDictionary* data, CURL* curl, CURLResponse* curlResponse);
 
