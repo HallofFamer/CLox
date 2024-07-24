@@ -9,40 +9,36 @@
 #include "os.h"
 #include "vm.h"
 
-static void httpCURLInfo(CURLM* curlM) {
+static void httpCURLPerform(uv_poll_t* poll, int status, int events) {
+    int running;
+    int flags = 0;
+    CURLContext* context = (CURLContext*)poll->data;
+    uv_timer_stop(context->data->timer);
+
+    if (events & UV_READABLE) flags |= CURL_CSELECT_IN;
+    if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
+    curl_multi_socket_action(context->data->curlM, context->socket, flags, &running);
+    
     char* doneURL;
     CURLMsg* message;
     int pending;
-    CURL* curl;
     CURLData* curlData;
 
-    while (message = curl_multi_info_read(curlM, &pending)) {
+    while (message = curl_multi_info_read(context->data->curlM, &pending)) {
         switch (message->msg) {
             case CURLMSG_DONE:
-                curl = message->easy_handle;
-                curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &doneURL);
-                curl_easy_getinfo(curl, CURLINFO_PRIVATE, &curlData);
-                curl_multi_remove_handle(curlM, curl);
-                curl_easy_cleanup(curl);
+                curl_easy_getinfo(message->easy_handle, CURLINFO_EFFECTIVE_URL, &doneURL);
+                curl_easy_getinfo(message->easy_handle, CURLINFO_PRIVATE, &curlData);
+                curl_multi_remove_handle(context->data->curlM, message->easy_handle);
+                curl_easy_cleanup(message->easy_handle);
                 if (curlData->file) fclose(curlData->file);
-                promiseFulfill(curlData->vm, curlData->promise, NIL_VAL);
+                curl_multi_cb callback = curlData->callback;
+                callback(curlData);
                 break;
             default:
                 break;
         }
     }
-}
-
-static void httpCURLPerform(uv_poll_t* poll, int status, int events) {
-    int running;
-    int flags = 0;
-    CURLContext* context;
-
-    if (events & UV_READABLE) flags |= CURL_CSELECT_IN;
-    if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
-    context = (CURLContext*)poll->data;
-    curl_multi_socket_action(context->data->curlM, context->socket, flags, &running);
-    httpCURLInfo(context->data->curlM);
 }
 
 static size_t httpCURLWriteFile(void* contents, size_t size, size_t nmemb, FILE* stream) {
@@ -58,7 +54,6 @@ static void httpCURLOnTimeout(uv_timer_t* timer) {
     int numRunningHandles;
     CURLMData* curlMData = (CURLMData*)timer->data;
     curl_multi_socket_action(curlMData->curlM, CURL_SOCKET_TIMEOUT, 0, &numRunningHandles);
-    httpCURLInfo(curlMData->curlM);
 }
 
 ObjArray* httpCreateCookies(VM* vm, CURL* curl) {
@@ -129,11 +124,12 @@ CURLContext* httpCURLCreateContext(CURLMData* data) {
     return context;
 }
 
-CURLData* httpCURLData(VM* vm, ObjPromise* promise) {
+CURLData* httpCURLData(VM* vm, ObjPromise* promise, curl_multi_cb callback) {
     CURLData* curlData = ALLOCATE_STRUCT(CURLData);
     if (curlData != NULL) {
         curlData->vm = vm;
         curlData->promise = promise;
+        curlData->callback = callback;
     }
     return curlData;
 }
@@ -240,12 +236,12 @@ CURLcode httpDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURL* curl) {
     return CURLE_FAILED_INIT;
 }
 
-ObjPromise* httpDownloadFileAsync(VM* vm, ObjString* src, ObjString* dest, CURLMData* curlMData) {
+ObjPromise* httpDownloadFileAsync(VM* vm, ObjString* src, ObjString* dest, CURLMData* curlMData, curl_multi_cb callback) {
     FILE* file;
     fopen_s(&file, dest->chars, "w");
     if (file != NULL) {
         ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
-        CURLData* curlData = httpCURLData(vm, promise);
+        CURLData* curlData = httpCURLData(vm, promise, callback);
         curlData->file = file;
 
         CURL* curl = curl_easy_init();
@@ -256,6 +252,12 @@ ObjPromise* httpDownloadFileAsync(VM* vm, ObjString* src, ObjString* dest, CURLM
         return promise;
     }
     return NULL;
+}
+
+void httpOnDownloadFile(CURLData* data) {
+    LOOP_PUSH_DATA(data);
+    promiseFulfill(data->vm, data->promise, NIL_VAL);
+    LOOP_POP_DATA(data);
 }
 
 struct curl_slist* httpParseHeaders(VM* vm, ObjDictionary* headers, CURL* curl) {
@@ -322,20 +324,6 @@ ObjString* httpParsePostData(VM* vm, ObjDictionary* postData) {
         string[offset] = '\0';
         return copyString(vm, string, (int)offset + 1);
     }
-}
-
-bool httpPrepareDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURLMData* curlMData, ObjPromise* promise) {
-    FILE* file;
-    fopen_s(&file, dest->chars, "w");
-    if (file != NULL) {
-        CURL* curl = curl_easy_init();
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-        //curl_easy_setopt(curl, CURLOPT_PRIVATE, (void*)data->promise);
-        curl_easy_setopt(curl, CURLOPT_URL, src->chars);
-        curl_multi_add_handle(curlMData->curlM, curl);
-        return true;
-    }
-    return false;
 }
 
 ObjString* httpRawURL(VM* vm, Value value) {

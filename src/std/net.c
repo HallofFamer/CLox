@@ -129,7 +129,7 @@ LOX_METHOD(HTTPClient, downloadAsync) {
     ObjRecord* data = AS_RECORD(getObjProperty(vm, self, "data"));
 
     CURLMData* curlMData = (CURLMData*)data->data;
-    ObjPromise* promise = httpDownloadFileAsync(vm, src, dest, curlMData);
+    ObjPromise* promise = httpDownloadFileAsync(vm, src, dest, curlMData, httpOnDownloadFile);
     if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to download file via HTTPClient.");
     RETURN_OBJ(promise);
 }
