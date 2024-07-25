@@ -9,6 +9,15 @@
 #include "os.h"
 #include "vm.h"
 
+static CURLMsg* httpCURLInfoRead(CURLContext* context, CURLData* data, int* messagesInQueue) {
+    CURLMsg* message = curl_multi_info_read(context->data->curlM, messagesInQueue);
+    if (data != NULL) {
+        curl_multi_cb callback = data->callback;
+        callback(data);
+    }
+    return message;
+}
+
 static void httpCURLPerform(uv_poll_t* poll, int status, int events) {
     int running;
     int flags = 0;
@@ -22,20 +31,18 @@ static void httpCURLPerform(uv_poll_t* poll, int status, int events) {
     char* doneURL;
     CURLMsg* message;
     int pending;
-    CURLData* curlData;
+    CURLData* curlData = NULL;
 
-    while (message = curl_multi_info_read(context->data->curlM, &pending)) {
+    while (message = httpCURLInfoRead(context, curlData, &pending)) {
         switch (message->msg) {
             case CURLMSG_DONE:
                 curl_easy_getinfo(message->easy_handle, CURLINFO_EFFECTIVE_URL, &doneURL);
                 curl_easy_getinfo(message->easy_handle, CURLINFO_PRIVATE, &curlData);
                 curl_multi_remove_handle(context->data->curlM, message->easy_handle);
                 curl_easy_cleanup(message->easy_handle);
-                if (curlData->file) fclose(curlData->file);
-                curl_multi_cb callback = curlData->callback;
-                callback(curlData);
                 break;
             default:
+                curlData = NULL;
                 break;
         }
     }
@@ -54,6 +61,10 @@ static void httpCURLOnTimeout(uv_timer_t* timer) {
     int numRunningHandles;
     CURLMData* curlMData = (CURLMData*)timer->data;
     curl_multi_socket_action(curlMData->curlM, CURL_SOCKET_TIMEOUT, 0, &numRunningHandles);
+}
+
+static void httpCURLClose(CURLContext* context) {
+    uv_close((uv_handle_t*)&context->poll, httpCURLOnClose);
 }
 
 ObjArray* httpCreateCookies(VM* vm, CURL* curl) {
@@ -109,10 +120,6 @@ ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse
     setObjProperty(vm, httpResponse, "url", OBJ_VAL(url));
     pop(vm);
     return httpResponse;
-}
-
-void httpCURLClose(CURLContext* context) {
-    uv_close((uv_handle_t*)&context->poll, httpCURLOnClose);
 }
 
 CURLContext* httpCURLCreateContext(CURLMData* data) {
@@ -256,6 +263,7 @@ ObjPromise* httpDownloadFileAsync(VM* vm, ObjString* src, ObjString* dest, CURLM
 
 void httpOnDownloadFile(CURLData* data) {
     LOOP_PUSH_DATA(data);
+    if (data->file) fclose(data->file);
     promiseFulfill(data->vm, data->promise, NIL_VAL);
     LOOP_POP_DATA(data);
 }

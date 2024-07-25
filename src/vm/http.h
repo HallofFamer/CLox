@@ -53,7 +53,6 @@ typedef enum HTTPMethod {
 ObjArray* httpCreateCookies(VM* vm, CURL* curl);
 ObjArray* httpCreateHeaders(VM* vm, CURLResponse curlResponse);
 ObjInstance* httpCreateResponse(VM* vm, ObjString* url, CURL* curl, CURLResponse curlResponse);
-void httpCURLClose(CURLContext* context);
 CURLContext* httpCURLCreateContext(CURLMData* data);
 CURLData* httpCURLData(VM* vm, ObjPromise* promise, curl_multi_cb callback);
 size_t httpCURLHeaders(void* headers, size_t size, size_t nitems, void* userData);

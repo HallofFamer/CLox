@@ -58,7 +58,7 @@ LOX_METHOD(HTTPClient, __init__) {
     ObjInstance* self = AS_INSTANCE(receiver);
     CURLMData* curlMData = httpCURLMData(vm, curl_multi_init(), ALLOCATE_STRUCT(uv_timer_t));
     if (curlMData == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a HTTP Client.");
-
+    
     curlMData->timer->data = curlMData;
     uv_timer_init(vm->eventLoop, curlMData->timer);
     curl_multi_setopt(curlMData->curlM, CURLMOPT_SOCKETFUNCTION, httpCURLPollSocket);
@@ -76,7 +76,10 @@ LOX_METHOD(HTTPClient, close) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjRecord* data = AS_RECORD(getObjProperty(vm, self, "data"));
     CURLMData* curlMData = (CURLMData*)data->data;
-    if(curlMData->curlM) curl_multi_cleanup(curlMData->curlM);
+    if (curlMData != NULL) {
+        curl_multi_cleanup(curlMData->curlM);
+        free(curlMData->timer);
+    }
     RETURN_NIL;
 }
 
@@ -192,9 +195,9 @@ LOX_METHOD(HTTPClient, options) {
 }
 
 LOX_METHOD(HTTPClient, patch) {
-    ASSERT_ARG_COUNT("HTTPClient::put(url, data)", 2);
-    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::put(url, data)", 0, clox.std.lang.String, clox.std.net.URL);
-    ASSERT_ARG_TYPE("HTTPClient::put(url, data)", 1, Dictionary);
+    ASSERT_ARG_COUNT("HTTPClient::patch(url, data)", 2);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::patch(url, data)", 0, clox.std.lang.String, clox.std.net.URL);
+    ASSERT_ARG_TYPE("HTTPClient::patch(url, data)", 1, Dictionary);
     ObjString* url = httpRawURL(vm, args[0]);
     ObjDictionary* data = AS_DICTIONARY(args[1]);
 
