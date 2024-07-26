@@ -76,10 +76,7 @@ LOX_METHOD(HTTPClient, close) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjRecord* data = AS_RECORD(getObjProperty(vm, self, "data"));
     CURLMData* curlMData = (CURLMData*)data->data;
-    if (curlMData != NULL) {
-        curl_multi_cleanup(curlMData->curlM);
-        free(curlMData->timer);
-    }
+    if (curlMData != NULL) curl_multi_cleanup(curlMData->curlM);
     RETURN_NIL;
 }
 
@@ -778,7 +775,7 @@ void registerNetPackage(VM* vm) {
     DEF_METHOD(httpClientClass, HTTPClient, close, 0);
     DEF_METHOD(httpClientClass, HTTPClient, delete, 1);
     DEF_METHOD(httpClientClass, HTTPClient, download, 2);
-    DEF_METHOD(httpClientClass, HTTPClient, downloadAsync, 2);
+    DEF_METHOD_ASYNC(httpClientClass, HTTPClient, downloadAsync, 2);
     DEF_METHOD(httpClientClass, HTTPClient, get, 1);
     DEF_METHOD(httpClientClass, HTTPClient, head, 1);
     DEF_METHOD(httpClientClass, HTTPClient, options, 1);

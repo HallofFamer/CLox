@@ -37,7 +37,6 @@ static void httpCURLPerform(uv_poll_t* poll, int status, int events) {
         switch (message->msg) {
             case CURLMSG_DONE:
                 curl_easy_getinfo(message->easy_handle, CURLINFO_EFFECTIVE_URL, &doneURL);
-                curl_easy_getinfo(message->easy_handle, CURLINFO_PRIVATE, &curlData);
                 curl_multi_remove_handle(context->data->curlM, message->easy_handle);
                 curl_easy_cleanup(message->easy_handle);
                 break;

@@ -878,7 +878,10 @@ static void async(Compiler* compiler, bool canAssign) {
 }
 
 static void await(Compiler* compiler, bool canAssign) {
-    if (compiler->type == TYPE_SCRIPT) compiler->isAsync = true;
+    if (compiler->type == TYPE_SCRIPT) {
+        compiler->isAsync = true;
+        compiler->function->isAsync = true;
+    }
     else if (!compiler->isAsync) error(compiler->parser, "Cannot use await unless in top level code or inside async functions/methods.");
     expression(compiler);
     emitByte(compiler, OP_AWAIT);
