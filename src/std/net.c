@@ -58,8 +58,8 @@ LOX_METHOD(HTTPClient, __init__) {
     ObjInstance* self = AS_INSTANCE(receiver);
     CURLMData* curlMData = httpCURLMData(vm, curl_multi_init(), ALLOCATE_STRUCT(uv_timer_t));
     if (curlMData == NULL) THROW_EXCEPTION(clox.std.net.HTTPException, "Failed to initiate a HTTP Client.");
-    
     curlMData->timer->data = curlMData;
+
     uv_timer_init(vm->eventLoop, curlMData->timer);
     curl_multi_setopt(curlMData->curlM, CURLMOPT_SOCKETFUNCTION, httpCURLPollSocket);
     curl_multi_setopt(curlMData->curlM, CURLMOPT_SOCKETDATA, (void*)curlMData);
@@ -67,15 +67,15 @@ LOX_METHOD(HTTPClient, __init__) {
     curl_multi_setopt(curlMData->curlM, CURLMOPT_TIMERDATA, (void*)curlMData);
 
     ObjRecord* data = newRecord(vm, curlMData);
-    setObjProperty(vm, self, "data", OBJ_VAL(data));
+    setObjProperty(vm, self, "metadata", OBJ_VAL(data));
     RETURN_VAL(receiver);
 }
 
 LOX_METHOD(HTTPClient, close) {
     ASSERT_ARG_COUNT("HTTPClient::close()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
-    ObjRecord* data = AS_RECORD(getObjProperty(vm, self, "data"));
-    CURLMData* curlMData = (CURLMData*)data->data;
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
+    CURLMData* curlMData = (CURLMData*)metadata->data;
     if (curlMData != NULL) curl_multi_cleanup(curlMData->curlM);
     RETURN_NIL;
 }
@@ -126,9 +126,9 @@ LOX_METHOD(HTTPClient, downloadAsync) {
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjString* src = httpRawURL(vm, args[0]);
     ObjString* dest = AS_STRING(args[1]);
-    ObjRecord* data = AS_RECORD(getObjProperty(vm, self, "data"));
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
 
-    CURLMData* curlMData = (CURLMData*)data->data;
+    CURLMData* curlMData = (CURLMData*)metadata->data;
     ObjPromise* promise = httpDownloadFileAsync(vm, src, dest, curlMData, httpOnDownloadFile);
     if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to download file via HTTPClient.");
     RETURN_OBJ(promise);
