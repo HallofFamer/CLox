@@ -1,4 +1,4 @@
-namespace test.lang;
+namespace test.concurrency;
 using clox.std.net.HTTPClient;
 using clox.std.net.HTTPRequest;
 using clox.std.net.URL;
@@ -8,8 +8,8 @@ print("Initializing HTTP Client: ");
 println(client);
 println("");
 
-println("Sending get request to example.com: ");
-var response = client.get(URL.parse("https://example.com"));
+println("Sending async get request to example.com: ");
+val response = await client.getAsync(URL.parse("https://example.com"));
 print("Status: ");
 println(response.status);
 print("Cookies: ");
@@ -20,8 +20,8 @@ println("Content: ");
 println(response.content);
 println("");
 
-println("Sending post request to httpbin.com: ");
-var response2 = client.post("https://httpbin.org/post", ["name" : "Ordland", "age": 34, "location" : "United States"]);
+println("Sending async post request to httpbin.com: ");
+val response2 = await client.postAsync("https://httpbin.org/post", ["name" : "Ordland", "age": 35, "location" : "United States"]);
 print("Status: ");
 println(response2.status);
 print("Cookies: ");
@@ -32,8 +32,8 @@ println("Content: ");
 println(response2.content);
 println("");
 
-println("Sending put request to httpbin.com: ");
-var response3 = client.put("https://httpbin.org/put", ["id": 521, "name" : "Ordland", "age": 34, "location" : "United States"]);
+println("Sending async put request to httpbin.com: ");
+val response3 = await client.putAsync("https://httpbin.org/put", ["id": 521, "name" : "Ordland", "age": 35, "location" : "United States"]);
 print("Status: ");
 println(response3.status);
 print("Cookies: ");
@@ -44,8 +44,8 @@ println("Content: ");
 println(response3.content);
 println("");
 
-println("Sending delete request to httpbin.com: ");
-var response4 = client.delete("https://httpbin.org/delete");
+println("Sending async delete request to httpbin.com: ");
+val response4 = await client.deleteAsync("https://httpbin.org/delete");
 print("Status: ");
 println(response4.status);
 print("Cookies: ");
@@ -56,8 +56,8 @@ println("Content: ");
 println(response4.content);
 println("");
 
-println("Sending patch request to httpbin.com: ");
-var response5 = client.patch("https://httpbin.org/patch", ["name" : "Hall of Famer", "location" : "New Jersey, United States"]);
+println("Sending async patch request to httpbin.com: ");
+val response5 = await client.patchAsync("https://httpbin.org/patch", ["name" : "Hall of Famer", "location" : "New Jersey, United States"]);
 print("Status: ");
 println(response5.status);
 print("Cookies: ");
@@ -74,7 +74,7 @@ println(request.toString());
 println("");
 
 println("Sending generic HTTP request to example.com: ");
-var response6 = client.send(request);
+val response6 = await client.sendAsync(request);
 print("Status: ");
 println(response6.status);
 print("Cookies: ");
