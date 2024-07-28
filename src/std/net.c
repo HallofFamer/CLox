@@ -383,6 +383,7 @@ LOX_METHOD(HTTPClient, sendAsync) {
     ASSERT_ARG_INSTANCE_OF("HTTPClient::send(request)", 0, clox.std.net.HTTPRequest);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjInstance* request = AS_INSTANCE(args[0]);
+
     ObjString* url = AS_STRING(getObjProperty(vm, request, "url"));
     HTTPMethod method = (HTTPMethod)AS_INT(getObjProperty(vm, request, "method"));
     ObjDictionary* headers = AS_DICTIONARY(getObjProperty(vm, request, "headers"));

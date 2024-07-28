@@ -434,9 +434,9 @@ LOX_METHOD(DurationClass, ofMinutes) {
     ASSERT_ARG_TYPE("Duration class::ofMinutes(minutes)", 0, Int);
     int minutes = AS_INT(args[0]);
     if (minutes < 0) THROW_EXCEPTION_FMT(clox.std.lang.IllegalArgumentException, "method Duration class::ofMinutes(minutes) expects argument 1 to be a non negative integer but got %d.", minutes);
-
     ObjClass* self = AS_CLASS(receiver);
     ObjInstance* instance = newInstance(vm, self);
+
     push(vm, OBJ_VAL(instance));
     int duration[4] = { 0, 0, minutes, 0 };
     durationObjInit(vm, duration, instance);

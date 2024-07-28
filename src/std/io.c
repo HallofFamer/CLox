@@ -38,7 +38,6 @@ LOX_METHOD(BinaryReadStream, readAsync) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) RETURN_PROMISE_EX(clox.std.io.IOException, "Cannot read the next byte because file is already closed.");
     loadFileRead(vm, file);
-
     ObjPromise* promise = fileReadAsync(vm, file, fileOnReadByte);
     if (promise == NULL) RETURN_PROMISE_EX(clox.std.io.IOException, "Failed to read byte from IO stream.");
     RETURN_OBJ(promise);
