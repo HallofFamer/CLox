@@ -99,6 +99,19 @@ LOX_METHOD(HTTPClient, delete) {
     RETURN_OBJ(httpResponse);
 }
 
+LOX_METHOD(HTTPClient, deleteAsync) {
+    ASSERT_ARG_COUNT("HTTPClient::deleteAsync(url)", 1);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::deleteAsync(url)", 0, clox.std.lang.String, clox.std.net.URL);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* url = httpRawURL(vm, args[0]);
+
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
+    CURLMData* curlMData = (CURLMData*)metadata->data;
+    ObjPromise* promise = httpSendRequestAsync(vm, url, HTTP_DELETE, NULL, NULL, curlMData, httpOnSendRequest);
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to initiate a DELETE request using CURL.");
+    RETURN_OBJ(promise);
+}
+
 LOX_METHOD(HTTPClient, download) {
     ASSERT_ARG_COUNT("HTTPClient::download(src, dest)", 2);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::download(src, dest)", 0, clox.std.lang.String, clox.std.net.URL);
@@ -153,6 +166,19 @@ LOX_METHOD(HTTPClient, get) {
     RETURN_OBJ(httpResponse);
 }
 
+LOX_METHOD(HTTPClient, getAsync) {
+    ASSERT_ARG_COUNT("HTTPClient::getAsync(url)", 1);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::getAsync(url)", 0, clox.std.lang.String, clox.std.net.URL);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* url = httpRawURL(vm, args[0]);
+
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
+    CURLMData* curlMData = (CURLMData*)metadata->data;
+    ObjPromise* promise = httpSendRequestAsync(vm, url, HTTP_GET, NULL, NULL, curlMData, httpOnSendRequest);
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to initiate a GET request using CURL.");
+    RETURN_OBJ(promise);
+}
+
 LOX_METHOD(HTTPClient, head) {
     ASSERT_ARG_COUNT("HTTPClient::head(url)", 1);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::head(url)", 0, clox.std.lang.String, clox.std.net.URL);
@@ -172,6 +198,20 @@ LOX_METHOD(HTTPClient, head) {
     RETURN_OBJ(httpResponse);
 }
 
+LOX_METHOD(HTTPClient, headAsync) {
+    ASSERT_ARG_COUNT("HTTPClient::headAsync(url)", 1);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::headAsync(url)", 0, clox.std.lang.String, clox.std.net.URL);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* url = httpRawURL(vm, args[0]);
+
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
+    CURLMData* curlMData = (CURLMData*)metadata->data;
+    ObjPromise* promise = httpSendRequestAsync(vm, url, HTTP_HEAD, NULL, NULL, curlMData, httpOnSendRequest);
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to initiate a HEAD request using CURL.");
+    RETURN_OBJ(promise);
+}
+
+
 LOX_METHOD(HTTPClient, options) {
     ASSERT_ARG_COUNT("HTTPClient::options(url)", 1);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::options(url)", 0, clox.std.lang.String, clox.std.net.URL);
@@ -189,6 +229,19 @@ LOX_METHOD(HTTPClient, options) {
     ObjInstance* httpResponse = httpCreateResponse(vm, url, curl, curlResponse);
     curl_easy_cleanup(curl);
     RETURN_OBJ(httpResponse);
+}
+
+LOX_METHOD(HTTPClient, optionsAsync) {
+    ASSERT_ARG_COUNT("HTTPClient::optionsAsync(url)", 1);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::optionsAsync(url)", 0, clox.std.lang.String, clox.std.net.URL);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* url = httpRawURL(vm, args[0]);
+
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
+    CURLMData* curlMData = (CURLMData*)metadata->data;
+    ObjPromise* promise = httpSendRequestAsync(vm, url, HTTP_OPTIONS, NULL, NULL, curlMData, httpOnSendRequest);
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to initiate an OPTIONS request using CURL.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(HTTPClient, patch) {
@@ -212,6 +265,21 @@ LOX_METHOD(HTTPClient, patch) {
     RETURN_OBJ(httpResponse);
 }
 
+LOX_METHOD(HTTPClient, patchAsync) {
+    ASSERT_ARG_COUNT("HTTPClient::patchAsync(url, data)", 2);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::patchAsync(url, data)", 0, clox.std.lang.String, clox.std.net.URL);
+    ASSERT_ARG_TYPE("HTTPClient::patchAsync(url, data)", 1, Dictionary);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* url = httpRawURL(vm, args[0]);
+    ObjDictionary* data = AS_DICTIONARY(args[1]);
+
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
+    CURLMData* curlMData = (CURLMData*)metadata->data;
+    ObjPromise* promise = httpSendRequestAsync(vm, url, HTTP_PATCH, NULL, data, curlMData, httpOnSendRequest);
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to initiate a PATCH request using CURL.");
+    RETURN_OBJ(promise);
+}
+
 LOX_METHOD(HTTPClient, post) {
     ASSERT_ARG_COUNT("HTTPClient::post(url, data)", 2);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::post(url, data)", 0, clox.std.lang.String, clox.std.net.URL);
@@ -233,6 +301,21 @@ LOX_METHOD(HTTPClient, post) {
     RETURN_OBJ(httpResponse);
 }
 
+LOX_METHOD(HTTPClient, postAsync) {
+    ASSERT_ARG_COUNT("HTTPClient::postAsync(url, data)", 2);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::postAsync(url, data)", 0, clox.std.lang.String, clox.std.net.URL);
+    ASSERT_ARG_TYPE("HTTPClient::postAsync(url, data)", 1, Dictionary);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* url = httpRawURL(vm, args[0]);
+    ObjDictionary* data = AS_DICTIONARY(args[1]);
+
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
+    CURLMData* curlMData = (CURLMData*)metadata->data;
+    ObjPromise* promise = httpSendRequestAsync(vm, url, HTTP_POST, NULL, data, curlMData, httpOnSendRequest);
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to initiate a POST request using CURL.");
+    RETURN_OBJ(promise);
+}
+
 LOX_METHOD(HTTPClient, put) {
     ASSERT_ARG_COUNT("HTTPClient::put(url, data)", 2);
     ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::put(url, data)", 0, clox.std.lang.String, clox.std.net.URL);
@@ -252,6 +335,21 @@ LOX_METHOD(HTTPClient, put) {
     ObjInstance* httpResponse = httpCreateResponse(vm, url, curl, curlResponse);
     curl_easy_cleanup(curl);
     RETURN_OBJ(httpResponse);
+}
+
+LOX_METHOD(HTTPClient, putAsync) {
+    ASSERT_ARG_COUNT("HTTPClient::putAsync(url, data)", 2);
+    ASSERT_ARG_INSTANCE_OF_ANY("HTTPClient::putAsync(url, data)", 0, clox.std.lang.String, clox.std.net.URL);
+    ASSERT_ARG_TYPE("HTTPClient::putAsync(url, data)", 1, Dictionary);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjString* url = httpRawURL(vm, args[0]);
+    ObjDictionary* data = AS_DICTIONARY(args[1]);
+
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
+    CURLMData* curlMData = (CURLMData*)metadata->data;
+    ObjPromise* promise = httpSendRequestAsync(vm, url, HTTP_PUT, NULL, data, curlMData, httpOnSendRequest);
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to initiate a PUT request using CURL.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(HTTPClient, send) {
@@ -278,6 +376,23 @@ LOX_METHOD(HTTPClient, send) {
     ObjInstance* httpResponse = httpCreateResponse(vm, url, curl, curlResponse);
     curl_easy_cleanup(curl);
     RETURN_OBJ(httpResponse);
+}
+
+LOX_METHOD(HTTPClient, sendAsync) {
+    ASSERT_ARG_COUNT("HTTPClient::sendAsync(request)", 1);
+    ASSERT_ARG_INSTANCE_OF("HTTPClient::send(request)", 0, clox.std.net.HTTPRequest);
+    ObjInstance* self = AS_INSTANCE(receiver);
+    ObjInstance* request = AS_INSTANCE(args[0]);
+    ObjString* url = AS_STRING(getObjProperty(vm, request, "url"));
+    HTTPMethod method = (HTTPMethod)AS_INT(getObjProperty(vm, request, "method"));
+    ObjDictionary* headers = AS_DICTIONARY(getObjProperty(vm, request, "headers"));
+    ObjDictionary* data = AS_DICTIONARY(getObjProperty(vm, request, "data"));
+
+    ObjRecord* metadata = AS_RECORD(getObjProperty(vm, self, "metadata"));
+    CURLMData* curlMData = (CURLMData*)metadata->data;
+    ObjPromise* promise = httpSendRequestAsync(vm, url, method, headers, data, curlMData, httpOnSendRequest);
+    if (promise == NULL) RETURN_PROMISE_EX(clox.std.net.HTTPException, "Failed to initiate a PUT request using CURL.");
+    RETURN_OBJ(promise);
 }
 
 LOX_METHOD(HTTPRequest, __init__) {
@@ -774,15 +889,23 @@ void registerNetPackage(VM* vm) {
     DEF_INTERCEPTOR(httpClientClass, HTTPClient, INTERCEPTOR_INIT, __init__, 0);
     DEF_METHOD(httpClientClass, HTTPClient, close, 0);
     DEF_METHOD(httpClientClass, HTTPClient, delete, 1);
+    DEF_METHOD_ASYNC(httpClientClass, HTTPClient, deleteAsync, 1);
     DEF_METHOD(httpClientClass, HTTPClient, download, 2);
     DEF_METHOD_ASYNC(httpClientClass, HTTPClient, downloadAsync, 2);
     DEF_METHOD(httpClientClass, HTTPClient, get, 1);
+    DEF_METHOD_ASYNC(httpClientClass, HTTPClient, getAsync, 1);
     DEF_METHOD(httpClientClass, HTTPClient, head, 1);
+    DEF_METHOD_ASYNC(httpClientClass, HTTPClient, headAsync, 1);
     DEF_METHOD(httpClientClass, HTTPClient, options, 1);
+    DEF_METHOD_ASYNC(httpClientClass, HTTPClient, optionsAsync, 1);
     DEF_METHOD(httpClientClass, HTTPClient, patch, 2);
+    DEF_METHOD_ASYNC(httpClientClass, HTTPClient, patchAsync, 2);
     DEF_METHOD(httpClientClass, HTTPClient, post, 2);
+    DEF_METHOD_ASYNC(httpClientClass, HTTPClient, postAsync, 2);
     DEF_METHOD(httpClientClass, HTTPClient, put, 2);
+    DEF_METHOD_ASYNC(httpClientClass, HTTPClient, putAsync, 2);
     DEF_METHOD(httpClientClass, HTTPClient, send, 1);
+    DEF_METHOD_ASYNC(httpClientClass, HTTPClient, sendAsync, 1);
 
     ObjClass* httpRequestClass = defineNativeClass(vm, "HTTPRequest");
     bindSuperclass(vm, httpRequestClass, vm->objectClass);

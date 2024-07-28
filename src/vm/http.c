@@ -18,6 +18,13 @@ static CURLMsg* httpCURLInfoRead(CURLContext* context, CURLData* data, int* mess
     return message;
 }
 
+static void httpCURLInitResponse(CURLResponse* curlResponse) {
+    curlResponse->headers = malloc(0);
+    curlResponse->content = malloc(0);
+    curlResponse->hSize = 0;
+    curlResponse->cSize = 0;
+}
+
 static void httpCURLPerform(uv_poll_t* poll, int status, int events) {
     int running;
     int flags = 0;
@@ -28,7 +35,6 @@ static void httpCURLPerform(uv_poll_t* poll, int status, int events) {
     if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
     curl_multi_socket_action(context->data->curlM, context->socket, flags, &running);
     
-    char* doneURL;
     CURLMsg* message;
     int pending;
     CURLData* curlData = NULL;
@@ -36,9 +42,8 @@ static void httpCURLPerform(uv_poll_t* poll, int status, int events) {
     while (message = httpCURLInfoRead(context, curlData, &pending)) {
         switch (message->msg) {
             case CURLMSG_DONE:
-                curl_easy_getinfo(message->easy_handle, CURLINFO_EFFECTIVE_URL, &doneURL);
                 curl_multi_remove_handle(context->data->curlM, message->easy_handle);
-                curl_easy_cleanup(message->easy_handle);
+                curl_easy_getinfo(message->easy_handle, CURLINFO_PRIVATE, &curlData);
                 break;
             default:
                 curlData = NULL;
@@ -60,6 +65,32 @@ static void httpCURLOnTimeout(uv_timer_t* timer) {
     int numRunningHandles;
     CURLMData* curlMData = (CURLMData*)timer->data;
     curl_multi_socket_action(curlMData->curlM, CURL_SOCKET_TIMEOUT, 0, &numRunningHandles);
+}
+
+static void httpCURLRequest(VM* vm, CURL* curl, ObjString* url, HTTPMethod method, ObjDictionary* data, CURLResponse* curlResponse) {
+    const char* urlChars = url->chars;
+    curl_easy_setopt(curl, CURLOPT_URL, urlChars);
+
+    if (method > HTTP_POST) {
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, httpMapMethod(method));
+    }
+
+    if (method == HTTP_HEAD) {
+        curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+    }
+    else if (method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH) {
+        const char* dataChars = httpParsePostData(vm, data)->chars;
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, dataChars);
+    }
+    else if (method == HTTP_OPTIONS) {
+        curl_easy_setopt(curl, CURLOPT_REQUEST_TARGET, "*");
+    }
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpCURLResponse);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)curlResponse);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, httpCURLHeaders);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*)curlResponse);
+    curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
 }
 
 static void httpCURLClose(CURLContext* context) {
@@ -130,11 +161,16 @@ CURLContext* httpCURLCreateContext(CURLMData* data) {
     return context;
 }
 
-CURLData* httpCURLData(VM* vm, ObjPromise* promise, curl_multi_cb callback) {
+CURLData* httpCURLData(VM* vm, CURL* curl, ObjString* url, HTTPMethod method, ObjPromise* promise, CURLResponse* curlResponse, curl_multi_cb callback) {
     CURLData* curlData = ALLOCATE_STRUCT(CURLData);
     if (curlData != NULL) {
         curlData->vm = vm;
+        curlData->curl = curl;
+        curlData->url = url;
+        curlData->method = method;
         curlData->promise = promise;
+        curlData->curlHeaders = NULL;
+        curlData->curlResponse = curlResponse;
         curlData->callback = callback;
     }
     return curlData;
@@ -228,7 +264,8 @@ void httpCURLStartTimeout(CURLM* curlM, long timeout, void* userData) {
 }
 
 CURLcode httpDownloadFile(VM* vm, ObjString* src, ObjString* dest, CURL* curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, src->chars);
+    const char* url = src->chars;
+    curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpCURLWriteFile);
     FILE* file;
     fopen_s(&file, dest->chars, "w");
@@ -246,14 +283,14 @@ ObjPromise* httpDownloadFileAsync(VM* vm, ObjString* src, ObjString* dest, CURLM
     FILE* file;
     fopen_s(&file, dest->chars, "w");
     if (file != NULL) {
-        ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
-        CURLData* curlData = httpCURLData(vm, promise, callback);
-        curlData->file = file;
-
         CURL* curl = curl_easy_init();
+        const char* url = src->chars;
+        ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        CURLData* curlData = httpCURLData(vm, curl, src, HTTP_GET, promise, NULL, callback);
+        curlData->file = file;
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
         curl_easy_setopt(curl, CURLOPT_PRIVATE, curlData);
-        curl_easy_setopt(curl, CURLOPT_URL, src->chars);
+        curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_multi_add_handle(curlMData->curlM, curl);
         return promise;
     }
@@ -264,6 +301,17 @@ void httpOnDownloadFile(CURLData* data) {
     LOOP_PUSH_DATA(data);
     if (data->file) fclose(data->file);
     promiseFulfill(data->vm, data->promise, NIL_VAL);
+    curl_easy_cleanup(data->curl);
+    LOOP_POP_DATA(data);
+}
+
+void httpOnSendRequest(CURLData* data) {
+    LOOP_PUSH_DATA(data);
+    ObjInstance* httpResponse = httpCreateResponse(data->vm, data->url, data->curl, *data->curlResponse);
+    promiseFulfill(data->vm, data->promise, OBJ_VAL(httpResponse));
+    curl_easy_cleanup(data->curl);
+    if (data->curlHeaders != NULL) curl_slist_free_all(data->curlHeaders);
+    free(data->curlResponse);
     LOOP_POP_DATA(data);
 }
 
@@ -342,32 +390,23 @@ ObjString* httpRawURL(VM* vm, Value value) {
 }
 
 CURLcode httpSendRequest(VM* vm, ObjString* url, HTTPMethod method, ObjDictionary* data, CURL* curl, CURLResponse* curlResponse) {
-    curlResponse->headers = malloc(0);
-    curlResponse->content = malloc(0);
-    curlResponse->hSize = 0;
-    curlResponse->cSize = 0;
-
-    char* urlChars = url->chars;
-    curl_easy_setopt(curl, CURLOPT_URL, urlChars);
-    if (method > HTTP_POST) {
-        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, httpMapMethod(method));
-    }
-
-    if (method == HTTP_HEAD) {
-        curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
-    }
-    else if (method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH) {
-        char* dataChars = httpParsePostData(vm, data)->chars;
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, dataChars);
-    }
-    else if (method == HTTP_OPTIONS) {
-        curl_easy_setopt(curl, CURLOPT_REQUEST_TARGET, "*");
-    }
-
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, httpCURLResponse);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)curlResponse);
-    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, httpCURLHeaders);
-    curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*)curlResponse);
-    curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
+    httpCURLInitResponse(curlResponse);
+    httpCURLRequest(vm, curl, url, method, data, curlResponse);
     return curl_easy_perform(curl);
+}
+
+ObjPromise* httpSendRequestAsync(VM* vm, ObjString* url, HTTPMethod method, ObjDictionary* headers, ObjDictionary* data, CURLMData* curlMData, curl_multi_cb callback) {
+    CURLResponse* curlResponse = ALLOCATE_STRUCT(CURLResponse);
+    if (curlResponse != NULL) {
+        CURL* curl = curl_easy_init();
+        ObjPromise* promise = newPromise(vm, PROMISE_PENDING, NIL_VAL, NIL_VAL);
+        CURLData* curlData = httpCURLData(vm, curl, url, method, promise, curlResponse, callback);
+        httpCURLInitResponse(curlResponse);
+        if (headers != NULL) curlData->curlHeaders = httpParseHeaders(vm, headers, curl);
+        httpCURLRequest(vm, curl, url, method, data, curlResponse);
+        curl_easy_setopt(curl, CURLOPT_PRIVATE, curlData);
+        curl_multi_add_handle(curlMData->curlM, curl);
+        return promise;
+    }
+    return NULL;
 }

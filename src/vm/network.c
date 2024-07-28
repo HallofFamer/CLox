@@ -6,6 +6,7 @@
 #include "native.h"
 #include "network.h"
 #include "object.h"
+#include "os.h"
 #include "vm.h"
 
 static NetworkData* networkLoadData(VM* vm, ObjInstance* network, ObjPromise* promise) {
