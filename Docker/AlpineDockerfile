@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-WORKDIR CLox-1.8.0
+WORKDIR CLox-1.9.0
 
 RUN apk add git make gcc libc-dev cmake curl-dev libuv1.dev --no-cache
 
@@ -15,4 +15,4 @@ RUN cd CLox \
 
 CMD ["CLox"]
 
-# To run the REPL from container, use this command: docker run -w /CLox-1.8.0/CLox -i -t clox:alpine
+# To run the REPL from container, use this command: docker run -w /CLox-1.9.0/CLox -i -t clox:alpine
