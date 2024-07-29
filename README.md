@@ -106,19 +106,19 @@ https://github.com/munificent/craftinginterpreters
 - Addition of nil handling operators: Optional chaining operator(?.), Nil coalescing operator(??), and Elvis operator(?:). 
 - Inline caching for VM optimization, as well as implementation of Shape(Hidden Class) for better instance variable representation.
 
-### CLox 1.8.0(current version)
+### CLox 1.8.0
 - Operator overloading to allow operators to be treated as method calls, thus can be used by user defined classes.
 - Improved string concatenation, addition of string interpolation and UTF-8 strings.
 - Interceptor methods which are invoked automatically when getting/setting properties, invoking methods or throwing exceptions.
 - Object ID and generic object map which enable inheritance for special build-in classes such as `String` and `Array`.
 
-### CLox 1.9.0(next version)
+### CLox 1.9.0(current version)
 - Generator functions/methods which can yield control back to the caller and resume at a later point of execution.
 - Add class `Promise` to the standard library(`clox.std.util`), which uses libuv to handle async tasks that completes in future. 
 - Introduction of `async` and `await` keywords, which allows C#/JS style of concurrency.
 - Refactoring package `clox.std.io` and `clox.std.net` to use async non-blocking calls.
 
-### CLox 2.0.0
+### CLox 2.0.0(next version)
 - Multi-pass compiler with abstract syntax tree, type checker, and generation of IR. 
 - Optional static typing support for function/method parameters and return values, types only exist at compile time(erased at runtime). 
 - Semicolon inference as well as basic type inference for immutable local/global variables. 
