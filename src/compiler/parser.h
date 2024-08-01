@@ -3,6 +3,7 @@
 #define clox_parser_h
 
 #include "../common/common.h"
+#include "ast.h"
 #include "lexer.h"
 
 typedef struct {
