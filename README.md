@@ -56,7 +56,7 @@ https://github.com/munificent/craftinginterpreters
 - C style For Loop replaced with Python/Kotlin style for-in Loop.
 - Global variables are scoped within the file it is declared, effectively becoming module variable.
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword.
-- Built-in and user defined classes/functions become be immutable, and cannot be accidentally overwritten.
+- Built-in and user defined classes/functions become immutable, and cannot be accidentally overwritten.
 - Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible.
 - Most runtime errors in VM interpreter loop replaced with Exceptions that can be caught at runtime.
 - Inline caching for VM optimization, as well as implementation of Shape(Hidden Class) for better instance variable representation.
@@ -151,7 +151,7 @@ cmake --build ./build --config Release
 git clone -b master https://github.com/HallofFamer/CLox.git
 cd CLox
 docker build -t clox:linux -f Docker/[$LinuxDockerfile] .
-docker run -w /CLox-1.8.0/CLox -i -t clox:linux
+docker run -w /CLox-1.9.0/CLox -i -t clox:linux
 ```
 
 
