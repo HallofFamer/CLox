@@ -34,8 +34,9 @@
         if (buffer->capacity < buffer->count + 1) { \
             int oldCapacity = buffer->capacity; \
             buffer->capacity = bufferGrowCapacity(oldCapacity); \
-            buffer->elements = (type*)realloc(buffer->elements, sizeof(type) * buffer->capacity); \
-            if (buffer->elements == NULL) exit(1); \
+            type* elements = (type*)realloc(buffer->elements, sizeof(type) * buffer->capacity); \
+            if(elements != NULL) buffer->elements = elements; \
+            else exit(1); \
         }\
         buffer->elements[buffer->count] = element; \
         buffer->count++; \
@@ -80,5 +81,6 @@ static inline void* bufferReallocate(void* elements, int newSize) {
 DECLARE_BUFFER(ByteArray, uint8_t)
 DECLARE_BUFFER(IntArray, int)
 DECLARE_BUFFER(DoubleArray, double)
+DECLARE_BUFFER(StringArray, char*)
 
 #endif // !clox_buffer_h
