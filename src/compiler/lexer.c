@@ -293,6 +293,10 @@ static Token string(Lexer* lexer) {
     return makeToken(lexer, TOKEN_STRING);
 }
 
+Token emptyToken() {
+    return syntheticToken("");
+}
+
 Token syntheticToken(const char* text) {
     Token token = {
         .start = text,

@@ -31,7 +31,7 @@ typedef enum {
     TOKEN_THROW, TOKEN_TRAIT, TOKEN_TRUE, TOKEN_TRY, TOKEN_USING,
     TOKEN_VAL, TOKEN_VAR, TOKEN_WHILE, TOKEN_WITH, TOKEN_YIELD,
 
-    TOKEN_ERROR, TOKEN_EOF
+    TOKEN_ERROR, TOKEN_EMPTY, TOKEN_EOF
 } TokenSymbol;
 
 typedef struct {
@@ -49,6 +49,7 @@ typedef struct {
 } Lexer;
 
 void initLexer(Lexer* lexer, const char* source);
+Token emptyToken();
 Token syntheticToken(const char* text);
 Token scanToken(Lexer* lexer);
 
