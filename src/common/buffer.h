@@ -74,10 +74,6 @@ static inline int bufferGrowCapacity(int capacity) {
     return capacity < 8 ? 8 : capacity * 2;
 }
 
-static inline void* bufferReallocate(void* elements, int newSize) {
-    return realloc(elements, newSize);
-}
-
 DECLARE_BUFFER(ByteArray, uint8_t)
 DECLARE_BUFFER(IntArray, int)
 DECLARE_BUFFER(DoubleArray, double)

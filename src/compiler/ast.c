@@ -47,9 +47,26 @@ void astAppendChild(Ast* ast, Ast* child) {
 }
 
 AstNodeCategory astCategory(AstNodeType type) {
-    if (type == AST_SCRIPT) return AST_CATEGORY_PROGRAM;
+    if (type == AST_TOP_SCRIPT) return AST_CATEGORY_PROGRAM;
     else if (type >= EXPR_ASSIGN && type <= EXPR_YIELD) return AST_CATEGORY_EXPR;
     else if (type >= STMT_AWAIT && type <= STMT_YIELD) return AST_CATEGORY_STMT;
     else if (type >= DECL_CLASS && type <= DECL_VAR) return AST_CATEGORY_DECL;
     else return AST_CATEGORY_OTHER;
+}
+
+static char* astOutputExprLiteral(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+char* astOutputString(Ast* ast, int indentLevel) {
+    switch (ast->category) {
+        case AST_CATEGORY_EXPR: {
+            switch (ast->type) {
+                case EXPR_LITERAL:
+                    return astOutputExprLiteral(ast, indentLevel);
+            }
+        }
+            
+    }
 }

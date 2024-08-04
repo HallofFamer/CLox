@@ -84,5 +84,6 @@ Ast* newAst(AstNodeType type, Token token, AstArray* children);
 void freeAst(Ast* node, bool shouldFreeChildren);
 void astAppendChild(Ast* ast, Ast* child);
 AstNodeCategory astCategory(AstNodeType type);
+char* astOutputString(Ast* ast, int indentLevel);
 
 #endif // !clox_ast_h
