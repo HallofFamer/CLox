@@ -47,10 +47,10 @@ void astAppendChild(Ast* ast, Ast* child) {
 }
 
 AstNodeCategory astCategory(AstNodeType type) {
-    if (type == AST_TOP_SCRIPT) return AST_CATEGORY_PROGRAM;
-    else if (type >= EXPR_ASSIGN && type <= EXPR_YIELD) return AST_CATEGORY_EXPR;
-    else if (type >= STMT_AWAIT && type <= STMT_YIELD) return AST_CATEGORY_STMT;
-    else if (type >= DECL_CLASS && type <= DECL_VAR) return AST_CATEGORY_DECL;
+    if (type == AST_TYPE_NONE) return AST_CATEGORY_PROGRAM;
+    else if (type >= AST_EXPR_ASSIGN && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
+    else if (type >= AST_STMT_AWAIT && type <= AST_STMT_YIELD) return AST_CATEGORY_STMT;
+    else if (type >= AST_DECL_CLASS && type <= AST_DECL_VAR) return AST_CATEGORY_DECL;
     else return AST_CATEGORY_OTHER;
 }
 

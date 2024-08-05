@@ -118,9 +118,7 @@ static void skipWhitespace(Lexer* lexer) {
                     advance(lexer);
                     skipBlockComment(lexer);
                 }
-                else {
-                    return;
-                }
+                else return;
                 break;
             default:
                 return;
