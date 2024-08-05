@@ -13,19 +13,32 @@ static void freeAstChildren(AstArray* children, bool shouldFreeChildren) {
 }
 
 Ast* newAst(AstNodeType type, Token token, AstArray* children) {
-    Ast* node = (Ast*)malloc(sizeof(Ast));
-    if (node != NULL) {
-        node->category = astNodeCategory(type);
-        node->type = type;
-        node->token = token;
-        node->parent = NULL;
+    Ast* ast = (Ast*)malloc(sizeof(Ast));
+    if (ast != NULL) {
+        ast->category = astNodeCategory(type);
+        ast->type = type;
+        ast->token = token;
+        ast->parent = NULL;
         if (children == NULL) {
-            node->children = (AstArray*)malloc(sizeof(AstArray));
-            if (node->children != NULL) AstArrayInit(node->children);
+            ast->children = (AstArray*)malloc(sizeof(AstArray));
+            if (ast->children != NULL) AstArrayInit(ast->children);
         }
-        else node->children = children;
+        else ast->children = children;
     }
-    return node;
+    return ast;
+}
+
+Ast* newAst1(AstNodeType type, Token token, Ast* child) {
+    Ast* ast = newAst(type, token, NULL);
+    astAppendChild(ast, child);
+    return ast;
+}
+
+Ast* newAst2(AstNodeType* type, Token token, Ast* left, Ast* right) {
+    Ast* ast = newAst(type, token, NULL);
+    astAppendChild(ast, left);
+    astAppendChild(ast, right);
+    return ast;
 }
 
 void freeAst(Ast* ast, bool shouldFreeChildren) {
@@ -54,17 +67,35 @@ AstNodeCategory astCategory(AstNodeType type) {
     else return AST_CATEGORY_OTHER;
 }
 
-static char* astOutputExprLiteral(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+static char* astPrintExprLiteral(Ast* ast, int indentLevel) {
+    switch (ast->token.type) {
+        case TOKEN_NIL:
+        case TOKEN_TRUE:
+        case TOKEN_FALSE:
+        case TOKEN_INT:
+        case TOKEN_NUMBER: {
+            char* buffer = (char*)malloc((size_t)ast->token.length + 1);
+            if (buffer != NULL) {
+                snprintf(buffer, ast->token.length, "%s", ast->token.start);
+                return buffer;
+            }
+        }
+        case TOKEN_STRING: {
+            char* buffer = (char*)malloc((size_t)ast->token.length + 3);
+            if (buffer != NULL) {
+                snprintf(buffer, ast->token.length, "\"%s\"", ast->token.start);
+                return buffer;
+            }
+        }
+    }
 }
 
-char* astOutputString(Ast* ast, int indentLevel) {
+char* astPrint(Ast* ast, int indentLevel) {
     switch (ast->category) {
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
-                case EXPR_LITERAL:
-                    return astOutputExprLiteral(ast, indentLevel);
+                case AST_EXPR_LITERAL:
+                    return astPrintExprLiteral(ast, indentLevel);
             }
         }
             

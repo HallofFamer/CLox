@@ -87,9 +87,11 @@ struct Ast {
 #define ASTNODE_IS_ROOT(astNode) (ast->type == AST_SCRIPT)
 
 Ast* newAst(AstNodeType type, Token token, AstArray* children);
+Ast* newAst1(AstNodeType type, Token token, Ast* child);
+Ast* newAst2(AstNodeType type, Token token, Ast* left, Ast* right);
 void freeAst(Ast* node, bool shouldFreeChildren);
 void astAppendChild(Ast* ast, Ast* child);
 AstNodeCategory astCategory(AstNodeType type);
-char* astOutputString(Ast* ast, int indentLevel);
+char* astPrint(Ast* ast, int indentLevel);
 
 #endif // !clox_ast_h
