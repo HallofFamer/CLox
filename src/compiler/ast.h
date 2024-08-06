@@ -66,15 +66,6 @@ typedef enum {
     AST_TYPE_ERROR
 } AstNodeType;
 
-typedef enum {
-    AST_LITERAL_UNKNOWN,
-    AST_LITERAL_NIL,
-    AST_LITERAL_BOOL,
-    AST_LITERA_INT,
-    AST_LITERAL_FLOAT,
-    AST_LITERAL_STRING
-} AstLiteralType;
-
 struct Ast {
     AstNodeCategory category;
     AstNodeType type;
@@ -91,7 +82,7 @@ Ast* newAst1(AstNodeType type, Token token, Ast* child);
 Ast* newAst2(AstNodeType type, Token token, Ast* left, Ast* right);
 void freeAst(Ast* node, bool shouldFreeChildren);
 void astAppendChild(Ast* ast, Ast* child);
-AstNodeCategory astCategory(AstNodeType type);
+AstNodeCategory astNodeCategory(AstNodeType type);
 char* astPrint(Ast* ast, int indentLevel);
 
 #endif // !clox_ast_h

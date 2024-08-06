@@ -34,7 +34,7 @@ Ast* newAst1(AstNodeType type, Token token, Ast* child) {
     return ast;
 }
 
-Ast* newAst2(AstNodeType* type, Token token, Ast* left, Ast* right) {
+Ast* newAst2(AstNodeType type, Token token, Ast* left, Ast* right) {
     Ast* ast = newAst(type, token, NULL);
     astAppendChild(ast, left);
     astAppendChild(ast, right);
@@ -59,7 +59,7 @@ void astAppendChild(Ast* ast, Ast* child) {
     if (child != NULL) child->parent = ast;
 }
 
-AstNodeCategory astCategory(AstNodeType type) {
+AstNodeCategory astNodeCategory(AstNodeType type) {
     if (type == AST_TYPE_NONE) return AST_CATEGORY_PROGRAM;
     else if (type >= AST_EXPR_ASSIGN && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
     else if (type >= AST_STMT_AWAIT && type <= AST_STMT_YIELD) return AST_CATEGORY_STMT;
@@ -88,6 +88,7 @@ static char* astPrintExprLiteral(Ast* ast, int indentLevel) {
             }
         }
     }
+    return NULL;
 }
 
 char* astPrint(Ast* ast, int indentLevel) {
@@ -100,4 +101,5 @@ char* astPrint(Ast* ast, int indentLevel) {
         }
             
     }
+    return NULL;
 }

@@ -61,7 +61,7 @@
         } \
         return -1;\
     }\
-    void name##Delete(name* buffer, int index) { \
+    type name##Delete(name* buffer, int index) { \
         type element = buffer->elements[index]; \
         for (int i = index; i < buffer->count - 1; i++) { \
             buffer->elements[i] = buffer->elements[i + 1]; \
