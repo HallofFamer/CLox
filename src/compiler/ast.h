@@ -77,6 +77,7 @@ struct Ast {
 
 #define ASTNODE_IS_ROOT(astNode) (ast->type == AST_SCRIPT)
 
+Ast* emptyAst(AstNodeType type, Token token);
 Ast* newAst(AstNodeType type, Token token, AstArray* children);
 Ast* newAst1(AstNodeType type, Token token, Ast* child);
 Ast* newAst2(AstNodeType type, Token token, Ast* left, Ast* right);

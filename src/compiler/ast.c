@@ -8,8 +8,21 @@ DEFINE_BUFFER(AstArray, Ast*)
 
 static void freeAstChildren(AstArray* children, bool shouldFreeChildren) {
     for (int i = 0; i < children->count; i++) {
-        freeAstNode(children->elements[i], shouldFreeChildren);
+        freeAst(children->elements[i], shouldFreeChildren);
     }
+}
+
+Ast* emptyAst(AstNodeType type, Token token) {
+    Ast* ast = (Ast*)malloc(sizeof(Ast));
+    if (ast != NULL) {
+        ast->category = astNodeCategory(type);
+        ast->type = type;
+        ast->token = token;
+        ast->parent = NULL;
+        ast->children = (AstArray*)malloc(sizeof(AstArray));
+        if (ast->children != NULL) AstArrayInit(ast->children);
+    }
+    return ast;
 }
 
 Ast* newAst(AstNodeType type, Token token, AstArray* children) {
