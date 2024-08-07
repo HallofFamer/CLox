@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,7 +26,18 @@ Ast* emptyAst(AstNodeType type, Token token) {
     return ast;
 }
 
-Ast* newAst(AstNodeType type, Token token, AstArray* children) {
+Ast* newAst(AstNodeType type, Token token, int numChildren, ...) {
+    Ast* ast = emptyAst(type, token);
+    va_list children;
+    va_start(children, numChildren);
+    for (int i = 0; i < numChildren; i++) {
+        astAppendChild(ast, va_arg(children, Ast*));
+    }
+    va_end(children);
+    return ast;
+}
+
+Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
     Ast* ast = (Ast*)malloc(sizeof(Ast));
     if (ast != NULL) {
         ast->category = astNodeCategory(type);
@@ -38,19 +50,6 @@ Ast* newAst(AstNodeType type, Token token, AstArray* children) {
         }
         else ast->children = children;
     }
-    return ast;
-}
-
-Ast* newAst1(AstNodeType type, Token token, Ast* child) {
-    Ast* ast = newAst(type, token, NULL);
-    astAppendChild(ast, child);
-    return ast;
-}
-
-Ast* newAst2(AstNodeType type, Token token, Ast* left, Ast* right) {
-    Ast* ast = newAst(type, token, NULL);
-    astAppendChild(ast, left);
-    astAppendChild(ast, right);
     return ast;
 }
 
