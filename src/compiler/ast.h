@@ -75,7 +75,7 @@ struct Ast {
     uint8_t depth;
 };
 
-#define ASTNODE_IS_ROOT(astNode) (ast->type == AST_SCRIPT)
+#define ASTNODE_IS_ROOT(astNode) (ast->category == AST_CATEGORY_PROGRAM)
 
 Ast* emptyAst(AstNodeType type, Token token);
 Ast* newAst(AstNodeType type, Token token, int numChildren, ...);

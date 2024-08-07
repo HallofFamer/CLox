@@ -79,6 +79,23 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
     else return AST_CATEGORY_OTHER;
 }
 
+static char* astPrintExprBinary(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astPrintExprGrouping(Ast* ast, int indentLevel) {
+    Ast* expr = ast->children->elements[0];
+    char* exprOutput = astPrint(expr, indentLevel);
+    size_t length = (size_t)ast->token.length + 8;
+    char* buffer = (char*)malloc(length + 1);
+
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(group %s)", exprOutput);
+    }
+    return buffer;
+}
+
 static char* astPrintExprLiteral(Ast* ast, int indentLevel) {
     switch (ast->token.type) {
         case TOKEN_NIL:
@@ -107,8 +124,14 @@ char* astPrint(Ast* ast, int indentLevel) {
     switch (ast->category) {
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
+                case AST_EXPR_BINARY: 
+                    return astPrintExprBinary(ast, indentLevel);
+                case AST_EXPR_GROUPING:
+                    return astPrintExprGrouping(ast, indentLevel);
                 case AST_EXPR_LITERAL:
                     return astPrintExprLiteral(ast, indentLevel);
+                default:
+                    return NULL;
             }
         }
             
