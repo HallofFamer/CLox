@@ -80,9 +80,9 @@ struct Ast {
 Ast* emptyAst(AstNodeType type, Token token);
 Ast* newAst(AstNodeType type, Token token, int numChildren, ...);
 Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children);
-void freeAst(Ast* node, bool shouldFreeChildren);
+void freeAst(Ast* node, bool freeChildren);
 void astAppendChild(Ast* ast, Ast* child);
 AstNodeCategory astNodeCategory(AstNodeType type);
-char* astPrint(Ast* ast, int indentLevel);
+char* astToString(Ast* ast, int indentLevel);
 
 #endif // !clox_ast_h

@@ -7,9 +7,9 @@
 
 DEFINE_BUFFER(AstArray, Ast*)
 
-static void freeAstChildren(AstArray* children, bool shouldFreeChildren) {
+static void freeAstChildren(AstArray* children, bool freeChildren) {
     for (int i = 0; i < children->count; i++) {
-        freeAst(children->elements[i], shouldFreeChildren);
+        freeAst(children->elements[i], freeChildren);
     }
 }
 
@@ -53,9 +53,9 @@ Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
     return ast;
 }
 
-void freeAst(Ast* ast, bool shouldFreeChildren) {
+void freeAst(Ast* ast, bool freeChildren) {
     if (ast->children != NULL) {
-        if (shouldFreeChildren) freeAstChildren(ast->children, shouldFreeChildren);
+        if (freeChildren) freeAstChildren(ast->children, freeChildren);
         AstArrayFree(ast->children);
         free(ast->children);
     }
@@ -79,14 +79,15 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
     else return AST_CATEGORY_OTHER;
 }
 
-static char* astPrintExprBinary(Ast* ast, int indentLevel) {
+static char* astExprBinaryToString(Ast* ast, int indentLevel) {
     // To be implemented
     return NULL;
 }
 
-static char* astPrintExprGrouping(Ast* ast, int indentLevel) {
+static char* astExprGroupingToString(Ast* ast, int indentLevel) {
+    if (ast->children == NULL || ast->children->count == 0) return NULL;
     Ast* expr = ast->children->elements[0];
-    char* exprOutput = astPrint(expr, indentLevel);
+    char* exprOutput = astToString(expr, indentLevel);
     size_t length = (size_t)ast->token.length + 8;
     char* buffer = (char*)malloc(length + 1);
 
@@ -96,7 +97,7 @@ static char* astPrintExprGrouping(Ast* ast, int indentLevel) {
     return buffer;
 }
 
-static char* astPrintExprLiteral(Ast* ast, int indentLevel) {
+static char* astExprLiteralToString(Ast* ast, int indentLevel) {
     switch (ast->token.type) {
         case TOKEN_NIL:
         case TOKEN_TRUE:
@@ -120,16 +121,16 @@ static char* astPrintExprLiteral(Ast* ast, int indentLevel) {
     return NULL;
 }
 
-char* astPrint(Ast* ast, int indentLevel) {
+char* astToString(Ast* ast, int indentLevel) {
     switch (ast->category) {
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
                 case AST_EXPR_BINARY: 
-                    return astPrintExprBinary(ast, indentLevel);
+                    return astExprBinaryToString(ast, indentLevel);
                 case AST_EXPR_GROUPING:
-                    return astPrintExprGrouping(ast, indentLevel);
+                    return astExprGroupingToString(ast, indentLevel);
                 case AST_EXPR_LITERAL:
-                    return astPrintExprLiteral(ast, indentLevel);
+                    return astExprLiteralToString(ast, indentLevel);
                 default:
                     return NULL;
             }

@@ -1,0 +1,816 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "parser.h"
+
+typedef enum {
+    PREC_NONE,
+    PREC_ASSIGNMENT,
+    PREC_COND,
+    PREC_OR,
+    PREC_AND,
+    PREC_EQUALITY,
+    PREC_COMPARISON,
+    PREC_TERM,
+    PREC_FACTOR,
+    PREC_UNARY,
+    PREC_CALL,
+    PREC_PRIMARY
+} Precedence;
+
+typedef Ast* (*ParsePrefixFn)(Parser* parser, Token token, bool canAssign);
+typedef Ast* (*ParseInfixFn)(Parser* parser, Token token, Ast* left, bool canAssign);
+
+typedef struct {
+    ParsePrefixFn prefix;
+    ParseInfixFn infix;
+    Precedence precedence;
+} ParseRule;
+
+typedef enum {
+    PARSE_BEHAVIOR_CLASS,
+    PARSE_BEHAVIOR_METACLASS,
+    PARSE_BEHAVIOR_TRAIT
+} ParseBehaviorType;
+
+typedef enum {
+    PARSE_TYPE_FUNCTION,
+    PARSE_TYPE_INITIALIZER,
+    PARSE_TYPE_LAMBDA,
+    PARSE_TYPE_METHOD,
+    PARSE_TYPE_SCRIPT
+} ParseFunctionType;
+
+static void* remalloc(void* pointer, size_t oldSize, size_t newSize) {
+    if (newSize == 0) {
+        free(pointer);
+        return NULL;
+    }
+
+    void* result = realloc(pointer, newSize);
+    if (result == NULL) exit(1);
+    return result;
+}
+
+static void errorAt(Parser* parser, Token* token, const char* message) {
+    if (parser->panicMode) return;
+    parser->panicMode = true;
+    fprintf(stderr, "[line %d] Error", token->line);
+
+    if (token->type == TOKEN_EOF) {
+        fprintf(stderr, " at end");
+    }
+    else if (token->type == TOKEN_ERROR) { }
+    else {
+        fprintf(stderr, " at '%.*s'", token->length, token->start);
+    }
+
+    fprintf(stderr, ": %s\n", message);
+    parser->hadError = true;
+}
+
+static void error(Parser* parser, const char* message) {
+    errorAt(parser, &parser->previous, message);
+}
+
+static void errorAtCurrent(Parser* parser, const char* message) {
+    errorAt(parser, &parser->current, message);
+}
+
+static void advance(Parser* parser) {
+    parser->previous = parser->current;
+    parser->current = parser->next;
+
+    for (;;) {
+        parser->next = scanToken(parser->lexer);
+        if (parser->next.type != TOKEN_ERROR) break;
+
+        errorAtCurrent(parser, parser->next.start);
+    }
+}
+
+static void consume(Parser* parser, TokenSymbol type, const char* message) {
+    if (parser->current.type == type) {
+        advance(parser);
+        return;
+    }
+    errorAtCurrent(parser, message);
+}
+
+static bool check(Parser* parser, TokenSymbol type) {
+    return parser->current.type == type;
+}
+
+static bool checkNext(Parser* parser, TokenSymbol type) {
+    return parser->next.type == type;
+}
+
+static bool match(Parser* parser, TokenSymbol type) {
+    if (!check(parser, type)) return false;
+    advance(parser);
+    return true;
+}
+
+static int hexDigit(Parser* parser, char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+
+    error(parser, "Invalid hex escape sequence.");
+    return -1;
+}
+
+static int hexEscape(Parser* parser, const char* source, int base, int startIndex) {
+    int value = 0;
+    for (int i = 0; i < base; i++) {
+        int index = startIndex + i + 2;
+        if (source[index] == '"' || source[index] == '\0') {
+            error(parser, "Incomplete hex escape sequence.");
+            break;
+        }
+
+        int digit = hexDigit(parser, source[index]);
+        if (digit == -1) break;
+        value = (value * 16) | digit;
+    }
+    return value;
+}
+
+static int unicodeEscape(Parser* parser, const char* source, char* target, int base, int startIndex, int currentLength) {
+    // To be implemented later.
+    /*
+    int value = hexEscape(parser, source, base, startIndex);
+    int numBytes = utf8NumBytes(value);
+    if (numBytes < 0) error(parser, "Negative unicode character specified.");
+    if (value > 0xffff) numBytes++;
+
+    if (numBytes > 0) {
+        char* utfChar = utf8Encode(value);
+        if (utfChar == NULL) error(parser, "Invalid unicode character specified.");
+        else {
+            memcpy(target + currentLength, utfChar, (size_t)numBytes + 1);
+            free(utfChar);
+        }
+    }
+    return numBytes;
+    */
+    return 1;
+}
+
+static char* parseString(Parser* parser, int* length) {
+    int maxLength = parser->previous.length - 2;
+    const char* source = parser->previous.start + 1;
+    char* target = (char*)malloc((size_t)maxLength + 1);
+    if (target == NULL) {
+        fprintf(stderr, "Not enough memory to parser string token.");
+        exit(1);
+    }
+
+    int i = 0, j = 0;
+    while (i < maxLength) {
+        if (source[i] == '\\') {
+            switch (source[i + 1]) {
+                case 'a': {
+                    target[j] = '\a';
+                    i++;
+                    break;
+                }
+                case 'b': {
+                    target[j] = '\b';
+                    i++;
+                    break;
+                }
+                case 'f': {
+                    target[j] = '\f';
+                    i++;
+                    break;
+                }
+                case 'n': {
+                    target[j] = '\n';
+                    i++;
+                    break;
+                }
+                case 'r': {
+                    target[j] = '\r';
+                    i++;
+                    break;
+                }
+                case 't': {
+                    target[j] = '\t';
+                    i++;
+                    break;
+                }    
+                case 'u': {
+                    int numBytes = unicodeEscape(parser, source, target, 4, i, j);
+                    j += numBytes > 4 ? numBytes - 2 : numBytes - 1;
+                    i += numBytes > 4 ? 6 : 5;
+                    break;
+                }
+                case 'U': {
+                    int numBytes = unicodeEscape(parser, source, target, 8, i, j);
+                    j += numBytes > 4 ? numBytes - 2 : numBytes - 1;
+                    i += 9;
+                    break;
+                }
+                case 'v': {
+                    target[j] = '\v';
+                    i++;
+                    break;
+                }
+                case 'x': {
+                    target[j] = hexEscape(parser, source, 2, i);
+                    i += 3;
+                    break;
+                }
+                case '"': {
+                    target[j] = '"';
+                    i++;
+                    break;
+                }
+                case '\\': {
+                    target[j] = '\\';
+                    i++;
+                    break;
+                }
+                default: target[j] = source[i];
+            }
+        }
+        else target[j] = source[i];
+        i++;
+        j++;
+    }
+
+    target = (char*)remalloc(target, (size_t)maxLength + 1, (size_t)j + 1);
+    target[j] = '\0';
+    *length = j;
+    return target;
+}
+
+static void synchronize(Parser* parser) {
+    parser->panicMode = false;
+
+    while (parser->current.type != TOKEN_EOF) {
+        if (parser->previous.type == TOKEN_SEMICOLON) return;
+
+        switch (parser->current.type) {
+            case TOKEN_ASYNC:
+            case TOKEN_AWAIT:
+            case TOKEN_CLASS:
+            case TOKEN_FOR:
+            case TOKEN_FUN:
+            case TOKEN_IF:
+            case TOKEN_NAMESPACE:
+            case TOKEN_RETURN:
+            case TOKEN_SWITCH:
+            case TOKEN_TRAIT:
+            case TOKEN_THROW:
+            case TOKEN_USING:
+            case TOKEN_VAL:
+            case TOKEN_VAR:
+            case TOKEN_WHILE:
+            case TOKEN_WITH:
+            case TOKEN_YIELD:
+                return;
+
+            default: ;
+        }
+        advance(parser);
+    }
+}
+
+static Ast* expression(Parser* parser);
+static Ast* statement(Parser* parser);
+static Ast* block(Parser* parser);
+static Ast* behavior(Parser* parser, ParseBehaviorType type, Token name);
+static Ast* function(Parser* parser, ParseFunctionType type, bool isAsync);
+static Ast* declaration(Parser* parser);
+static ParseRule* getRule(TokenSymbol type);
+static Ast* parsePrecedence(Parser* parser, Precedence precedence);
+
+static Ast* argumentList(Parser* parser) {
+    Ast* argList = emptyAst(AST_LIST_EXPR, parser->previous);
+    uint8_t argCount = 0;
+
+    if (!check(parser, TOKEN_RIGHT_PAREN)) {
+        do {
+            Ast* child = expression(parser);
+            if (argCount == UINT8_MAX) error(parser, "Can't have more than 255 arguments.");
+            astAppendChild(argList, child);
+            argCount++;
+        } while (match(parser, TOKEN_COMMA));
+    }
+
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+    return argList;
+}
+
+static Ast* identifier(Parser* parser) {
+    advance(parser);
+    return emptyAst(AST_EXPR_VARIABLE, parser->previous);
+}
+
+static Ast* binary(Parser* parser, Token token, Ast* left, bool canAssign) {
+    ParseRule* rule = getRule(parser->previous.type);
+    Ast* right = parsePrecedence(parser, (Precedence)(rule->precedence + 1));
+    return newAst(AST_EXPR_BINARY, token, 2, left, right);
+}
+
+static Ast* call(Parser* parser, Token token, Ast* left, bool canAssign) { 
+    Ast* right = argumentList(parser);
+    return newAst(AST_EXPR_CALL, token, 2, left, right);
+}
+
+static Ast* dot(Parser* parser, Token token, Ast* left, bool canAssign) { 
+    Ast* right = identifier(parser);
+    Ast* expr = NULL;
+
+    if (canAssign && match(parser, TOKEN_EQUAL)) {
+        Ast* last = expression(parser);
+        expr = newAst(AST_EXPR_SET, token, 3, left, right, last);
+    }
+    else if (match(parser, TOKEN_LEFT_PAREN)) {
+        Ast* last = argumentList(parser);
+        expr = newAst(AST_EXPR_INVOKE, token, 3, left, right, last);
+    }
+    else expr = newAst(AST_EXPR_GET, token, 2, left, right);
+
+    return expr;
+}
+
+static Ast* question(Parser* parser, Token token, Ast* left, bool canAssign) { 
+    // To be implemented
+    return NULL;
+}
+
+static Ast* subscript(Parser* parser, Token token, Ast* left, bool canAssign) { 
+    // To be implemented
+    return NULL;
+}
+
+static Ast* literal(Parser* parser, Token token, bool canAssign) {
+    return emptyAst(AST_EXPR_LITERAL, token);
+}
+
+static Ast* grouping(Parser* parser, Token token, bool canAssign) { 
+    Ast* expr = emptyAst(AST_EXPR_GROUPING, token);
+    Ast* child = expression(parser);
+    astAppendChild(expr, child);
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+    return expr;
+}
+
+static Ast* interpolation(Parser* parser, Token token, bool canAssign) { 
+    // To be implemented
+    return NULL;
+}
+
+static Ast* array(Parser* parser, Token token, Ast* element) {
+    Ast* array = newAst(AST_EXPR_COLLECTION, token, 1, element);
+    uint8_t elementCount = 1;
+    while (match(parser, TOKEN_COMMA)) {
+        element = expression(parser);
+        astAppendChild(array, element);
+
+        if (elementCount == UINT8_MAX) {
+            error(parser, "Cannot have more than 255 elements.");
+        }
+        elementCount++;
+    }
+
+    consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after elements.");
+    return array;
+}
+
+static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
+    Ast* dict = newAst(AST_EXPR_COLLECTION, token, 2, key, value);
+    uint8_t entryCount = 1;
+    while (match(parser, TOKEN_COMMA)) {
+        Ast* key = expression(parser);
+        astAppendChild(dict, key);
+        consume(parser, TOKEN_COLON, "Expect ':' after entry key.");
+        Ast* value = expression(parser);
+        astAppendChild(dict, value);
+
+        if (entryCount == UINT8_MAX) {
+            error(parser, "Cannot have more than 255 entries.");
+        }
+        entryCount++;
+    }
+
+    consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after entries.");
+    return dict;
+}
+
+static Ast* collection(Parser* parser, Token token, bool canAssign) { 
+    if (match(parser, TOKEN_RIGHT_BRACKET)) return emptyAst(AST_EXPR_COLLECTION, token);
+    else {
+        Ast* first = expression(parser);
+        if (match(parser, TOKEN_COLON)) {
+            Ast* firstValue = expression(parser);
+            return dictionary(parser, token, first, firstValue);
+        }
+        else return array(parser, token, first);
+    }
+}
+
+static Ast* closure(Parser* parser, Token token, bool canAssign) {
+    return function(parser, PARSE_TYPE_FUNCTION, false);
+}
+
+static Ast* lambda(Parser* parser, Token token, bool canAssign) {
+    return function(parser, PARSE_TYPE_LAMBDA, false);
+}
+
+static Ast* variable(Parser* parser, Token token, bool canAssign) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* klass(Parser* parser, Token token, bool canAssign) {
+    return behavior(parser, PARSE_BEHAVIOR_CLASS, syntheticToken("@"));
+}
+
+static Ast* trait(Parser* parser, Token token, bool canAssign) {
+    return behavior(parser, PARSE_BEHAVIOR_TRAIT, syntheticToken("@"));
+}
+
+static Ast* super_(Parser* parser, Token token, bool canAssign) {
+    Ast* left = emptyAst(AST_EXPR_VARIABLE, token);
+    consume(parser, TOKEN_DOT, "Expect '.' after 'super'.");
+    consume(parser, TOKEN_IDENTIFIER, "Expect superclass method name.");
+    Token method = parser->previous;
+
+    if (match(parser, TOKEN_LEFT_PAREN)) {
+        Ast* right = argumentList(parser);
+        return newAst(AST_EXPR_SUPER, method, 2, left, right);
+    }
+    else return newAst(AST_EXPR_SUPER, method, 1, left);
+}
+
+static Ast* this_(Parser* parser, Token token, bool canAssign) { 
+    return emptyAst(AST_EXPR_THIS, token);
+}
+
+static Ast* unary(Parser* parser, Token token, bool canAssign) {
+    Ast* child = parsePrecedence(parser, PREC_UNARY);
+    return newAst(AST_EXPR_UNARY, token, 1, child);
+}
+
+static Ast* yield(Parser* parser, Token token, bool canAssign) {
+    Ast* child = expression(parser);
+    return newAst(AST_EXPR_YIELD, token, 1, child);
+}
+
+static Ast* async(Parser* parser, Token token, bool canAssign) { 
+    // To be implemented
+    return NULL;
+}
+
+static Ast* await(Parser* parser, Token token, bool canAssign) { 
+    Ast* child = expression(parser);
+    return newAst(AST_EXPR_AWAIT, token, 1, child);
+}
+
+ParseRule parseRules[] = {
+    [TOKEN_LEFT_PAREN]     = {grouping,      call,        PREC_CALL},
+    [TOKEN_RIGHT_PAREN]    = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_LEFT_BRACKET]   = {collection,    subscript,   PREC_CALL},
+    [TOKEN_RIGHT_BRACKET]  = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_LEFT_BRACE]     = {lambda,        NULL,        PREC_NONE},
+    [TOKEN_RIGHT_BRACE]    = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_COLON]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_COMMA]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_MINUS]          = {unary,         binary,      PREC_TERM},
+    [TOKEN_MODULO]         = {NULL,          binary,      PREC_FACTOR},
+    [TOKEN_PIPE]           = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_PLUS]           = {NULL,          binary,      PREC_TERM},
+    [TOKEN_QUESTION]       = {NULL,          question,    PREC_CALL},
+    [TOKEN_SEMICOLON]      = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_SLASH]          = {NULL,          binary,      PREC_FACTOR},
+    [TOKEN_STAR]           = {NULL,          binary,      PREC_FACTOR},
+    [TOKEN_BANG]           = {unary,         NULL,        PREC_NONE},
+    [TOKEN_BANG_EQUAL]     = {NULL,          binary,      PREC_EQUALITY},
+    [TOKEN_EQUAL]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_EQUAL_EQUAL]    = {NULL,          binary,      PREC_EQUALITY},
+    [TOKEN_GREATER]        = {NULL,          binary,      PREC_COMPARISON},
+    [TOKEN_GREATER_EQUAL]  = {NULL,          binary,      PREC_COMPARISON},
+    [TOKEN_LESS]           = {NULL,          binary,      PREC_COMPARISON},
+    [TOKEN_LESS_EQUAL]     = {NULL,          binary,      PREC_COMPARISON},
+    [TOKEN_DOT]            = {NULL,          dot,         PREC_CALL},
+    [TOKEN_DOT_DOT]        = {NULL,          binary,      PREC_CALL},
+    [TOKEN_IDENTIFIER]     = {variable,      NULL,        PREC_NONE},
+    [TOKEN_STRING]         = {literal,       NULL,        PREC_NONE},
+    [TOKEN_INTERPOLATION]  = {interpolation, NULL,        PREC_NONE},
+    [TOKEN_NUMBER]         = {literal,       NULL,        PREC_NONE},
+    [TOKEN_INT]            = {literal,      NULL,        PREC_NONE},
+    [TOKEN_AND]            = {NULL,          binary,      PREC_AND},
+    [TOKEN_AS]             = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_ASYNC]          = {async,         NULL,        PREC_NONE},
+    [TOKEN_AWAIT]          = {await,         NULL,        PREC_NONE},
+    [TOKEN_BREAK]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_CASE]           = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_CATCH]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_CLASS]          = {klass,         NULL,        PREC_NONE},
+    [TOKEN_CONTINUE]       = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_DEFAULT]        = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_ELSE]           = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_FALSE]          = {literal,       NULL,        PREC_NONE},
+    [TOKEN_FINALLY]        = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_FOR]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_FUN]            = {closure,       NULL,        PREC_NONE},
+    [TOKEN_IF]             = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_NAMESPACE]      = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_NIL]            = {literal,       NULL,        PREC_NONE},
+    [TOKEN_OR]             = {NULL,          binary,      PREC_OR},
+    [TOKEN_REQUIRE]        = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_RETURN]         = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_SUPER]          = {super_,        NULL,        PREC_NONE},
+    [TOKEN_SWITCH]         = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_THIS]           = {this_,         NULL,        PREC_NONE},
+    [TOKEN_THROW]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_TRAIT]          = {trait,         NULL,        PREC_NONE},
+    [TOKEN_TRUE]           = {literal,       NULL,        PREC_NONE},
+    [TOKEN_TRY]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_USING]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_VAL]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_VAR]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_WHILE]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_WITH]           = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_YIELD]          = {yield,         NULL,        PREC_NONE},
+    [TOKEN_ERROR]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_EMPTY]          = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_EOF]            = {NULL,          NULL,        PREC_NONE},
+};
+
+static Ast* parsePrefix(Parser* parser, Precedence precedence, bool canAssign) {
+    ParsePrefixFn prefixRule = getRule(parser->previous.type)->prefix;
+    if (prefixRule == NULL) {
+        error(parser, "Expect expression.");
+        return NULL;
+    }
+    return prefixRule(parser, parser->previous, canAssign);
+}
+
+static Ast* parseInfix(Parser* parser, Precedence precedence, Ast* left, bool canAssign) {
+    while (precedence <= getRule(parser->current.type)->precedence) {
+        advance(parser);
+        ParseInfixFn infixRule = getRule(parser->previous.type)->infix;
+        left = infixRule(parser, parser->previous, left, canAssign);
+    }
+
+    if (canAssign && match(parser, TOKEN_EQUAL)) {
+        error(parser, "Invalid assignment target.");
+    }
+    return left;
+}
+
+static Ast* parsePrecedence(Parser* parser, Precedence precedence) {
+    advance(parser);
+    bool canAssign = precedence <= PREC_ASSIGNMENT;
+    Ast* left = parsePrefix(parser, precedence, canAssign);
+    return parseInfix(parser, precedence, left, canAssign);
+}
+
+static ParseRule* getRule(TokenSymbol type) {
+    return &parseRules[type];
+}
+
+static Ast* expression(Parser* parser) {
+    return parsePrecedence(parser, PREC_ASSIGNMENT);
+}
+
+static Ast* block(Parser* parser) {
+    Ast* blk = emptyAst(AST_STMT_BLOCK, parser->previous);
+    while (!check(parser, TOKEN_RIGHT_BRACE) && !check(parser, TOKEN_EOF)) {
+        Ast* decl = declaration(parser);
+        astAppendChild(blk, decl);
+    }
+    consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+    return blk;
+}
+
+static Ast* awaitStatement(Parser* parser) {
+    Token token = parser->previous;
+    Ast* expr = expression(parser);
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after await value.");
+    return newAst(AST_STMT_AWAIT, token, 1, expr);
+}
+
+static Ast* breakStatement(Parser* parser) {
+    Ast* stmt = emptyAst(AST_STMT_BREAK, parser->previous);
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after 'break'.");
+    return stmt;
+}
+
+static Ast* continueStatement(Parser* parser) {
+    Ast* stmt = emptyAst(AST_STMT_CONTINUE, parser->previous);
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
+    return stmt;
+}
+
+static Ast* expressionStatement(Parser* parser) {
+    Token token = parser->previous;
+    Ast* expr = expression(parser);
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after expression.");
+    return newAst(AST_STMT_EXPRESSION, token, 1, expr);
+}
+
+static Ast* forStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* ifStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* requireStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* returnStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* switchStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* throwStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* tryStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* usingStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* whileStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* yieldStatement(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* statement(Parser* parser) {
+    if (match(parser, TOKEN_AWAIT)) {
+        return awaitStatement(parser);
+    }
+    else if (match(parser, TOKEN_BREAK)) {
+        return breakStatement(parser);
+    }
+    else if (match(parser, TOKEN_CONTINUE)) {
+        return continueStatement(parser);
+    }
+    else if (match(parser, TOKEN_FOR)) {
+        return forStatement(parser);
+    }
+    else if (match(parser, TOKEN_IF)) {
+        return ifStatement(parser);
+    }
+    else if (match(parser, TOKEN_REQUIRE)) {
+        return requireStatement(parser);
+    }
+    else if (match(parser, TOKEN_RETURN)) {
+        return returnStatement(parser);
+    }
+    else if (match(parser, TOKEN_SWITCH)) {
+        return switchStatement(parser);
+    }
+    else if (match(parser, TOKEN_THROW)) {
+        return throwStatement(parser);
+    }
+    else if (match(parser, TOKEN_TRY)) {
+        return tryStatement(parser);
+    }
+    else if (match(parser, TOKEN_USING)) {
+        return usingStatement(parser);
+    }
+    else if (match(parser, TOKEN_WHILE)) {
+        return whileStatement(parser);
+    }
+    else if (match(parser, TOKEN_YIELD)) {
+        return yieldStatement(parser);
+    }
+    else if (match(parser, TOKEN_LEFT_BRACE)) {
+        return block(parser);
+    }
+    else {
+        return expressionStatement(parser);
+    }
+}
+
+static Ast* behavior(Parser* parser, ParseBehaviorType type, Token name) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* function(Parser* parser, ParseFunctionType type, bool isAsync) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* classDeclaration(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* funDeclaration(Parser* parser, bool isAsync) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* namespaceDeclaration(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* traitDeclaration(Parser* parser) {
+    // To be implemented
+    return NULL;
+}
+
+static Ast* varDeclaration(Parser* parser, bool isMutable) {
+    consume(parser, TOKEN_IDENTIFIER, "Expect variable name.");
+    Token identifier = parser->previous;
+    Ast* varDecl = emptyAst(AST_DECL_VAR, identifier);
+    if (!isMutable && !check(parser, TOKEN_EQUAL)) {
+        error(parser, "Immutable variable must be initialized upon declaration.");
+    }
+    else if (match(parser, TOKEN_EQUAL)) {
+        Ast* expr = expression(parser);
+        astAppendChild(varDecl, expr);
+    }
+
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+    return varDecl;
+}
+
+static Ast* declaration(Parser* parser) {
+    if (check(parser, TOKEN_ASYNC) && checkNext(parser, TOKEN_FUN)) {
+        advance(parser);
+        advance(parser);
+        return funDeclaration(parser, true);
+    }
+    else if (check(parser, TOKEN_CLASS) && checkNext(parser, TOKEN_IDENTIFIER)) {
+        advance(parser);
+        return classDeclaration(parser);
+    }
+    else if (check(parser, TOKEN_FUN) && checkNext(parser, TOKEN_IDENTIFIER)) {
+        advance(parser);
+        return funDeclaration(parser, false);
+    }
+    else if (match(parser, TOKEN_NAMESPACE)) {
+        return namespaceDeclaration(parser);
+    }
+    else if (check(parser, TOKEN_TRAIT) && checkNext(parser, TOKEN_IDENTIFIER)) {
+        advance(parser);
+        return traitDeclaration(parser);
+    }
+    else if (match(parser, TOKEN_VAL)) {
+        return varDeclaration(parser, false);
+    }
+    else if (match(parser, TOKEN_VAR)) {
+        return varDeclaration(parser, true);
+    }
+    else {
+        return statement(parser);
+    }
+}
+
+void initParser(Parser* parser, Lexer* lexer) {
+    parser->lexer = lexer;
+    parser->rootClass = syntheticToken("Object");
+    parser->hadError = false;
+    parser->panicMode = false;
+}
+
+Ast* parse(Parser* parser) {
+    Ast* ast = emptyAst(AST_TYPE_NONE, emptyToken());
+    while (!match(parser, TOKEN_EOF)) {
+        Ast* decl = declaration(parser);
+        if (parser->panicMode) synchronize(parser);
+        astAppendChild(ast, decl);
+    }
+
+#ifdef DEBUG_PRINT_AST
+    const char* astString = astPrint(ast, 0);
+    printf("%s", astString);
+#endif
+
+    return ast;
+}
