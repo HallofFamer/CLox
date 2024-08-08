@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <uv.h>
+
 #include "lexer.h"
 
 void initLexer(Lexer* lexer, const char* source) {
@@ -289,18 +289,6 @@ static Token string(Lexer* lexer) {
     if (isAtEnd(lexer)) return errorToken(lexer, "Unterminated string.");
     advance(lexer);
     return makeToken(lexer, TOKEN_STRING);
-}
-
-Token emptyToken() {
-    return syntheticToken("");
-}
-
-Token syntheticToken(const char* text) {
-    Token token = {
-        .start = text,
-        .length = (int)strlen(text)
-    };
-    return token;
 }
 
 Token scanToken(Lexer* lexer) {
