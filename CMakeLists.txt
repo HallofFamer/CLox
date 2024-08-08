@@ -95,6 +95,12 @@ set(no_group_source_files
 )
 source_group("" FILES ${no_group_source_files})
 
+set(Source_Files__common
+    "src/common/os.h"
+    "src/common/os.c"
+)
+source_group("Source Files\\common" FILES ${Source_Files__common})
+
 set(Source_Files__inc
     "src/inc/ini.c"
     "src/inc/ini.h"

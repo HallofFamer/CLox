@@ -43,5 +43,6 @@ typedef struct {
 
 Token emptyToken();
 Token syntheticToken(const char* text);
+char* tokenToString(Token token);
 
 #endif // !clox_token_h

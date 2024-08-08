@@ -627,13 +627,20 @@ static Ast* ifStatement(Parser* parser) {
 }
 
 static Ast* requireStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Token token = parser->previous;
+    Ast* expr = expression(parser);
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after required file path.");
+    return newAst(AST_STMT_REQUIRE, token, 1, expr);
 }
 
 static Ast* returnStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Token token = parser->previous;
+    if (match(parser, TOKEN_SEMICOLON)) return emptyAst(AST_STMT_RETURN, token);
+    else {
+        Ast* expr = expression(parser);
+        consume(parser, TOKEN_SEMICOLON, "Expect ';' after return value.");
+        return newAst(AST_STMT_RETURN, token, 1, expr);
+    }
 }
 
 static Ast* switchStatement(Parser* parser) {

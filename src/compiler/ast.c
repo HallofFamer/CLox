@@ -80,8 +80,16 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
 }
 
 static char* astExprBinaryToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* operator = tokenToString(ast->token);
+    char* left = astToString(ast->children->elements[0], indentLevel);
+    char* right = astToString(ast->children->elements[1], indentLevel);
+    size_t length = strlen(operator) + strlen(left) + strlen(right) + 4;
+
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(%s %s %s)", left, operator, right);
+    }
+    return buffer;
 }
 
 static char* astExprGroupingToString(Ast* ast, int indentLevel) {
