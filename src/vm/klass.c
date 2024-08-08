@@ -5,8 +5,8 @@
 #include <time.h>
 
 #include "klass.h"
-#include "os.h"
 #include "vm.h"
+#include "../common/os.h"
 
 static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass* superclass) {
     unsigned long currentTimeStamp = (unsigned long)time(NULL);

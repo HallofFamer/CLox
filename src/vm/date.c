@@ -5,8 +5,8 @@
 
 #include "native.h"
 #include "object.h"
-#include "os.h"
 #include "vm.h"
+#include "../common/os.h"
 
 static struct tm dateToTm(int year, int month, int day) {
     struct tm cDate = {

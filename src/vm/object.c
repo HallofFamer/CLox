@@ -4,7 +4,7 @@
 
 #include "memory.h"
 #include "object.h"
-#include "os.h"
+#include "../common/os.h"
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     Obj* object = (Obj*)reallocate(vm, NULL, 0, size);

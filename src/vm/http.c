@@ -6,8 +6,8 @@
 #include "memory.h"
 #include "native.h"
 #include "object.h"
-#include "os.h"
 #include "vm.h"
+#include "../common/os.h"
 
 static CURLMsg* httpCURLInfoRead(CURLContext* context, CURLData* data, int* messagesInQueue) {
     CURLMsg* message = curl_multi_info_read(context->data->curlM, messagesInQueue);

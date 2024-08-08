@@ -3,6 +3,7 @@
 
 #include "net.h"
 #include "../inc/yuarel.h"
+#include "../common/os.h"
 #include "../vm/assert.h"
 #include "../vm/dict.h"
 #include "../vm/http.h"
@@ -10,7 +11,6 @@
 #include "../vm/native.h"
 #include "../vm/network.h"
 #include "../vm/object.h"
-#include "../vm/os.h"
 #include "../vm/string.h"
 #include "../vm/value.h"
 #include "../vm/vm.h"

@@ -6,8 +6,8 @@
 #include "native.h"
 #include "network.h"
 #include "object.h"
-#include "os.h"
 #include "vm.h"
+#include "../common/os.h"
 
 static NetworkData* networkLoadData(VM* vm, ObjInstance* network, ObjPromise* promise) {
     NetworkData* data = ALLOCATE_STRUCT(NetworkData);

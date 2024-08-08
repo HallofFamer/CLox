@@ -6,12 +6,12 @@
 #include <string.h>
 
 #include "lang.h"
+#include "../common/os.h"
 #include "../vm/assert.h"
 #include "../vm/dict.h"
 #include "../vm/hash.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
-#include "../vm/os.h"
 #include "../vm/string.h"
 #include "../vm/vm.h"
 

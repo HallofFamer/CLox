@@ -295,7 +295,7 @@ static Token string(Scanner* scanner) {
     return makeToken(scanner, TOKEN_STRING);
 }
 
-Token syntheticToken(const char* text) {
+Token synthesizeToken(const char* text) {
     Token token = { 
         .start = text,
         .length = (int)strlen(text)
@@ -303,7 +303,7 @@ Token syntheticToken(const char* text) {
     return token;
 }
 
-Token scanToken(Scanner* scanner) {
+Token scanNextToken(Scanner* scanner) {
     skipWhitespace(scanner);
     scanner->start = scanner->current;
 

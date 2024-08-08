@@ -6,8 +6,8 @@
 #include "memory.h"
 #include "native.h"
 #include "object.h"
-#include "os.h"
 #include "vm.h"
+#include "../common/os.h"
 
 static FileData* fileLoadData(VM* vm, ObjFile* file, ObjPromise* promise) {
     FileData* data = ALLOCATE_STRUCT(FileData);

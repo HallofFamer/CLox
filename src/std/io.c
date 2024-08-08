@@ -3,13 +3,13 @@
 #include <sys/stat.h>
 
 #include "io.h"
+#include "../common/os.h"
 #include "../vm/assert.h"
 #include "../vm/date.h"
 #include "../vm/file.h"
 #include "../vm/memory.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
-#include "../vm/os.h"
 #include "../vm/string.h"
 #include "../vm/vm.h"
 
