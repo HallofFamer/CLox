@@ -119,8 +119,8 @@ https://github.com/munificent/craftinginterpreters
 - Refactoring package `clox.std.io` and `clox.std.net` to use async non-blocking calls.
 
 ### CLox 2.0.0(next version)
-- Multi-pass compiler with abstract syntax tree, type checker, and generation of IR. 
-- Optional static typing support for function/method parameters and return values, types only exist at compile time(erased at runtime). 
+- Multi-pass compiler with abstract syntax tree, semantic analyzer, type checker, and generation of IR. 
+- Optional static typing support for function/method parameters and return values, types only exist at compile time and are erased at runtime. 
 - Semicolon inference as well as basic type inference for immutable local/global variables. 
 - Replace the naive mark and sweep GC with a generational GC which has multiple regions for objects of various 'ages'.  
 
@@ -154,6 +154,18 @@ docker build -t clox:linux -f Docker/[$LinuxDockerfile] .
 docker run -w /CLox-1.9.0/CLox -i -t clox:linux
 ```
 
+
+## Credits & Special Thanks
+
+#### Below is the attribution list for my CLox's design and implementation, please contact me if anything else is missing. This does not include 3rd-party libraries whose copyrights are already present in the header files.
+
+- [Robert Nystrom](https://github.com/munificent/craftinginterpreters): For the original Lox language specification and source code that this project is based on. 
+- Smalltalk-lang: For the inspiration of object and class model.
+- Ruby-lang: For the inspiration of generic ID map/table which allows inheritance and properties on any objects.
+- Javascript-lang: For the inspiration of object shape/hidden-class.
+- [Wren-lang](https://github.com/wren-lang/wren): For the inspiration of UTF-8 string implementation as well as dynamic array macros.
+- [Michael Malone(cometlang)](https://github.com/cometlang/comet): For the inspiration of exception and try/catch/finally statement. 
+- [RevengerWizard(teascript)](https://github.com/RevengerWizard/teascript): For the inspiration of reentrancy in Lox language. 
 
 ## FAQ
 
