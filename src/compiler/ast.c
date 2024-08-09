@@ -129,6 +129,18 @@ static char* astExprLiteralToString(Ast* ast, int indentLevel) {
     return NULL;
 }
 
+static char* astExprUnaryToString(Ast* ast, int indentLevel) {
+    char* operator = tokenToString(ast->token);
+    char* child = astToString(ast->children->elements[0], indentLevel);
+    size_t length = strlen(operator) + strlen(child) + 3;
+
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(%s %s)", operator, child);
+    }
+    return buffer;
+}
+
 char* astToString(Ast* ast, int indentLevel) {
     switch (ast->category) {
         case AST_CATEGORY_EXPR: {
@@ -139,6 +151,8 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprGroupingToString(ast, indentLevel);
                 case AST_EXPR_LITERAL:
                     return astExprLiteralToString(ast, indentLevel);
+                case AST_EXPR_UNARY:
+                    return astExprUnaryToString(ast, indentLevel);
                 default:
                     return NULL;
             }
