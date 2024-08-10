@@ -24,5 +24,8 @@ char* tokenToString(Token token) {
         buffer[token.length] = '\0';
         return buffer;
     }
-    exit(1);
+    else {
+        fprintf(stderr, "Not enough mempry to convert token to string.");
+        exit(1);
+    }
 }

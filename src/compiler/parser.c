@@ -423,8 +423,7 @@ static Ast* lambda(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* variable(Parser* parser, Token token, bool canAssign) {
-    // To be implemented
-    return NULL;
+    return emptyAst(AST_EXPR_VARIABLE, token);
 }
 
 static Ast* klass(Parser* parser, Token token, bool canAssign) {

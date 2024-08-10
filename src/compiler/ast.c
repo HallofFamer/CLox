@@ -79,15 +79,25 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
     else return AST_CATEGORY_OTHER;
 }
 
-static char* astExprBinaryToString(Ast* ast, int indentLevel) {
-    char* operator = tokenToString(ast->token);
+static char* AstExprAssignToString(Ast* ast, int indentLevel) {
     char* left = astToString(ast->children->elements[0], indentLevel);
     char* right = astToString(ast->children->elements[1], indentLevel);
-    size_t length = strlen(operator) + strlen(left) + strlen(right) + 4;
-
+    size_t length = strlen(left) + strlen(right) + 10;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
-        sprintf_s(buffer, length, "(%s %s %s)", left, operator, right);
+        sprintf_s(buffer, length, "(assign %s %s)", left, right);
+    }
+    return buffer;
+}
+
+static char* astExprBinaryToString(Ast* ast, int indentLevel) {
+    char* op = tokenToString(ast->token);
+    char* left = astToString(ast->children->elements[0], indentLevel);
+    char* right = astToString(ast->children->elements[1], indentLevel);
+    size_t length = strlen(op) + strlen(left) + strlen(right) + 4;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(%s %s %s)", left, op, right);
     }
     return buffer;
 }
@@ -98,7 +108,6 @@ static char* astExprGroupingToString(Ast* ast, int indentLevel) {
     char* exprOutput = astToString(expr, indentLevel);
     size_t length = (size_t)ast->token.length + 8;
     char* buffer = (char*)malloc(length + 1);
-
     if (buffer != NULL) {
         sprintf_s(buffer, length, "(group %s)", exprOutput);
     }
@@ -130,13 +139,22 @@ static char* astExprLiteralToString(Ast* ast, int indentLevel) {
 }
 
 static char* astExprUnaryToString(Ast* ast, int indentLevel) {
-    char* operator = tokenToString(ast->token);
+    char* op = tokenToString(ast->token);
     char* child = astToString(ast->children->elements[0], indentLevel);
-    size_t length = strlen(operator) + strlen(child) + 3;
-
+    size_t length = strlen(op) + strlen(child) + 3;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
-        sprintf_s(buffer, length, "(%s %s)", operator, child);
+        sprintf_s(buffer, length, "(%s %s)", op, child);
+    }
+    return buffer;
+}
+
+static char* astExprVariableToString(Ast* ast, int indentLevel) {
+    const char* name = tokenToString(ast->token);
+    size_t length = strlen(name) + 6;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(var %s)", name);
     }
     return buffer;
 }
@@ -145,6 +163,8 @@ char* astToString(Ast* ast, int indentLevel) {
     switch (ast->category) {
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
+                case AST_EXPR_ASSIGN:
+                    return AstExprAssignToString(ast, indentLevel);
                 case AST_EXPR_BINARY: 
                     return astExprBinaryToString(ast, indentLevel);
                 case AST_EXPR_GROUPING:
@@ -153,6 +173,8 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprLiteralToString(ast, indentLevel);
                 case AST_EXPR_UNARY:
                     return astExprUnaryToString(ast, indentLevel);
+                case AST_EXPR_VARIABLE:
+                    return astExprVariableToString(ast, indentLevel);
                 default:
                     return NULL;
             }
