@@ -79,7 +79,7 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
     else return AST_CATEGORY_OTHER;
 }
 
-static char* AstExprAssignToString(Ast* ast, int indentLevel) {
+static char* astExprAssignToString(Ast* ast, int indentLevel) {
     char* left = astToString(ast->children->elements[0], indentLevel);
     char* right = astToString(ast->children->elements[1], indentLevel);
     size_t length = strlen(left) + strlen(right) + 10;
@@ -164,7 +164,7 @@ char* astToString(Ast* ast, int indentLevel) {
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
                 case AST_EXPR_ASSIGN:
-                    return AstExprAssignToString(ast, indentLevel);
+                    return astExprAssignToString(ast, indentLevel);
                 case AST_EXPR_BINARY: 
                     return astExprBinaryToString(ast, indentLevel);
                 case AST_EXPR_GROUPING:

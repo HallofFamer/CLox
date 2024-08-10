@@ -668,8 +668,10 @@ static Ast* whileStatement(Parser* parser) {
 }
 
 static Ast* yieldStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Token token = parser->previous;
+    Ast* expr = expression(parser);
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after yield value.");
+    return newAst(AST_STMT_YIELD, token, 1, expr);
 }
 
 static Ast* statement(Parser* parser) {
