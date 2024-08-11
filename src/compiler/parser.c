@@ -648,8 +648,10 @@ static Ast* switchStatement(Parser* parser) {
 }
 
 static Ast* throwStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Token token = parser->previous;
+    Ast* expr = expression(parser);
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after thrown exception object.");
+    return newAst(AST_STMT_THROW, token, 1, expr);
 }
 
 static Ast* tryStatement(Parser* parser) {

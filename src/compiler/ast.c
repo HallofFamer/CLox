@@ -79,6 +79,16 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
     else return AST_CATEGORY_OTHER;
 }
 
+static char* astIndent(char* source, char* padding) {
+    size_t length = strlen(source) + strlen(padding);
+    char* result = (char*)malloc(length + 1);
+    if (result != NULL) {
+        strcpy(result, source);
+        strcat_s(result, length, padding);
+    }
+    return result;
+}
+
 static char* astExprAssignToString(Ast* ast, int indentLevel) {
     char* left = astToString(ast->children->elements[0], indentLevel);
     char* right = astToString(ast->children->elements[1], indentLevel);
