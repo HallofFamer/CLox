@@ -621,8 +621,18 @@ static Ast* forStatement(Parser* parser) {
 }
 
 static Ast* ifStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Token token = parser->previous;
+    consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    Ast* condition = expression(parser);
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+    Ast* thenBranch = statement(parser);
+
+    Ast* stmt = newAst(AST_STMT_IF, token, 2, condition, thenBranch);
+    if (match(parser, TOKEN_ELSE)) {
+        Ast* elseBranch = statement(parser);
+        astAppendChild(stmt, elseBranch);
+    }
+    return stmt;
 }
 
 static Ast* requireStatement(Parser* parser) {

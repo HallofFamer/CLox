@@ -80,11 +80,13 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
 }
 
 static char* astIndent(char* source, char* padding) {
-    size_t length = strlen(source) + strlen(padding);
-    char* result = (char*)malloc(length + 1);
+    size_t srcLength = strlen(source);
+    size_t padLendth = strlen(padding);
+    char* result = (char*)malloc(srcLength + padLendth + 1);
     if (result != NULL) {
-        strcpy(result, source);
-        strcat_s(result, length, padding);
+        memcpy(result, padding, padLendth);
+        memcpy(result + padLendth, source, srcLength);
+        result[srcLength + padLendth] = '\0';
     }
     return result;
 }
