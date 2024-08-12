@@ -79,7 +79,7 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
     else return AST_CATEGORY_OTHER;
 }
 
-static char* astIndent(char* source, char* padding) {
+static char* astPadString(char* source, char* padding) {
     size_t srcLength = strlen(source);
     size_t padLendth = strlen(padding);
     char* result = (char*)malloc(srcLength + padLendth + 1);
@@ -89,6 +89,14 @@ static char* astIndent(char* source, char* padding) {
         result[srcLength + padLendth] = '\0';
     }
     return result;
+}
+
+static char* astIndent(int indentLevel) {
+    char* buffer = "";
+    for (int i = 0; i < indentLevel; i++) {
+        buffer = astPadString(buffer, "  ");
+    }
+    return buffer;
 }
 
 static char* astExprAssignToString(Ast* ast, int indentLevel) {

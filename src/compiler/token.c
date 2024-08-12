@@ -9,10 +9,7 @@ Token emptyToken() {
 }
 
 Token syntheticToken(const char* text) {
-    Token token = {
-        .start = text,
-        .length = (int)strlen(text)
-    };
+    Token token = { .start = text, .length = (int)strlen(text) };
     return token;
 }
 

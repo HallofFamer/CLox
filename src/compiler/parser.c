@@ -675,8 +675,12 @@ static Ast* usingStatement(Parser* parser) {
 }
 
 static Ast* whileStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Token token = parser->previous;
+    consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    Ast* condition = expression(parser);
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+    Ast* body = statement(parser);
+    return newAst(AST_STMT_WHILE, token, 2, condition, body);
 }
 
 static Ast* yieldStatement(Parser* parser) {
