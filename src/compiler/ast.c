@@ -158,6 +158,10 @@ static char* astExprLiteralToString(Ast* ast, int indentLevel) {
     return NULL;
 }
 
+static char* astExprThisToString(Ast* ast, int indentLevel) {
+    return "(this)";
+}
+
 static char* astExprUnaryToString(Ast* ast, int indentLevel) {
     char* op = tokenToString(ast->token);
     char* child = astToString(ast->children->elements[0], indentLevel);
@@ -191,6 +195,8 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprGroupingToString(ast, indentLevel);
                 case AST_EXPR_LITERAL:
                     return astExprLiteralToString(ast, indentLevel);
+                case AST_EXPR_THIS: 
+                    return astExprThisToString(ast, indentLevel);
                 case AST_EXPR_UNARY:
                     return astExprUnaryToString(ast, indentLevel);
                 case AST_EXPR_VARIABLE:

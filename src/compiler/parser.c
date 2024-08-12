@@ -616,8 +616,26 @@ static Ast* expressionStatement(Parser* parser) {
 }
 
 static Ast* forStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Token token = parser->previous;
+    Ast* stmt = emptyAst(AST_STMT_FOR, token);
+    consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+    consume(parser, TOKEN_VAR, "Expect 'var' keyword after '(' in For loop.");
+
+    if (match(parser, TOKEN_LEFT_PAREN)) { 
+        astAppendChild(stmt, identifier(parser));
+        consume(parser, TOKEN_COMMA, "Expect ',' after first variable declaration.");
+        astAppendChild(stmt, identifier(parser));
+        consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after second variable declaration.");
+    }
+    else {
+        astAppendChild(stmt, identifier(parser));
+    }
+
+    consume(parser, TOKEN_COLON, "Expect ':' after variable name.");
+    astAppendChild(stmt, expression(parser));
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
+    astAppendChild(stmt, statement(parser));
+    return stmt;
 }
 
 static Ast* ifStatement(Parser* parser) {
@@ -754,8 +772,9 @@ static Ast* classDeclaration(Parser* parser) {
 }
 
 static Ast* funDeclaration(Parser* parser, bool isAsync) {
-    // To be implemented
-    return NULL;
+    Token name = parser->previous;
+    Ast* body = function(parser, PARSE_TYPE_FUNCTION, isAsync);
+    return newAst(AST_DECL_FUN, name, 1, body);
 }
 
 static Ast* namespaceDeclaration(Parser* parser) {
