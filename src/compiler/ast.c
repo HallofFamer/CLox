@@ -108,6 +108,23 @@ static char* astOutputChildExpr(Ast* ast, int indentLevel, int index) {
     return astToString(expr, indentLevel);
 }
 
+static char* astExprArrayToString(Ast* ast, int indentLevel) {
+    size_t length = 8;
+    char* buffer = (char*)malloc(length + 1);
+
+    if (buffer != NULL) {
+        Ast* argList = ast->children->elements[1];
+        sprintf_s(buffer, length, "(array [");
+        for (int i = 0; i < argList->children->count; i++) {
+            char* argOutput = astOutputChildExpr(ast, indentLevel, i);
+            buffer = astConcat(buffer, argOutput);
+            buffer = astConcat(buffer, " ");
+        }
+        buffer = astConcat(buffer, "]");
+    }
+    return buffer;
+}
+
 static char* astExprAssignToString(Ast* ast, int indentLevel) {
     char* left = astOutputChildExpr(ast, indentLevel, 0);
     char* right = astOutputChildExpr(ast, indentLevel, 1);
@@ -150,10 +167,31 @@ static char* astExprCallToString(Ast* ast, int indentLevel) {
         Ast* argList = ast->children->elements[1];
         sprintf_s(buffer, length, "(call %s (", exprOutput);
         for (int i = 0; i < argList->children->count; i++) {
-            char* argOutput = astToString(ast->children->elements[i], indentLevel);
+            char* argOutput = astOutputChildExpr(ast, indentLevel, i);
             buffer = astConcat(buffer, argOutput);
             buffer = astConcat(buffer, " ");
         }
+        buffer = astConcat(buffer, ")");
+    }
+    return buffer;
+}
+
+static char* astExprDictionaryToString(Ast* ast, int indentLevel) {
+    size_t length = 13;
+    char* buffer = (char*)malloc(length + 1);
+
+    if (buffer != NULL) {
+        Ast* argList = ast->children->elements[1];
+        sprintf_s(buffer, length, "(dictionary [");
+        for (int i = 0; i < argList->children->count; i += 2) {
+            char* keyOutput = astOutputChildExpr(ast, indentLevel, i);
+            char* valueOutput = astOutputChildExpr(ast, indentLevel, i + 1);
+            buffer = astConcat(buffer, keyOutput);
+            buffer = astConcat(buffer, ": ");
+            buffer = astConcat(buffer, valueOutput);
+            buffer = astConcat(buffer, " ");
+        }
+        buffer = astConcat(buffer, "]");
     }
     return buffer;
 }
@@ -164,6 +202,25 @@ static char* astExprGroupingToString(Ast* ast, int indentLevel) {
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
         sprintf_s(buffer, length, "(group %s)", exprOutput);
+    }
+    return buffer;
+}
+
+static char* astExprInvokeToString(Ast* ast, int indentLevel) {
+    char* receiverOutput = astOutputChildExpr(ast, indentLevel, 0);
+    char* methodOutput = astOutputChildExpr(ast, indentLevel, 1);
+    size_t length = strlen(receiverOutput) + strlen(methodOutput) + 10;
+    char* buffer = (char*)malloc(length + 1);
+
+    if (buffer != NULL) {
+        Ast* argList = ast->children->elements[2];
+        sprintf_s(buffer, length, "(invoke %s.%s(", receiverOutput, methodOutput);
+        for (int i = 0; i < argList->children->count; i++) {
+            char* argOutput = astOutputChildExpr(ast, indentLevel, i);
+            buffer = astConcat(buffer, argOutput);
+            buffer = astConcat(buffer, " ");
+        }
+        buffer = astConcat(buffer, ")");
     }
     return buffer;
 }
@@ -231,6 +288,8 @@ char* astToString(Ast* ast, int indentLevel) {
     switch (ast->category) {
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
+                case AST_EXPR_ARRAY:
+                    return astExprArrayToString(ast, indentLevel);
                 case AST_EXPR_ASSIGN:
                     return astExprAssignToString(ast, indentLevel);
                 case AST_EXPR_AWAIT:
@@ -239,8 +298,12 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprBinaryToString(ast, indentLevel);
                 case AST_EXPR_CALL:
                     return astExprCallToString(ast, indentLevel);
+                case AST_EXPR_DICTIONARY:
+                    return astExprDictionaryToString(ast, indentLevel);
                 case AST_EXPR_GROUPING:
                     return astExprGroupingToString(ast, indentLevel);
+                case AST_EXPR_INVOKE:
+                    return astExprInvokeToString(ast, indentLevel);
                 case AST_EXPR_LITERAL:
                     return astExprLiteralToString(ast, indentLevel);
                 case AST_EXPR_THIS: 

@@ -366,7 +366,7 @@ static Ast* interpolation(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* array(Parser* parser, Token token, Ast* element) {
-    Ast* array = newAst(AST_EXPR_COLLECTION, token, 1, element);
+    Ast* array = newAst(AST_EXPR_ARRAY, token, 1, element);
     uint8_t elementCount = 1;
     while (match(parser, TOKEN_COMMA)) {
         element = expression(parser);
@@ -383,7 +383,7 @@ static Ast* array(Parser* parser, Token token, Ast* element) {
 }
 
 static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
-    Ast* dict = newAst(AST_EXPR_COLLECTION, token, 2, key, value);
+    Ast* dict = newAst(AST_EXPR_DICTIONARY, token, 2, key, value);
     uint8_t entryCount = 1;
     while (match(parser, TOKEN_COMMA)) {
         Ast* key = expression(parser);
@@ -403,7 +403,7 @@ static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
 }
 
 static Ast* collection(Parser* parser, Token token, bool canAssign) { 
-    if (match(parser, TOKEN_RIGHT_BRACKET)) return emptyAst(AST_EXPR_COLLECTION, token);
+    if (match(parser, TOKEN_RIGHT_BRACKET)) return emptyAst(AST_EXPR_ARRAY, token);
     else {
         Ast* first = expression(parser);
         if (match(parser, TOKEN_COLON)) {
@@ -688,8 +688,25 @@ static Ast* tryStatement(Parser* parser) {
 }
 
 static Ast* usingStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Token token = parser->previous;
+    Ast* _namespace = emptyAst(AST_LIST_VAR, token);
+    Ast* subNamespace = NULL;
+    Ast* alias = NULL;
+    int namespaceDepth = 0;
+
+    do {
+        consume(parser, TOKEN_IDENTIFIER, "Expect namespace identifier.");
+        subNamespace = emptyAst(AST_EXPR_VARIABLE, parser->previous);
+        astAppendChild(_namespace, subNamespace);
+    } while (match(parser, TOKEN_DOT));
+
+    if (match(parser, TOKEN_AS)) {
+        consume(parser, TOKEN_IDENTIFIER, "Expect alias after 'as'.");
+        alias = emptyAst(AST_EXPR_VARIABLE, parser->previous);
+    }
+    else alias = subNamespace;
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after using statement.");
+    return newAst(AST_STMT_USING, token, 2, _namespace, alias);
 }
 
 static Ast* whileStatement(Parser* parser) {
