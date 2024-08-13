@@ -79,14 +79,14 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
     else return AST_CATEGORY_OTHER;
 }
 
-static char* astPadString(char* source, char* padding) {
+static char* astConcat(char* source, char* dest) {
     size_t srcLength = strlen(source);
-    size_t padLendth = strlen(padding);
-    char* result = (char*)malloc(srcLength + padLendth + 1);
+    size_t destLendth = strlen(dest);
+    char* result = (char*)malloc(srcLength + destLendth + 1);
     if (result != NULL) {
-        memcpy(result, padding, padLendth);
-        memcpy(result + padLendth, source, srcLength);
-        result[srcLength + padLendth] = '\0';
+        memcpy(result, source, srcLength);
+        memcpy(result + srcLength, dest, destLendth);
+        result[srcLength + destLendth] = '\0';
     }
     return result;
 }
@@ -94,14 +94,23 @@ static char* astPadString(char* source, char* padding) {
 static char* astIndent(int indentLevel) {
     char* buffer = "";
     for (int i = 0; i < indentLevel; i++) {
-        buffer = astPadString(buffer, "  ");
+        buffer = astConcat(buffer, "  ");
     }
     return buffer;
 }
 
+static char* astOutputChildExpr(Ast* ast, int indentLevel, int index) {
+    if (ast->children == NULL || ast->children->count < index) {
+        fprintf(stderr, "Ast has no children or invalid child index specified.");
+        exit(1);
+    }
+    Ast* expr = ast->children->elements[index];
+    return astToString(expr, indentLevel);
+}
+
 static char* astExprAssignToString(Ast* ast, int indentLevel) {
-    char* left = astToString(ast->children->elements[0], indentLevel);
-    char* right = astToString(ast->children->elements[1], indentLevel);
+    char* left = astOutputChildExpr(ast, indentLevel, 0);
+    char* right = astOutputChildExpr(ast, indentLevel, 1);
     size_t length = strlen(left) + strlen(right) + 10;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
@@ -110,10 +119,20 @@ static char* astExprAssignToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
+static char* astExprAwaitToString(Ast* ast, int indentLevel) {
+    char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);;
+    size_t length = (size_t)ast->token.length + 8;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(await %s)", exprOutput);
+    }
+    return buffer;
+}
+
 static char* astExprBinaryToString(Ast* ast, int indentLevel) {
     char* op = tokenToString(ast->token);
-    char* left = astToString(ast->children->elements[0], indentLevel);
-    char* right = astToString(ast->children->elements[1], indentLevel);
+    char* left = astOutputChildExpr(ast, indentLevel, 0);
+    char* right = astOutputChildExpr(ast, indentLevel, 1);
     size_t length = strlen(op) + strlen(left) + strlen(right) + 4;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
@@ -122,10 +141,25 @@ static char* astExprBinaryToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
+static char* astExprCallToString(Ast* ast, int indentLevel) {
+    char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);
+    size_t length = (size_t)ast->token.length + 8;
+    char* buffer = (char*)malloc(length + 1);
+
+    if (buffer != NULL) {
+        Ast* argList = ast->children->elements[1];
+        sprintf_s(buffer, length, "(call %s (", exprOutput);
+        for (int i = 0; i < argList->children->count; i++) {
+            char* argOutput = astToString(ast->children->elements[i], indentLevel);
+            buffer = astConcat(buffer, argOutput);
+            buffer = astConcat(buffer, " ");
+        }
+    }
+    return buffer;
+}
+
 static char* astExprGroupingToString(Ast* ast, int indentLevel) {
-    if (ast->children == NULL || ast->children->count == 0) return NULL;
-    Ast* expr = ast->children->elements[0];
-    char* exprOutput = astToString(expr, indentLevel);
+    char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);
     size_t length = (size_t)ast->token.length + 8;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
@@ -164,7 +198,7 @@ static char* astExprThisToString(Ast* ast, int indentLevel) {
 
 static char* astExprUnaryToString(Ast* ast, int indentLevel) {
     char* op = tokenToString(ast->token);
-    char* child = astToString(ast->children->elements[0], indentLevel);
+    char* child = astOutputChildExpr(ast, indentLevel, 0);
     size_t length = strlen(op) + strlen(child) + 3;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
@@ -183,14 +217,28 @@ static char* astExprVariableToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
+static char* astExprYieldToString(Ast* ast, int indentLevel) {
+    char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);;
+    size_t length = (size_t)ast->token.length + 8;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(yield %s)", exprOutput);
+    }
+    return buffer;
+}
+
 char* astToString(Ast* ast, int indentLevel) {
     switch (ast->category) {
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
                 case AST_EXPR_ASSIGN:
                     return astExprAssignToString(ast, indentLevel);
+                case AST_EXPR_AWAIT:
+                    return astExprAwaitToString(ast, indentLevel);
                 case AST_EXPR_BINARY: 
                     return astExprBinaryToString(ast, indentLevel);
+                case AST_EXPR_CALL:
+                    return astExprCallToString(ast, indentLevel);
                 case AST_EXPR_GROUPING:
                     return astExprGroupingToString(ast, indentLevel);
                 case AST_EXPR_LITERAL:
@@ -201,6 +249,8 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprUnaryToString(ast, indentLevel);
                 case AST_EXPR_VARIABLE:
                     return astExprVariableToString(ast, indentLevel);
+                case AST_EXPR_YIELD:
+                    return astExprYieldToString(ast, indentLevel);
                 default:
                     return NULL;
             }

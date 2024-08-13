@@ -761,9 +761,46 @@ static Ast* behavior(Parser* parser, ParseBehaviorType type, Token name) {
     return NULL;
 }
 
+static Ast* parameterList(Parser* parser, Token token) {
+    Ast* params = emptyAst(AST_LIST_VAR, token);
+    int arity = 0;
+    if (match(parser, TOKEN_DOT_DOT)) {
+        // variadic parameter, implement later.
+    }
+
+    do {
+        arity++;
+        if (arity > UINT8_MAX) {
+            errorAtCurrent(parser, "Can't have more than 255 parameters.");
+        }
+
+        bool isMutable = match(parser, TOKEN_VAR);
+        Ast* param = identifier(parser);
+        astAppendChild(params, param);
+    } while (match(parser, TOKEN_COMMA));
+
+    return params;
+}
+
+static Ast* functionParameters(Parser* parser) {
+    consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after function keyword/name.");
+    Ast* params = parameterList(parser, parser->previous);
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+    return params;
+}
+
+static Ast* lambdaParameters(Parser* parser) {
+    Token token = parser->previous;
+    if (!match(parser, TOKEN_PIPE)) return emptyAst(AST_LIST_VAR, token);
+    return parameterList(parser, token);
+}
+
 static Ast* function(Parser* parser, ParseFunctionType type, bool isAsync) {
-    // To be implemented
-    return NULL;
+    Token token = parser->previous;
+    Ast* params = (type == PARSE_TYPE_LAMBDA) ? lambdaParameters(parser) : functionParameters(parser);
+    Ast* body = block(parser);
+    return newAst(AST_EXPR_FUNCTION, token, 2, params, body);
 }
 
 static Ast* classDeclaration(Parser* parser) {
