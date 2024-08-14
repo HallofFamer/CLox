@@ -196,6 +196,17 @@ static char* astExprDictionaryToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
+static char* astExprGetToString(Ast* ast, int indentLevel) {
+    char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);
+    char* propOutput = tokenToString(ast->token);
+    size_t length = strlen(exprOutput) + strlen(propOutput) + 15;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(getProperty %s.%s)", exprOutput, propOutput);
+    }
+    return buffer;
+}
+
 static char* astExprGroupingToString(Ast* ast, int indentLevel) {
     char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);
     size_t length = (size_t)ast->token.length + 8;
@@ -300,6 +311,8 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprCallToString(ast, indentLevel);
                 case AST_EXPR_DICTIONARY:
                     return astExprDictionaryToString(ast, indentLevel);
+                case AST_EXPR_GET:
+                    return astExprGetToString(ast, indentLevel);
                 case AST_EXPR_GROUPING:
                     return astExprGroupingToString(ast, indentLevel);
                 case AST_EXPR_INVOKE:

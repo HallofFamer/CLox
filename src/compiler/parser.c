@@ -683,8 +683,29 @@ static Ast* throwStatement(Parser* parser) {
 }
 
 static Ast* tryStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Ast* stmt = emptyAst(AST_STMT_TRY, parser->previous);
+    Ast* tryStmt = statement(parser);
+    astAppendChild(stmt, tryStmt);
+
+    if (match(parser, TOKEN_CATCH)) {
+        consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after catch");
+        consume(parser, TOKEN_IDENTIFIER, "Expect type name to catch");
+        Token exceptionType = parser->previous;
+        Ast* exceptionVar = identifier(parser);
+
+        consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after catch statement");
+        Ast* catchBody = statement(parser);
+        Ast* catchStmt = newAst(AST_STMT_CATCH, exceptionType, 2, exceptionVar, catchBody);
+        astAppendChild(stmt, catchStmt);
+    }
+    else errorAtCurrent(parser, "Must have a catch statement following a try statement.");
+
+    if (match(parser, TOKEN_FINALLY)) {
+        Ast* finallyStmt = statement(parser);
+        astAppendChild(stmt, finallyStmt);
+    }
+
+    return stmt;
 }
 
 static Ast* usingStatement(Parser* parser) {
