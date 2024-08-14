@@ -338,6 +338,12 @@ static Ast* dot(Parser* parser, Token token, Ast* left, bool canAssign) {
     return expr;
 }
 
+static Ast* logical(Parser* parser, Token token, Ast* left, bool canAssign) {
+    ParseRule* rule = getRule(parser->previous.type);
+    Ast* right = parsePrecedence(parser, (Precedence)(rule->precedence + 1));
+    return newAst(AST_EXPR_LOGICAL, token, 2, left, right);
+}
+
 static Ast* question(Parser* parser, Token token, Ast* left, bool canAssign) { 
     // To be implemented
     return NULL;
@@ -502,8 +508,8 @@ ParseRule parseRules[] = {
     [TOKEN_STRING]         = {literal,       NULL,        PREC_NONE},
     [TOKEN_INTERPOLATION]  = {interpolation, NULL,        PREC_NONE},
     [TOKEN_NUMBER]         = {literal,       NULL,        PREC_NONE},
-    [TOKEN_INT]            = {literal,      NULL,        PREC_NONE},
-    [TOKEN_AND]            = {NULL,          binary,      PREC_AND},
+    [TOKEN_INT]            = {literal,       NULL,        PREC_NONE},
+    [TOKEN_AND]            = {NULL,          logical,     PREC_AND},
     [TOKEN_AS]             = {NULL,          NULL,        PREC_NONE},
     [TOKEN_ASYNC]          = {async,         NULL,        PREC_NONE},
     [TOKEN_AWAIT]          = {await,         NULL,        PREC_NONE},
@@ -521,7 +527,7 @@ ParseRule parseRules[] = {
     [TOKEN_IF]             = {NULL,          NULL,        PREC_NONE},
     [TOKEN_NAMESPACE]      = {NULL,          NULL,        PREC_NONE},
     [TOKEN_NIL]            = {literal,       NULL,        PREC_NONE},
-    [TOKEN_OR]             = {NULL,          binary,      PREC_OR},
+    [TOKEN_OR]             = {NULL,          logical,     PREC_OR},
     [TOKEN_REQUIRE]        = {NULL,          NULL,        PREC_NONE},
     [TOKEN_RETURN]         = {NULL,          NULL,        PREC_NONE},
     [TOKEN_SUPER]          = {super_,        NULL,        PREC_NONE},

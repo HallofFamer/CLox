@@ -260,6 +260,22 @@ static char* astExprLiteralToString(Ast* ast, int indentLevel) {
     return NULL;
 }
 
+static char* astExprLogicalToString(Ast* ast, int indentLevel) {
+    return astExprBinaryToString(ast, indentLevel);
+}
+
+static char* astExprSetToString(Ast* ast, int indentLevel) {
+    char* left = astOutputChildExpr(ast, indentLevel, 0);
+    char* prop = tokenToString(ast->token);
+    char* right = astOutputChildExpr(ast, indentLevel, 1);
+    size_t length = strlen(left) + strlen(prop) + strlen(right) + 18;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(setProperty %s.%s = %s)", left, prop, right);
+    }
+    return buffer;
+}
+
 static char* astExprThisToString(Ast* ast, int indentLevel) {
     return "(this)";
 }
@@ -319,6 +335,10 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprInvokeToString(ast, indentLevel);
                 case AST_EXPR_LITERAL:
                     return astExprLiteralToString(ast, indentLevel);
+                case AST_EXPR_LOGICAL:
+                    return astExprLogicalToString(ast, indentLevel);
+                case AST_EXPR_SET:
+                    return astExprSetToString(ast, indentLevel);
                 case AST_EXPR_THIS: 
                     return astExprThisToString(ast, indentLevel);
                 case AST_EXPR_UNARY:
