@@ -894,8 +894,18 @@ static Ast* funDeclaration(Parser* parser, bool isAsync) {
 }
 
 static Ast* namespaceDeclaration(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Ast* decl = emptyAst(AST_DECL_NAMESPACE, parser->previous);
+    uint8_t namespaceDepth = 0;
+    do {
+        if (namespaceDepth > UINT4_MAX) {
+            errorAtCurrent(parser, "Can't have more than 15 levels of namespace depth.");
+        }
+        astAppendChild(decl, identifier(parser));
+        namespaceDepth++;
+    } while (match(parser, TOKEN_DOT));
+
+    consume(parser, TOKEN_SEMICOLON, "Expect semicolon after namespace declaration.");
+    return decl;
 }
 
 static Ast* traitDeclaration(Parser* parser) {
@@ -967,7 +977,7 @@ Ast* parse(Parser* parser) {
     }
 
 #ifdef DEBUG_PRINT_AST
-    const char* astString = astPrint(ast, 0);
+    const char* astString = astToString(ast, 0);
     printf("%s", astString);
 #endif
 
