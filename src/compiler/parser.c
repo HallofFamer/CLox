@@ -677,8 +677,43 @@ static Ast* returnStatement(Parser* parser) {
 }
 
 static Ast* switchStatement(Parser* parser) {
-    // To be implemented
-    return NULL;
+    Ast* stmt = emptyAst(AST_STMT_SWITCH, parser->previous);
+    consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'switch'.");
+    Ast* expr = expression(parser);
+    astAppendChild(stmt, expr);
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after value.");
+    consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before switch cases.");
+    Ast* caseListStmt = emptyAst(AST_LIST_STMT, parser->previous);
+    astAppendChild(stmt, caseListStmt);
+
+    int state = 0;
+    int caseCount = 0;
+    while (!match(parser, TOKEN_RIGHT_BRACE) && !check(parser, TOKEN_EOF)) {
+        if (match(parser, TOKEN_CASE) || match(parser, TOKEN_DEFAULT)) {
+            Token caseToken = parser->previous;
+            if (state == 1) caseCount++;
+            if (state == 2) error(parser, "Can't have another case or default after the default case.");
+
+            if (caseToken.type == TOKEN_CASE) {
+                state = 1;
+                Ast* caseLabel = expression(parser);
+                consume(parser, TOKEN_COLON, "Expect ':' after case value.");
+                Token token = parser->previous;
+                Ast* caseBody = statement(parser);
+                Ast* caseStmt = newAst(AST_STMT_CASE, token, 2, caseLabel, caseBody);
+                astAppendChild(caseListStmt, caseStmt);
+            }
+            else {
+                state = 2;
+                Token token = parser->previous;
+                consume(parser, TOKEN_COLON, "Expect ':' after default.");
+                Ast* defaultStmt = statement(parser);
+                astAppendChild(stmt, defaultStmt);
+            }
+        }
+    }
+
+    return stmt;
 }
 
 static Ast* throwStatement(Parser* parser) {

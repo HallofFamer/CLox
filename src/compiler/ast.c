@@ -276,6 +276,16 @@ static char* astExprSetToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
+static char* astExprSuperToString(Ast* ast, int indentLevel) {
+    char* prop = tokenToString(ast->token);
+    size_t length = strlen(prop) + 17;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(superGet super.%s)", prop);
+    }
+    return buffer;
+}
+
 static char* astExprThisToString(Ast* ast, int indentLevel) {
     return "(this)";
 }
@@ -339,6 +349,8 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprLogicalToString(ast, indentLevel);
                 case AST_EXPR_SET:
                     return astExprSetToString(ast, indentLevel);
+                case AST_EXPR_SUPER:
+                    return astExprSuperToString(ast, indentLevel);
                 case AST_EXPR_THIS: 
                     return astExprThisToString(ast, indentLevel);
                 case AST_EXPR_UNARY:
