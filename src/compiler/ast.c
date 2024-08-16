@@ -208,11 +208,11 @@ static char* astExprFunctionToString(Ast* ast, int indentLevel) {
 }
 
 static char* astExprGroupingToString(Ast* ast, int indentLevel) {
-    char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);
+    char* expr = astOutputChildExpr(ast, indentLevel, 0);
     size_t length = (size_t)ast->token.length + 8;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
-        sprintf_s(buffer, length, "(group %s)", exprOutput);
+        sprintf_s(buffer, length, "(group %s)", expr);
     }
     return buffer;
 }
@@ -364,13 +364,68 @@ static char* astExprVariableToString(Ast* ast, int indentLevel) {
 }
 
 static char* astExprYieldToString(Ast* ast, int indentLevel) {
-    char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);;
+    char* expr = astOutputChildExpr(ast, indentLevel, 0);;
     size_t length = (size_t)ast->token.length + 8;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
-        sprintf_s(buffer, length, "(yield %s)", exprOutput);
+        sprintf_s(buffer, length, "(yield %s)", expr);
     }
     return buffer;
+}
+
+static char* astStmtAwaitToString(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    size_t length = strlen(indent) + 6;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "%s(await", indent);
+    }
+
+    char* expr = astOutputChildExpr(ast, indentLevel, 0);
+    buffer = astConcat(buffer, " ");
+    buffer = astConcat(buffer, expr);
+    buffer = astConcat(buffer, ")\n");
+    return buffer;
+}
+
+static char* astStmtBlockToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astStmtBreakToString(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    size_t length = strlen(indent) + 8;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "%s(break)\n", indent);
+    }
+    return buffer;
+}
+
+static char* astStmtCaseToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astStmtCatchToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astStmtContinueToString(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    size_t length = strlen(indent) + 11;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "%s(continue)\n", indent);
+    }
+    return buffer;
+}
+
+static char* astStmtExpressionToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
 }
 
 char* astToString(Ast* ast, int indentLevel) {
@@ -423,7 +478,26 @@ char* astToString(Ast* ast, int indentLevel) {
                     return NULL;
             }
         }
-            
+        case AST_CATEGORY_STMT: {
+            switch (ast->type) {
+                case AST_STMT_AWAIT:
+                    return astStmtAwaitToString(ast, indentLevel);
+                case AST_STMT_BLOCK:
+                    return astStmtBlockToString(ast, indentLevel);
+                case AST_STMT_BREAK:
+                    return astStmtBreakToString(ast, indentLevel);
+                case AST_STMT_CASE:
+                    return astStmtCaseToString(ast, indentLevel);
+                case AST_STMT_CATCH:
+                    return astStmtCatchToString(ast, indentLevel);
+                case AST_STMT_CONTINUE:
+                    return astStmtContinueToString(ast, indentLevel);
+                case AST_STMT_EXPRESSION:
+                    return astStmtExpressionToString(ast, indentLevel);
+                default: 
+                    return NULL;
+            }
+        }
     }
     return NULL;
 }

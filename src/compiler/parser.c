@@ -842,6 +842,45 @@ static Ast* statement(Parser* parser) {
     }
 }
 
+static Ast* methods(Parser* parser, Token* name) {
+    consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before class/trait body.");
+    Ast* methodList = emptyAst(AST_LIST_METHOD, *name);
+
+    while (!check(parser, TOKEN_RIGHT_BRACE) && !check(parser, TOKEN_EOF)) {
+        bool isAsync = false, isClass = false, isInitializer = false;
+        if (match(parser, TOKEN_ASYNC)) isAsync = true;
+        if (match(parser, TOKEN_CLASS)) isClass = true;
+        consume(parser, TOKEN_IDENTIFIER, "Expect method name.");
+
+        if (parser->previous.length == 8 && memcmp(parser->previous.start, "__init__", 8) == 0) {
+            isInitializer = true;
+        }
+        Ast* method = function(parser, PARSE_TYPE_METHOD, isAsync);
+        astAppendChild(methodList, method);
+    }
+
+    consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after class/trait body.");
+    return methodList;
+}
+
+static Ast* traits(Parser* parser, Token* name) {
+    Ast* traitList = emptyAst(AST_LIST_VAR, *name);
+    uint8_t traitCount = 0;
+
+    do {
+        traitCount++;
+        if (traitCount > UINT4_MAX) {
+            errorAtCurrent(parser, "Can't have more than 15 parameters.");
+        }
+
+        consume(parser, TOKEN_IDENTIFIER, "Expect class/trait name.");
+        Token traitName = parser->previous;
+        Ast* trait = emptyAst(AST_EXPR_VARIABLE, traitName);
+    } while (match(parser, TOKEN_COMMA));
+
+    return traitList;
+}
+
 static Ast* behavior(Parser* parser, ParseBehaviorType type, Token name) {
     // To be implemented
     return NULL;
@@ -890,8 +929,20 @@ static Ast* function(Parser* parser, ParseFunctionType type, bool isAsync) {
 }
 
 static Ast* classDeclaration(Parser* parser) {
-    // To be implemented
-    return NULL;
+    consume(parser, TOKEN_IDENTIFIER, "Expect class name.");
+    Token className = parser->previous;
+    Ast* superClass = NULL;
+
+    if (match(parser, TOKEN_LESS)) {
+        consume(parser, TOKEN_IDENTIFIER, "Expect super class name.");
+        Token superClassName = parser->previous;
+        Ast* superClass = emptyAst(AST_EXPR_VARIABLE, superClassName);
+    }
+    else superClass = emptyAst(AST_EXPR_VARIABLE, syntheticToken("Object"));
+
+    Ast* traitList = traits(parser, &className);
+    Ast* methodList = methods(parser, &className);
+    return newAst(AST_DECL_CLASS, className, 3, superClass, traitList, methodList);
 }
 
 static Ast* funDeclaration(Parser* parser, bool isAsync) {
@@ -916,8 +967,11 @@ static Ast* namespaceDeclaration(Parser* parser) {
 }
 
 static Ast* traitDeclaration(Parser* parser) {
-    // To be implemented
-    return NULL;
+    consume(parser, TOKEN_IDENTIFIER, "Expect trait name.");
+    Token traitName = parser->previous;
+    Ast* traitList = traits(parser, &traitName);
+    Ast* methodList = methods(parser, &traitName);
+    return newAst(AST_DECL_TRAIT, traitName, 2, traitList, methodList);
 }
 
 static Ast* varDeclaration(Parser* parser, bool isMutable) {
