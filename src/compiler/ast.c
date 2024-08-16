@@ -207,17 +207,6 @@ static char* astExprFunctionToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
-static char* astExprGetToString(Ast* ast, int indentLevel) {
-    char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);
-    char* propOutput = tokenToString(ast->token);
-    size_t length = strlen(exprOutput) + strlen(propOutput) + 15;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(getProperty %s.%s)", exprOutput, propOutput);
-    }
-    return buffer;
-}
-
 static char* astExprGroupingToString(Ast* ast, int indentLevel) {
     char* exprOutput = astOutputChildExpr(ast, indentLevel, 0);
     size_t length = (size_t)ast->token.length + 8;
@@ -229,17 +218,17 @@ static char* astExprGroupingToString(Ast* ast, int indentLevel) {
 }
 
 static char* astExprInvokeToString(Ast* ast, int indentLevel) {
-    char* receiverOutput = astOutputChildExpr(ast, indentLevel, 0);
-    char* methodOutput = astOutputChildExpr(ast, indentLevel, 1);
-    size_t length = strlen(receiverOutput) + strlen(methodOutput) + 10;
+    char* receiver = astOutputChildExpr(ast, indentLevel, 0);
+    char* method = astOutputChildExpr(ast, indentLevel, 1);
+    size_t length = strlen(receiver) + strlen(method) + 10;
     char* buffer = (char*)malloc(length + 1);
 
     if (buffer != NULL) {
         Ast* argList = ast->children->elements[2];
-        sprintf_s(buffer, length, "(invoke %s.%s(", receiverOutput, methodOutput);
+        sprintf_s(buffer, length, "(invoke %s.%s(", receiver, method);
         for (int i = 0; i < argList->children->count; i++) {
-            char* argOutput = astOutputChildExpr(ast, indentLevel, i);
-            buffer = astConcat(buffer, argOutput);
+            char* arg = astOutputChildExpr(ast, indentLevel, i);
+            buffer = astConcat(buffer, arg);
             buffer = astConcat(buffer, " ");
         }
         buffer = astConcat(buffer, ")");
@@ -275,24 +264,76 @@ static char* astExprLogicalToString(Ast* ast, int indentLevel) {
     return astExprBinaryToString(ast, indentLevel);
 }
 
-static char* astExprSetToString(Ast* ast, int indentLevel) {
+static char* astExprPropertyGetToString(Ast* ast, int indentLevel) {
+    char* expr = astOutputChildExpr(ast, indentLevel, 0);
+    char* prop = tokenToString(ast->token);
+    size_t length = strlen(expr) + strlen(prop) + 15;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(propertyGet %s.%s)", expr, prop);
+    }
+    return buffer;
+}
+
+static char* astExprPropertySetToString(Ast* ast, int indentLevel) {
     char* left = astOutputChildExpr(ast, indentLevel, 0);
     char* prop = tokenToString(ast->token);
     char* right = astOutputChildExpr(ast, indentLevel, 1);
     size_t length = strlen(left) + strlen(prop) + strlen(right) + 18;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
-        sprintf_s(buffer, length, "(setProperty %s.%s = %s)", left, prop, right);
+        sprintf_s(buffer, length, "(propertySet %s.%s = %s)", left, prop, right);
     }
     return buffer;
 }
 
-static char* astExprSuperToString(Ast* ast, int indentLevel) {
+static char* astExprSubscriptGetToString(Ast* ast, int indentLevel) {
+    char* expr = astOutputChildExpr(ast, indentLevel, 0);
+    char* index = astOutputChildExpr(ast, indentLevel, 1);
+    size_t length = strlen(expr) + strlen(index) + 17;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(subscriptGet %s[%s])", expr, index);
+    }
+    return buffer;
+}
+
+static char* astExprSubscriptSetToString(Ast* ast, int indentLevel) {
+    char* left = astOutputChildExpr(ast, indentLevel, 0);
+    char* index = astOutputChildExpr(ast, indentLevel, 1);
+    char* right = astOutputChildExpr(ast, indentLevel, 2);
+    size_t length = strlen(left) + strlen(index) + strlen(right) + 20;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "(subscriptSet %s[%s] = %s)", left, index, right);
+    }
+    return buffer;
+}
+
+static char* astExprSuperGetToString(Ast* ast, int indentLevel) {
     char* prop = tokenToString(ast->token);
     size_t length = strlen(prop) + 17;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
         sprintf_s(buffer, length, "(superGet super.%s)", prop);
+    }
+    return buffer;
+}
+
+static char* astExprSuperInvokeToString(Ast* ast, int indentLevel) {
+    char* method = tokenToString(ast->token);
+    size_t length = strlen(method) + 15;
+    char* buffer = (char*)malloc(length + 1);
+
+    if (buffer != NULL) {
+        Ast* argList = ast->children->elements[0];
+        sprintf_s(buffer, length, "(invoke super.%s(", method);
+        for (int i = 0; i < argList->children->count; i++) {
+            char* arg = astOutputChildExpr(ast, indentLevel, i);
+            buffer = astConcat(buffer, arg);
+            buffer = astConcat(buffer, " ");
+        }
+        buffer = astConcat(buffer, ")");
     }
     return buffer;
 }
@@ -350,8 +391,6 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprDictionaryToString(ast, indentLevel);
                 case AST_EXPR_FUNCTION:
                     return astExprFunctionToString(ast, indentLevel);
-                case AST_EXPR_GET:
-                    return astExprGetToString(ast, indentLevel);
                 case AST_EXPR_GROUPING:
                     return astExprGroupingToString(ast, indentLevel);
                 case AST_EXPR_INVOKE:
@@ -360,10 +399,18 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprLiteralToString(ast, indentLevel);
                 case AST_EXPR_LOGICAL:
                     return astExprLogicalToString(ast, indentLevel);
-                case AST_EXPR_SET:
-                    return astExprSetToString(ast, indentLevel);
-                case AST_EXPR_SUPER:
-                    return astExprSuperToString(ast, indentLevel);
+                case AST_EXPR_PROPERTY_GET:
+                    return astExprPropertyGetToString(ast, indentLevel);
+                case AST_EXPR_PROPERTY_SET:
+                    return astExprPropertySetToString(ast, indentLevel);
+                case AST_EXPR_SUBSCRIPT_GET:
+                    return astExprSubscriptGetToString(ast, indentLevel);
+                case AST_EXPR_SUBSCRIPT_SET:
+                    return astExprSubscriptSetToString(ast, indentLevel);
+                case AST_EXPR_SUPER_GET:
+                    return astExprSuperGetToString(ast, indentLevel);
+                case AST_EXPR_SUPER_INVOKE:
+                    return astExprSuperInvokeToString(ast, indentLevel);
                 case AST_EXPR_THIS: 
                     return astExprThisToString(ast, indentLevel);
                 case AST_EXPR_UNARY:

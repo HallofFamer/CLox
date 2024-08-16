@@ -322,18 +322,18 @@ static Ast* call(Parser* parser, Token token, Ast* left, bool canAssign) {
 }
 
 static Ast* dot(Parser* parser, Token token, Ast* left, bool canAssign) { 
-    Ast* right = identifier(parser);
+    Ast* property = identifier(parser);
     Ast* expr = NULL;
 
     if (canAssign && match(parser, TOKEN_EQUAL)) {
-        Ast* last = expression(parser);
-        expr = newAst(AST_EXPR_SET, token, 3, left, right, last);
+        Ast* right = expression(parser);
+        expr = newAst(AST_EXPR_PROPERTY_SET, token, 3, left, property, right);
     }
     else if (match(parser, TOKEN_LEFT_PAREN)) {
-        Ast* last = argumentList(parser);
-        expr = newAst(AST_EXPR_INVOKE, token, 3, left, right, last);
+        Ast* right = argumentList(parser);
+        expr = newAst(AST_EXPR_INVOKE, token, 3, left, property, right);
     }
-    else expr = newAst(AST_EXPR_GET, token, 2, left, right);
+    else expr = newAst(AST_EXPR_PROPERTY_GET, token, 2, left, property);
 
     return expr;
 }
@@ -350,8 +350,16 @@ static Ast* question(Parser* parser, Token token, Ast* left, bool canAssign) {
 }
 
 static Ast* subscript(Parser* parser, Token token, Ast* left, bool canAssign) { 
-    // To be implemented
-    return NULL;
+    Ast* expr = NULL;
+    Ast* index = expression(parser);
+    consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after subscript.");
+
+    if (canAssign && match(parser, TOKEN_EQUAL)) {
+        Ast* right = expression(parser);
+        expr = newAst(AST_EXPR_SUBSCRIPT_SET, token, 3, left, index, right);
+    }
+    else expr = newAst(AST_EXPR_SUBSCRIPT_GET, token, 2, left, index);
+    return expr;
 }
 
 static Ast* literal(Parser* parser, Token token, bool canAssign) {
@@ -441,16 +449,15 @@ static Ast* trait(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* super_(Parser* parser, Token token, bool canAssign) {
-    Ast* left = emptyAst(AST_EXPR_VARIABLE, token);
     consume(parser, TOKEN_DOT, "Expect '.' after 'super'.");
     consume(parser, TOKEN_IDENTIFIER, "Expect superclass method name.");
     Token method = parser->previous;
 
     if (match(parser, TOKEN_LEFT_PAREN)) {
-        Ast* right = argumentList(parser);
-        return newAst(AST_EXPR_SUPER, method, 2, left, right);
+        Ast* value = argumentList(parser);
+        return newAst(AST_EXPR_SUPER_INVOKE, method, 1, value);
     }
-    else return newAst(AST_EXPR_SUPER, method, 1, left);
+    else return emptyAst(AST_EXPR_SUPER_GET, method);
 }
 
 static Ast* this_(Parser* parser, Token token, bool canAssign) { 
@@ -745,7 +752,6 @@ static Ast* tryStatement(Parser* parser) {
         Ast* finallyStmt = statement(parser);
         astAppendChild(stmt, finallyStmt);
     }
-
     return stmt;
 }
 
@@ -767,6 +773,7 @@ static Ast* usingStatement(Parser* parser) {
         alias = emptyAst(AST_EXPR_VARIABLE, parser->previous);
     }
     else alias = subNamespace;
+
     consume(parser, TOKEN_SEMICOLON, "Expect ';' after using statement.");
     return newAst(AST_STMT_USING, token, 2, _namespace, alias);
 }
