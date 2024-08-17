@@ -374,17 +374,13 @@ static char* astExprYieldToString(Ast* ast, int indentLevel) {
 }
 
 static char* astStmtAwaitToString(Ast* ast, int indentLevel) {
+    char* expr = astOutputChildExpr(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
-    size_t length = strlen(indent) + 6;
+    size_t length = strlen(expr) + strlen(indent) + 9;
     char* buffer = (char*)malloc(length + 1);
     if (buffer != NULL) {
-        sprintf_s(buffer, length, "%s(await", indent);
+        sprintf_s(buffer, length, "%s(await %s)\n", indent, expr);
     }
-
-    char* expr = astOutputChildExpr(ast, indentLevel, 0);
-    buffer = astConcat(buffer, " ");
-    buffer = astConcat(buffer, expr);
-    buffer = astConcat(buffer, ")\n");
     return buffer;
 }
 
@@ -426,6 +422,54 @@ static char* astStmtContinueToString(Ast* ast, int indentLevel) {
 static char* astStmtExpressionToString(Ast* ast, int indentLevel) {
     // To be implemented
     return NULL;
+}
+
+static char* astStmtForToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astStmtIfToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astStmtRequireToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astStmtReturnToString(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    size_t length = strlen(indent) + 7;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "%s(return", indent);
+    }
+
+    if (ast->children != NULL && ast->children->count > 0) {
+        char* expr = astOutputChildExpr(ast, indentLevel, 0);
+        buffer = astConcat(buffer, " ");
+        buffer = astConcat(buffer, expr);
+    }
+    buffer = astConcat(buffer, ")\n");
+    return buffer;
+}
+
+static char* astStmtSwitchToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astStmtThrowToString(Ast* ast, int indentLevel) {
+    char* expr = astOutputChildExpr(ast, indentLevel, 0);
+    char* indent = astIndent(indentLevel);
+    size_t length = strlen(expr) + strlen(indent) + 9;
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer != NULL) {
+        sprintf_s(buffer, length, "%s(throw %s)\n", indent, expr);
+    }
+    return buffer;
 }
 
 char* astToString(Ast* ast, int indentLevel) {
@@ -494,6 +538,18 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astStmtContinueToString(ast, indentLevel);
                 case AST_STMT_EXPRESSION:
                     return astStmtExpressionToString(ast, indentLevel);
+                case AST_STMT_FOR:
+                    return astStmtForToString(ast, indentLevel);
+                case AST_STMT_IF:
+                    return astStmtIfToString(ast, indentLevel);
+                case AST_STMT_REQUIRE:
+                    return astStmtRequireToString(ast, indentLevel);
+                case AST_STMT_RETURN:
+                    return astStmtReturnToString(ast, indentLevel);
+                case AST_STMT_SWITCH:
+                    return astStmtSwitchToString(ast, indentLevel);
+                case AST_STMT_THROW:
+                    return astStmtThrowToString(ast, indentLevel);
                 default: 
                     return NULL;
             }
