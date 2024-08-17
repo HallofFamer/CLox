@@ -304,8 +304,8 @@ static Ast* argumentList(Parser* parser) {
     return argList;
 }
 
-static Ast* identifier(Parser* parser) {
-    advance(parser);
+static Ast* identifier(Parser* parser, const char* message) {
+    consume(parser, TOKEN_IDENTIFIER, message);
     return emptyAst(AST_EXPR_VARIABLE, parser->previous);
 }
 
@@ -321,7 +321,7 @@ static Ast* call(Parser* parser, Token token, Ast* left, bool canAssign) {
 }
 
 static Ast* dot(Parser* parser, Token token, Ast* left, bool canAssign) { 
-    Ast* property = identifier(parser);
+    Ast* property = identifier(parser, "Expect property name after '.'.");
     Ast* expr = NULL;
 
     if (canAssign && match(parser, TOKEN_EQUAL)) {
@@ -437,6 +437,51 @@ static Ast* lambda(Parser* parser, Token token, bool canAssign) {
 
 static Ast* variable(Parser* parser, Token token, bool canAssign) {
     return emptyAst(AST_EXPR_VARIABLE, token);
+}
+
+static Ast* methods(Parser* parser, Token* name) {
+    consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before class/trait body.");
+    Ast* methodList = emptyAst(AST_LIST_METHOD, *name);
+
+    while (!check(parser, TOKEN_RIGHT_BRACE) && !check(parser, TOKEN_EOF)) {
+        bool isAsync = false, isClass = false, isInitializer = false;
+        if (match(parser, TOKEN_ASYNC)) isAsync = true;
+        if (match(parser, TOKEN_CLASS)) isClass = true;
+        consume(parser, TOKEN_IDENTIFIER, "Expect method name.");
+
+        if (parser->previous.length == 8 && memcmp(parser->previous.start, "__init__", 8) == 0) {
+            isInitializer = true;
+        }
+        Ast* method = function(parser, PARSE_TYPE_METHOD, isAsync);
+        astAppendChild(methodList, method);
+    }
+
+    consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after class/trait body.");
+    return methodList;
+}
+
+static Ast* superclass_(Parser* parser) {
+    if (match(parser, TOKEN_LESS)) {
+        return identifier(parser, "Expect super class name.");
+    }
+    return emptyAst(AST_EXPR_VARIABLE, syntheticToken("Object"));
+}
+
+static Ast* traits(Parser* parser, Token* name) {
+    Ast* traitList = emptyAst(AST_LIST_VAR, *name);
+    uint8_t traitCount = 0;
+
+    do {
+        traitCount++;
+        if (traitCount > UINT4_MAX) {
+            errorAtCurrent(parser, "Can't have more than 15 parameters.");
+        }
+
+        Ast* trait = identifier(parser, "Expect class/trait name.");
+        astAppendChild(traitList, trait);
+    } while (match(parser, TOKEN_COMMA));
+
+    return traitList;
 }
 
 static Ast* klass(Parser* parser, Token token, bool canAssign) {
@@ -599,13 +644,14 @@ static Ast* expression(Parser* parser) {
 }
 
 static Ast* block(Parser* parser) {
-    Ast* blk = emptyAst(AST_STMT_BLOCK, parser->previous);
+    Token token = parser->previous;
+    Ast* stmtList = emptyAst(AST_STMT_BLOCK, token);
     while (!check(parser, TOKEN_RIGHT_BRACE) && !check(parser, TOKEN_EOF)) {
         Ast* decl = declaration(parser);
-        astAppendChild(blk, decl);
+        astAppendChild(stmtList, decl);
     }
     consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
-    return blk;
+    return newAst(AST_LIST_STMT, token, 1, stmtList);
 }
 
 static Ast* awaitStatement(Parser* parser) {
@@ -641,14 +687,12 @@ static Ast* forStatement(Parser* parser) {
     consume(parser, TOKEN_VAR, "Expect 'var' keyword after '(' in For loop.");
 
     if (match(parser, TOKEN_LEFT_PAREN)) { 
-        astAppendChild(stmt, identifier(parser));
+        astAppendChild(stmt, identifier(parser, "Expect first variable name after '('."));
         consume(parser, TOKEN_COMMA, "Expect ',' after first variable declaration.");
-        astAppendChild(stmt, identifier(parser));
+        astAppendChild(stmt, identifier(parser, "Expect second variable name after ','."));
         consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after second variable declaration.");
     }
-    else {
-        astAppendChild(stmt, identifier(parser));
-    }
+    else astAppendChild(stmt, identifier(parser, "Expect variable name after 'var'."));
 
     consume(parser, TOKEN_COLON, "Expect ':' after variable name.");
     astAppendChild(stmt, expression(parser));
@@ -718,7 +762,6 @@ static Ast* switchStatement(Parser* parser) {
             }
             else {
                 state = 2;
-                Token token = parser->previous;
                 consume(parser, TOKEN_COLON, "Expect ':' after default.");
                 Ast* defaultStmt = statement(parser);
                 astAppendChild(stmt, defaultStmt);
@@ -745,7 +788,7 @@ static Ast* tryStatement(Parser* parser) {
         consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after catch");
         consume(parser, TOKEN_IDENTIFIER, "Expect type name to catch");
         Token exceptionType = parser->previous;
-        Ast* exceptionVar = identifier(parser);
+        Ast* exceptionVar = identifier(parser, "Expect identifier after exception type.");
 
         consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after catch statement");
         Ast* catchBody = statement(parser);
@@ -848,54 +891,6 @@ static Ast* statement(Parser* parser) {
     }
 }
 
-static Ast* methods(Parser* parser, Token* name) {
-    consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before class/trait body.");
-    Ast* methodList = emptyAst(AST_LIST_METHOD, *name);
-
-    while (!check(parser, TOKEN_RIGHT_BRACE) && !check(parser, TOKEN_EOF)) {
-        bool isAsync = false, isClass = false, isInitializer = false;
-        if (match(parser, TOKEN_ASYNC)) isAsync = true;
-        if (match(parser, TOKEN_CLASS)) isClass = true;
-        consume(parser, TOKEN_IDENTIFIER, "Expect method name.");
-
-        if (parser->previous.length == 8 && memcmp(parser->previous.start, "__init__", 8) == 0) {
-            isInitializer = true;
-        }
-        Ast* method = function(parser, PARSE_TYPE_METHOD, isAsync);
-        astAppendChild(methodList, method);
-    }
-
-    consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after class/trait body.");
-    return methodList;
-}
-
-static Ast* superclass_(Parser* parser) {
-    if (match(parser, TOKEN_LESS)) {
-        consume(parser, TOKEN_IDENTIFIER, "Expect super class name.");
-        Token superClassName = parser->previous;
-        return emptyAst(AST_EXPR_VARIABLE, superClassName);
-    }
-    return emptyAst(AST_EXPR_VARIABLE, syntheticToken("Object"));
-}
-
-static Ast* traits(Parser* parser, Token* name) {
-    Ast* traitList = emptyAst(AST_LIST_VAR, *name);
-    uint8_t traitCount = 0;
-
-    do {
-        traitCount++;
-        if (traitCount > UINT4_MAX) {
-            errorAtCurrent(parser, "Can't have more than 15 parameters.");
-        }
-
-        consume(parser, TOKEN_IDENTIFIER, "Expect class/trait name.");
-        Token traitName = parser->previous;
-        Ast* trait = emptyAst(AST_EXPR_VARIABLE, traitName);
-    } while (match(parser, TOKEN_COMMA));
-
-    return traitList;
-}
-
 static Ast* parameterList(Parser* parser, Token token) {
     Ast* params = emptyAst(AST_LIST_VAR, token);
     int arity = 0;
@@ -910,7 +905,7 @@ static Ast* parameterList(Parser* parser, Token token) {
         }
 
         bool isMutable = match(parser, TOKEN_VAR);
-        Ast* param = identifier(parser);
+        Ast* param = identifier(parser, "Expect parameter name.");
         astAppendChild(params, param);
     } while (match(parser, TOKEN_COMMA));
 
@@ -960,7 +955,7 @@ static Ast* namespaceDeclaration(Parser* parser) {
         if (namespaceDepth > UINT4_MAX) {
             errorAtCurrent(parser, "Can't have more than 15 levels of namespace depth.");
         }
-        astAppendChild(decl, identifier(parser));
+        astAppendChild(decl, identifier(parser, "Expect Namespace identifier."));
         namespaceDepth++;
     } while (match(parser, TOKEN_DOT));
 
