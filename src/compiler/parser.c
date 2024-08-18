@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "parser.h"
+#include "../inc/utf8.h"
 
 typedef enum {
     PREC_NONE,
@@ -132,15 +133,13 @@ static int hexEscape(Parser* parser, const char* source, int base, int startInde
 }
 
 static int unicodeEscape(Parser* parser, const char* source, char* target, int base, int startIndex, int currentLength) {
-    // To be implemented later.
-    /*
     int value = hexEscape(parser, source, base, startIndex);
-    int numBytes = utf8NumBytes(value);
+    int numBytes = utf8_num_bytes(value);
     if (numBytes < 0) error(parser, "Negative unicode character specified.");
     if (value > 0xffff) numBytes++;
 
     if (numBytes > 0) {
-        char* utfChar = utf8Encode(value);
+        char* utfChar = utf8_encode(value);
         if (utfChar == NULL) error(parser, "Invalid unicode character specified.");
         else {
             memcpy(target + currentLength, utfChar, (size_t)numBytes + 1);
@@ -148,8 +147,6 @@ static int unicodeEscape(Parser* parser, const char* source, char* target, int b
         }
     }
     return numBytes;
-    */
-    return 1;
 }
 
 static char* parseString(Parser* parser, int* length) {

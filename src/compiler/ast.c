@@ -139,8 +139,8 @@ static char* astExprArrayToString(Ast* ast, int indentLevel) {
     sprintf_s(buffer, length, "(array [");
 
     for (int i = 0; i < argList->children->count; i++) {
-        char* argOutput = astGetChildOutput(ast, indentLevel, i);
-        buffer = astConcatOutput(buffer, argOutput);
+        char* arg = astGetChildOutput(ast, indentLevel, i);
+        buffer = astConcatOutput(buffer, arg);
         buffer = astConcatOutput(buffer, " ");
     }
     buffer = astConcatOutput(buffer, "]");
@@ -242,6 +242,11 @@ static char* astExprInvokeToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
+static char* astExprInterpolationToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
 static char* astExprLiteralToString(Ast* ast, int indentLevel) {
     switch (ast->token.type) {
         case TOKEN_NIL:
@@ -282,10 +287,8 @@ static char* astExprPropertySetToString(Ast* ast, int indentLevel) {
     char* prop = tokenToString(ast->token);
     char* right = astGetChildOutput(ast, indentLevel, 1);
     size_t length = strlen(left) + strlen(prop) + strlen(right) + 18;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(propertySet %s.%s = %s)", left, prop, right);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(propertySet %s.%s = %s)", left, prop, right);
     return buffer;
 }
 
@@ -521,6 +524,8 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprGroupingToString(ast, indentLevel);
                 case AST_EXPR_INVOKE:
                     return astExprInvokeToString(ast, indentLevel);
+                case AST_EXPR_INTERPOLATION:
+                    return astExprInterpolationToString(ast, indentLevel);
                 case AST_EXPR_LITERAL:
                     return astExprLiteralToString(ast, indentLevel);
                 case AST_EXPR_LOGICAL:

@@ -1691,6 +1691,10 @@ utf8rcodepoint(const utf8_int8_t *utf8_restrict str,
 #undef utf8_constexpr14
 #undef utf8_null
 
+int utf8_num_bytes(int value);
+char* utf8_encode(int value);
+int utf8_decode(const uint8_t* bytes, uint32_t length);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
