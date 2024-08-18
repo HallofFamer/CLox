@@ -95,13 +95,11 @@ AstNodeCategory astNodeCategory(AstNodeType type) {
 
 static char* astConcatOutput(char* source, char* dest) {
     size_t srcLength = strlen(source);
-    size_t destLendth = strlen(dest);
-    char* result = (char*)malloc(srcLength + destLendth + 1);
-    if (result != NULL) {
-        memcpy(result, source, srcLength);
-        memcpy(result + srcLength, dest, destLendth);
-        result[srcLength + destLendth] = '\0';
-    }
+    size_t destLength = strlen(dest);
+    char* result = bufferNewCharArray(srcLength + destLength);
+    memcpy(result, source, srcLength);
+    memcpy(result + srcLength, dest, destLength);
+    result[srcLength + destLength] = '\0';
     return result;
 }
 
@@ -136,18 +134,16 @@ static char* astGetChildOutput(Ast* ast, int indentLevel, int index) {
 
 static char* astExprArrayToString(Ast* ast, int indentLevel) {
     size_t length = 8;
-    char* buffer = (char*)malloc(length + 1);
+    char* buffer = bufferNewCharArray(length);
+    Ast* argList = ast->children->elements[1];
+    sprintf_s(buffer, length, "(array [");
 
-    if (buffer != NULL) {
-        Ast* argList = ast->children->elements[1];
-        sprintf_s(buffer, length, "(array [");
-        for (int i = 0; i < argList->children->count; i++) {
-            char* argOutput = astGetChildOutput(ast, indentLevel, i);
-            buffer = astConcatOutput(buffer, argOutput);
-            buffer = astConcatOutput(buffer, " ");
-        }
-        buffer = astConcatOutput(buffer, "]");
+    for (int i = 0; i < argList->children->count; i++) {
+        char* argOutput = astGetChildOutput(ast, indentLevel, i);
+        buffer = astConcatOutput(buffer, argOutput);
+        buffer = astConcatOutput(buffer, " ");
     }
+    buffer = astConcatOutput(buffer, "]");
     return buffer;
 }
 
@@ -155,20 +151,16 @@ static char* astExprAssignToString(Ast* ast, int indentLevel) {
     char* left = astGetChildOutput(ast, indentLevel, 0);
     char* right = astGetChildOutput(ast, indentLevel, 1);
     size_t length = strlen(left) + strlen(right) + 10;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(assign %s %s)", left, right);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(assign %s %s)", left, right);
     return buffer;
 }
 
 static char* astExprAwaitToString(Ast* ast, int indentLevel) {
     char* exprOutput = astGetChildOutput(ast, indentLevel, 0);;
     size_t length = (size_t)ast->token.length + 8;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(await %s)", exprOutput);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(await %s)", exprOutput);
     return buffer;
 }
 
@@ -177,48 +169,42 @@ static char* astExprBinaryToString(Ast* ast, int indentLevel) {
     char* left = astGetChildOutput(ast, indentLevel, 0);
     char* right = astGetChildOutput(ast, indentLevel, 1);
     size_t length = strlen(op) + strlen(left) + strlen(right) + 4;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(%s %s %s)", left, op, right);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(%s %s %s)", left, op, right);
     return buffer;
 }
 
 static char* astExprCallToString(Ast* ast, int indentLevel) {
-    char* exprOutput = astGetChildOutput(ast, indentLevel, 0);
+    char* expr = astGetChildOutput(ast, indentLevel, 0);
     size_t length = (size_t)ast->token.length + 8;
-    char* buffer = (char*)malloc(length + 1);
+    char* buffer = bufferNewCharArray(length);
+    Ast* argList = ast->children->elements[1];
+    sprintf_s(buffer, length, "(call %s (", expr);
 
-    if (buffer != NULL) {
-        Ast* argList = ast->children->elements[1];
-        sprintf_s(buffer, length, "(call %s (", exprOutput);
-        for (int i = 0; i < argList->children->count; i++) {
-            char* argOutput = astGetChildOutput(ast, indentLevel, i);
-            buffer = astConcatOutput(buffer, argOutput);
-            buffer = astConcatOutput(buffer, " ");
-        }
-        buffer = astConcatOutput(buffer, ")");
+    for (int i = 0; i < argList->children->count; i++) {
+        char* arg = astGetChildOutput(ast, indentLevel, i);
+        buffer = astConcatOutput(buffer, arg);
+        buffer = astConcatOutput(buffer, " ");
     }
+    buffer = astConcatOutput(buffer, ")");
     return buffer;
 }
 
 static char* astExprDictionaryToString(Ast* ast, int indentLevel) {
     size_t length = 13;
-    char* buffer = (char*)malloc(length + 1);
+    char* buffer = bufferNewCharArray(length);
+    Ast* argList = ast->children->elements[1];
+    sprintf_s(buffer, length, "(dictionary [");
 
-    if (buffer != NULL) {
-        Ast* argList = ast->children->elements[1];
-        sprintf_s(buffer, length, "(dictionary [");
-        for (int i = 0; i < argList->children->count; i += 2) {
-            char* keyOutput = astGetChildOutput(ast, indentLevel, i);
-            char* valueOutput = astGetChildOutput(ast, indentLevel, i + 1);
-            buffer = astConcatOutput(buffer, keyOutput);
-            buffer = astConcatOutput(buffer, ": ");
-            buffer = astConcatOutput(buffer, valueOutput);
-            buffer = astConcatOutput(buffer, " ");
-        }
-        buffer = astConcatOutput(buffer, "]");
+    for (int i = 0; i < argList->children->count; i += 2) {
+        char* key = astGetChildOutput(ast, indentLevel, i);
+        char* value = astGetChildOutput(ast, indentLevel, i + 1);
+        buffer = astConcatOutput(buffer, key);
+        buffer = astConcatOutput(buffer, ": ");
+        buffer = astConcatOutput(buffer, value);
+        buffer = astConcatOutput(buffer, " ");
     }
+    buffer = astConcatOutput(buffer, "]");
     return buffer;
 }
 
@@ -226,20 +212,16 @@ static char* astExprFunctionToString(Ast* ast, int indentLevel) {
     char* params = astGetChildOutput(ast, indentLevel, 0);
     char* block = astGetChildOutput(ast, indentLevel + 1, 1);
     size_t length = strlen(params) + strlen(block) + 14;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(function (%s) %s)", params, block);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(function (%s) %s)", params, block);
     return buffer;
 }
 
 static char* astExprGroupingToString(Ast* ast, int indentLevel) {
     char* expr = astGetChildOutput(ast, indentLevel, 0);
     size_t length = (size_t)ast->token.length + 8;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(group %s)", expr);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(group %s)", expr);
     return buffer;
 }
 
@@ -247,18 +229,16 @@ static char* astExprInvokeToString(Ast* ast, int indentLevel) {
     char* receiver = astGetChildOutput(ast, indentLevel, 0);
     char* method = astGetChildOutput(ast, indentLevel, 1);
     size_t length = strlen(receiver) + strlen(method) + 10;
-    char* buffer = (char*)malloc(length + 1);
+    char* buffer = bufferNewCharArray(length);
+    Ast* argList = ast->children->elements[2];
+    sprintf_s(buffer, length, "(invoke %s.%s(", receiver, method);
 
-    if (buffer != NULL) {
-        Ast* argList = ast->children->elements[2];
-        sprintf_s(buffer, length, "(invoke %s.%s(", receiver, method);
-        for (int i = 0; i < argList->children->count; i++) {
-            char* arg = astGetChildOutput(ast, indentLevel, i);
-            buffer = astConcatOutput(buffer, arg);
-            buffer = astConcatOutput(buffer, " ");
-        }
-        buffer = astConcatOutput(buffer, ")");
+    for (int i = 0; i < argList->children->count; i++) {
+        char* arg = astGetChildOutput(ast, indentLevel, i);
+        buffer = astConcatOutput(buffer, arg);
+        buffer = astConcatOutput(buffer, " ");
     }
+    buffer = astConcatOutput(buffer, ")");
     return buffer;
 }
 
@@ -269,18 +249,16 @@ static char* astExprLiteralToString(Ast* ast, int indentLevel) {
         case TOKEN_FALSE:
         case TOKEN_INT:
         case TOKEN_NUMBER: {
-            char* buffer = (char*)malloc((size_t)ast->token.length + 1);
-            if (buffer != NULL) {
-                snprintf(buffer, ast->token.length, "%s", ast->token.start);
-                return buffer;
-            }
+            size_t length = (size_t)ast->token.length;
+            char* buffer = bufferNewCharArray(length);
+            snprintf(buffer, length, "%s", ast->token.start);
+            return buffer;
         }
         case TOKEN_STRING: {
-            char* buffer = (char*)malloc((size_t)ast->token.length + 3);
-            if (buffer != NULL) {
-                snprintf(buffer, ast->token.length, "\"%s\"", ast->token.start);
-                return buffer;
-            }
+            size_t length = (size_t)ast->token.length + 2;
+            char* buffer = bufferNewCharArray(length);
+            snprintf(buffer, length, "\"%s\"", ast->token.start);
+            return buffer;
         }
     }
     return NULL;
@@ -294,10 +272,8 @@ static char* astExprPropertyGetToString(Ast* ast, int indentLevel) {
     char* expr = astGetChildOutput(ast, indentLevel, 0);
     char* prop = tokenToString(ast->token);
     size_t length = strlen(expr) + strlen(prop) + 15;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(propertyGet %s.%s)", expr, prop);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(propertyGet %s.%s)", expr, prop);
     return buffer;
 }
 
@@ -317,10 +293,8 @@ static char* astExprSubscriptGetToString(Ast* ast, int indentLevel) {
     char* expr = astGetChildOutput(ast, indentLevel, 0);
     char* index = astGetChildOutput(ast, indentLevel, 1);
     size_t length = strlen(expr) + strlen(index) + 17;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(subscriptGet %s[%s])", expr, index);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(subscriptGet %s[%s])", expr, index);
     return buffer;
 }
 
@@ -329,38 +303,33 @@ static char* astExprSubscriptSetToString(Ast* ast, int indentLevel) {
     char* index = astGetChildOutput(ast, indentLevel, 1);
     char* right = astGetChildOutput(ast, indentLevel, 2);
     size_t length = strlen(left) + strlen(index) + strlen(right) + 20;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(subscriptSet %s[%s] = %s)", left, index, right);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(subscriptSet %s[%s] = %s)", left, index, right);
     return buffer;
 }
 
 static char* astExprSuperGetToString(Ast* ast, int indentLevel) {
     char* prop = tokenToString(ast->token);
     size_t length = strlen(prop) + 17;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(superGet super.%s)", prop);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(superGet super.%s)", prop);
     return buffer;
 }
 
 static char* astExprSuperInvokeToString(Ast* ast, int indentLevel) {
     char* method = tokenToString(ast->token);
     size_t length = strlen(method) + 15;
-    char* buffer = (char*)malloc(length + 1);
+    char* buffer = bufferNewCharArray(length);
+    Ast* argList = ast->children->elements[0];
+    sprintf_s(buffer, length, "(invoke super.%s(", method);
 
-    if (buffer != NULL) {
-        Ast* argList = ast->children->elements[0];
-        sprintf_s(buffer, length, "(invoke super.%s(", method);
-        for (int i = 0; i < argList->children->count; i++) {
-            char* arg = astGetChildOutput(ast, indentLevel, i);
-            buffer = astConcatOutput(buffer, arg);
-            buffer = astConcatOutput(buffer, " ");
-        }
-        buffer = astConcatOutput(buffer, ")");
+    for (int i = 0; i < argList->children->count; i++) {
+        char* arg = astGetChildOutput(ast, indentLevel, i);
+        buffer = astConcatOutput(buffer, arg);
+        buffer = astConcatOutput(buffer, " ");
     }
+
+    buffer = astConcatOutput(buffer, ")");
     return buffer;
 }
 
@@ -372,30 +341,24 @@ static char* astExprUnaryToString(Ast* ast, int indentLevel) {
     char* op = tokenToString(ast->token);
     char* child = astGetChildOutput(ast, indentLevel, 0);
     size_t length = strlen(op) + strlen(child) + 3;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(%s %s)", op, child);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(%s %s)", op, child);
     return buffer;
 }
 
 static char* astExprVariableToString(Ast* ast, int indentLevel) {
     const char* name = tokenToString(ast->token);
     size_t length = strlen(name) + 6;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(var %s)", name);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(var %s)", name);
     return buffer;
 }
 
 static char* astExprYieldToString(Ast* ast, int indentLevel) {
     char* expr = astGetChildOutput(ast, indentLevel, 0);;
     size_t length = (size_t)ast->token.length + 8;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "(yield %s)", expr);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(yield %s)", expr);
     return buffer;
 }
 
@@ -403,10 +366,8 @@ static char* astStmtAwaitToString(Ast* ast, int indentLevel) {
     char* expr = astGetChildOutput(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
     size_t length = strlen(expr) + strlen(indent) + 9;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "%s(await %s)\n", indent, expr);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(await %s)\n", indent, expr);
     return buffer;
 }
 
@@ -480,20 +441,16 @@ static char* astStmtRequireToString(Ast* ast, int indentLevel) {
     char* expr = astGetChildOutput(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
     size_t length = strlen(expr) + strlen(indent) + 10;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "%s(require %s)\n", indent, expr);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(require %s)\n", indent, expr);
     return buffer;
 }
 
 static char* astStmtReturnToString(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     size_t length = strlen(indent) + 7;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "%s(return", indent);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(return", indent);
 
     if (ast->children != NULL && ast->children->count > 0) {
         char* expr = astGetChildOutput(ast, indentLevel, 0);
@@ -513,10 +470,8 @@ static char* astStmtThrowToString(Ast* ast, int indentLevel) {
     char* expr = astGetChildOutput(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
     size_t length = strlen(expr) + strlen(indent) + 9;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "%s(throw %s)\n", indent, expr);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(throw %s)\n", indent, expr);
     return buffer;
 }
 
@@ -539,10 +494,8 @@ static char* astStmtYieldToString(Ast* ast, int indentLevel) {
     char* expr = astGetChildOutput(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
     size_t length = strlen(expr) + strlen(indent) + 9;
-    char* buffer = (char*)malloc(length + 1);
-    if (buffer != NULL) {
-        sprintf_s(buffer, length, "%s(yield %s)\n", indent, expr);
-    }
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(yield %s)\n", indent, expr);
     return buffer;
 }
 

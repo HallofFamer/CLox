@@ -76,6 +76,15 @@ static inline int bufferGrowCapacity(int capacity) {
     return capacity < 8 ? 8 : capacity * 2;
 }
 
+static inline char* bufferNewCharArray(size_t length) {
+    char* buffer = (char*)malloc(length + 1);
+    if (buffer == NULL) {
+        fprintf(stderr, "Ast has no children or invalid child index specified.");
+        exit(1);
+    }
+    return buffer;
+}
+
 DECLARE_BUFFER(ByteArray, uint8_t)
 DECLARE_BUFFER(IntArray, int)
 DECLARE_BUFFER(DoubleArray, double)

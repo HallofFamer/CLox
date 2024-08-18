@@ -75,6 +75,7 @@ typedef enum {
 typedef struct {
     bool isAsync;
     bool isClass;
+    bool isInitializer;
     bool isLambda;
     bool isMutable;
     bool isOptional;

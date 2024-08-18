@@ -29,12 +29,6 @@ typedef struct {
 } ParseRule;
 
 typedef enum {
-    PARSE_BEHAVIOR_CLASS,
-    PARSE_BEHAVIOR_METACLASS,
-    PARSE_BEHAVIOR_TRAIT
-} ParseBehaviorType;
-
-typedef enum {
     PARSE_TYPE_FUNCTION,
     PARSE_TYPE_INITIALIZER,
     PARSE_TYPE_LAMBDA,
@@ -343,12 +337,7 @@ static Ast* logical(Parser* parser, Token token, Ast* left, bool canAssign) {
     return newAst(AST_EXPR_LOGICAL, token, 2, left, right);
 }
 
-static Ast* question(Parser* parser, Token token, Ast* left, bool canAssign) { 
-    // To be implemented
-    return NULL;
-}
-
-static Ast* subscript(Parser* parser, Token token, Ast* left, bool canAssign) { 
+static Ast* subscript(Parser* parser, Token token, Ast* left, bool canAssign) {
     Ast* expr = NULL;
     Ast* index = expression(parser);
     consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after subscript.");
@@ -358,6 +347,26 @@ static Ast* subscript(Parser* parser, Token token, Ast* left, bool canAssign) {
         expr = newAst(AST_EXPR_SUBSCRIPT_SET, token, 3, left, index, right);
     }
     else expr = newAst(AST_EXPR_SUBSCRIPT_GET, token, 2, left, index);
+    return expr;
+}
+
+static Ast* question(Parser* parser, Token token, Ast* left, bool canAssign) { 
+    Ast* expr = NULL;
+
+    if (match(parser, TOKEN_DOT)) {
+        expr = dot(parser, token, left, canAssign);
+    }
+    else if (match(parser, TOKEN_LEFT_BRACKET)) {
+        expr = subscript(parser, token, left, canAssign);
+    }
+    else if (match(parser, TOKEN_LEFT_PAREN)) {
+        expr = call(parser, token, left, canAssign);
+    }
+    else if (match(parser, TOKEN_QUESTION) || match(parser, TOKEN_COLON)) {
+        expr = binary(parser, token, left, canAssign);
+    }
+
+    if (expr != NULL) expr->modifier.isOptional = true;
     return expr;
 }
 
@@ -453,6 +462,9 @@ static Ast* methods(Parser* parser, Token* name) {
             isInitializer = true;
         }
         Ast* method = function(parser, PARSE_TYPE_METHOD, isAsync);
+        method->modifier.isAsync = isAsync;
+        method->modifier.isClass = isClass;
+        method->modifier.isInitializer = isInitializer;
         astAppendChild(methodList, method);
     }
 
@@ -484,7 +496,7 @@ static Ast* traits(Parser* parser, Token* name) {
     return traitList;
 }
 
-static Ast* klass(Parser* parser, Token token, bool canAssign) {
+static Ast* class_(Parser* parser, Token token, bool canAssign) {
     Token className = syntheticToken("@");
     Ast* superClass = superclass_(parser);
     Ast* traitList = traits(parser, &className);
@@ -526,8 +538,17 @@ static Ast* yield(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* async(Parser* parser, Token token, bool canAssign) { 
-    // To be implemented
-    return NULL;
+    Ast* func = NULL;
+    if (match(parser, TOKEN_FUN)) {
+        func = function(parser, PARSE_TYPE_FUNCTION, true);
+    }
+    else if (match(parser, TOKEN_LEFT_BRACE)) {
+        func = function(parser, PARSE_TYPE_LAMBDA, true);
+    }
+    else {
+        error(parser, "Can only use async as expression modifier for anonymous functions or lambda.");
+    }
+    return func;
 }
 
 static Ast* await(Parser* parser, Token token, bool canAssign) { 
@@ -574,7 +595,7 @@ ParseRule parseRules[] = {
     [TOKEN_BREAK]          = {NULL,          NULL,        PREC_NONE},
     [TOKEN_CASE]           = {NULL,          NULL,        PREC_NONE},
     [TOKEN_CATCH]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_CLASS]          = {klass,         NULL,        PREC_NONE},
+    [TOKEN_CLASS]          = {class_,         NULL,        PREC_NONE},
     [TOKEN_CONTINUE]       = {NULL,          NULL,        PREC_NONE},
     [TOKEN_DEFAULT]        = {NULL,          NULL,        PREC_NONE},
     [TOKEN_ELSE]           = {NULL,          NULL,        PREC_NONE},
@@ -894,8 +915,11 @@ static Ast* statement(Parser* parser) {
 static Ast* parameterList(Parser* parser, Token token) {
     Ast* params = emptyAst(AST_LIST_VAR, token);
     int arity = 0;
+
     if (match(parser, TOKEN_DOT_DOT)) {
-        // variadic parameter, implement later.
+        Ast* param = identifier(parser, "Expect parameter name.");
+        param->modifier.isVariadic = true;
+        astAppendChild(params, param);
     }
 
     do {
@@ -906,6 +930,7 @@ static Ast* parameterList(Parser* parser, Token token) {
 
         bool isMutable = match(parser, TOKEN_VAR);
         Ast* param = identifier(parser, "Expect parameter name.");
+        param->modifier.isMutable = isMutable;
         astAppendChild(params, param);
     } while (match(parser, TOKEN_COMMA));
 
@@ -928,9 +953,12 @@ static Ast* lambdaParameters(Parser* parser) {
 
 static Ast* function(Parser* parser, ParseFunctionType type, bool isAsync) {
     Token token = parser->previous;
-    Ast* params = (type == PARSE_TYPE_LAMBDA) ? lambdaParameters(parser) : functionParameters(parser);
+    bool isLambda = (type == PARSE_TYPE_LAMBDA);
+    Ast* params = isLambda ? lambdaParameters(parser) : functionParameters(parser);
     Ast* body = block(parser);
-    return newAst(AST_EXPR_FUNCTION, token, 2, params, body);
+    Ast* func = newAst(AST_EXPR_FUNCTION, token, 2, params, body);
+    func->modifier.isLambda = isLambda;
+    return func;
 }
 
 static Ast* classDeclaration(Parser* parser) {
@@ -975,6 +1003,7 @@ static Ast* varDeclaration(Parser* parser, bool isMutable) {
     consume(parser, TOKEN_IDENTIFIER, "Expect variable name.");
     Token identifier = parser->previous;
     Ast* varDecl = emptyAst(AST_DECL_VAR, identifier);
+    varDecl->modifier.isMutable = isMutable;
     if (!isMutable && !check(parser, TOKEN_EQUAL)) {
         error(parser, "Immutable variable must be initialized upon declaration.");
     }
