@@ -2,7 +2,6 @@
 #ifndef clox_lexer_h
 #define clox_lexer_h
 
-#include "../common/common.h"
 #include "token.h"
 
 typedef struct {

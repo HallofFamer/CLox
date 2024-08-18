@@ -279,6 +279,7 @@ static Token string(Lexer* lexer) {
             }
             lexer->interpolationDepth++;
             advance(lexer);
+
             Token token = makeToken(lexer, TOKEN_INTERPOLATION);
             advance(lexer);
             return token;
@@ -333,9 +334,10 @@ Token scanToken(Lexer* lexer) {
             return makeToken(lexer, match(lexer, '=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
         case '.':
             return makeToken(lexer, match(lexer, '.') ? TOKEN_DOT_DOT : TOKEN_DOT);
-        case '`':
+        case '`': 
             return keywordIdentifier(lexer);
-        case '"': return string(lexer);
+        case '"':
+            return string(lexer);
     }
     return errorToken(lexer, "Unexpected character.");
 }
