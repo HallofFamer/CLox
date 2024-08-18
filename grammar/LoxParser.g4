@@ -3,21 +3,26 @@ options { tokenVocab = LoxLexer; }
 
 program: declaration* EOF;
 declaration: classDecl | funDecl | namespaceDecl | traitDecl | varDecl | statement;
-classDecl: CLASS IDENTIFIER (LT IDENTIFIER)? (WITH parameters)? LBRACE CLASS? function* RBRACE;
+classDecl: CLASS IDENTIFIER classBody;
 funDecl: FUN function;
 namespaceDecl: NAMESPACE IDENTIFIER (DOT IDENTIFIER)*;
-traitDecl: TRAIT IDENTIFIER (WITH parameters);
+traitDecl: TRAIT IDENTIFIER traitBody;
 varDecl: (VAL | VAR) IDENTIFIER (EQ expression)? SEMICOLON;
 
-statement: awaitStmt | breakStmt | continueStmt | exprStmt | forStmt | ifStmt | requireStmt | returnStmt | whileStmt | yieldStmt | block;
+statement: awaitStmt | breakStmt | caseStmt | continueStmt | exprStmt | forStmt | ifStmt | requireStmt | returnStmt | switchStmt | usingStmt | whileStmt | yieldStmt | block;
 awaitStmt: AWAIT expression SEMICOLON;
 breakStmt: BREAK SEMICOLON;
+caseStmt: CASE expression COLON statement;
+catchStmt: CATCH LPAREN IDENTIFIER IDENTIFIER? RPAREN statement
 continueStmt: CONTINUE SEMICOLON;
 exprStmt: expression SEMICOLON;
 forStmt: FOR LPAREN (varDecl | exprStmt)? SEMICOLON expression? SEMICOLON expression? RPAREN statement;
 ifStmt: IF LPAREN expression RPAREN statement (ELSE statement)?;
-requireStmt: REQUIRE STRING SEMICOLON;
+requireStmt: REQUIRE expression SEMICOLON;
 returnStmt: RETURN expression? SEMICOLON;
+switchStmt: SWITCH caseStmt* (DEFAULT COLON statement)? 
+tryStmt: TRY statement catchStmt (FINALLY statement)?
+usingStmt: USING IDENTIFIER (DOT IDENTIFIER)*;
 whileStmt: WHILE LPAREN expression RPAREN statement;
 yieldStmt: YIELD expression SEMICOLON;
 block: LBRACE declaration* RBRACE;
@@ -32,9 +37,11 @@ term: (factor (PLUS | MINUS) factor)*;
 factor: (unary (STAR | SLASH | MODULUS) unary)*;
 unary: ((BANG | MINUS) unary) | call;
 call: primary (LPAREN arguments? RPAREN | LSQUARE expression RSQUARE | DOT IDENTIFIER)*;
-primary: 'nil' | 'true' | 'false' | INT | FLOAT | STRING | IDENTIFIER | (LPAREN expression RPAREN) | (LSQUARE arguments? RSQUARE) | (FUN functionBody) | (SUPER DOT IDENTIFIER);
+primary: 'nil' | 'true' | 'false' | INT | FLOAT | STRING | IDENTIFIER | (LPAREN expression RPAREN) | (LSQUARE arguments? RSQUARE) | (expression DOTDOT expression) | (CLASS classBody) | (FUN functionBody) | (SUPER DOT IDENTIFIER) | (TRAIT traitBody);
 
-function: ASYNC? IDENTIFIER functionBody;
+classBody: (LT IDENTIFIER)? (WITH parameters)? LBRACE function* RBRACE;
+function: ASYNC? CLASS? IDENTIFIER functionBody;
 functionBody: LPAREN parameters? RPAREN block;
-parameters: IDENTIFIER (COMMA IDENTIFIER)*;
+traitBody: (WITH parameters)? LBRACE CLASS? function* RBRACE;
+parameters: (VAR? IDENTIFIER (VAR? COMMA IDENTIFIER)*) | (DOTDOT IDENTIFIER);
 arguments: expression (COMMA expression)*;

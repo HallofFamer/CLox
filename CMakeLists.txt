@@ -96,6 +96,9 @@ set(no_group_source_files
 source_group("" FILES ${no_group_source_files})
 
 set(Source_Files__common
+    "src/common/buffer.h"
+    "src/common/buffer.c"
+    "src/common/common.h"
     "src/common/os.h"
     "src/common/os.c"
 )
@@ -136,7 +139,6 @@ set(Source_Files__vm
     "src/vm/assert.h"
     "src/vm/chunk.c"
     "src/vm/chunk.h"
-    "src/vm/common.h"
     "src/vm/compiler.c"
     "src/vm/compiler.h"
     "src/vm/date.c"

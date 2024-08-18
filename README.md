@@ -119,7 +119,7 @@ https://github.com/munificent/craftinginterpreters
 - Refactoring package `clox.std.io` and `clox.std.net` to use async non-blocking calls.
 
 ### CLox 2.0.0(next version)
-- Multi-pass compiler with abstract syntax tree, semantic analyzer, type checker, and generation of IR. 
+- Multi-pass compiler with abstract syntax tree, semantic analyzer, symbol table, type checker, and generation of bytecode by walking AST. 
 - Optional static typing support for function/method parameters and return values, types only exist at compile time and are erased at runtime. 
 - Semicolon inference as well as basic type inference for immutable local/global variables. 
 - Replace the naive mark and sweep GC with a generational GC which has multiple regions for objects of various 'ages'.  
