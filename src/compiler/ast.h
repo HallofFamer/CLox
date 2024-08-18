@@ -24,6 +24,7 @@ typedef enum {
     AST_EXPR_AWAIT,
     AST_EXPR_BINARY,
     AST_EXPR_CALL,
+    AST_EXPR_CLASS,
     AST_EXPR_DICTIONARY,
     AST_EXPR_FUNCTION,
     AST_EXPR_GROUPING,
@@ -37,6 +38,7 @@ typedef enum {
     AST_EXPR_SUPER_GET,
     AST_EXPR_SUPER_INVOKE,
     AST_EXPR_THIS,
+    AST_EXPR_TRAIT,
     AST_EXPR_UNARY,
     AST_EXPR_VARIABLE,
     AST_EXPR_YIELD,
@@ -70,9 +72,19 @@ typedef enum {
     AST_TYPE_ERROR
 } AstNodeType;
 
+typedef struct {
+    bool isAsync;
+    bool isClass;
+    bool isLambda;
+    bool isMutable;
+    bool isOptional;
+    bool isVariadic;
+} AstModifier;
+
 struct Ast {
     AstNodeCategory category;
     AstNodeType type;
+    AstModifier modifier;
     Token token;
     Ast* parent;
     AstArray* children;
@@ -86,6 +98,7 @@ Ast* newAst(AstNodeType type, Token token, int numChildren, ...);
 Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children);
 void freeAst(Ast* node, bool freeChildren);
 void astAppendChild(Ast* ast, Ast* child);
+AstModifier astInitModifier();
 AstNodeCategory astNodeCategory(AstNodeType type);
 char* astToString(Ast* ast, int indentLevel);
 

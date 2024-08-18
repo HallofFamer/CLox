@@ -489,14 +489,14 @@ static Ast* klass(Parser* parser, Token token, bool canAssign) {
     Ast* superClass = superclass_(parser);
     Ast* traitList = traits(parser, &className);
     Ast* methodList = methods(parser, &className);
-    return newAst(AST_DECL_CLASS, className, 3, superClass, traitList, methodList);
+    return newAst(AST_EXPR_CLASS, className, 3, superClass, traitList, methodList);
 }
 
 static Ast* trait(Parser* parser, Token token, bool canAssign) {
     Token traitName = syntheticToken("@");
     Ast* traitList = traits(parser, &traitName);
     Ast* methodList = methods(parser, &traitName);
-    return newAst(AST_DECL_TRAIT, traitName, 2, traitList, methodList);
+    return newAst(AST_EXPR_TRAIT, traitName, 2, traitList, methodList);
 }
 
 static Ast* super_(Parser* parser, Token token, bool canAssign) {
