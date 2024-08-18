@@ -2,7 +2,7 @@
 #ifndef clox_std_collection_h
 #define clox_std_collection_h
 
-#include "../vm/common.h"
+#include "../common/common.h"
 
 void registerCollectionPackage(VM* vm);
 

@@ -2,7 +2,6 @@
 #ifndef clox_date_h
 #define clox_date_h
 
-#include "common.h"
 #include "value.h"
 
 double dateObjGetTimestamp(VM* vm, ObjInstance* date);

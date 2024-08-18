@@ -2,7 +2,6 @@
 #ifndef clox_string_h
 #define clox_string_h
 
-#include "common.h"
 #include "object.h"
 #include "../inc/utf8.h"
 

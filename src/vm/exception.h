@@ -2,7 +2,6 @@
 #ifndef clox_exception_h
 #define clox_exception_h
 
-#include "common.h"
 #include "value.h"
 
 typedef struct {

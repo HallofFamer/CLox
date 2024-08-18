@@ -2,7 +2,6 @@
 #ifndef clox_file_h
 #define clox_file_h
 
-#include "common.h"
 #include "loop.h"
 
 typedef struct {

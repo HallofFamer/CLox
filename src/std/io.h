@@ -2,7 +2,7 @@
 #ifndef clox_std_io_h
 #define clox_std_io_h
 
-#include "../vm/common.h"
+#include "../common/common.h"
 
 void registerIOPackage(VM* vm);
 

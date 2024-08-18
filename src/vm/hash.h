@@ -2,7 +2,6 @@
 #ifndef clox_hash_h
 #define clox_hash_h
 
-#include "common.h"
 #include "object.h"
 #include "value.h"
 

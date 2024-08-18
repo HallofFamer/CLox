@@ -2,7 +2,6 @@
 #include <string.h>
 #include <uv.h>
 
-#include "common.h"
 #include "scanner.h"
 
 void initScanner(Scanner* scanner, const char* source) {

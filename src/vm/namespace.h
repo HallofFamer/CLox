@@ -2,7 +2,6 @@
 #ifndef clox_namespace_h
 #define clox_namespace_h
 
-#include "common.h"
 #include "value.h"
 
 ObjNamespace* declareNamespace(VM* vm, uint8_t namespaceDepth);

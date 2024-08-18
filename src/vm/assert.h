@@ -2,7 +2,6 @@
 #ifndef clox_assert_h
 #define clox_assert_h
 
-#include "common.h"
 #include "native.h"
 #include "value.h"
 

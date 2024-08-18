@@ -4,7 +4,6 @@
 
 #include <curl/curl.h>
 
-#include "common.h"
 #include "loop.h"
 
 typedef struct CURLData CURLData;

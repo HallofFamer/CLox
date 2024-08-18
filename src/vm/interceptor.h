@@ -2,7 +2,6 @@
 #ifndef clox_interceptor_h
 #define clox_interceptor_h
 
-#include "common.h"
 #include "value.h"
 
 #define HAS_CLASS_INTERCEPTOR(klass, interceptor) ((klass->interceptors) & (1 << interceptor))

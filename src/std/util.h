@@ -2,7 +2,7 @@
 #ifndef clox_std_util_h
 #define clox_std_util_h
 
-#include "../vm/common.h"
+#include "../common/common.h"
 
 void registerUtilPackage(VM* vm);
 

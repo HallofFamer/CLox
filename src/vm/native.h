@@ -4,7 +4,6 @@
 
 #include <time.h>
 
-#include "common.h"
 #include "object.h"
 #include "value.h"
 #include "vm.h"

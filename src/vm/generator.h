@@ -2,7 +2,6 @@
 #ifndef clox_generator_h
 #define clox_generator_h
 
-#include "common.h"
 #include "value.h"
 
 typedef enum {

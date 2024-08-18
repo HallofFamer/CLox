@@ -2,7 +2,6 @@
 #ifndef clox_network_h
 #define clox_network_h
 
-#include "common.h"
 #include "loop.h"
 
 typedef struct NetworkData {

@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-#include "common.h"
+#include "../common/common.h"
 
 typedef struct Obj Obj;
 typedef struct ObjArray ObjArray;

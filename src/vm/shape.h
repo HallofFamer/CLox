@@ -2,7 +2,6 @@
 #ifndef clox_shape_h
 #define clox_shape_h
 
-#include "common.h"
 #include "id.h"
 #include "object.h"
 

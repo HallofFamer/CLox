@@ -3,7 +3,6 @@
 #define clox_object_h
 
 #include "chunk.h"
-#include "common.h"
 #include "exception.h"
 #include "generator.h"
 #include "id.h"

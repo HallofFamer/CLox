@@ -1,8 +1,7 @@
 #pragma once
-#ifndef clox_index_h
-#define clox_index_h
+#ifndef clox_id_h
+#define clox_id_h
 
-#include "common.h"
 #include "value.h"
 
 #define ENSURE_OBJECT_ID(object) \

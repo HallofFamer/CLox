@@ -2,7 +2,6 @@
 #ifndef clox_dict_h
 #define clox_dict_h
 
-#include "common.h"
 #include "object.h"
 #include "value.h"
 

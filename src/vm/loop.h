@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <uv.h>
 
-#include "common.h"
 #include "value.h"
 
 #define LOOP_PUSH_DATA(data) \
