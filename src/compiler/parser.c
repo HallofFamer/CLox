@@ -380,8 +380,28 @@ static Ast* grouping(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* interpolation(Parser* parser, Token token, bool canAssign) { 
-    // To be implemented
-    return NULL;
+    Ast* exprs = emptyAst(AST_LIST_EXPR, token);
+    int count = 0;
+    do {
+        bool concatenate = false;
+        bool isString = false;
+
+        if (parser->previous.length > 2) {
+            int length = 0;
+            char* str = parseString(parser, &length);
+            Ast* string = emptyAst(AST_EXPR_LITERAL, syntheticToken(str));
+            concatenate = true;
+            isString = true;
+            astAppendChild(exprs, string);
+        }
+
+        Ast* expr = expression(parser);
+        astAppendChild(exprs, expr);
+        count++;
+    } while (match(parser, TOKEN_INTERPOLATION));
+
+    consume(parser, TOKEN_STRING, "Expect end of string interpolation.");
+    return newAst(AST_EXPR_INTERPOLATION, token, 1, exprs);
 }
 
 static Ast* array(Parser* parser, Token token, Ast* element) {
