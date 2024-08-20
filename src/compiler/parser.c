@@ -1,4 +1,3 @@
-#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,6 +63,7 @@ static void errorAt(Parser* parser, Token* token, const char* message) {
 
     fprintf(stderr, ": %s\n", message);
     parser->hadError = true;
+    longjmp(parser->jumpBuffer, 1);
 }
 
 static void error(Parser* parser, const char* message) {
@@ -1075,9 +1075,11 @@ void initParser(Parser* parser, Lexer* lexer) {
 Ast* parse(Parser* parser) {
     Ast* ast = emptyAst(AST_TYPE_NONE, emptyToken());
     while (!match(parser, TOKEN_EOF)) {
-        Ast* decl = declaration(parser);
-        if (parser->panicMode) synchronize(parser);
-        astAppendChild(ast, decl);
+        if (setjmp(parser->jumpBuffer) == 0) {
+            Ast* decl = declaration(parser);
+            astAppendChild(ast, decl);
+        }
+        else synchronize(parser);
     }
 
 #ifdef DEBUG_PRINT_AST

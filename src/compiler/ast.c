@@ -494,6 +494,65 @@ static char* astStmtWhileToString(Ast* ast, int indentLevel) {
     return NULL;
 }
 
+static char* astStmtYieldToString(Ast* ast, int indentLevel) {
+    char* expr = astGetChildOutput(ast, indentLevel, 0);
+    char* indent = astIndent(indentLevel);
+    size_t length = strlen(expr) + strlen(indent) + 9;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(yield %s)\n", indent, expr);
+    return buffer;
+}
+
+static char* astDeclClassToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astDeclFunToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astDeclMethodToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astDeclNamespaceToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astDeclTraitToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astDeclVarToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
+static char* astListExprToString(Ast* ast, int indentLevel) {
+    char* buffer = "(exprList\n";
+    for (int i = 0; i < ast->children->count; i++) {
+        char* stmt = astToString(ast->children->elements[i], indentLevel);
+        buffer = astConcatOutput(buffer, stmt);
+    }
+    buffer = astConcatOutput(buffer, ")\n");
+    return buffer;
+}
+
+static char* astListMethodToString(Ast* ast, int indentLevel) {
+    char* buffer = "(methodList\n";
+    for (int i = 0; i < ast->children->count; i++) {
+        char* stmt = astToString(ast->children->elements[i], indentLevel);
+        buffer = astConcatOutput(buffer, stmt);
+    }
+    buffer = astConcatOutput(buffer, ")\n");
+    return buffer;
+}
+
 static char* astListStmtToString(Ast* ast, int indentLevel) {
     char* buffer = "(stmtList\n";
     for (int i = 0; i < ast->children->count; i++) {
@@ -504,12 +563,13 @@ static char* astListStmtToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
-static char* astStmtYieldToString(Ast* ast, int indentLevel) {
-    char* expr = astGetChildOutput(ast, indentLevel, 0);
-    char* indent = astIndent(indentLevel);
-    size_t length = strlen(expr) + strlen(indent) + 9;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(yield %s)\n", indent, expr);
+static char* astListVarToString(Ast* ast, int indentLevel) {
+    char* buffer = "(varList\n";
+    for (int i = 0; i < ast->children->count; i++) {
+        char* stmt = astToString(ast->children->elements[i], indentLevel);
+        buffer = astConcatOutput(buffer, stmt);
+    }
+    buffer = astConcatOutput(buffer, ")\n");
     return buffer;
 }
 
@@ -607,14 +667,32 @@ char* astToString(Ast* ast, int indentLevel) {
         }
         case AST_CATEGORY_DECL: {
             switch (ast->type) {
+                case AST_DECL_CLASS:
+                    return astDeclClassToString(ast, indentLevel);
+                case AST_DECL_FUN:
+                    return astDeclFunToString(ast, indentLevel);
+                case AST_DECL_METHOD:
+                    return astDeclMethodToString(ast, indentLevel);
+                case AST_DECL_NAMESPACE:
+                    return astDeclNamespaceToString(ast, indentLevel);
+                case AST_DECL_TRAIT:
+                    return astDeclTraitToString(ast, indentLevel);
+                case AST_DECL_VAR:
+                    return astDeclVarToString(ast, indentLevel);
                 default:
                     return NULL;
             }
         }
         case AST_CATEGORY_OTHER: {
             switch (ast->type) {
+                case AST_LIST_EXPR:
+                    return astListExprToString(ast, indentLevel);
+                case AST_LIST_METHOD:
+                    return astListMethodToString(ast, indentLevel);
                 case AST_LIST_STMT:
                     return astListStmtToString(ast, indentLevel);
+                case AST_LIST_VAR:
+                    return astListVarToString(ast, indentLevel);
                 default:
                     return NULL;
             }

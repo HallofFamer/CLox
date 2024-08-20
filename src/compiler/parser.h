@@ -2,6 +2,8 @@
 #ifndef clox_parser_h
 #define clox_parser_h
 
+#include <setjmp.h>
+
 #include "ast.h"
 #include "lexer.h"
 
@@ -13,6 +15,7 @@ typedef struct {
     Token rootClass;
     bool hadError;
     bool panicMode;
+    jmp_buf jumpBuffer;
 } Parser;
 
 void initParser(Parser* parser, Lexer* lexer);
