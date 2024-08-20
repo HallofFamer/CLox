@@ -350,10 +350,11 @@ static char* astExprUnaryToString(Ast* ast, int indentLevel) {
 }
 
 static char* astExprVariableToString(Ast* ast, int indentLevel) {
+    const char* format = ast->modifier.isMutable ? "(var %s)" : "(val %s)";
     const char* name = tokenToString(ast->token);
     size_t length = strlen(name) + 6;
     char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(var %s)", name);
+    sprintf_s(buffer, length, format, name);
     return buffer;
 }
 
@@ -493,6 +494,16 @@ static char* astStmtWhileToString(Ast* ast, int indentLevel) {
     return NULL;
 }
 
+static char* astListStmtToString(Ast* ast, int indentLevel) {
+    char* buffer = "(stmtList\n";
+    for (int i = 0; i < ast->children->count; i++) {
+        char* stmt = astToString(ast->children->elements[i], indentLevel);
+        buffer = astConcatOutput(buffer, stmt);
+    }
+    buffer = astConcatOutput(buffer, ")\n");
+    return buffer;
+}
+
 static char* astStmtYieldToString(Ast* ast, int indentLevel) {
     char* expr = astGetChildOutput(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
@@ -594,6 +605,22 @@ char* astToString(Ast* ast, int indentLevel) {
                     return NULL;
             }
         }
+        case AST_CATEGORY_DECL: {
+            switch (ast->type) {
+                default:
+                    return NULL;
+            }
+        }
+        case AST_CATEGORY_OTHER: {
+            switch (ast->type) {
+                case AST_LIST_STMT:
+                    return astListStmtToString(ast, indentLevel);
+                default:
+                    return NULL;
+            }
+        }
+        default:
+            return NULL;
     }
     return NULL;
 }

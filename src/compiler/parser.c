@@ -1,3 +1,4 @@
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -260,7 +261,6 @@ static void synchronize(Parser* parser) {
             case TOKEN_VAL:
             case TOKEN_VAR:
             case TOKEN_WHILE:
-            case TOKEN_WITH:
             case TOKEN_YIELD:
                 return;
 
