@@ -243,8 +243,11 @@ static char* astExprInvokeToString(Ast* ast, int indentLevel) {
 }
 
 static char* astExprInterpolationToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* exprs = astGetChildOutput(ast, indentLevel, 0);
+    size_t length = strlen(exprs) + 16;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(interpolation %s)", exprs);
+    return buffer;
 }
 
 static char* astExprLiteralToString(Ast* ast, int indentLevel) {

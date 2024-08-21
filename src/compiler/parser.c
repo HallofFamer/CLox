@@ -37,17 +37,6 @@ typedef enum {
     PARSE_TYPE_SCRIPT
 } ParseFunctionType;
 
-static void* remalloc(void* pointer, size_t oldSize, size_t newSize) {
-    if (newSize == 0) {
-        free(pointer);
-        return NULL;
-    }
-
-    void* result = realloc(pointer, newSize);
-    if (result == NULL) exit(1);
-    return result;
-}
-
 static void errorAt(Parser* parser, Token* token, const char* message) {
     if (parser->panicMode) return;
     parser->panicMode = true;
@@ -233,8 +222,12 @@ static char* parseString(Parser* parser, int* length) {
         j++;
     }
 
-    target = (char*)remalloc(target, (size_t)maxLength + 1, (size_t)j + 1);
-    target[j] = '\0';
+    if (target != NULL) {
+        target = (char*)realloc(target, (size_t)j + 1);
+        if (target != NULL) {
+            target[j] = '\0';
+        }
+    }
     *length = j;
     return target;
 }
@@ -405,11 +398,11 @@ static Ast* interpolation(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* array(Parser* parser, Token token, Ast* element) {
-    Ast* array = newAst(AST_EXPR_ARRAY, token, 1, element);
+    Ast* exprs = newAst(AST_LIST_EXPR, token, 1, element);
     uint8_t elementCount = 1;
     while (match(parser, TOKEN_COMMA)) {
         element = expression(parser);
-        astAppendChild(array, element);
+        astAppendChild(exprs, element);
 
         if (elementCount == UINT8_MAX) {
             error(parser, "Cannot have more than 255 elements.");
@@ -418,18 +411,18 @@ static Ast* array(Parser* parser, Token token, Ast* element) {
     }
 
     consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after elements.");
-    return array;
+    return newAst(AST_EXPR_ARRAY, token, 1, exprs);
 }
 
 static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
-    Ast* dict = newAst(AST_EXPR_DICTIONARY, token, 2, key, value);
+    Ast* exprs = newAst(AST_LIST_EXPR, token, 2, key, value);
     uint8_t entryCount = 1;
     while (match(parser, TOKEN_COMMA)) {
         Ast* key = expression(parser);
-        astAppendChild(dict, key);
+        astAppendChild(exprs, key);
         consume(parser, TOKEN_COLON, "Expect ':' after entry key.");
         Ast* value = expression(parser);
-        astAppendChild(dict, value);
+        astAppendChild(exprs, value);
 
         if (entryCount == UINT8_MAX) {
             error(parser, "Cannot have more than 255 entries.");
@@ -438,7 +431,7 @@ static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
     }
 
     consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after entries.");
-    return dict;
+    return newAst(AST_EXPR_DICTIONARY, token, 1, exprs);
 }
 
 static Ast* collection(Parser* parser, Token token, bool canAssign) { 
