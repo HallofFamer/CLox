@@ -430,13 +430,23 @@ static char* astStmtContinueToString(Ast* ast, int indentLevel) {
 }
 
 static char* astStmtExpressionToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* expr = astToString(ast, indentLevel);
+    size_t length = strlen(indent) + strlen(expr) + 12;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(exprStmt %s)\n", indent, expr);
+    return buffer;
 }
 
 static char* astStmtForToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* decl = astGetChildOutput(ast, indentLevel, 0);
+    char* expr = astGetChildOutput(ast, indentLevel, 1);
+    char* body = astGetChildOutput(ast, indentLevel + 1, 2);
+    size_t length = strlen(indent) + strlen(decl) + strlen(expr) + 13;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(for %s : %s \n%s\n)\n", indent, decl, expr, body);
+    return buffer;
 }
 
 static char* astStmtIfToString(Ast* ast, int indentLevel) {

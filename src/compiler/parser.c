@@ -139,6 +139,12 @@ static int unicodeEscape(Parser* parser, const char* source, char* target, int b
     return numBytes;
 }
 
+static void* resizeString(char* string, size_t newSize) {
+    void* result = realloc(string, newSize);
+    if (result == NULL) exit(1);
+    return result;
+}
+
 static char* parseString(Parser* parser, int* length) {
     int maxLength = parser->previous.length - 2;
     const char* source = parser->previous.start + 1;
@@ -222,12 +228,7 @@ static char* parseString(Parser* parser, int* length) {
         j++;
     }
 
-    if (target != NULL) {
-        target = (char*)realloc(target, (size_t)j + 1);
-        if (target != NULL) {
-            target[j] = '\0';
-        }
-    }
+    target = resizeString(target, (size_t)j + 1);
     *length = j;
     return target;
 }
@@ -716,20 +717,21 @@ static Ast* forStatement(Parser* parser) {
     Ast* stmt = emptyAst(AST_STMT_FOR, token);
     consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
     consume(parser, TOKEN_VAR, "Expect 'var' keyword after '(' in For loop.");
+    Ast* decl = emptyAst(AST_LIST_VAR, parser->previous);
 
     if (match(parser, TOKEN_LEFT_PAREN)) { 
-        astAppendChild(stmt, identifier(parser, "Expect first variable name after '('."));
+        astAppendChild(decl, identifier(parser, "Expect first variable name after '('."));
         consume(parser, TOKEN_COMMA, "Expect ',' after first variable declaration.");
-        astAppendChild(stmt, identifier(parser, "Expect second variable name after ','."));
+        astAppendChild(decl, identifier(parser, "Expect second variable name after ','."));
         consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after second variable declaration.");
     }
-    else astAppendChild(stmt, identifier(parser, "Expect variable name after 'var'."));
+    else astAppendChild(decl, identifier(parser, "Expect variable name after 'var'."));
 
     consume(parser, TOKEN_COLON, "Expect ':' after variable name.");
-    astAppendChild(stmt, expression(parser));
+    Ast* expr = expression(parser);
     consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after loop expression.");
-    astAppendChild(stmt, statement(parser));
-    return stmt;
+    Ast* body = statement(parser);
+    return newAst(AST_STMT_FOR, token, 3, decl, expr, body);
 }
 
 static Ast* ifStatement(Parser* parser) {
