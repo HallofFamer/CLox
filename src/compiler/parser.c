@@ -969,6 +969,7 @@ static Ast* function(Parser* parser, ParseFunctionType type, bool isAsync) {
     Ast* params = isLambda ? lambdaParameters(parser) : functionParameters(parser);
     Ast* body = block(parser);
     Ast* func = newAst(AST_EXPR_FUNCTION, token, 2, params, body);
+    func->modifier.isAsync = isAsync;
     func->modifier.isLambda = isLambda;
     return func;
 }

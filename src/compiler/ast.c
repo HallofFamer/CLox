@@ -73,18 +73,6 @@ void astAppendChild(Ast* ast, Ast* child) {
     if (child != NULL) child->parent = ast;
 }
 
-AstModifier astInitModifier() {
-    AstModifier modifier = { 
-        .isAsync = false, 
-        .isClass = false, 
-        .isLambda = false, 
-        .isMutable = false, 
-        .isOptional = false, 
-        .isVariadic = false 
-    };
-    return modifier;
-}
-
 AstNodeCategory astNodeCategory(AstNodeType type) {
     if (type == AST_TYPE_NONE) return AST_CATEGORY_PROGRAM;
     else if (type >= AST_EXPR_ASSIGN && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
@@ -450,8 +438,25 @@ static char* astStmtForToString(Ast* ast, int indentLevel) {
 }
 
 static char* astStmtIfToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* condition = astGetChildOutput(ast, indentLevel, 0);
+    size_t length = strlen(indent) + strlen(condition) + 5;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(if %s\n", indent, condition);
+
+    char* thenBranch = astGetChildOutput(ast, indentLevel + 1, 1);
+    buffer = astConcatOutput(buffer, thenBranch);
+    if (ast->children->count > 2) {
+        char* elseBranch = astGetChildOutput(ast, indentLevel + 1, 2);
+        size_t length2 = strlen(indent) + 6;
+        char* buffer2 = bufferNewCharArray(length);
+        sprintf_s(buffer2, length2, "%s(else %s\n", indent, condition);
+        buffer = astConcatOutput(buffer, buffer2);
+        free(buffer2);
+    }
+
+    buffer = astConcatOutput(buffer, ")\n");
+    return buffer;
 }
 
 static char* astStmtRequireToString(Ast* ast, int indentLevel) {

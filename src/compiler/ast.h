@@ -95,12 +95,23 @@ struct Ast {
 
 #define ASTNODE_IS_ROOT(astNode) (ast->category == AST_CATEGORY_PROGRAM)
 
+static inline AstModifier astInitModifier() {
+    AstModifier modifier = {
+        .isAsync = false,
+        .isClass = false,
+        .isLambda = false,
+        .isMutable = false,
+        .isOptional = false,
+        .isVariadic = false
+    };
+    return modifier;
+}
+
 Ast* emptyAst(AstNodeType type, Token token);
 Ast* newAst(AstNodeType type, Token token, int numChildren, ...);
 Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children);
 void freeAst(Ast* node, bool freeChildren);
 void astAppendChild(Ast* ast, Ast* child);
-AstModifier astInitModifier();
 AstNodeCategory astNodeCategory(AstNodeType type);
 char* astToString(Ast* ast, int indentLevel);
 
