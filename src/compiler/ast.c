@@ -400,13 +400,24 @@ static char* astStmtBreakToString(Ast* ast, int indentLevel) {
 }
 
 static char* astStmtCaseToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* expr = astGetChildOutput(ast, indentLevel, 0);
+    char* body = astGetChildOutput(ast, indentLevel, 1);
+    size_t length = strlen(indent) + strlen(expr) + strlen(body) + 10;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(case %s: %s)\n", indent, expr, body);
+    return buffer;
 }
 
 static char* astStmtCatchToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* exceptionType = tokenToString(ast->token);
+    char* exceptionVar = astGetChildOutput(ast, indentLevel, 0);
+    char* catchBody = astGetChildOutput(ast, indentLevel, 1);
+    size_t length = strlen(indent) + strlen(exceptionType) + strlen(exceptionVar) + strlen(catchBody) + 11;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(catch %s %s %s)\n", indent, exceptionType, exceptionVar, catchBody);
+    return buffer;
 }
 
 static char* astStmtContinueToString(Ast* ast, int indentLevel) {
@@ -440,15 +451,14 @@ static char* astStmtForToString(Ast* ast, int indentLevel) {
 static char* astStmtIfToString(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* condition = astGetChildOutput(ast, indentLevel, 0);
+    char* thenBranch = astGetChildOutput(ast, indentLevel + 1, 1);
     size_t length = strlen(indent) + strlen(condition) + 5;
     char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(if %s\n", indent, condition);
+    sprintf_s(buffer, length, "%s(if %s\n%s", indent, condition, thenBranch);
 
-    char* thenBranch = astGetChildOutput(ast, indentLevel + 1, 1);
-    buffer = astConcatOutput(buffer, thenBranch);
     if (ast->children->count > 2) {
         char* elseBranch = astGetChildOutput(ast, indentLevel + 1, 2);
-        size_t length2 = strlen(indent) + 6;
+        size_t length2 = strlen(indent) + 7;
         char* buffer2 = bufferNewCharArray(length);
         sprintf_s(buffer2, length2, "%s(else %s\n", indent, condition);
         buffer = astConcatOutput(buffer, buffer2);
@@ -489,17 +499,33 @@ static char* astStmtSwitchToString(Ast* ast, int indentLevel) {
 }
 
 static char* astStmtThrowToString(Ast* ast, int indentLevel) {
-    char* expr = astGetChildOutput(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
-    size_t length = strlen(expr) + strlen(indent) + 9;
+    char* expr = astGetChildOutput(ast, indentLevel, 0);
+    size_t length = strlen(indent) + strlen(expr) + 9;
     char* buffer = bufferNewCharArray(length);
     sprintf_s(buffer, length, "%s(throw %s)\n", indent, expr);
     return buffer;
 }
 
 static char* astStmtTryToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* tryStmt = astGetChildOutput(ast, indentLevel + 1, 0);
+    char* catchStmt = astGetChildOutput(ast, indentLevel + 1, 1);
+    size_t length = strlen(indent) + strlen(tryStmt) + strlen(catchStmt) + 14;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(try \n%s\ncatch \n%s", indent, tryStmt, catchStmt);
+
+    if (ast->children->count > 2) {
+        char* finallyStmt = astGetChildOutput(ast, indentLevel + 1, 2);
+        size_t length2 = strlen(indent) + 10;
+        char* buffer2 = bufferNewCharArray(length);
+        sprintf_s(buffer2, length2, "%s(finally %s\n", indent, finallyStmt);
+        buffer = astConcatOutput(buffer, buffer2);
+        free(buffer2);
+    }
+
+    buffer = astConcatOutput(buffer, ")\n");
+    return buffer;
 }
 
 static char* astStmtUsingToString(Ast* ast, int indentLevel) {
