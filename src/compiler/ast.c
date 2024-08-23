@@ -569,8 +569,23 @@ static char* astDeclMethodToString(Ast* ast, int indentLevel) {
 }
 
 static char* astDeclNamespaceToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    Ast* identifiers = astGetChild(ast, 0);
+    Ast* identifier = astGetChild(identifiers, 0);
+    char* name = tokenToString(identifier->token);
+    size_t length = strlen(indent) + strlen(name) + 15;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(namespaceDecl %s", indent, name);
+
+    for (int i = 1; i < identifiers->children->count; i++) {
+        identifier = astGetChild(ast, i);
+        char* name = tokenToString(identifier->token);
+        buffer = astConcatOutput(buffer, ".");
+        buffer = astConcatOutput(buffer, name);
+    }
+
+    buffer = astConcatOutput(buffer, ")\n");
+    return buffer;
 }
 
 static char* astDeclTraitToString(Ast* ast, int indentLevel) {
@@ -579,14 +594,26 @@ static char* astDeclTraitToString(Ast* ast, int indentLevel) {
 }
 
 static char* astDeclVarToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* keyword = ast->modifier.isMutable ? "var" : "val";
+    char* name = tokenToString(ast->token);
+    char* expr = "";
+
+    if (ast->children->count > 0) {
+        expr = astGetChildOutput(ast, indentLevel, 0);
+        expr = astConcatOutput(" = ", expr);
+    }
+
+    size_t length = strlen(indent) + strlen(name) + strlen(expr) + 12;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(varDecl %s %s%s)\n", indent, keyword, name, expr);
+    return buffer;
 }
 
 static char* astListExprToString(Ast* ast, int indentLevel) {
     char* buffer = "(exprList\n";
     for (int i = 0; i < ast->children->count; i++) {
-        char* stmt = astToString(ast->children->elements[i], indentLevel);
+        char* stmt = astToString(astGetChild(ast, i), indentLevel);
         buffer = astConcatOutput(buffer, stmt);
     }
     buffer = astConcatOutput(buffer, ")\n");

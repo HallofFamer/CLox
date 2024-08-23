@@ -1002,18 +1002,19 @@ static Ast* funDeclaration(Parser* parser, bool isAsync) {
 }
 
 static Ast* namespaceDeclaration(Parser* parser) {
-    Ast* decl = emptyAst(AST_DECL_NAMESPACE, parser->previous);
+    Token token = parser->previous;
+    Ast* _namespace = emptyAst(AST_LIST_VAR, token);
     uint8_t namespaceDepth = 0;
     do {
         if (namespaceDepth > UINT4_MAX) {
             errorAtCurrent(parser, "Can't have more than 15 levels of namespace depth.");
         }
-        astAppendChild(decl, identifier(parser, "Expect Namespace identifier."));
+        astAppendChild(_namespace, identifier(parser, "Expect Namespace identifier."));
         namespaceDepth++;
     } while (match(parser, TOKEN_DOT));
 
     consume(parser, TOKEN_SEMICOLON, "Expect semicolon after namespace declaration.");
-    return decl;
+    return newAst(AST_DECL_NAMESPACE, token, 1, _namespace);
 }
 
 static Ast* traitDeclaration(Parser* parser) {
