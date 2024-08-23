@@ -93,7 +93,7 @@ struct Ast {
     uint8_t depth;
 };
 
-#define ASTNODE_IS_ROOT(astNode) (ast->category == AST_CATEGORY_PROGRAM)
+#define AST_IS_ROOT(ast) (ast->category == AST_CATEGORY_PROGRAM)
 
 static inline AstModifier astInitModifier() {
     AstModifier modifier = {

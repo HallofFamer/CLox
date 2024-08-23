@@ -256,6 +256,7 @@ static char* astExprLiteralToString(Ast* ast, int indentLevel) {
             snprintf(buffer, length, "\"%s\"", ast->token.start);
             return buffer;
         }
+        default: return NULL;
     }
     return NULL;
 }
@@ -442,7 +443,7 @@ static char* astStmtForToString(Ast* ast, int indentLevel) {
     char* decl = astGetChildOutput(ast, indentLevel, 0);
     char* expr = astGetChildOutput(ast, indentLevel, 1);
     char* body = astGetChildOutput(ast, indentLevel + 1, 2);
-    size_t length = strlen(indent) + strlen(decl) + strlen(expr) + 13;
+    size_t length = strlen(indent) + strlen(decl) + strlen(expr) + strlen(body)  + 13;
     char* buffer = bufferNewCharArray(length);
     sprintf_s(buffer, length, "%s(for %s : %s \n%s\n)\n", indent, decl, expr, body);
     return buffer;
@@ -534,8 +535,13 @@ static char* astStmtUsingToString(Ast* ast, int indentLevel) {
 }
 
 static char* astStmtWhileToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* expr = astGetChildOutput(ast, indentLevel, 0);
+    char* body = astGetChildOutput(ast, indentLevel + 1, 1);
+    size_t length = strlen(indent) + strlen(expr) + 13;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(while %s\n%s\n)\n", indent, expr, body);
+    return buffer;
 }
 
 static char* astStmtYieldToString(Ast* ast, int indentLevel) {
@@ -665,8 +671,7 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprVariableToString(ast, indentLevel);
                 case AST_EXPR_YIELD:
                     return astExprYieldToString(ast, indentLevel);
-                default:
-                    return NULL;
+                default: return NULL;
             }
         }
         case AST_CATEGORY_STMT: {
@@ -705,8 +710,7 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astStmtUsingToString(ast, indentLevel);
                 case AST_STMT_YIELD:
                     return astStmtYieldToString(ast, indentLevel);
-                default: 
-                    return NULL;
+                default: return NULL;
             }
         }
         case AST_CATEGORY_DECL: {
@@ -723,8 +727,7 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astDeclTraitToString(ast, indentLevel);
                 case AST_DECL_VAR:
                     return astDeclVarToString(ast, indentLevel);
-                default:
-                    return NULL;
+                default: return NULL;
             }
         }
         case AST_CATEGORY_OTHER: {
@@ -737,8 +740,7 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astListStmtToString(ast, indentLevel);
                 case AST_LIST_VAR:
                     return astListVarToString(ast, indentLevel);
-                default:
-                    return NULL;
+                default: return NULL;
             }
         }
         default:

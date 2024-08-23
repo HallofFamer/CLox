@@ -373,6 +373,18 @@ static Ast* grouping(Parser* parser, Token token, bool canAssign) {
     return expr;
 }
 
+static Ast* string(Parser* parser, Token token, bool canAssign) {
+    int length = 0;
+    char* str = parseString(parser, &length);
+    Token strToken = {
+        .length = length,
+        .line = token.line,
+        .start = str,
+        .type = TOKEN_STRING
+    };
+    return emptyAst(AST_EXPR_LITERAL, strToken);
+}
+
 static Ast* interpolation(Parser* parser, Token token, bool canAssign) { 
     Ast* exprs = emptyAst(AST_LIST_EXPR, token);
     int count = 0;
@@ -487,7 +499,7 @@ static Ast* superclass_(Parser* parser) {
     if (match(parser, TOKEN_LESS)) {
         return identifier(parser, "Expect super class name.");
     }
-    return emptyAst(AST_EXPR_VARIABLE, syntheticToken("Object"));
+    return emptyAst(AST_EXPR_VARIABLE, parser->rootClass);
 }
 
 static Ast* traits(Parser* parser, Token* name) {
@@ -595,7 +607,7 @@ ParseRule parseRules[] = {
     [TOKEN_DOT]            = {NULL,          dot,         PREC_CALL},
     [TOKEN_DOT_DOT]        = {NULL,          binary,      PREC_CALL},
     [TOKEN_IDENTIFIER]     = {variable,      NULL,        PREC_NONE},
-    [TOKEN_STRING]         = {literal,       NULL,        PREC_NONE},
+    [TOKEN_STRING]         = {string,        NULL,        PREC_NONE},
     [TOKEN_INTERPOLATION]  = {interpolation, NULL,        PREC_NONE},
     [TOKEN_NUMBER]         = {literal,       NULL,        PREC_NONE},
     [TOKEN_INT]            = {literal,       NULL,        PREC_NONE},
