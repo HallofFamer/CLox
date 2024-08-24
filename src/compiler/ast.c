@@ -559,13 +559,26 @@ static char* astDeclClassToString(Ast* ast, int indentLevel) {
 }
 
 static char* astDeclFunToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* async = ast->modifier.isAsync ? "async " : "";
+    char* name = tokenToString(ast->token);
+    char* body = astGetChildOutput(ast, indentLevel + 1, 0);
+    size_t length = strlen(indent) + strlen(async) + strlen(name) + strlen(body) + 12;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(funDecl %s%s %s)\n", indent, async, name, body);
+    return buffer;
 }
 
 static char* astDeclMethodToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* async = ast->modifier.isAsync ? "async " : "";
+    char* _class = ast->modifier.isClass ? "class " : "";
+    char* name = tokenToString(ast->token);
+    char* body = astGetChildOutput(ast, indentLevel + 1, 0);
+    size_t length = strlen(indent) + strlen(async) + strlen(_class) + strlen(name) + strlen(body) + 15;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(methodDecl %s%s%s %s)\n", indent, async, _class, name, body);
+    return buffer;
 }
 
 static char* astDeclNamespaceToString(Ast* ast, int indentLevel) {
