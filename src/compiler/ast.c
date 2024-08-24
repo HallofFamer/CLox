@@ -530,8 +530,30 @@ static char* astStmtTryToString(Ast* ast, int indentLevel) {
 }
 
 static char* astStmtUsingToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    Ast* identifiers = astGetChild(ast, 0);
+    Ast* identifier = astGetChild(identifiers, 0);
+    char* name = tokenToString(identifier->token);
+    size_t length = strlen(indent) + strlen(name) + 15;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(using %s", indent, name);
+
+    for (int i = 1; i < identifiers->children->count; i++) {
+        identifier = astGetChild(identifiers, i);
+        name = tokenToString(identifier->token);
+        buffer = astConcatOutput(buffer, ".");
+        buffer = astConcatOutput(buffer, name);
+    }
+
+    if (ast->children->count > 1) {
+        Ast* alias = astGetChild(ast, 1);
+        name = tokenToString(alias->token);
+        buffer = astConcatOutput(buffer, " as ");
+        buffer = astConcatOutput(buffer, name);
+    }
+
+    buffer = astConcatOutput(buffer, ")\n");
+    return buffer;
 }
 
 static char* astStmtWhileToString(Ast* ast, int indentLevel) {
@@ -591,7 +613,7 @@ static char* astDeclNamespaceToString(Ast* ast, int indentLevel) {
     sprintf_s(buffer, length, "%s(namespaceDecl %s", indent, name);
 
     for (int i = 1; i < identifiers->children->count; i++) {
-        identifier = astGetChild(ast, i);
+        identifier = astGetChild(identifiers, i);
         char* name = tokenToString(identifier->token);
         buffer = astConcatOutput(buffer, ".");
         buffer = astConcatOutput(buffer, name);
@@ -663,8 +685,20 @@ static char* astListVarToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
+static char* astOutputScript(Ast* ast, int indentLevel) {
+    char* buffer = "(program \n";
+    if (ast->children != NULL && ast->children->count > 0) {
+        for (int i = 0; i < ast->children->count; i++) {
+            char* stmt = astToString(ast->children->elements[i], indentLevel + 1);
+            buffer = astConcatOutput(buffer, stmt);
+        }
+    }
+    buffer = astConcatOutput(buffer, ")\n");
+}
+
 char* astToString(Ast* ast, int indentLevel) {
     switch (ast->category) {
+        case AST_CATEGORY_PROGRAM: return astOutputScript(ast, indentLevel);
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
                 case AST_EXPR_ARRAY:

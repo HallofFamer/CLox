@@ -4,7 +4,7 @@
 
 #include "../common/buffer.h"
 #include "../common/common.h"
-#include "lexer.h"
+#include "token.h"
 
 typedef struct Ast Ast;
 DECLARE_BUFFER(AstArray, Ast*)

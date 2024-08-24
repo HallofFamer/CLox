@@ -847,6 +847,7 @@ static Ast* tryStatement(Parser* parser) {
 
 static Ast* usingStatement(Parser* parser) {
     Token token = parser->previous;
+    Ast* stmt = emptyAst(AST_STMT_USING, token);
     Ast* _namespace = emptyAst(AST_LIST_VAR, token);
     Ast* subNamespace = NULL;
     Ast* alias = NULL;
@@ -857,15 +858,15 @@ static Ast* usingStatement(Parser* parser) {
         subNamespace = emptyAst(AST_EXPR_VARIABLE, parser->previous);
         astAppendChild(_namespace, subNamespace);
     } while (match(parser, TOKEN_DOT));
+    astAppendChild(stmt, _namespace);
 
     if (match(parser, TOKEN_AS)) {
         consume(parser, TOKEN_IDENTIFIER, "Expect alias after 'as'.");
         alias = emptyAst(AST_EXPR_VARIABLE, parser->previous);
+        astAppendChild(stmt, alias);
     }
-    else alias = subNamespace;
-
     consume(parser, TOKEN_SEMICOLON, "Expect ';' after using statement.");
-    return newAst(AST_STMT_USING, token, 2, _namespace, alias);
+    return stmt;
 }
 
 static Ast* whileStatement(Parser* parser) {
@@ -1089,6 +1090,10 @@ Ast* parse(Parser* parser) {
 
 #ifdef DEBUG_PRINT_AST
     const char* astString = astToString(ast, 0);
+    if (astString == NULL) { 
+        fprintf(stderr, "Parse Error: Invalid AST constructed.");
+        exit(1);
+    }
     printf("%s", astString);
 #endif
 
