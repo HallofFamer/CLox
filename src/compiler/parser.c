@@ -985,11 +985,11 @@ static Ast* function(Parser* parser, ParseFunctionType type, bool isAsync) {
 
 static Ast* classDeclaration(Parser* parser) {
     consume(parser, TOKEN_IDENTIFIER, "Expect class name.");
-    Token className = parser->previous;
+    Token name = parser->previous;
     Ast* superClass = superclass_(parser);
-    Ast* traitList = traits(parser, &className);
-    Ast* methodList = methods(parser, &className);
-    return newAst(AST_DECL_CLASS, className, 3, superClass, traitList, methodList);
+    Ast* traitList = traits(parser, &name);
+    Ast* methodList = methods(parser, &name);
+    return newAst(AST_DECL_CLASS, name, 3, superClass, traitList, methodList);
 }
 
 static Ast* funDeclaration(Parser* parser, bool isAsync) {

@@ -178,6 +178,11 @@ static char* astExprCallToString(Ast* ast, int indentLevel) {
     return buffer;
 }
 
+static char* astExprClassToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
+}
+
 static char* astExprDictionaryToString(Ast* ast, int indentLevel) {
     size_t length = 13;
     char* buffer = bufferNewCharArray(length);
@@ -330,6 +335,11 @@ static char* astExprSuperInvokeToString(Ast* ast, int indentLevel) {
 
 static char* astExprThisToString(Ast* ast, int indentLevel) {
     return "(this)";
+}
+
+static char* astExprTraitToString(Ast* ast, int indentLevel) {
+    // To be implemented
+    return NULL;
 }
 
 static char* astExprUnaryToString(Ast* ast, int indentLevel) {
@@ -576,8 +586,15 @@ static char* astStmtYieldToString(Ast* ast, int indentLevel) {
 }
 
 static char* astDeclClassToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* className = tokenToString(ast->token);
+    char* superClassName = astGetChildOutput(ast, indentLevel + 1, 0);
+    char* traitList = astGetChildOutput(ast, indentLevel + 1, 1);
+    char* methodList = astGetChildOutput(ast, indentLevel + 1, 2);
+    size_t length = strlen(indent) + strlen(className) + strlen(superClassName) + strlen(traitList) + strlen(methodList) + 17;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(classDecl %s %s \n%s\n%s)\n", indent, className, superClassName, traitList, methodList);
+    return buffer;
 }
 
 static char* astDeclFunToString(Ast* ast, int indentLevel) {
@@ -587,7 +604,7 @@ static char* astDeclFunToString(Ast* ast, int indentLevel) {
     char* body = astGetChildOutput(ast, indentLevel + 1, 0);
     size_t length = strlen(indent) + strlen(async) + strlen(name) + strlen(body) + 12;
     char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(funDecl %s%s %s)\n", indent, async, name, body);
+    sprintf_s(buffer, length, "%s(funDecl %s%s\n%s)\n", indent, async, name, body);
     return buffer;
 }
 
@@ -711,6 +728,8 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprBinaryToString(ast, indentLevel);
                 case AST_EXPR_CALL:
                     return astExprCallToString(ast, indentLevel);
+                case AST_EXPR_CLASS:
+                    return astExprClassToString(ast, indentLevel);
                 case AST_EXPR_DICTIONARY:
                     return astExprDictionaryToString(ast, indentLevel);
                 case AST_EXPR_FUNCTION:
@@ -739,6 +758,8 @@ char* astToString(Ast* ast, int indentLevel) {
                     return astExprSuperInvokeToString(ast, indentLevel);
                 case AST_EXPR_THIS: 
                     return astExprThisToString(ast, indentLevel);
+                case AST_EXPR_TRAIT:
+                    return astExprTraitToString(ast, indentLevel);
                 case AST_EXPR_UNARY:
                     return astExprUnaryToString(ast, indentLevel);
                 case AST_EXPR_VARIABLE:
