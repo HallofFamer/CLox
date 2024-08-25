@@ -505,8 +505,30 @@ static char* astStmtReturnToString(Ast* ast, int indentLevel) {
 }
 
 static char* astStmtSwitchToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* expr = astGetChildOutput(ast, indentLevel, 0);
+    size_t length = strlen(indent) + strlen(expr) + 9;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(switch %s\n", indent, expr);
+
+    char* caseList = astGetChildOutput(ast, indentLevel + 1, 1);
+    size_t length2 = strlen(caseList) + 12;
+    char* buffer2 = bufferNewCharArray(length2);
+    sprintf_s(buffer, length, "%s(caseList %s)\n", indent, caseList);
+    astConcatOutput(buffer, buffer2);
+    free(buffer2);
+
+    if (ast->children != NULL && ast->children->count > 2) {
+        char* defaultStmt = astGetChildOutput(ast, indentLevel + 1, 2);
+        size_t length3 = strlen(defaultStmt) + 11;
+        char* buffer3 = bufferNewCharArray(length3);
+        sprintf_s(buffer, length, "%s(default %s)\n", indent, defaultStmt);
+        astConcatOutput(buffer, buffer3);
+        free(buffer3);
+    }
+
+    buffer = astConcatOutput(buffer, ")\n");
+    return buffer;
 }
 
 static char* astStmtThrowToString(Ast* ast, int indentLevel) {
