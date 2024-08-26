@@ -66,7 +66,6 @@ static void advance(Parser* parser) {
     for (;;) {
         parser->next = scanToken(parser->lexer);
         if (parser->next.type != TOKEN_ERROR) break;
-
         errorAtCurrent(parser, parser->next.start);
     }
 }
@@ -851,7 +850,6 @@ static Ast* usingStatement(Parser* parser) {
     Ast* _namespace = emptyAst(AST_LIST_VAR, token);
     Ast* subNamespace = NULL;
     Ast* alias = NULL;
-    int namespaceDepth = 0;
 
     do {
         consume(parser, TOKEN_IDENTIFIER, "Expect namespace identifier.");

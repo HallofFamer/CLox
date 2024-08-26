@@ -183,9 +183,9 @@ static char* astExprClassToString(Ast* ast, int indentLevel) {
     char* superClassName = astGetChildOutput(ast, indentLevel + 1, 0);
     char* traitList = astGetChildOutput(ast, indentLevel + 1, 1);
     char* methodList = astGetChildOutput(ast, indentLevel + 1, 2);
-    size_t length = strlen(indent) + strlen(superClassName) + strlen(traitList) + strlen(methodList) + 14;
+    size_t length = strlen(indent) + strlen(superClassName) + strlen(traitList) + strlen(methodList) + 18;
     char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(class < %s \n%s\n%s)\n", indent, superClassName, traitList, methodList);
+    sprintf_s(buffer, length, "%s(class < %s\nwith %s\n%s)\n", indent, superClassName, traitList, methodList);
     return buffer;
 }
 
@@ -344,8 +344,13 @@ static char* astExprThisToString(Ast* ast, int indentLevel) {
 }
 
 static char* astExprTraitToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* traitList = astGetChildOutput(ast, indentLevel + 1, 0);
+    char* methodList = astGetChildOutput(ast, indentLevel + 1, 1);
+    size_t length = strlen(indent) + strlen(traitList) + strlen(methodList) + 16;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(trait \nwith %s\n%s)\n", indent, traitList, methodList);
+    return buffer;
 }
 
 static char* astExprUnaryToString(Ast* ast, int indentLevel) {
