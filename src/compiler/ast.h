@@ -10,7 +10,7 @@ typedef struct Ast Ast;
 DECLARE_BUFFER(AstArray, Ast*)
 
 typedef enum {
-    AST_CATEGORY_PROGRAM,
+    AST_CATEGORY_SCRIPT,
     AST_CATEGORY_EXPR,
     AST_CATEGORY_STMT,
     AST_CATEGORY_DECL,
@@ -93,7 +93,7 @@ struct Ast {
     uint8_t depth;
 };
 
-#define AST_IS_ROOT(ast) (ast->category == AST_CATEGORY_PROGRAM)
+#define AST_IS_ROOT(ast) (ast->category == AST_CATEGORY_SCRIPT)
 
 static inline AstModifier astInitModifier() {
     AstModifier modifier = {

@@ -74,7 +74,7 @@ void astAppendChild(Ast* ast, Ast* child) {
 }
 
 AstNodeCategory astNodeCategory(AstNodeType type) {
-    if (type == AST_TYPE_NONE) return AST_CATEGORY_PROGRAM;
+    if (type == AST_TYPE_NONE) return AST_CATEGORY_SCRIPT;
     else if (type >= AST_EXPR_ASSIGN && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
     else if (type >= AST_STMT_AWAIT && type <= AST_STMT_YIELD) return AST_CATEGORY_STMT;
     else if (type >= AST_DECL_CLASS && type <= AST_DECL_VAR) return AST_CATEGORY_DECL;
@@ -179,8 +179,14 @@ static char* astExprCallToString(Ast* ast, int indentLevel) {
 }
 
 static char* astExprClassToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* superClassName = astGetChildOutput(ast, indentLevel + 1, 0);
+    char* traitList = astGetChildOutput(ast, indentLevel + 1, 1);
+    char* methodList = astGetChildOutput(ast, indentLevel + 1, 2);
+    size_t length = strlen(indent) + strlen(superClassName) + strlen(traitList) + strlen(methodList) + 14;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(class < %s \n%s\n%s)\n", indent, superClassName, traitList, methodList);
+    return buffer;
 }
 
 static char* astExprDictionaryToString(Ast* ast, int indentLevel) {
@@ -613,9 +619,9 @@ static char* astDeclClassToString(Ast* ast, int indentLevel) {
     char* superClassName = astGetChildOutput(ast, indentLevel + 1, 0);
     char* traitList = astGetChildOutput(ast, indentLevel + 1, 1);
     char* methodList = astGetChildOutput(ast, indentLevel + 1, 2);
-    size_t length = strlen(indent) + strlen(className) + strlen(superClassName) + strlen(traitList) + strlen(methodList) + 17;
+    size_t length = strlen(indent) + strlen(className) + strlen(superClassName) + strlen(traitList) + strlen(methodList) + 19;
     char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(classDecl %s %s \n%s\n%s)\n", indent, className, superClassName, traitList, methodList);
+    sprintf_s(buffer, length, "%s(classDecl %s < %s \n%s\n%s)\n", indent, className, superClassName, traitList, methodList);
     return buffer;
 }
 
@@ -733,11 +739,12 @@ static char* astOutputScript(Ast* ast, int indentLevel) {
         }
     }
     buffer = astConcatOutput(buffer, ")\n");
+    return buffer;
 }
 
 char* astToString(Ast* ast, int indentLevel) {
     switch (ast->category) {
-        case AST_CATEGORY_PROGRAM: return astOutputScript(ast, indentLevel);
+        case AST_CATEGORY_SCRIPT: return astOutputScript(ast, indentLevel);
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
                 case AST_EXPR_ARRAY:

@@ -993,6 +993,7 @@ static Ast* classDeclaration(Parser* parser) {
 }
 
 static Ast* funDeclaration(Parser* parser, bool isAsync) {
+    consume(parser, TOKEN_IDENTIFIER, "Expect function name.");
     Token name = parser->previous;
     Ast* body = function(parser, PARSE_TYPE_FUNCTION, isAsync);
     return newAst(AST_DECL_FUN, name, 1, body);
