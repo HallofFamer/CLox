@@ -674,8 +674,14 @@ static char* astDeclNamespaceToString(Ast* ast, int indentLevel) {
 }
 
 static char* astDeclTraitToString(Ast* ast, int indentLevel) {
-    // To be implemented
-    return NULL;
+    char* indent = astIndent(indentLevel);
+    char* traitName = tokenToString(ast->token);
+    char* traitList = astGetChildOutput(ast, indentLevel + 1, 0);
+    char* methodList = astGetChildOutput(ast, indentLevel + 1, 1);
+    size_t length = strlen(indent) + strlen(traitName) + strlen(traitList) + strlen(methodList) + 20;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "%s(traitDecl %s\nwith %s\n%s)\n", indent, traitName, traitList, methodList);
+    return buffer;
 }
 
 static char* astDeclVarToString(Ast* ast, int indentLevel) {

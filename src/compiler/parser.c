@@ -406,11 +406,11 @@ static Ast* interpolation(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* array(Parser* parser, Token token, Ast* element) {
-    Ast* exprs = newAst(AST_LIST_EXPR, token, 1, element);
+    Ast* elements = newAst(AST_LIST_EXPR, token, 1, element);
     uint8_t elementCount = 1;
     while (match(parser, TOKEN_COMMA)) {
         element = expression(parser);
-        astAppendChild(exprs, element);
+        astAppendChild(elements, element);
 
         if (elementCount == UINT8_MAX) {
             error(parser, "Cannot have more than 255 elements.");
@@ -419,18 +419,18 @@ static Ast* array(Parser* parser, Token token, Ast* element) {
     }
 
     consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after elements.");
-    return newAst(AST_EXPR_ARRAY, token, 1, exprs);
+    return newAst(AST_EXPR_ARRAY, token, 1, elements);
 }
 
 static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
-    Ast* exprs = newAst(AST_LIST_EXPR, token, 2, key, value);
+    Ast* entries = newAst(AST_LIST_EXPR, token, 2, key, value);
     uint8_t entryCount = 1;
     while (match(parser, TOKEN_COMMA)) {
         Ast* key = expression(parser);
-        astAppendChild(exprs, key);
+        astAppendChild(entries, key);
         consume(parser, TOKEN_COLON, "Expect ':' after entry key.");
         Ast* value = expression(parser);
-        astAppendChild(exprs, value);
+        astAppendChild(entries, value);
 
         if (entryCount == UINT8_MAX) {
             error(parser, "Cannot have more than 255 entries.");
@@ -439,7 +439,7 @@ static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
     }
 
     consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after entries.");
-    return newAst(AST_EXPR_DICTIONARY, token, 1, exprs);
+    return newAst(AST_EXPR_DICTIONARY, token, 1, entries);
 }
 
 static Ast* collection(Parser* parser, Token token, bool canAssign) { 
@@ -546,13 +546,13 @@ static Ast* this_(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* unary(Parser* parser, Token token, bool canAssign) {
-    Ast* child = parsePrecedence(parser, PREC_UNARY);
-    return newAst(AST_EXPR_UNARY, token, 1, child);
+    Ast* expr = parsePrecedence(parser, PREC_UNARY);
+    return newAst(AST_EXPR_UNARY, token, 1, expr);
 }
 
 static Ast* yield(Parser* parser, Token token, bool canAssign) {
-    Ast* child = expression(parser);
-    return newAst(AST_EXPR_YIELD, token, 1, child);
+    Ast* expr = expression(parser);
+    return newAst(AST_EXPR_YIELD, token, 1, expr);
 }
 
 static Ast* async(Parser* parser, Token token, bool canAssign) { 
@@ -570,8 +570,8 @@ static Ast* async(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* await(Parser* parser, Token token, bool canAssign) { 
-    Ast* child = expression(parser);
-    return newAst(AST_EXPR_AWAIT, token, 1, child);
+    Ast* expr = expression(parser);
+    return newAst(AST_EXPR_AWAIT, token, 1, expr);
 }
 
 ParseRule parseRules[] = {
