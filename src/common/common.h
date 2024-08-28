@@ -26,7 +26,8 @@
 typedef struct VM VM;
 typedef enum InterpretResult InterpretResult;
 typedef struct CallFrame CallFrame;
+typedef struct CompilerV1 CompilerV1;
+typedef struct ClassCompilerV1 ClassCompilerV1;
 typedef struct Compiler Compiler;
-typedef struct ClassCompiler ClassCompiler;
 
 #endif // !clox_common_h

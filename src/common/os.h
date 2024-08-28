@@ -21,6 +21,7 @@
 #define localtime_s(buf,timer) localtime(timer)
 #define sscanf_s(buffer,format,...) sscanf(buffer,format,__VA_ARGS__)
 #define sprintf_s(buffer,bufsz,format,...) sprintf(buffer,format,__VA_ARGS__)
+#define snprintf_s(buffer,bufsz,format,...) snprintf(buffer,format,__VA_ARGS__)
 #define strtok_s(str,delim,ctx) strtok(str,delim)
 #define _chmod(path,mode) chmod(path,mode)
 #define _getcwd(buffer,size) getcwd(buffer,size)

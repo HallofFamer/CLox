@@ -79,7 +79,7 @@ static inline int bufferGrowCapacity(int capacity) {
 static inline char* bufferNewCharArray(size_t length) {
     char* buffer = (char*)malloc(length + 1);
     if (buffer == NULL) {
-        fprintf(stderr, "Ast has no children or invalid child index specified.");
+        fprintf(stderr, "Not enough memory to allocate string of length %zu.", length);
         exit(1);
     }
     return buffer;
@@ -88,6 +88,7 @@ static inline char* bufferNewCharArray(size_t length) {
 DECLARE_BUFFER(ByteArray, uint8_t)
 DECLARE_BUFFER(IntArray, int)
 DECLARE_BUFFER(DoubleArray, double)
+DECLARE_BUFFER(CharArray, char)
 DECLARE_BUFFER(StringArray, char*)
 
 #endif // !clox_buffer_h

@@ -57,11 +57,13 @@ void runAtStartup() {
         exit(60);
     }
 #endif
+
     curl_global_init(CURL_GLOBAL_ALL);
 }
 
 void runAtExit(void) {
     curl_global_cleanup();
+
 #ifdef _WIN32
     WSACleanup();
 #endif
