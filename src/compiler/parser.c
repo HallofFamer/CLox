@@ -323,6 +323,11 @@ static Ast* logical(Parser* parser, Token token, Ast* left, bool canAssign) {
     return newAst(AST_EXPR_LOGICAL, token, 2, left, right);
 }
 
+static Ast* nil(Parser* parser, Token token, Ast* left, bool canAssign) {
+    Ast* right = parsePrecedence(parser, PREC_PRIMARY);
+    return newAst(AST_EXPR_NIL, token, 2, left, right);
+}
+
 static Ast* subscript(Parser* parser, Token token, Ast* left, bool canAssign) {
     Ast* expr = NULL;
     Ast* index = expression(parser);
@@ -349,7 +354,7 @@ static Ast* question(Parser* parser, Token token, Ast* left, bool canAssign) {
         expr = call(parser, token, left, canAssign);
     }
     else if (match(parser, TOKEN_QUESTION) || match(parser, TOKEN_COLON)) {
-        expr = binary(parser, token, left, canAssign);
+        expr = nil(parser, token, left, canAssign);
     }
 
     if (expr != NULL) expr->modifier.isOptional = true;

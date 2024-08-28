@@ -267,6 +267,16 @@ static char* astOutputExprLogical(Ast* ast, int indentLevel) {
     return astOutputExprBinary(ast, indentLevel);
 }
 
+static char* astOutputExprNil(Ast* ast, int indentLevel) {
+    char* op = tokenToString(ast->token);
+    char* left = astOutputChild(ast, indentLevel, 0);
+    char* right = astOutputChild(ast, indentLevel, 1);
+    size_t length = strlen(op) + strlen(left) + strlen(right) + 5;
+    char* buffer = bufferNewCharArray(length);
+    sprintf_s(buffer, length, "(%s ?%s %s)", left, op, right);
+    return buffer;
+}
+
 static char* astOutputExprPropertyGet(Ast* ast, int indentLevel) {
     char* expr = astOutputChild(ast, indentLevel, 0);
     char* prop = tokenToString(ast->token);
@@ -774,6 +784,8 @@ char* astOutput(Ast* ast, int indentLevel) {
                     return astOutputExprLiteral(ast, indentLevel);
                 case AST_EXPR_LOGICAL:
                     return astOutputExprLogical(ast, indentLevel);
+                case AST_EXPR_NIL:
+                    return astOutputExprNil(ast, indentLevel);
                 case AST_EXPR_PROPERTY_GET:
                     return astOutputExprPropertyGet(ast, indentLevel);
                 case AST_EXPR_PROPERTY_SET:

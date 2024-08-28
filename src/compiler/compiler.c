@@ -45,6 +45,16 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Ast* a
     compiler->innermostLoopScopeDepth = 0;
 }
 
+static ObjFunction* endCompiler(Compiler* compiler) {
+    // To be implemented
+    return NULL;
+}
+
+static void emitOpCode(Compiler* compiler) {
+    // To be implemented
+    return NULL;
+}
+
 ObjFunction* compile(VM* vm, const char* source) {
     Lexer lexer;
     initLexer(&lexer, source);
@@ -52,9 +62,11 @@ ObjFunction* compile(VM* vm, const char* source) {
     Parser parser;
     initParser(&parser, &lexer);
     Ast* ast = parse(&parser);
-
+    if (parser.hadError) return NULL;
+    
     Compiler compiler;
     initCompiler(vm, &compiler, NULL, ast, false);
-
-    return NULL;
+    emitOpCode(&compiler);
+    ObjFunction* function = endCompiler(&compiler);
+    return function;
 }
