@@ -263,7 +263,6 @@ static Token number(Lexer* lexer) {
 
     if (peek(lexer) == '.' && isDigit(peekNext(lexer))) {
         advance(lexer);
-
         while (isDigit(peek(lexer))) advance(lexer);
         return makeToken(lexer, TOKEN_NUMBER);
     }
