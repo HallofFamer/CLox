@@ -4,10 +4,6 @@
 
 #include "token.h"
 
-Token emptyToken() {
-    return syntheticToken("");
-}
-
 Token syntheticToken(const char* text) {
     Token token = { 
         .start = text, 

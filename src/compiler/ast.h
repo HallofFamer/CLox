@@ -112,7 +112,14 @@ Ast* newAst(AstNodeType type, Token token, int numChildren, ...);
 Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children);
 void freeAst(Ast* node, bool freeChildren);
 void astAppendChild(Ast* ast, Ast* child);
-AstNodeCategory astNodeCategory(AstNodeType type);
 char* astOutput(Ast* ast, int indentLevel);
+
+static inline AstNodeCategory astNodeCategory(AstNodeType type) {
+    if (type == AST_TYPE_NONE) return AST_CATEGORY_SCRIPT;
+    else if (type >= AST_EXPR_ASSIGN && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
+    else if (type >= AST_STMT_AWAIT && type <= AST_STMT_YIELD) return AST_CATEGORY_STMT;
+    else if (type >= AST_DECL_CLASS && type <= AST_DECL_VAR) return AST_CATEGORY_DECL;
+    else return AST_CATEGORY_OTHER;
+}
 
 #endif // !clox_ast_h

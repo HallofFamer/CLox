@@ -40,8 +40,11 @@ typedef struct {
     int line;
 } Token;
 
-Token emptyToken();
 Token syntheticToken(const char* text);
 char* tokenToString(Token token);
+
+static inline Token emptyToken() {
+    return syntheticToken("");
+}
 
 #endif // !clox_token_h
