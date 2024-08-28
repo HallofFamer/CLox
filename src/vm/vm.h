@@ -2,7 +2,7 @@
 #ifndef clox_vm_h
 #define clox_vm_h
 
-#include "compiler.h"
+#include "compiler_v1.h"
 #include "exception.h"
 #include "object.h"
 #include "shape.h"
@@ -89,8 +89,9 @@ struct VM {
     uv_loop_t* eventLoop;
 
     Configuration config;
-    Compiler* currentCompiler;
-    ClassCompiler* currentClass;
+    CompilerV1* currentCompiler;
+    ClassCompilerV1* currentClass;
+    Compiler* compiler;
 
     int behaviorCount;
     int namespaceCount;

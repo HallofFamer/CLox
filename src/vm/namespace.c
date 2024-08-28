@@ -127,7 +127,7 @@ bool loadModule(VM* vm, ObjString* path) {
     vm->currentModule = newModule(vm, path);
 
     char* source = readFile(path->chars);
-    ObjFunction* function = compile(vm, source);
+    ObjFunction* function = compileV1(vm, source);
     free(source);
     if (function == NULL) return false;
     push(vm, OBJ_VAL(function));

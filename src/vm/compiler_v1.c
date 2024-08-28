@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "compiler.h"
+#include "compiler_v1.h"
 #include "debug.h"
 #include "id.h"
 #include "memory.h"
@@ -18,7 +18,7 @@ typedef struct {
     Token rootClass;
     bool hadError;
     bool panicMode;
-} Parser;
+} ParserV1;
 
 typedef enum {
     PREC_NONE,
@@ -33,28 +33,28 @@ typedef enum {
     PREC_UNARY,
     PREC_CALL,
     PREC_PRIMARY
-} Precedence;
+} PrecedenceV1;
 
-typedef void (*ParseFn)(Compiler* compiler, bool canAssign);
+typedef void (*ParseFn)(CompilerV1* compiler, bool canAssign);
 
 typedef struct {
     ParseFn prefix;
     ParseFn infix;
-    Precedence precedence;
-} ParseRule;
+    PrecedenceV1 precedence;
+} ParseRuleV1;
 
 typedef struct {
     Token name;
     int depth;
     bool isCaptured;
     bool isMutable;
-} Local;
+} LocalV1;
 
 typedef struct {
     uint8_t index;
     bool isLocal;
     bool isMutable;
-} Upvalue;
+} UpvalueV1;
 
 typedef enum {
     TYPE_FUNCTION,
@@ -64,15 +64,15 @@ typedef enum {
     TYPE_SCRIPT
 } FunctionType;
 
-struct Compiler {
-    struct Compiler* enclosing;
-    Parser* parser;
+struct CompilerV1 {
+    struct CompilerV1* enclosing;
+    ParserV1* parser;
     ObjFunction* function;
     FunctionType type;
 
-    Local locals[UINT8_COUNT];
+    LocalV1 locals[UINT8_COUNT];
     int localCount;
-    Upvalue upvalues[UINT8_COUNT];
+    UpvalueV1 upvalues[UINT8_COUNT];
     IDMap indexes;
 
     int scopeDepth;
@@ -81,14 +81,14 @@ struct Compiler {
     bool isAsync;
 };
 
-struct ClassCompiler {
-    struct ClassCompiler* enclosing;
+struct ClassCompilerV1 {
+    struct ClassCompilerV1* enclosing;
     Token name;
     Token superclass;
     BehaviorType type;
 };
 
-static void initParser(Parser* parser, VM* vm, Scanner* scanner) {
+static void initParserV1(ParserV1* parser, VM* vm, Scanner* scanner) {
     parser->vm = vm;
     parser->scanner = scanner;
     parser->rootClass = synthesizeToken("Object");
@@ -96,7 +96,7 @@ static void initParser(Parser* parser, VM* vm, Scanner* scanner) {
     parser->panicMode = false;
 }
 
-static void errorAt(Parser* parser, Token* token, const char* message) {
+static void errorAt(ParserV1* parser, Token* token, const char* message) {
     if (parser->panicMode) return;
     parser->panicMode = true;
     fprintf(stderr, "[line %d] Error", token->line);
@@ -115,15 +115,15 @@ static void errorAt(Parser* parser, Token* token, const char* message) {
     parser->hadError = true;
 }
 
-static void error(Parser* parser, const char* message) {
+static void error(ParserV1* parser, const char* message) {
     errorAt(parser, &parser->previous, message);
 }
 
-static void errorAtCurrent(Parser* parser, const char* message) {
+static void errorAtCurrent(ParserV1* parser, const char* message) {
     errorAt(parser, &parser->current, message);
 }
 
-static void advance(Parser* parser) {
+static void advance(ParserV1* parser) {
     parser->previous = parser->current;
     parser->current = parser->next;
 
@@ -135,7 +135,7 @@ static void advance(Parser* parser) {
     }
 }
 
-static void consume(Parser* parser, TokenSymbol type, const char* message) {
+static void consume(ParserV1* parser, TokenSymbol type, const char* message) {
     if (parser->current.type == type) {
         advance(parser);
         return;
@@ -143,21 +143,21 @@ static void consume(Parser* parser, TokenSymbol type, const char* message) {
     errorAtCurrent(parser, message);
 }
 
-static bool check(Parser* parser, TokenSymbol type) {
+static bool check(ParserV1* parser, TokenSymbol type) {
     return parser->current.type == type;
 }
 
-static bool checkNext(Parser* parser, TokenSymbol type) {
+static bool checkNext(ParserV1* parser, TokenSymbol type) {
     return parser->next.type == type;
 }
 
-static bool match(Parser* parser, TokenSymbol type) {
+static bool match(ParserV1* parser, TokenSymbol type) {
     if (!check(parser, type)) return false;
     advance(parser);
     return true;
 }
 
-static int hexDigit(Parser* parser, char c) {
+static int hexDigit(ParserV1* parser, char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return c - 'a' + 10;
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
@@ -166,7 +166,7 @@ static int hexDigit(Parser* parser, char c) {
     return -1;
 }
 
-static int hexEscape(Parser* parser, const char* source, int base, int startIndex) {
+static int hexEscape(ParserV1* parser, const char* source, int base, int startIndex) {
     int value = 0;
     for (int i = 0; i < base; i++) {
         int index = startIndex + i + 2;
@@ -182,7 +182,7 @@ static int hexEscape(Parser* parser, const char* source, int base, int startInde
     return value;
 }
 
-static int unicodeEscape(Parser* parser, const char* source, char* target, int base, int startIndex, int currentLength) {
+static int unicodeEscape(ParserV1* parser, const char* source, char* target, int base, int startIndex, int currentLength) {
     int value = hexEscape(parser, source, base, startIndex);
     int numBytes = utf8NumBytes(value);
     if (numBytes < 0) error(parser, "Negative unicode character specified.");
@@ -199,7 +199,7 @@ static int unicodeEscape(Parser* parser, const char* source, char* target, int b
     return numBytes;
 }
 
-static char* parseString(Parser* parser, int* length) {
+static char* parseString(ParserV1* parser, int* length) {
     int maxLength = parser->previous.length - 2;
     const char* source = parser->previous.start + 1;
     char* target = (char*)malloc((size_t)maxLength + 1);
@@ -285,7 +285,7 @@ static char* parseString(Parser* parser, int* length) {
     return target;
 }
 
-static void synchronize(Parser* parser) {
+static void synchronize(ParserV1* parser) {
     parser->panicMode = false;
 
     while (parser->current.type != TOKEN_EOF) {
@@ -318,27 +318,27 @@ static void synchronize(Parser* parser) {
     }
 }
 
-static Chunk* currentChunk(Compiler* compiler) {
+static Chunk* currentChunk(CompilerV1* compiler) {
     return &compiler->function->chunk;
 }
 
-static void emitByte(Compiler* compiler, uint8_t byte) {
+static void emitByte(CompilerV1* compiler, uint8_t byte) {
     writeChunk(compiler->parser->vm, currentChunk(compiler), byte, compiler->parser->previous.line);
 }
 
-static void emitBytes(Compiler* compiler, uint8_t byte1, uint8_t byte2) {
+static void emitBytes(CompilerV1* compiler, uint8_t byte1, uint8_t byte2) {
     emitByte(compiler, byte1);
     emitByte(compiler, byte2);
 }
 
-static int emitJump(Compiler* compiler, uint8_t instruction) {
+static int emitJump(CompilerV1* compiler, uint8_t instruction) {
     emitByte(compiler, instruction);
     emitByte(compiler, 0xff);
     emitByte(compiler, 0xff);
     return currentChunk(compiler)->count - 2;
 }
 
-static void emitLoop(Compiler* compiler, int loopStart) {
+static void emitLoop(CompilerV1* compiler, int loopStart) {
     emitByte(compiler, OP_LOOP);
 
     int offset = currentChunk(compiler)->count - loopStart + 2;
@@ -348,7 +348,7 @@ static void emitLoop(Compiler* compiler, int loopStart) {
     emitByte(compiler, offset & 0xff);
 }
 
-static void emitReturn(Compiler* compiler, uint8_t depth) {
+static void emitReturn(CompilerV1* compiler, uint8_t depth) {
     if (compiler->type == TYPE_INITIALIZER) {
         emitBytes(compiler, OP_GET_LOCAL, 0);
     }
@@ -364,7 +364,7 @@ static void emitReturn(Compiler* compiler, uint8_t depth) {
     }
 }
 
-static uint8_t makeConstant(Compiler* compiler, Value value) {
+static uint8_t makeConstant(CompilerV1* compiler, Value value) {
     int constant = addConstant(compiler->parser->vm, currentChunk(compiler), value);
     if (constant > UINT8_MAX) {
         error(compiler->parser, "Too many constants in one chunk.");
@@ -374,11 +374,11 @@ static uint8_t makeConstant(Compiler* compiler, Value value) {
     return (uint8_t)constant;
 }
 
-static void emitConstant(Compiler* compiler, Value value) {
+static void emitConstant(CompilerV1* compiler, Value value) {
     emitBytes(compiler, OP_CONSTANT, makeConstant(compiler, value));
 }
 
-static void patchJump(Compiler* compiler, int offset) {
+static void patchJump(CompilerV1* compiler, int offset) {
     int jump = currentChunk(compiler)->count - offset - 2;
     if (jump > UINT16_MAX) {
         error(compiler->parser, "Too much code to jump over.");
@@ -388,12 +388,12 @@ static void patchJump(Compiler* compiler, int offset) {
     currentChunk(compiler)->code[offset + 1] = jump & 0xff;
 }
 
-static void patchAddress(Compiler* compiler, int offset) {
+static void patchAddress(CompilerV1* compiler, int offset) {
     currentChunk(compiler)->code[offset] = (currentChunk(compiler)->count >> 8) & 0xff;
     currentChunk(compiler)->code[offset + 1] = currentChunk(compiler)->count & 0xff;
 }
 
-static void endLoop(Compiler* compiler) {
+static void endLoop(CompilerV1* compiler) {
     int offset = compiler->innermostLoopStart;
     Chunk* chunk = currentChunk(compiler);
     while (offset < chunk->count) {
@@ -407,7 +407,7 @@ static void endLoop(Compiler* compiler) {
     }
 }
 
-static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing, FunctionType type, bool isAsync) {
+static void initCompiler(CompilerV1* compiler, ParserV1* parser, CompilerV1* enclosing, FunctionType type, bool isAsync) {
     compiler->parser = parser;
     compiler->enclosing = enclosing;
     compiler->function = NULL;
@@ -430,7 +430,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
         else compiler->function->name = copyString(parser->vm, parser->previous.start, parser->previous.length);
     }
 
-    Local* local = &compiler->locals[compiler->localCount++];
+    LocalV1* local = &compiler->locals[compiler->localCount++];
     local->depth = 0;
     local->isCaptured = false;
     local->isMutable = false;
@@ -445,7 +445,7 @@ static void initCompiler(Compiler* compiler, Parser* parser, Compiler* enclosing
     }
 }
 
-static ObjFunction* endCompiler(Compiler* compiler) {
+static ObjFunction* endCompiler(CompilerV1* compiler) {
     emitReturn(compiler, 0);
     ObjFunction* function = compiler->function;
 
@@ -460,11 +460,11 @@ static ObjFunction* endCompiler(Compiler* compiler) {
     return function;
 }
 
-static void beginScope(Compiler* compiler) {
+static void beginScope(CompilerV1* compiler) {
     compiler->scopeDepth++;
 }
 
-static void endScope(Compiler* compiler) {
+static void endScope(CompilerV1* compiler) {
     compiler->scopeDepth--;
 
     while (compiler->localCount > 0 && compiler->locals[compiler->localCount - 1].depth > compiler->scopeDepth) {
@@ -478,16 +478,16 @@ static void endScope(Compiler* compiler) {
     }
 }
 
-static void expression(Compiler* compiler);
-static void statement(Compiler* compiler);
-static void block(Compiler* compiler);
-static void behavior(Compiler* compiler, BehaviorType type, Token name);
-static void function(Compiler* enclosing, FunctionType type, bool isAsync);
-static void declaration(Compiler* compiler);
-static ParseRule* getRule(TokenSymbol type);
-static void parsePrecedence(Compiler* compiler, Precedence precedence);
+static void expression(CompilerV1* compiler);
+static void statement(CompilerV1* compiler);
+static void block(CompilerV1* compiler);
+static void behavior(CompilerV1* compiler, BehaviorType type, Token name);
+static void function(CompilerV1* enclosing, FunctionType type, bool isAsync);
+static void declaration(CompilerV1* compiler);
+static ParseRuleV1* getRule(TokenSymbol type);
+static void parsePrecedence(CompilerV1* compiler, PrecedenceV1 precedence);
 
-static uint8_t makeIdentifier(Compiler* compiler, Value value) {
+static uint8_t makeIdentifier(CompilerV1* compiler, Value value) {
     ObjString* name = AS_STRING(value);
     int identifier;
     if (!idMapGet(&compiler->indexes, name, &identifier)) {
@@ -502,13 +502,13 @@ static uint8_t makeIdentifier(Compiler* compiler, Value value) {
     return (uint8_t)identifier;
 }
 
-static uint8_t identifierConstant(Compiler* compiler, Token* name) {
+static uint8_t identifierConstant(CompilerV1* compiler, Token* name) {
     const char* start = name->start[0] != '`' ? name->start : name->start + 1;
     int length = name->start[0] != '`' ? name->length : name->length - 2;
     return makeIdentifier(compiler, OBJ_VAL(copyString(compiler->parser->vm, start, length)));
 }
 
-static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
+static ObjString* identifierName(CompilerV1* compiler, uint8_t arg) {
     return AS_STRING(currentChunk(compiler)->identifiers.values[arg]);
 }
 
@@ -517,7 +517,7 @@ static bool identifiersEqual(Token* a, Token* b) {
     return memcmp(a->start, b->start, a->length) == 0;
 }
 
-static uint8_t propertyConstant(Compiler* compiler, const char* message) {
+static uint8_t propertyConstant(CompilerV1* compiler, const char* message) {
     switch (compiler->parser->current.type) {
         case TOKEN_IDENTIFIER:
         case TOKEN_EQUAL_EQUAL:
@@ -557,9 +557,9 @@ static uint8_t propertyConstant(Compiler* compiler, const char* message) {
     }
 }
 
-static int resolveLocal(Compiler* compiler, Token* name) {
+static int resolveLocal(CompilerV1* compiler, Token* name) {
     for (int i = compiler->localCount - 1; i >= 0; i--) {
-        Local* local = &compiler->locals[i];
+        LocalV1* local = &compiler->locals[i];
         if (identifiersEqual(name, &local->name)) {
             if (local->depth == -1) {
                 error(compiler->parser, "Can't read local variable in its own initializer.");
@@ -570,11 +570,11 @@ static int resolveLocal(Compiler* compiler, Token* name) {
     return -1;
 }
 
-static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal, bool isMutable) {
+static int addUpvalue(CompilerV1* compiler, uint8_t index, bool isLocal, bool isMutable) {
     int upvalueCount = compiler->function->upvalueCount;
 
     for (int i = 0; i < upvalueCount; i++) {
-        Upvalue* upvalue = &compiler->upvalues[i];
+        UpvalueV1* upvalue = &compiler->upvalues[i];
         if (upvalue->index == index && upvalue->isLocal == isLocal) {
             return i;
         }
@@ -591,7 +591,7 @@ static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal, bool isMu
     return compiler->function->upvalueCount++;
 }
 
-static int resolveUpvalue(Compiler* compiler, Token* name) {
+static int resolveUpvalue(CompilerV1* compiler, Token* name) {
     if (compiler->enclosing == NULL) return -1;
 
     int local = resolveLocal(compiler->enclosing, name);
@@ -607,13 +607,13 @@ static int resolveUpvalue(Compiler* compiler, Token* name) {
     return -1;
 }
 
-static int addLocal(Compiler* compiler, Token name) {
+static int addLocal(CompilerV1* compiler, Token name) {
     if (compiler->localCount == UINT8_COUNT) {
         error(compiler->parser, "Too many local variables in function.");
         return -1;
     }
 
-    Local* local = &compiler->locals[compiler->localCount++];
+    LocalV1* local = &compiler->locals[compiler->localCount++];
     local->name = name;
     local->depth = -1;
     local->isCaptured = false;
@@ -621,17 +621,17 @@ static int addLocal(Compiler* compiler, Token name) {
     return compiler->localCount - 1;
 }
 
-static void getLocal(Compiler* compiler, int slot) {
+static void getLocal(CompilerV1* compiler, int slot) {
     emitByte(compiler, OP_GET_LOCAL);
     emitByte(compiler, slot);
 }
 
-static void setLocal(Compiler* compiler, int slot) {
+static void setLocal(CompilerV1* compiler, int slot) {
     emitByte(compiler, OP_SET_LOCAL);
     emitByte(compiler, slot);
 }
 
-static int discardLocals(Compiler* compiler) {
+static int discardLocals(CompilerV1* compiler) {
     int i = compiler->localCount - 1;
     for (; i >= 0 && compiler->locals[i].depth > compiler->innermostLoopScopeDepth; i--) {
         if (compiler->locals[i].isCaptured) {
@@ -644,19 +644,19 @@ static int discardLocals(Compiler* compiler) {
     return compiler->localCount - i - 1;
 }
 
-static void invokeMethod(Compiler* compiler, int args, const char* name, int length) {
+static void invokeMethod(CompilerV1* compiler, int args, const char* name, int length) {
     int slot = makeIdentifier(compiler, OBJ_VAL(copyString(compiler->parser->vm, name, length)));
     emitByte(compiler, OP_INVOKE);
     emitByte(compiler, slot);
     emitByte(compiler, args);
 }
 
-static void declareVariable(Compiler* compiler) {
+static void declareVariable(CompilerV1* compiler) {
     if (compiler->scopeDepth == 0) return;
 
     Token* name = &compiler->parser->previous;
     for (int i = compiler->localCount - 1; i >= 0; i--) {
-        Local* local = &compiler->locals[i];
+        LocalV1* local = &compiler->locals[i];
         if (local->depth != -1 && local->depth < compiler->scopeDepth) {
             break;
         }
@@ -668,20 +668,20 @@ static void declareVariable(Compiler* compiler) {
     addLocal(compiler, *name);
 }
 
-static uint8_t parseVariable(Compiler* compiler, const char* errorMessage) {
+static uint8_t parseVariable(CompilerV1* compiler, const char* errorMessage) {
     consume(compiler->parser, TOKEN_IDENTIFIER, errorMessage);
     declareVariable(compiler);
     if (compiler->scopeDepth > 0) return 0;
     return identifierConstant(compiler, &compiler->parser->previous);
 }
 
-static void markInitialized(Compiler* compiler, bool isMutable) {
+static void markInitialized(CompilerV1* compiler, bool isMutable) {
     if (compiler->scopeDepth == 0) return;
     compiler->locals[compiler->localCount - 1].depth = compiler->scopeDepth;
     compiler->locals[compiler->localCount - 1].isMutable = isMutable;
 }
 
-static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
+static void defineVariable(CompilerV1* compiler, uint8_t global, bool isMutable) {
     if (compiler->scopeDepth > 0) {
         markInitialized(compiler, isMutable);
         return;
@@ -706,7 +706,7 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     }
 }
 
-static uint8_t argumentList(Compiler* compiler) {
+static uint8_t argumentList(CompilerV1* compiler) {
     uint8_t argCount = 0;
     if (!check(compiler->parser, TOKEN_RIGHT_PAREN)) {
         do {
@@ -721,7 +721,7 @@ static uint8_t argumentList(Compiler* compiler) {
     return argCount;
 }
 
-static void parameterList(Compiler* compiler) {
+static void parameterList(CompilerV1* compiler) {
     if (match(compiler->parser, TOKEN_DOT_DOT)) {
         compiler->function->arity = -1;
         uint8_t constant = parseVariable(compiler, "Expect variadic parameter name.");
@@ -740,7 +740,7 @@ static void parameterList(Compiler* compiler) {
     } while (match(compiler->parser, TOKEN_COMMA));
 }
 
-static void and_(Compiler* compiler, bool canAssign) {
+static void and_(CompilerV1* compiler, bool canAssign) {
     int endJump = emitJump(compiler, OP_JUMP_IF_FALSE);
 
     emitByte(compiler, OP_POP);
@@ -749,10 +749,10 @@ static void and_(Compiler* compiler, bool canAssign) {
     patchJump(compiler, endJump);
 }
 
-static void binary(Compiler* compiler, bool canAssign) {
+static void binary(CompilerV1* compiler, bool canAssign) {
     TokenSymbol operatorType = compiler->parser->previous.type;
-    ParseRule* rule = getRule(operatorType);
-    parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
+    ParseRuleV1* rule = getRule(operatorType);
+    parsePrecedence(compiler, (PrecedenceV1)(rule->precedence + 1));
 
     switch (operatorType) {
         case TOKEN_BANG_EQUAL:        emitBytes(compiler, OP_EQUAL, OP_NOT); break;
@@ -771,12 +771,12 @@ static void binary(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void call(Compiler* compiler, bool canAssign) {
+static void call(CompilerV1* compiler, bool canAssign) {
     uint8_t argCount = argumentList(compiler);
     emitBytes(compiler, OP_CALL, argCount);
 }
 
-static void dot(Compiler* compiler, bool canAssign) {
+static void dot(CompilerV1* compiler, bool canAssign) {
     uint8_t name = propertyConstant(compiler, "Expect property name after '.'.");
 
     if (canAssign && match(compiler->parser, TOKEN_EQUAL)) {
@@ -793,12 +793,12 @@ static void dot(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void question(Compiler* compiler, bool canAssign) {
+static void question(CompilerV1* compiler, bool canAssign) {
 #define PARSE_PRECEDENCE() \
     do { \
         TokenSymbol operatorType = compiler->parser->previous.type; \
-        ParseRule* rule = getRule(operatorType); \
-        parsePrecedence(compiler, (Precedence)(rule->precedence + 1)); \
+        ParseRuleV1* rule = getRule(operatorType); \
+        parsePrecedence(compiler, (PrecedenceV1)(rule->precedence + 1)); \
     } while (false)
 
     if (match(compiler->parser, TOKEN_DOT)) {
@@ -834,7 +834,7 @@ static void question(Compiler* compiler, bool canAssign) {
 #undef PARSE_PRECEDENCE
 }
 
-static void subscript(Compiler* compiler, bool canAssign) {
+static void subscript(CompilerV1* compiler, bool canAssign) {
     expression(compiler);
     consume(compiler->parser, TOKEN_RIGHT_BRACKET, "Expect ']' after subscript.");
 
@@ -847,7 +847,7 @@ static void subscript(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void literal(Compiler* compiler, bool canAssign) {
+static void literal(CompilerV1* compiler, bool canAssign) {
     switch (compiler->parser->previous.type) {
         case TOKEN_FALSE: emitByte(compiler, OP_FALSE); break;
         case TOKEN_NIL: emitByte(compiler, OP_NIL); break;
@@ -856,22 +856,22 @@ static void literal(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void grouping(Compiler* compiler, bool canAssign) {
+static void grouping(CompilerV1* compiler, bool canAssign) {
     expression(compiler);
     consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-static void integer(Compiler* compiler, bool canAssign) {
+static void integer(CompilerV1* compiler, bool canAssign) {
     int value = strtol(compiler->parser->previous.start, NULL, 10);
     emitConstant(compiler, INT_VAL(value));
 }
 
-static void number(Compiler* compiler, bool canAssign) {
+static void number(CompilerV1* compiler, bool canAssign) {
     double value = strtod(compiler->parser->previous.start, NULL);
     emitConstant(compiler, NUMBER_VAL(value));
 }
 
-static void or_(Compiler* compiler, bool canAssign) {
+static void or_(CompilerV1* compiler, bool canAssign) {
     int elseJump = emitJump(compiler, OP_JUMP_IF_FALSE);
     int endJump = emitJump(compiler, OP_JUMP);
 
@@ -882,13 +882,13 @@ static void or_(Compiler* compiler, bool canAssign) {
     patchJump(compiler, endJump);
 }
 
-static void string(Compiler* compiler, bool canAssign) {
+static void string(CompilerV1* compiler, bool canAssign) {
     int length = 0;
     char* string = parseString(compiler->parser, &length);
     emitConstant(compiler, OBJ_VAL(takeString(compiler->parser->vm, string, length)));
 }
 
-static void interpolation(Compiler* compiler, bool canAssign) {
+static void interpolation(CompilerV1* compiler, bool canAssign) {
     int count = 0;
     do {
         bool concatenate = false;
@@ -916,7 +916,7 @@ static void interpolation(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void array(Compiler* compiler) {
+static void array(CompilerV1* compiler) {
     uint8_t elementCount = 1;
     while (match(compiler->parser, TOKEN_COMMA)) {
         expression(compiler);
@@ -930,7 +930,7 @@ static void array(Compiler* compiler) {
     emitBytes(compiler, OP_ARRAY, elementCount);
 }
 
-static void dictionary(Compiler* compiler) {
+static void dictionary(CompilerV1* compiler) {
     uint8_t entryCount = 1;
     while (match(compiler->parser, TOKEN_COMMA)) {
         expression(compiler);
@@ -947,7 +947,7 @@ static void dictionary(Compiler* compiler) {
     emitBytes(compiler, OP_DICTIONARY, entryCount);
 }
 
-static void collection(Compiler* compiler, bool canAssign) {
+static void collection(CompilerV1* compiler, bool canAssign) {
     if (match(compiler->parser, TOKEN_RIGHT_BRACKET)) {
         emitBytes(compiler, OP_ARRAY, 0);
     }
@@ -961,15 +961,15 @@ static void collection(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void closure(Compiler* compiler, bool canAssign) {
+static void closure(CompilerV1* compiler, bool canAssign) {
     function(compiler, TYPE_FUNCTION, false);
 }
 
-static void lambda(Compiler* compiler, bool canAssign) {
+static void lambda(CompilerV1* compiler, bool canAssign) {
     function(compiler, TYPE_LAMBDA, false);
 }
 
-static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
+static void checkMutability(CompilerV1* compiler, int arg, uint8_t opCode) {
     switch (opCode) {
         case OP_SET_LOCAL:
             if (!compiler->locals[arg].isMutable) {
@@ -994,7 +994,7 @@ static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
     }
 }
 
-static void namedVariable(Compiler* compiler, Token name, bool canAssign) {
+static void namedVariable(CompilerV1* compiler, Token name, bool canAssign) {
     uint8_t getOp, setOp;
     int arg = resolveLocal(compiler, &name);
     if (arg != -1) {
@@ -1021,25 +1021,25 @@ static void namedVariable(Compiler* compiler, Token name, bool canAssign) {
     }
 }
 
-static void variable(Compiler* compiler, bool canAssign) {
+static void variable(CompilerV1* compiler, bool canAssign) {
     namedVariable(compiler, compiler->parser->previous, canAssign);
 }
 
-static void klass(Compiler* compiler, bool canAssign) {
+static void klass(CompilerV1* compiler, bool canAssign) {
     behavior(compiler, BEHAVIOR_CLASS, synthesizeToken("@"));
 }
 
-static void trait(Compiler* compiler, bool canAssign) {
+static void trait(CompilerV1* compiler, bool canAssign) {
     behavior(compiler, BEHAVIOR_TRAIT, synthesizeToken("@"));
 }
 
-static void namespace_(Compiler* compiler, bool canAssign) {
+static void namespace_(CompilerV1* compiler, bool canAssign) {
     consume(compiler->parser, TOKEN_IDENTIFIER, "Expect Namespace identifier.");
     ObjString* name = copyString(compiler->parser->vm, compiler->parser->previous.start, compiler->parser->previous.length);
     emitBytes(compiler, OP_NAMESPACE, makeIdentifier(compiler, OBJ_VAL(name)));
 }
 
-static void super_(Compiler* compiler, bool canAssign) {
+static void super_(CompilerV1* compiler, bool canAssign) {
     if (compiler->parser->vm->currentClass == NULL) {
         error(compiler->parser, "Cannot use 'super' outside of a class.");
     }
@@ -1062,7 +1062,7 @@ static void super_(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void this_(Compiler* compiler, bool canAssign) {
+static void this_(CompilerV1* compiler, bool canAssign) {
     if (compiler->parser->vm->currentClass == NULL) {
         error(compiler->parser, "Cannot use 'this' outside of a class.");
         return;
@@ -1070,7 +1070,7 @@ static void this_(Compiler* compiler, bool canAssign) {
     variable(compiler, false);
 }
 
-static void unary(Compiler* compiler, bool canAssign) {
+static void unary(CompilerV1* compiler, bool canAssign) {
     TokenSymbol operatorType = compiler->parser->previous.type;
     parsePrecedence(compiler, PREC_UNARY);
 
@@ -1081,7 +1081,7 @@ static void unary(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void yield(Compiler* compiler, bool canAssign) {
+static void yield(CompilerV1* compiler, bool canAssign) {
     if (compiler->type == TYPE_SCRIPT) {
         error(compiler->parser, "Can't yield from top-level code.");
     }
@@ -1105,7 +1105,7 @@ static void yield(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void async(Compiler* compiler, bool canAssign) {
+static void async(CompilerV1* compiler, bool canAssign) {
     if (match(compiler->parser, TOKEN_FUN)) {
         function(compiler, TYPE_FUNCTION, true);
     }
@@ -1117,7 +1117,7 @@ static void async(Compiler* compiler, bool canAssign) {
     }
 }
 
-static void await(Compiler* compiler, bool canAssign) {
+static void await(CompilerV1* compiler, bool canAssign) {
     if (compiler->type == TYPE_SCRIPT) {
         compiler->isAsync = true;
         compiler->function->isAsync = true;
@@ -1127,7 +1127,7 @@ static void await(Compiler* compiler, bool canAssign) {
     emitByte(compiler, OP_AWAIT);
 }
 
-ParseRule rules[] = {
+ParseRuleV1 rules[] = {
     [TOKEN_LEFT_PAREN]       = {grouping,      call,        PREC_CALL},
     [TOKEN_RIGHT_PAREN]      = {NULL,          NULL,        PREC_NONE},
     [TOKEN_LEFT_BRACKET]     = {collection,    subscript,   PREC_CALL},
@@ -1197,7 +1197,7 @@ ParseRule rules[] = {
     [TOKEN_EOF]              = {NULL,          NULL,        PREC_NONE},
 };
 
-static void parsePrecedence(Compiler* compiler, Precedence precedence) {
+static void parsePrecedence(CompilerV1* compiler, PrecedenceV1 precedence) {
     advance(compiler->parser);
     ParseFn prefixRule = getRule(compiler->parser->previous.type)->prefix;
     if (prefixRule == NULL) {
@@ -1219,22 +1219,22 @@ static void parsePrecedence(Compiler* compiler, Precedence precedence) {
     }
 }
 
-static ParseRule* getRule(TokenSymbol type) {
+static ParseRuleV1* getRule(TokenSymbol type) {
     return &rules[type];
 }
 
-static void expression(Compiler* compiler) {
+static void expression(CompilerV1* compiler) {
     parsePrecedence(compiler, PREC_ASSIGNMENT);
 }
 
-static void block(Compiler* compiler) {
+static void block(CompilerV1* compiler) {
     while (!check(compiler->parser, TOKEN_RIGHT_BRACE) && !check(compiler->parser, TOKEN_EOF)) {
         declaration(compiler);
     }
     consume(compiler->parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
 }
 
-static void functionParameters(Compiler* compiler) {
+static void functionParameters(CompilerV1* compiler) {
     consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after function keyword/name.");
     if (!check(compiler->parser, TOKEN_RIGHT_PAREN)) {
         parameterList(compiler);
@@ -1243,7 +1243,7 @@ static void functionParameters(Compiler* compiler) {
     consume(compiler->parser, TOKEN_LEFT_BRACE, "Expect '{' before function body.");
 }
 
-static void lambdaParameters(Compiler* compiler) {
+static void lambdaParameters(CompilerV1* compiler) {
     if (!match(compiler->parser, TOKEN_PIPE)) return;
     if (!check(compiler->parser, TOKEN_PIPE)) {
         parameterList(compiler);
@@ -1251,9 +1251,9 @@ static void lambdaParameters(Compiler* compiler) {
     consume(compiler->parser, TOKEN_PIPE, "Expect '|' after lambda parameters.");
 }
 
-static uint8_t lambdaDepth(Compiler* compiler) {
+static uint8_t lambdaDepth(CompilerV1* compiler) {
     uint8_t depth = 1;
-    Compiler* current = compiler->enclosing;
+    CompilerV1* current = compiler->enclosing;
     while (current->type == TYPE_LAMBDA) {
         depth++;
         current = current->enclosing;
@@ -1261,8 +1261,8 @@ static uint8_t lambdaDepth(Compiler* compiler) {
     return depth;
 }
 
-static void function(Compiler* enclosing, FunctionType type, bool isAsync) {
-    Compiler compiler;
+static void function(CompilerV1* enclosing, FunctionType type, bool isAsync) {
+    CompilerV1 compiler;
     initCompiler(&compiler, enclosing->parser, enclosing, type, isAsync);
     beginScope(&compiler);
 
@@ -1279,7 +1279,7 @@ static void function(Compiler* enclosing, FunctionType type, bool isAsync) {
     }
 }
 
-static void method(Compiler* compiler) {
+static void method(CompilerV1* compiler) {
     bool isAsync = false;
     if (match(compiler->parser, TOKEN_ASYNC)) isAsync = true;
     uint8_t opCode = match(compiler->parser, TOKEN_CLASS) ? OP_CLASS_METHOD : OP_INSTANCE_METHOD;
@@ -1294,7 +1294,7 @@ static void method(Compiler* compiler) {
     emitBytes(compiler, opCode, constant);
 }
 
-static void methods(Compiler* compiler) {
+static void methods(CompilerV1* compiler) {
     consume(compiler->parser, TOKEN_LEFT_BRACE, "Expect '{' before class/trait body.");
     while (!check(compiler->parser, TOKEN_RIGHT_BRACE) && !check(compiler->parser, TOKEN_EOF)) {
         method(compiler);
@@ -1302,7 +1302,7 @@ static void methods(Compiler* compiler) {
     consume(compiler->parser, TOKEN_RIGHT_BRACE, "Expect '}' after class/trait body.");
 }
 
-static uint8_t traits(Compiler* compiler, Token* name) {
+static uint8_t traits(CompilerV1* compiler, Token* name) {
     uint8_t traitCount = 0;
 
     do {
@@ -1318,15 +1318,15 @@ static uint8_t traits(Compiler* compiler, Token* name) {
     return traitCount;
 }
 
-static void behavior(Compiler* compiler, BehaviorType type, Token name) {
+static void behavior(CompilerV1* compiler, BehaviorType type, Token name) {
     bool isAnonymous = (name.type != TOKEN_IDENTIFIER && name.length == 1);
     if (isAnonymous) {
         emitBytes(compiler, OP_ANONYMOUS, type);
         emitByte(compiler, OP_DUP);
     }
 
-    ClassCompiler* enclosingClass = compiler->parser->vm->currentClass;
-    ClassCompiler classCompiler = { .name = name, .enclosing = enclosingClass, .type = type, .superclass = compiler->parser->rootClass };
+    ClassCompilerV1* enclosingClass = compiler->parser->vm->currentClass;
+    ClassCompilerV1 classCompiler = { .name = name, .enclosing = enclosingClass, .type = type, .superclass = compiler->parser->rootClass };
     compiler->parser->vm->currentClass = &classCompiler;
 
     if (type == BEHAVIOR_CLASS) {
@@ -1359,7 +1359,7 @@ static void behavior(Compiler* compiler, BehaviorType type, Token name) {
     compiler->parser->vm->currentClass = enclosingClass;
 }
 
-static void classDeclaration(Compiler* compiler) {
+static void classDeclaration(CompilerV1* compiler) {
     consume(compiler->parser, TOKEN_IDENTIFIER, "Expect class name.");
     Token className = compiler->parser->previous;
     uint8_t nameConstant = identifierConstant(compiler, &compiler->parser->previous);
@@ -1369,14 +1369,14 @@ static void classDeclaration(Compiler* compiler) {
     behavior(compiler, BEHAVIOR_CLASS, className);
 }
 
-static void funDeclaration(Compiler* compiler, bool isAsync) {
+static void funDeclaration(CompilerV1* compiler, bool isAsync) {
     uint8_t global = parseVariable(compiler, "Expect function name.");
     markInitialized(compiler, false);
     function(compiler, TYPE_FUNCTION, isAsync);
     defineVariable(compiler, global, false);
 }
 
-static void namespaceDeclaration(Compiler* compiler) {
+static void namespaceDeclaration(CompilerV1* compiler) {
     uint8_t namespaceDepth = 0;
     do {
         if (namespaceDepth > UINT4_MAX) {
@@ -1390,7 +1390,7 @@ static void namespaceDeclaration(Compiler* compiler) {
     emitBytes(compiler, OP_DECLARE_NAMESPACE, namespaceDepth);
 }
 
-static void traitDeclaration(Compiler* compiler) {
+static void traitDeclaration(CompilerV1* compiler) {
     consume(compiler->parser, TOKEN_IDENTIFIER, "Expect trait name.");
     Token traitName = compiler->parser->previous;
     uint8_t nameConstant = identifierConstant(compiler, &compiler->parser->previous);
@@ -1400,7 +1400,7 @@ static void traitDeclaration(Compiler* compiler) {
     behavior(compiler, BEHAVIOR_TRAIT, traitName);
 }
 
-static void varDeclaration(Compiler* compiler, bool isMutable) {
+static void varDeclaration(CompilerV1* compiler, bool isMutable) {
     uint8_t global = parseVariable(compiler, "Expect variable name.");
 
     if (!isMutable && !check(compiler->parser, TOKEN_EQUAL)) {
@@ -1417,7 +1417,7 @@ static void varDeclaration(Compiler* compiler, bool isMutable) {
     defineVariable(compiler, global, isMutable);
 }
 
-static void awaitStatement(Compiler* compiler) {
+static void awaitStatement(CompilerV1* compiler) {
     if (compiler->type == TYPE_SCRIPT) {
         compiler->isAsync = true;
         compiler->function->isAsync = true;
@@ -1429,7 +1429,7 @@ static void awaitStatement(Compiler* compiler) {
     emitBytes(compiler, OP_AWAIT, OP_POP);
 }
 
-static void breakStatement(Compiler* compiler) {
+static void breakStatement(CompilerV1* compiler) {
     if (compiler->innermostLoopStart == -1) {
         error(compiler->parser, "Cannot use 'break' outside of a loop.");
     }
@@ -1439,7 +1439,7 @@ static void breakStatement(Compiler* compiler) {
     emitJump(compiler, OP_END);
 }
 
-static void continueStatement(Compiler* compiler) {
+static void continueStatement(CompilerV1* compiler) {
     if (compiler->innermostLoopStart == -1) {
         error(compiler->parser, "Cannot use 'continue' outside of a loop.");
     }
@@ -1449,7 +1449,7 @@ static void continueStatement(Compiler* compiler) {
     emitLoop(compiler, compiler->innermostLoopStart);
 }
 
-static void expressionStatement(Compiler* compiler) {
+static void expressionStatement(CompilerV1* compiler) {
     expression(compiler);
     if (compiler->type == TYPE_LAMBDA && !check(compiler->parser, TOKEN_SEMICOLON)) {
         emitByte(compiler, OP_RETURN);
@@ -1460,7 +1460,7 @@ static void expressionStatement(Compiler* compiler) {
     }
 }
 
-static void forStatement(Compiler* compiler) {
+static void forStatement(CompilerV1* compiler) {
     beginScope(compiler);
     Token indexToken, valueToken;
     consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
@@ -1526,7 +1526,7 @@ static void forStatement(Compiler* compiler) {
     endScope(compiler);
 }
 
-static void ifStatement(Compiler* compiler) {
+static void ifStatement(CompilerV1* compiler) {
     consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
     expression(compiler);
     consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
@@ -1543,7 +1543,7 @@ static void ifStatement(Compiler* compiler) {
     patchJump(compiler, elseJump);
 }
 
-static void requireStatement(Compiler* compiler) {
+static void requireStatement(CompilerV1* compiler) {
     if (compiler->type != TYPE_SCRIPT) {
         error(compiler->parser, "Can only require source files from top-level code.");
     }
@@ -1553,7 +1553,7 @@ static void requireStatement(Compiler* compiler) {
     emitByte(compiler, OP_REQUIRE);
 }
 
-static void returnStatement(Compiler* compiler) {
+static void returnStatement(CompilerV1* compiler) {
     if (compiler->type == TYPE_SCRIPT) {
         error(compiler->parser, "Can't return from top-level code.");
     }
@@ -1581,7 +1581,7 @@ static void returnStatement(Compiler* compiler) {
     }
 }
 
-static void switchStatement(Compiler* compiler) {
+static void switchStatement(CompilerV1* compiler) {
     consume(compiler->parser, TOKEN_LEFT_PAREN, "Expect '(' after 'switch'.");
     expression(compiler);
     consume(compiler->parser, TOKEN_RIGHT_PAREN, "Expect ')' after value.");
@@ -1642,13 +1642,13 @@ static void switchStatement(Compiler* compiler) {
     emitByte(compiler, OP_POP);
 }
 
-static void throwStatement(Compiler* compiler) {
+static void throwStatement(CompilerV1* compiler) {
     expression(compiler);
     consume(compiler->parser, TOKEN_SEMICOLON, "Expect ';' after thrown exception object.");
     emitByte(compiler, OP_THROW);
 }
 
-static void tryStatement(Compiler* compiler) {
+static void tryStatement(CompilerV1* compiler) {
     emitByte(compiler, OP_TRY);
     int exceptionType = currentChunk(compiler)->count;
     emitByte(compiler, 0xff);
@@ -1699,7 +1699,7 @@ static void tryStatement(Compiler* compiler) {
     }
 }
 
-static void usingStatement(Compiler* compiler) {
+static void usingStatement(CompilerV1* compiler) {
     uint8_t namespaceDepth = 0;
     do {
         consume(compiler->parser, TOKEN_IDENTIFIER, "Expect namespace identifier.");
@@ -1720,7 +1720,7 @@ static void usingStatement(Compiler* compiler) {
     emitBytes(compiler, OP_USING_NAMESPACE, alias);
 }
 
-static void whileStatement(Compiler* compiler) {
+static void whileStatement(CompilerV1* compiler) {
     int loopStart = compiler->innermostLoopStart;
     int scopeDepth = compiler->innermostLoopScopeDepth;
     compiler->innermostLoopStart = currentChunk(compiler)->count;
@@ -1743,7 +1743,7 @@ static void whileStatement(Compiler* compiler) {
     compiler->innermostLoopScopeDepth = scopeDepth;
 }
 
-static void yieldStatement(Compiler* compiler) {
+static void yieldStatement(CompilerV1* compiler) {
     if (compiler->type == TYPE_SCRIPT) {
         error(compiler->parser, "Can't yield from top-level code.");
     }
@@ -1767,7 +1767,7 @@ static void yieldStatement(Compiler* compiler) {
     }
 }
 
-static void declaration(Compiler* compiler) {
+static void declaration(CompilerV1* compiler) {
     if (check(compiler->parser, TOKEN_ASYNC) && checkNext(compiler->parser, TOKEN_FUN)) {
         advance(compiler->parser);
         advance(compiler->parser);
@@ -1803,7 +1803,7 @@ static void declaration(Compiler* compiler) {
     }
 }
 
-static void statement(Compiler* compiler) {
+static void statement(CompilerV1* compiler) {
     if (match(compiler->parser, TOKEN_AWAIT)) {
         awaitStatement(compiler);
     }
@@ -1853,14 +1853,14 @@ static void statement(Compiler* compiler) {
     }
 }
 
-ObjFunction* compile(VM* vm, const char* source) {
+ObjFunction* compileV1(VM* vm, const char* source) {
     Scanner scanner;
     initScanner(&scanner, source);
 
-    Parser parser;
-    initParser(&parser, vm, &scanner);
+    ParserV1 parser;
+    initParserV1(&parser, vm, &scanner);
 
-    Compiler compiler;
+    CompilerV1 compiler;
     initCompiler(&compiler, &parser, NULL, TYPE_SCRIPT, false);
 
     advance(&parser);
@@ -1874,7 +1874,7 @@ ObjFunction* compile(VM* vm, const char* source) {
 }
 
 void markCompilerRoots(VM* vm) {
-    Compiler* compiler = vm->currentCompiler;
+    CompilerV1* compiler = vm->currentCompiler;
     while (compiler != NULL) {
         markObject(vm, (Obj*)compiler->function);
         markIDMap(vm, &compiler->indexes);

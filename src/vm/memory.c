@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "compiler.h"
+#include "compiler_v1.h"
 #include "memory.h"
 
 #ifdef DEBUG_LOG_GC
