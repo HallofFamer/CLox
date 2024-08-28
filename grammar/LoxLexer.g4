@@ -56,7 +56,7 @@ PLUS: '+';
 MINUS: '-';
 STAR: '*';
 SLASH: '/';
-MODULUS: '%';
+MODULO: '%';
 
 INT: DIGIT+;
 FLOAT: INT(DOT INT);

@@ -34,9 +34,9 @@ logicAND: (equality AND equality)*;
 equality: (comparison (BangEQ | EQEQ) comparison)*;
 comparison: (term (LT | LTEQ | GT | GTEQ) term)*;
 term: (factor (PLUS | MINUS) factor)*;
-factor: (unary (STAR | SLASH | MODULUS) unary)*;
+factor: (unary (STAR | SLASH | MODULO) unary)*;
 unary: ((BANG | MINUS) unary) | call;
-call: primary (LPAREN arguments? RPAREN | LSQUARE expression RSQUARE | DOT IDENTIFIER)*;
+call: primary (LPAREN arguments? RPAREN | LSQUARE expression QUESTION? RSQUARE | DOT IDENTIFIER)*;
 primary: 'nil' | 'true' | 'false' | INT | FLOAT | STRING | IDENTIFIER | (LPAREN expression RPAREN) | (LSQUARE arguments? RSQUARE) | (expression DOTDOT expression) | (CLASS classBody) | (FUN functionBody) | (SUPER DOT IDENTIFIER) | (TRAIT traitBody);
 
 classBody: (LT IDENTIFIER)? (WITH parameters)? LBRACE function* RBRACE;

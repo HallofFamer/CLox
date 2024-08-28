@@ -124,6 +124,24 @@ https://github.com/munificent/craftinginterpreters
 - Semicolon inference as well as basic type inference for immutable local/global variables. 
 - Replace the naive mark and sweep GC with a generational GC which has multiple regions for objects of various 'ages'.  
 
+### CLox 2.1.0
+- Enhanced type system with basic support for generics/parametric polymorphism.
+- Capability of saving bytecode into disk as .loxo file, which can be loaded later for faster compilation.
+- Allow declaration of object properties outside of class initializer, which also enables optional static typing.
+- Trailing closure similar to Kotlin and Swift which allows last lambda argument to be placed outside of parenthesis.
+
+### CLox 2.2.0
+- Additional type system enhancement for union types, with `|` operator on types such as `String | Nil`.
+- `type` keyword used as declaration of type alias, useful for complex generic types and union types.
+- Object literal syntax similar to Javascript which can be good for configuration objects. 
+- Redesign of Iterator/Enumerator API for ease of use and implementation of iterable types.
+
+### CLox 2.3.0
+- Support for structural pattern matching using `match` keyword, removes `switch` statement as it has been superceded.
+- Implement a profiler which can identify the "Hotspots" of the program and how long they execute. 
+- Add new package `clox.std.text` which handles text processing for MIME types such as json and xml.
+- Experimental Thread API, initial step towards multi-threading for Lox VM.
+
 
 ## Build and Run Clox
 
