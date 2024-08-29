@@ -702,7 +702,7 @@ static char* astOutputDeclVar(Ast* ast, int indentLevel) {
 }
 
 static char* astOutputListExpr(Ast* ast, int indentLevel) {
-    char* buffer = "(exprList\n";
+    char* buffer = "(listExpr\n";
     for (int i = 0; i < ast->children->count; i++) {
         char* stmt = astOutput(astGetChild(ast, i), indentLevel);
         buffer = astConcatOutput(buffer, stmt);
@@ -712,7 +712,7 @@ static char* astOutputListExpr(Ast* ast, int indentLevel) {
 }
 
 static char* astOutputListMethod(Ast* ast, int indentLevel) {
-    char* buffer = "(methodList\n";
+    char* buffer = "(listMethod\n";
     for (int i = 0; i < ast->children->count; i++) {
         char* stmt = astOutput(ast->children->elements[i], indentLevel);
         buffer = astConcatOutput(buffer, stmt);
@@ -722,7 +722,7 @@ static char* astOutputListMethod(Ast* ast, int indentLevel) {
 }
 
 static char* astOutputListStmt(Ast* ast, int indentLevel) {
-    char* buffer = "(stmtList\n";
+    char* buffer = "(listStmt\n";
     for (int i = 0; i < ast->children->count; i++) {
         char* stmt = astOutput(ast->children->elements[i], indentLevel);
         buffer = astConcatOutput(buffer, stmt);
@@ -732,7 +732,7 @@ static char* astOutputListStmt(Ast* ast, int indentLevel) {
 }
 
 static char* astOutputListVar(Ast* ast, int indentLevel) {
-    char* buffer = "(varList\n";
+    char* buffer = "(listVar\n";
     for (int i = 0; i < ast->children->count; i++) {
         char* stmt = astOutput(ast->children->elements[i], indentLevel);
         buffer = astConcatOutput(buffer, stmt);
