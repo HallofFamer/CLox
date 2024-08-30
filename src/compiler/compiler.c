@@ -36,6 +36,7 @@ struct Compiler {
     int localCount;
     Upvalue upvalues[UINT8_COUNT];
     IDMap indexes;
+    Token currentToken;
 
     int scopeDepth;
     int innermostLoopStart;
@@ -44,15 +45,33 @@ struct Compiler {
     bool hadError;
 };
 
+static void compileError(Compiler* compiler, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    fprintf(stderr, "[line %d] Compile Error: ", compiler->currentToken.line);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+    compiler->hadError = true;
+}
+
 static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, bool isAsync) {
     compiler->vm = vm;
     compiler->enclosing = enclosing;
     compiler->type = type;
+    compiler->function = NULL;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     compiler->innermostLoopStart = -1;
     compiler->innermostLoopScopeDepth = 0;
     compiler->hadError = false;
+
+    compiler->isAsync = isAsync;
+    compiler->function = newFunction(vm);
+    compiler->function->isAsync = isAsync;
+
+    initIDMap(&compiler->indexes);
+    vm->currentCompiler = compiler;
 }
 
 static ObjFunction* endCompiler(Compiler* compiler) {
@@ -120,7 +139,7 @@ static void compileDeclaration(Compiler* compiler, Ast* ast) {
     }
 }
 
-static void compileScript(Compiler* compiler, Ast* ast) {
+static void compileAst(Compiler* compiler, Ast* ast) {
     if (compiler->hadError || !AST_IS_ROOT(ast)) return;
     for (int i = 0; i < ast->children->count; i++) {
         Ast* decl = ast->children->elements[i];
@@ -139,7 +158,7 @@ ObjFunction* compile(VM* vm, const char* source) {
     
     Compiler compiler;
     initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, false);
-    compileScript(&compiler, ast);
+    compileAst(&compiler, ast);
     ObjFunction* function = endCompiler(&compiler);
     return function;
 }

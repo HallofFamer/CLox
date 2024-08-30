@@ -29,15 +29,7 @@ typedef struct {
     Precedence precedence;
 } ParseRule;
 
-typedef enum {
-    PARSE_TYPE_FUNCTION,
-    PARSE_TYPE_INITIALIZER,
-    PARSE_TYPE_LAMBDA,
-    PARSE_TYPE_METHOD,
-    PARSE_TYPE_SCRIPT
-} ParseFunctionType;
-
-static void errorAt(Parser* parser, Token* token, const char* message) {
+static void parseError(Parser* parser, Token* token, const char* message) {
     if (parser->panicMode) return;
     parser->panicMode = true;
     fprintf(stderr, "[line %d] Parse Error", token->line);
@@ -52,11 +44,11 @@ static void errorAt(Parser* parser, Token* token, const char* message) {
 }
 
 static void error(Parser* parser, const char* message) {
-    errorAt(parser, &parser->previous, message);
+    parseError(parser, &parser->previous, message);
 }
 
 static void errorAtCurrent(Parser* parser, const char* message) {
-    errorAt(parser, &parser->current, message);
+    parseError(parser, &parser->current, message);
 }
 
 static void advance(Parser* parser) {
@@ -262,7 +254,7 @@ static void synchronize(Parser* parser) {
 static Ast* expression(Parser* parser);
 static Ast* statement(Parser* parser);
 static Ast* block(Parser* parser);
-static Ast* function(Parser* parser, ParseFunctionType type, bool isAsync);
+static Ast* function(Parser* parser, bool isAsync, bool isLambda);
 static Ast* declaration(Parser* parser);
 static ParseRule* getRule(TokenSymbol type);
 static Ast* parsePrecedence(Parser* parser, Precedence precedence);
@@ -460,11 +452,11 @@ static Ast* collection(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* closure(Parser* parser, Token token, bool canAssign) {
-    return function(parser, PARSE_TYPE_FUNCTION, false);
+    return function(parser, false, false);
 }
 
 static Ast* lambda(Parser* parser, Token token, bool canAssign) {
-    return function(parser, PARSE_TYPE_LAMBDA, false);
+    return function(parser, false, true);
 }
 
 static Ast* variable(Parser* parser, Token token, bool canAssign) {
@@ -484,7 +476,7 @@ static Ast* methods(Parser* parser, Token* name) {
         if (parser->previous.length == 8 && memcmp(parser->previous.start, "__init__", 8) == 0) {
             isInitializer = true;
         }
-        Ast* method = function(parser, PARSE_TYPE_METHOD, isAsync);
+        Ast* method = function(parser, isAsync, false);
         method->modifier.isAsync = isAsync;
         method->modifier.isClass = isClass;
         method->modifier.isInitializer = isInitializer;
@@ -563,10 +555,10 @@ static Ast* yield(Parser* parser, Token token, bool canAssign) {
 static Ast* async(Parser* parser, Token token, bool canAssign) { 
     Ast* func = NULL;
     if (match(parser, TOKEN_FUN)) {
-        func = function(parser, PARSE_TYPE_FUNCTION, true);
+        func = function(parser, true, false);
     }
     else if (match(parser, TOKEN_LEFT_BRACE)) {
-        func = function(parser, PARSE_TYPE_LAMBDA, true);
+        func = function(parser, true, true);
     }
     else {
         error(parser, "Can only use async as expression modifier for anonymous functions or lambda.");
@@ -975,9 +967,8 @@ static Ast* lambdaParameters(Parser* parser) {
     return parameterList(parser, token);
 }
 
-static Ast* function(Parser* parser, ParseFunctionType type, bool isAsync) {
+static Ast* function(Parser* parser, bool isAsync, bool isLambda) {
     Token token = parser->previous;
-    bool isLambda = (type == PARSE_TYPE_LAMBDA);
     Ast* params = isLambda ? lambdaParameters(parser) : functionParameters(parser);
     Ast* body = block(parser);
     Ast* func = newAst(AST_EXPR_FUNCTION, token, 2, params, body);
@@ -998,7 +989,7 @@ static Ast* classDeclaration(Parser* parser) {
 static Ast* funDeclaration(Parser* parser, bool isAsync) {
     consume(parser, TOKEN_IDENTIFIER, "Expect function name.");
     Token name = parser->previous;
-    Ast* body = function(parser, PARSE_TYPE_FUNCTION, isAsync);
+    Ast* body = function(parser, isAsync, false);
     return newAst(AST_DECL_FUN, name, 1, body);
 }
 

@@ -755,7 +755,8 @@ static char* astOutputScript(Ast* ast, int indentLevel) {
 
 char* astOutput(Ast* ast, int indentLevel) {
     switch (ast->category) {
-        case AST_CATEGORY_SCRIPT: return astOutputScript(ast, indentLevel);
+        case AST_CATEGORY_SCRIPT: 
+            return astOutputScript(ast, indentLevel);
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
                 case AST_EXPR_ARRAY:
