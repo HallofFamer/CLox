@@ -45,14 +45,99 @@ struct Compiler {
     bool hadError;
 };
 
+static Chunk* currentChunk(Compiler* compiler) {
+    return &compiler->function->chunk;
+}
+
+static int currentLine(Compiler* compiler) {
+    return compiler->currentToken.length;
+}
+
 static void compileError(Compiler* compiler, const char* format, ...) {
     va_list args;
     va_start(args, format);
-    fprintf(stderr, "[line %d] Compile Error: ", compiler->currentToken.line);
+    fprintf(stderr, "[line %d] Compile Error: ", currentLine(compiler));
     vfprintf(stderr, format, args);
     va_end(args);
     fputs("\n", stderr);
     compiler->hadError = true;
+}
+
+static void emitByte(Compiler* compiler, uint8_t byte) {
+    writeChunk(compiler->vm, currentChunk(compiler), byte, currentLine(compiler));
+}
+
+static void emitBytes(Compiler* compiler, uint8_t byte1, uint8_t byte2) {
+    emitByte(compiler, byte1);
+    emitByte(compiler, byte2);
+}
+
+static int emitJump(Compiler* compiler, uint8_t instruction) {
+    emitByte(compiler, instruction);
+    emitByte(compiler, 0xff);
+    emitByte(compiler, 0xff);
+    return currentChunk(compiler)->count - 2;
+}
+
+static void emitLoop(Compiler* compiler, int loopStart) {
+    emitByte(compiler, OP_LOOP);
+
+    int offset = currentChunk(compiler)->count - loopStart + 2;
+    if (offset > UINT16_MAX) compileError(compiler, "Loop body too large.");
+
+    emitByte(compiler, (offset >> 8) & 0xff);
+    emitByte(compiler, offset & 0xff);
+}
+
+static void emitReturn(Compiler* compiler, uint8_t depth) {
+    if (compiler->type == COMPILE_TYPE_INITIALIZER) emitBytes(compiler, OP_GET_LOCAL, 0);
+    else emitByte(compiler, OP_NIL);
+
+    if (depth == 0) emitByte(compiler, OP_RETURN);
+    else emitBytes(compiler, OP_RETURN_NONLOCAL, depth);
+}
+
+static uint8_t makeConstant(Compiler* compiler, Value value) {
+    int constant = addConstant(compiler->vm, currentChunk(compiler), value);
+    if (constant > UINT8_MAX) {
+        compileError(compiler, "Too many constants in one chunk.");
+        return 0;
+    }
+
+    return (uint8_t)constant;
+}
+
+static void emitConstant(CompilerV1* compiler, Value value) {
+    emitBytes(compiler, OP_CONSTANT, makeConstant(compiler, value));
+}
+
+static void patchJump(Compiler* compiler, int offset) {
+    int jump = currentChunk(compiler)->count - offset - 2;
+    if (jump > UINT16_MAX) {
+        compileError(compiler, "Too much code to jump over.");
+    }
+
+    currentChunk(compiler)->code[offset] = (jump >> 8) & 0xff;
+    currentChunk(compiler)->code[offset + 1] = jump & 0xff;
+}
+
+static void patchAddress(Compiler* compiler, int offset) {
+    currentChunk(compiler)->code[offset] = (currentChunk(compiler)->count >> 8) & 0xff;
+    currentChunk(compiler)->code[offset + 1] = currentChunk(compiler)->count & 0xff;
+}
+
+static void endLoop(Compiler* compiler) {
+    int offset = compiler->innermostLoopStart;
+    Chunk* chunk = currentChunk(compiler);
+    while (offset < chunk->count) {
+        if (chunk->code[offset] == OP_END) {
+            chunk->code[offset] = OP_JUMP;
+            patchJump(compiler, offset + 1);
+        }
+        else {
+            offset += opCodeOffset(chunk, offset);
+        }
+    }
 }
 
 static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, bool isAsync) {

@@ -1084,12 +1084,7 @@ Ast* parse(Parser* parser) {
     }
 
 #ifdef DEBUG_PRINT_AST
-    const char* astString = astOutput(ast, 0);
-    if (astString == NULL) { 
-        fprintf(stderr, "Parse Error: Invalid AST constructed.");
-        exit(1);
-    }
-    printf("%s", astString);
+    astOutput(ast, 0);
 #endif
 
     return ast;
