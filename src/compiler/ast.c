@@ -742,7 +742,7 @@ static char* astOutputListVar(Ast* ast, int indentLevel) {
 }
 
 static char* astOutputScript(Ast* ast, int indentLevel) {
-    char* buffer = "(program \n";
+    char* buffer = "(script \n";
     if (ast->children != NULL && ast->children->count > 0) {
         for (int i = 0; i < ast->children->count; i++) {
             char* stmt = astOutput(ast->children->elements[i], indentLevel + 1);
