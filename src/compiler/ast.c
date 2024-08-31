@@ -129,7 +129,7 @@ static void astOutputExprAwait(Ast* ast, int indentLevel) {
 static void astOutputExprBinary(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* op = tokenToString(ast->token);
-    printf("%sbinary(%s)\n", indent);
+    printf("%sbinary %s\n", indent);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     free(indent);
@@ -170,7 +170,7 @@ static void astOutputExprFunction(Ast* ast, int indentLevel) {
 
 static void astOutputExprGrouping(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%sclass\n", indent);
+    printf("%sgrouping\n", indent);
     astOutputChild(ast, indentLevel + 1, 0);
     free(indent);
 }
@@ -218,7 +218,7 @@ static void astOutputExprLogical(Ast* ast, int indentLevel) {
 static void astOutputExprNil(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* op = tokenToString(ast->token);
-    printf("%sbinary(?%s)\n", indent);
+    printf("%sbinary ?%s\n", indent);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     free(indent);
@@ -228,7 +228,7 @@ static void astOutputExprNil(Ast* ast, int indentLevel) {
 static void astOutputExprPropertyGet(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* prop = tokenToString(ast->token);
-    printf("%spropertyGet(%s)\n", indent, prop);
+    printf("%spropertyGet %s\n", indent, prop);
     astOutputChild(ast, indentLevel + 1, 0);
     free(indent);
     free(prop);
@@ -237,7 +237,7 @@ static void astOutputExprPropertyGet(Ast* ast, int indentLevel) {
 static void astOutputExprPropertySet(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* token = tokenToString(ast->token);
-    printf("%spropertySet(%s)\n", indent, token);
+    printf("%spropertySet %s\n", indent, token);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     free(indent);
@@ -271,7 +271,7 @@ static void astOutputExprSuperGet(Ast* ast, int indentLevel) {
 static void astOutputExprSuperInvoke(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* method = tokenToString(ast->token);
-    printf("%superInvoke(%s)\n", indent, method);
+    printf("%superInvoke %s\n", indent, method);
     astOutputChild(ast, indentLevel + 1, 0);
     free(indent);
     free(method);
@@ -294,7 +294,7 @@ static void astOutputExprTrait(Ast* ast, int indentLevel) {
 static void astOutputExprUnary(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* op = tokenToString(ast->token);
-    printf("%sunary(%s)\n", indent);
+    printf("%sunary %s\n", indent);
     astOutputChild(ast, indentLevel + 1, 0);
     free(indent);
     free(op);
@@ -349,7 +349,7 @@ static char* astOutputStmtCatch(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* type = tokenToString(ast->token);
     char* indent = astIndent(indentLevel);
-    printf("%scatchStmt(%s)\n", indent, type);
+    printf("%scatchStmt %s\n", indent, type);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     free(indent);

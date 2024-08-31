@@ -202,6 +202,188 @@ static void endScope(Compiler* compiler) {
     }
 }
 
+static uint8_t makeIdentifier(Compiler* compiler, Value value) {
+    ObjString* name = AS_STRING(value);
+    int identifier;
+    if (!idMapGet(&compiler->indexes, name, &identifier)) {
+        identifier = addIdentifier(compiler->vm, currentChunk(compiler), value);
+        if (identifier > UINT8_MAX) {
+            compileError(compiler, "Too many identifiers in one chunk.");
+            return 0;
+        }
+        idMapSet(compiler->vm, &compiler->indexes, name, identifier);
+    }
+
+    return (uint8_t)identifier;
+}
+
+static uint8_t identifierConstant(Compiler* compiler, Token* name) {
+    const char* start = name->start[0] != '`' ? name->start : name->start + 1;
+    int length = name->start[0] != '`' ? name->length : name->length - 2;
+    return makeIdentifier(compiler, OBJ_VAL(copyString(compiler->vm, start, length)));
+}
+
+static ObjString* identifierName(CompilerV1* compiler, uint8_t arg) {
+    return AS_STRING(currentChunk(compiler)->identifiers.values[arg]);
+}
+
+static bool identifiersEqual(Token* a, Token* b) {
+    if (a->length != b->length) return false;
+    return memcmp(a->start, b->start, a->length) == 0;
+}
+
+static uint8_t propertyConstant(Compiler* compiler, const char* message) {
+    // To be implemented
+    return NULL;
+}
+
+static int resolveLocal(Compiler* compiler, Token* name) {
+    for (int i = compiler->localCount - 1; i >= 0; i--) {
+        Local* local = &compiler->locals[i];
+        if (identifiersEqual(name, &local->name)) {
+            if (local->depth == -1) {
+                compileError(compiler, "Can't read local variable in its own initializer.");
+            }
+            return i;
+        }
+    }
+    return -1;
+}
+
+static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal, bool isMutable) {
+    int upvalueCount = compiler->function->upvalueCount;
+
+    for (int i = 0; i < upvalueCount; i++) {
+        Upvalue* upvalue = &compiler->upvalues[i];
+        if (upvalue->index == index && upvalue->isLocal == isLocal) {
+            return i;
+        }
+    }
+
+    if (upvalueCount == UINT8_COUNT) {
+        compileError(compiler, "Too many closure variables in function.");
+        return 0;
+    }
+
+    compiler->upvalues[upvalueCount].isLocal = isLocal;
+    compiler->upvalues[upvalueCount].index = index;
+    compiler->upvalues[upvalueCount].isMutable = isMutable;
+    return compiler->function->upvalueCount++;
+}
+
+static int resolveUpvalue(Compiler* compiler, Token* name) {
+    if (compiler->enclosing == NULL) return -1;
+
+    int local = resolveLocal(compiler->enclosing, name);
+    if (local != -1) {
+        compiler->enclosing->locals[local].isCaptured = true;
+        return addUpvalue(compiler, (uint8_t)local, true, compiler->enclosing->locals[local].isMutable);
+    }
+
+    int upvalue = resolveUpvalue(compiler->enclosing, name);
+    if (upvalue != -1) {
+        return addUpvalue(compiler, (uint8_t)upvalue, false, compiler->enclosing->upvalues[upvalue].isMutable);
+    }
+    return -1;
+}
+
+static int addLocal(Compiler* compiler, Token name) {
+    if (compiler->localCount == UINT8_COUNT) {
+        compileError(compiler, "Too many local variables in function.");
+        return -1;
+    }
+
+    Local* local = &compiler->locals[compiler->localCount++];
+    local->name = name;
+    local->depth = -1;
+    local->isCaptured = false;
+    local->isMutable = true;
+    return compiler->localCount - 1;
+}
+
+static void getLocal(Compiler* compiler, int slot) {
+    emitByte(compiler, OP_GET_LOCAL);
+    emitByte(compiler, slot);
+}
+
+static void setLocal(Compiler* compiler, int slot) {
+    emitByte(compiler, OP_SET_LOCAL);
+    emitByte(compiler, slot);
+}
+
+static int discardLocals(Compiler* compiler) {
+    int i = compiler->localCount - 1;
+    for (; i >= 0 && compiler->locals[i].depth > compiler->innermostLoopScopeDepth; i--) {
+        if (compiler->locals[i].isCaptured) {
+            emitByte(compiler, OP_CLOSE_UPVALUE);
+        }
+        else {
+            emitByte(compiler, OP_POP);
+        }
+    }
+    return compiler->localCount - i - 1;
+}
+
+static void invokeMethod(Compiler* compiler, int args, const char* name, int length) {
+    int slot = makeIdentifier(compiler, OBJ_VAL(copyString(compiler->vm, name, length)));
+    emitByte(compiler, OP_INVOKE);
+    emitByte(compiler, slot);
+    emitByte(compiler, args);
+}
+
+static void declareVariable(Compiler* compiler, Token* name) {
+    if (compiler->scopeDepth == 0) return;
+
+    for (int i = compiler->localCount - 1; i >= 0; i--) {
+        Local* local = &compiler->locals[i];
+        if (local->depth != -1 && local->depth < compiler->scopeDepth) {
+            break;
+        }
+
+        if (identifiersEqual(name, &local->name)) {
+            compileError(compiler, "Already a variable with this name in this scope.");
+        }
+    }
+    addLocal(compiler, *name);
+}
+
+static uint8_t compileVariable(Compiler* compiler, Token* name, const char* errorMessage) {
+    declareVariable(compiler, name);
+    if (compiler->scopeDepth > 0) return 0;
+    return identifierConstant(compiler, name);
+}
+
+static void markInitialized(Compiler* compiler, bool isMutable) {
+    if (compiler->scopeDepth == 0) return;
+    compiler->locals[compiler->localCount - 1].depth = compiler->scopeDepth;
+    compiler->locals[compiler->localCount - 1].isMutable = isMutable;
+}
+
+static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
+    if (compiler->scopeDepth > 0) {
+        markInitialized(compiler, isMutable);
+        return;
+    }
+    else {
+        ObjString* name = identifierName(compiler, global);
+        int index;
+        if (idMapGet(&compiler->vm->currentModule->varIndexes, name, &index)) {
+            compileError(compiler, "Cannot redeclare global variable.");
+        }
+
+        if (isMutable) {
+            idMapSet(compiler->vm, &compiler->vm->currentModule->varIndexes, name, compiler->vm->currentModule->varFields.count);
+            valueArrayWrite(compiler->vm, &compiler->vm->currentModule->varFields, NIL_VAL);
+            emitBytes(compiler, OP_DEFINE_GLOBAL_VAR, global);
+        }
+        else {
+            idMapSet(compiler->vm, &compiler->vm->currentModule->valIndexes, name, compiler->vm->currentModule->valFields.count);
+            valueArrayWrite(compiler->vm, &compiler->vm->currentModule->valFields, NIL_VAL);
+            emitBytes(compiler, OP_DEFINE_GLOBAL_VAL, global);
+        }
+    }
+}
+
 static void compileExpression(Compiler* compiler, Ast* ast) {
     // To be implemented
     return NULL;
