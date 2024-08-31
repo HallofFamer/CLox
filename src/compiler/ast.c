@@ -69,18 +69,9 @@ void astAppendChild(Ast* ast, Ast* child) {
         fprintf(stderr, "Not enough memory to add child AST node to parent.");
         exit(1);
     }
+
     AstArrayAdd(ast->children, child);
     if (child != NULL) child->parent = ast;
-}
-
-static char* astConcatOutput(char* source, char* dest) {
-    size_t srcLength = strlen(source);
-    size_t destLength = strlen(dest);
-    char* result = bufferNewCharArray(srcLength + destLength);
-    memcpy(result, source, srcLength);
-    memcpy(result + srcLength, dest, destLength);
-    result[srcLength + destLength] = '\0';
-    return result;
 }
 
 static Ast* astGetChild(Ast* ast, int index) {
@@ -108,6 +99,7 @@ static void astOutputChild(Ast* ast, int indentLevel, int index) {
         fprintf(stderr, "Ast has no children or invalid child index specified.");
         exit(1);
     }
+
     Ast* expr = ast->children->elements[index];
     astOutput(expr, indentLevel);
 }

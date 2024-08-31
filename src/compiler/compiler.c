@@ -138,7 +138,7 @@ static void endLoop(Compiler* compiler) {
     }
 }
 
-static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, bool isAsync) {
+static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, const char* name, bool isAsync) {
     compiler->vm = vm;
     compiler->enclosing = enclosing;
     compiler->type = type;
@@ -152,12 +152,57 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->isAsync = isAsync;
     compiler->function = newFunction(vm);
     compiler->function->isAsync = isAsync;
-
+    if (type != COMPILE_TYPE_SCRIPT) compiler->function->name = newString(vm, name);
     initIDMap(&compiler->indexes);
     vm->currentCompiler = compiler;
+
+    Local* local = &compiler->locals[compiler->localCount++];
+    local->depth = 0;
+    local->isCaptured = false;
+    local->isMutable = false;
+
+    if (type != COMPILE_TYPE_FUNCTION && type != COMPILE_TYPE_LAMBDA) {
+        local->name.start = "this";
+        local->name.length = 4;
+    }
+    else {
+        local->name.start = "";
+        local->name.length = 0;
+    }
 }
 
 static ObjFunction* endCompiler(Compiler* compiler) {
+    emitReturn(compiler, 0);
+    ObjFunction* function = compiler->function;
+
+#ifdef DEBUG_PRINT_CODE
+    if (!compiler->parser->hadError) {
+        disassembleChunk(currentChunk(compiler), function->name != NULL ? function->name->chars : "<script>");
+    }
+#endif
+
+    freeIDMap(compiler->vm, &compiler->indexes);
+    compiler->vm->currentCompiler = compiler->enclosing;
+    return function;
+}
+
+static void beginScope(Compiler* compiler) {
+    compiler->scopeDepth++;
+}
+
+static void endScope(Compiler* compiler) {
+    compiler->scopeDepth--;
+
+    while (compiler->localCount > 0 && compiler->locals[compiler->localCount - 1].depth > compiler->scopeDepth) {
+        if (compiler->locals[compiler->localCount - 1].isCaptured) {
+            emitByte(compiler, OP_CLOSE_UPVALUE);
+        }
+        else emitByte(compiler, OP_POP);
+        compiler->localCount--;
+    }
+}
+
+static void compileExpression(Compiler* compiler, Ast* ast) {
     // To be implemented
     return NULL;
 }
@@ -218,15 +263,33 @@ static void compileDeclaration(Compiler* compiler, Ast* ast) {
             compileVarDeclaration(compiler, ast);
             break;
         default: 
-            compileStatement(compiler, ast);
+            compileError(compiler, "Invalid declaration type.");
     }
 }
 
-static void compileAst(Compiler* compiler, Ast* ast) {
+static void compileChild(Compiler* compiler, Ast* ast) {
+    switch (ast->category) {
+        case AST_CATEGORY_SCRIPT:
+            compileAst(compiler, ast);
+            break;
+        case AST_CATEGORY_EXPR:
+            compileExpression(compiler, ast);
+            break;
+        case AST_CATEGORY_STMT:
+            compileStatement(compiler, ast);
+        case AST_CATEGORY_DECL:
+            compileDeclaration(compiler, ast);
+            break;
+        default:
+            break;
+    }
+}
+
+void compileAst(Compiler* compiler, Ast* ast) {
     if (compiler->hadError || !AST_IS_ROOT(ast)) return;
     for (int i = 0; i < ast->children->count; i++) {
         Ast* decl = ast->children->elements[i];
-        compileDeclaration(compiler, decl);
+        compileChild(compiler, decl);
     }
 }
 
@@ -240,7 +303,7 @@ ObjFunction* compile(VM* vm, const char* source) {
     if (parser.hadError) return NULL;
     
     Compiler compiler;
-    initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, false);
+    initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, NULL, false);
     compileAst(&compiler, ast);
     ObjFunction* function = endCompiler(&compiler);
     return function;
