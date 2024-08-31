@@ -103,785 +103,684 @@ static char* astIndent(int indentLevel) {
     return buffer;
 }
 
-static char* astOutputChild(Ast* ast, int indentLevel, int index) {
+static void astOutputChild(Ast* ast, int indentLevel, int index) {
     if (ast->children == NULL || ast->children->count < index) {
         fprintf(stderr, "Ast has no children or invalid child index specified.");
         exit(1);
     }
     Ast* expr = ast->children->elements[index];
-    return astOutput(expr, indentLevel);
+    astOutput(expr, indentLevel);
 }
 
-static char* astOutputExprArray(Ast* ast, int indentLevel) {
-    size_t length = 8;
-    char* buffer = bufferNewCharArray(length);
-    Ast* argList = ast->children->elements[1];
-    sprintf_s(buffer, length, "(array [");
-
-    for (int i = 0; i < argList->children->count; i++) {
-        char* arg = astOutputChild(ast, indentLevel, i);
-        buffer = astConcatOutput(buffer, arg);
-        buffer = astConcatOutput(buffer, " ");
-    }
-    buffer = astConcatOutput(buffer, "]");
-    return buffer;
+static void astOutputExprArray(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sarray\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
-static char* astOutputExprAssign(Ast* ast, int indentLevel) {
-    char* left = astOutputChild(ast, indentLevel, 0);
-    char* right = astOutputChild(ast, indentLevel, 1);
-    size_t length = strlen(left) + strlen(right) + 10;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(assign %s %s)", left, right);
-    return buffer;
+static void astOutputExprAssign(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sassign\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
 }
 
-static char* astOutputExprAwait(Ast* ast, int indentLevel) {
-    char* exprOutput = astOutputChild(ast, indentLevel, 0);;
-    size_t length = (size_t)ast->token.length + 8;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(await %s)", exprOutput);
-    return buffer;
+static void astOutputExprAwait(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sawait\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);;
+    free(indent);
 }
 
-static char* astOutputExprBinary(Ast* ast, int indentLevel) {
+static void astOutputExprBinary(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
     char* op = tokenToString(ast->token);
-    char* left = astOutputChild(ast, indentLevel, 0);
-    char* right = astOutputChild(ast, indentLevel, 1);
-    size_t length = strlen(op) + strlen(left) + strlen(right) + 4;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(%s %s %s)", left, op, right);
-    return buffer;
+    printf("%sbinary(%s)\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
+    free(op);
 }
 
-static char* astOutputExprCall(Ast* ast, int indentLevel) {
-    char* expr = astOutputChild(ast, indentLevel, 0);
-    size_t length = (size_t)ast->token.length + 8;
-    char* buffer = bufferNewCharArray(length);
-    Ast* argList = ast->children->elements[1];
-    sprintf_s(buffer, length, "(call %s (", expr);
-
-    for (int i = 0; i < argList->children->count; i++) {
-        char* arg = astOutputChild(ast, indentLevel, i);
-        buffer = astConcatOutput(buffer, arg);
-        buffer = astConcatOutput(buffer, " ");
-    }
-    buffer = astConcatOutput(buffer, ")");
-    return buffer;
+static void astOutputExprCall(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%scall\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
 }
 
-static char* astOutputExprClass(Ast* ast, int indentLevel) {
-    char* superClassName = astOutputChild(ast, indentLevel + 1, 0);
-    char* traitList = astOutputChild(ast, indentLevel + 1, 1);
-    char* methodList = astOutputChild(ast, indentLevel + 1, 2);
-    size_t length = strlen(superClassName) + strlen(traitList) + strlen(methodList) + 18;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(class < %s\nwith %s\n%s)\n", superClassName, traitList, methodList);
-    return buffer;
+static void astOutputExprClass(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sclass\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    astOutputChild(ast, indentLevel + 1, 2);
+    free(indent);
 }
 
-static char* astOutputExprDictionary(Ast* ast, int indentLevel) {
-    size_t length = 13;
-    char* buffer = bufferNewCharArray(length);
-    Ast* argList = ast->children->elements[1];
-    sprintf_s(buffer, length, "(dictionary [");
-
-    for (int i = 0; i < argList->children->count; i += 2) {
-        char* key = astOutputChild(ast, indentLevel, i);
-        char* value = astOutputChild(ast, indentLevel, i + 1);
-        buffer = astConcatOutput(buffer, key);
-        buffer = astConcatOutput(buffer, ": ");
-        buffer = astConcatOutput(buffer, value);
-        buffer = astConcatOutput(buffer, " ");
-    }
-    buffer = astConcatOutput(buffer, "]");
-    return buffer;
+static void astOutputExprDictionary(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sdictionary\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
-static char* astOutputExprFunction(Ast* ast, int indentLevel) {
-    char* params = astOutputChild(ast, indentLevel, 0);
-    char* block = astOutputChild(ast, indentLevel + 1, 1);
-    size_t length = strlen(params) + strlen(block) + 14;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(function (%s) %s)", params, block);
-    return buffer;
+static void astOutputExprFunction(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sfunction\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
 }
 
-static char* astOutputExprGrouping(Ast* ast, int indentLevel) {
-    char* expr = astOutputChild(ast, indentLevel, 0);
-    size_t length = (size_t)ast->token.length + 8;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(group %s)", expr);
-    return buffer;
+static void astOutputExprGrouping(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sclass\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
-static char* astOutputExprInvoke(Ast* ast, int indentLevel) {
-    char* receiver = astOutputChild(ast, indentLevel, 0);
-    char* method = astOutputChild(ast, indentLevel, 1);
-    size_t length = strlen(receiver) + strlen(method) + 10;
-    char* buffer = bufferNewCharArray(length);
-    Ast* argList = ast->children->elements[2];
-    sprintf_s(buffer, length, "(invoke %s.%s(", receiver, method);
-
-    for (int i = 0; i < argList->children->count; i++) {
-        char* arg = astOutputChild(ast, indentLevel, i);
-        buffer = astConcatOutput(buffer, arg);
-        buffer = astConcatOutput(buffer, " ");
-    }
-    buffer = astConcatOutput(buffer, ")");
-    return buffer;
+static void astOutputExprInvoke(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sinvoke\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    astOutputChild(ast, indentLevel + 1, 2);
+    free(indent);
 }
 
-static char* astOutputExprInterpolation(Ast* ast, int indentLevel) {
-    char* exprs = astOutputChild(ast, indentLevel, 0);
-    size_t length = strlen(exprs) + 16;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(interpolation %s)", exprs);
-    return buffer;
+static void astOutputExprInterpolation(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sinterpolation\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
-static char* astOutputExprLiteral(Ast* ast, int indentLevel) {
+static void astOutputExprLiteral(Ast* ast, int indentLevel) {
+    char* token = tokenToString(ast->token);
     switch (ast->token.type) {
         case TOKEN_NIL:
         case TOKEN_TRUE:
         case TOKEN_FALSE:
         case TOKEN_INT:
         case TOKEN_NUMBER: {
-            size_t length = (size_t)ast->token.length;
-            char* buffer = bufferNewCharArray(length);
-            snprintf(buffer, length, "%s", ast->token.start);
-            return buffer;
+            printf("%s", token);
+            break;
         }
         case TOKEN_STRING: {
-            size_t length = (size_t)ast->token.length + 2;
-            char* buffer = bufferNewCharArray(length);
-            snprintf(buffer, length, "\"%s\"", ast->token.start);
-            return buffer;
+            printf("\"%s\"", token);
+            break;
         }
-        default: return NULL;
+        default: break;
     }
-    return NULL;
+    free(token);
 }
 
-static char* astOutputExprLogical(Ast* ast, int indentLevel) {
-    return astOutputExprBinary(ast, indentLevel);
+static void astOutputExprLogical(Ast* ast, int indentLevel) {
+    astOutputExprBinary(ast, indentLevel);
 }
 
-static char* astOutputExprNil(Ast* ast, int indentLevel) {
+static void astOutputExprNil(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
     char* op = tokenToString(ast->token);
-    char* left = astOutputChild(ast, indentLevel, 0);
-    char* right = astOutputChild(ast, indentLevel, 1);
-    size_t length = strlen(op) + strlen(left) + strlen(right) + 5;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(%s ?%s %s)", left, op, right);
-    return buffer;
+    printf("%sbinary(?%s)\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
+    free(op);
 }
 
-static char* astOutputExprPropertyGet(Ast* ast, int indentLevel) {
-    char* expr = astOutputChild(ast, indentLevel, 0);
+static void astOutputExprPropertyGet(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
     char* prop = tokenToString(ast->token);
-    size_t length = strlen(expr) + strlen(prop) + 15;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(propertyGet %s.%s)", expr, prop);
-    return buffer;
+    printf("%spropertyGet(%s)\n", indent, prop);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
+    free(prop);
 }
 
-static char* astOutputExprPropertySet(Ast* ast, int indentLevel) {
-    char* left = astOutputChild(ast, indentLevel, 0);
-    char* prop = tokenToString(ast->token);
-    char* right = astOutputChild(ast, indentLevel, 1);
-    size_t length = strlen(left) + strlen(prop) + strlen(right) + 18;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(propertySet %s.%s = %s)", left, prop, right);
-    return buffer;
+static void astOutputExprPropertySet(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    char* token = tokenToString(ast->token);
+    printf("%spropertySet(%s)\n", indent, token);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
+    free(token);
 }
 
-static char* astOutputExprSubscriptGet(Ast* ast, int indentLevel) {
-    char* expr = astOutputChild(ast, indentLevel, 0);
-    char* index = astOutputChild(ast, indentLevel, 1);
-    size_t length = strlen(expr) + strlen(index) + 17;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(subscriptGet %s[%s])", expr, index);
-    return buffer;
+static void astOutputExprSubscriptGet(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%subscriptGet\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
 }
 
-static char* astOutputExprSubscriptSet(Ast* ast, int indentLevel) {
-    char* left = astOutputChild(ast, indentLevel, 0);
-    char* index = astOutputChild(ast, indentLevel, 1);
-    char* right = astOutputChild(ast, indentLevel, 2);
-    size_t length = strlen(left) + strlen(index) + strlen(right) + 20;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(subscriptSet %s[%s] = %s)", left, index, right);
-    return buffer;
+static void astOutputExprSubscriptSet(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%subscriptSet\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    astOutputChild(ast, indentLevel + 1, 2);
+    free(indent);
 }
 
-static char* astOutputExprSuperGet(Ast* ast, int indentLevel) {
-    char* prop = tokenToString(ast->token);
-    size_t length = strlen(prop) + 17;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(superGet super.%s)", prop);
-    return buffer;
+static void astOutputExprSuperGet(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%superGet\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
-static char* astOutputExprSuperInvoke(Ast* ast, int indentLevel) {
+static void astOutputExprSuperInvoke(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
     char* method = tokenToString(ast->token);
-    size_t length = strlen(method) + 15;
-    char* buffer = bufferNewCharArray(length);
-    Ast* argList = ast->children->elements[0];
-    sprintf_s(buffer, length, "(invoke super.%s(", method);
-
-    for (int i = 0; i < argList->children->count; i++) {
-        char* arg = astOutputChild(ast, indentLevel, i);
-        buffer = astConcatOutput(buffer, arg);
-        buffer = astConcatOutput(buffer, " ");
-    }
-
-    buffer = astConcatOutput(buffer, ")");
-    return buffer;
+    printf("%superInvoke(%s)\n", indent, method);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
+    free(method);
 }
 
-static char* astOutputExprThis(Ast* ast, int indentLevel) {
-    return "(this)";
+static void astOutputExprThis(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%sthis\n", indent);
+    free(indent);
 }
 
-static char* astOutputExprTrait(Ast* ast, int indentLevel) {
-    char* traitList = astOutputChild(ast, indentLevel + 1, 0);
-    char* methodList = astOutputChild(ast, indentLevel + 1, 1);
-    size_t length = strlen(traitList) + strlen(methodList) + 16;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(trait \nwith %s\n%s)\n", traitList, methodList);
-    return buffer;
+static void astOutputExprTrait(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    printf("%strait\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
 }
 
-static char* astOutputExprUnary(Ast* ast, int indentLevel) {
+static void astOutputExprUnary(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
     char* op = tokenToString(ast->token);
-    char* child = astOutputChild(ast, indentLevel, 0);
-    size_t length = strlen(op) + strlen(child) + 3;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(%s %s)", op, child);
-    return buffer;
+    printf("%sunary(%s)\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
+    free(op);
 }
 
-static char* astOutputExprVariable(Ast* ast, int indentLevel) {
-    const char* format = ast->modifier.isMutable ? "(var %s)" : "(val %s)";
-    const char* name = tokenToString(ast->token);
-    size_t length = strlen(name) + 6;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, format, name);
-    return buffer;
+static void astOutputExprVariable(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
+    char* modifier = ast->modifier.isMutable ? "var" : "val";
+    char* name = tokenToString(ast->token);
+    printf("%s%s %s\n", indent, modifier, name);
+    free(indent);
+    free(name);
 }
 
 static char* astOutputExprYield(Ast* ast, int indentLevel) {
-    char* expr = astOutputChild(ast, indentLevel, 0);;
-    size_t length = (size_t)ast->token.length + 8;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "(yield %s)", expr);
-    return buffer;
+    char* indent = astIndent(indentLevel);
+    printf("%syield\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
 static char* astOutputStmtAwait(Ast* ast, int indentLevel) {
-    char* expr = astOutputChild(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
-    size_t length = strlen(expr) + strlen(indent) + 9;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(await %s)\n", indent, expr);
-    return buffer;
+    printf("%sawaitStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
 static char* astOutputStmtBlock(Ast* ast, int indentLevel) {
-    char* buffer;
-    size_t length;
     char* indent = astIndent(indentLevel);
+    printf("%sblock\n", indent);
     Ast* stmtList = astGetChild(ast, 0);
-
-    if (astHasChild(stmtList)) {
-        length = strlen(indent) + 7;
-        buffer = bufferNewCharArray(length);
-        sprintf_s(buffer, length, "%s(block\n", indent);
-
-        char* stmtListOutput = astOutput(stmtList, indentLevel + 1);
-        buffer = astConcatOutput(buffer, stmtListOutput);
-        buffer = astConcatOutput(buffer, indent);
-        buffer = astConcatOutput(buffer, ")\n");
-    }
-    else {
-        length = strlen(indent) + 8;
-        buffer = bufferNewCharArray(strlen(indent) + 8);
-        sprintf_s(buffer, length, "%s(block)\n", indent);
-    }
-
-    return buffer;
+    astOutput(stmtList, indentLevel + 1);
+    free(indent);
 }
 
 static char* astOutputStmtBreak(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    size_t length = strlen(indent) + 8;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(break)\n", indent);
-    return buffer;
+    printf("%sbreak\n", indent);
+    free(indent);
 }
 
 static char* astOutputStmtCase(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* expr = astOutputChild(ast, indentLevel, 0);
-    char* body = astOutputChild(ast, indentLevel, 1);
-    size_t length = strlen(indent) + strlen(expr) + strlen(body) + 10;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(case %s: %s)\n", indent, expr, body);
-    return buffer;
+    printf("%scaseStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
 }
 
 static char* astOutputStmtCatch(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* exceptionType = tokenToString(ast->token);
-    char* exceptionVar = astOutputChild(ast, indentLevel, 0);
-    char* catchBody = astOutputChild(ast, indentLevel, 1);
-    size_t length = strlen(indent) + strlen(exceptionType) + strlen(exceptionVar) + strlen(catchBody) + 11;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(catch %s %s %s)\n", indent, exceptionType, exceptionVar, catchBody);
-    return buffer;
+    char* type = tokenToString(ast->token);
+    char* indent = astIndent(indentLevel);
+    printf("%scatchStmt(%s)\n", indent, type);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
+    free(type);
 }
 
 static char* astOutputStmtContinue(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    size_t length = strlen(indent) + 11;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(continue)\n", indent);
-    return buffer;
+    printf("%scontinue\n", indent);
+    free(indent);
 }
 
-static char* astOutputStmtExpression(Ast* ast, int indentLevel) {
+static void astOutputStmtExpression(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* expr = astOutput(ast, indentLevel);
-    size_t length = strlen(indent) + strlen(expr) + 12;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(exprStmt %s)\n", indent, expr);
-    return buffer;
+    printf("%sexprStmt\n", indent);
+    Ast* expr = astGetChild(ast, 0);
+    astOutput(expr, indentLevel + 1);
+    free(indent);
 }
 
 static char* astOutputStmtFor(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* decl = astOutputChild(ast, indentLevel, 0);
-    char* expr = astOutputChild(ast, indentLevel, 1);
-    char* body = astOutputChild(ast, indentLevel + 1, 2);
-    size_t length = strlen(indent) + strlen(decl) + strlen(expr) + strlen(body)  + 13;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(for %s : %s \n%s\n)\n", indent, decl, expr, body);
-    return buffer;
+    printf("%sforStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    astOutputChild(ast, indentLevel + 1, 2);
+    free(indent);
 }
 
 static char* astOutputStmtIf(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* condition = astOutputChild(ast, indentLevel, 0);
-    char* thenBranch = astOutputChild(ast, indentLevel + 1, 1);
-    size_t length = strlen(indent) + strlen(condition) + 5;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(if %s\n%s", indent, condition, thenBranch);
-
+    printf("%sifStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
     if (ast->children->count > 2) {
-        char* elseBranch = astOutputChild(ast, indentLevel + 1, 2);
-        size_t length2 = strlen(indent) + 7;
-        char* buffer2 = bufferNewCharArray(length);
-        sprintf_s(buffer2, length2, "%s(else %s\n", indent, condition);
-        buffer = astConcatOutput(buffer, buffer2);
-        free(buffer2);
+        astOutputChild(ast, indentLevel + 1, 2);
     }
-
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    free(indent);
 }
 
 static char* astOutputStmtRequire(Ast* ast, int indentLevel) {
-    char* expr = astOutputChild(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
-    size_t length = strlen(expr) + strlen(indent) + 10;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(require %s)\n", indent, expr);
-    return buffer;
+    printf("%srequireStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
 static char* astOutputStmtReturn(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    size_t length = strlen(indent) + 7;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(return", indent);
-
+    printf("%sreturnStmt\n", indent);
     if (ast->children != NULL && ast->children->count > 0) {
-        char* expr = astOutputChild(ast, indentLevel, 0);
-        buffer = astConcatOutput(buffer, " ");
-        buffer = astConcatOutput(buffer, expr);
+        astOutputChild(ast, indentLevel + 1, 1);
     }
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    free(indent);
 }
 
 static char* astOutputStmtSwitch(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* expr = astOutputChild(ast, indentLevel, 0);
-    size_t length = strlen(indent) + strlen(expr) + 9;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(switch %s\n", indent, expr);
-
-    char* caseList = astOutputChild(ast, indentLevel + 1, 1);
-    size_t length2 = strlen(caseList) + 12;
-    char* buffer2 = bufferNewCharArray(length2);
-    sprintf_s(buffer, length, "%s(caseList %s)\n", indent, caseList);
-    astConcatOutput(buffer, buffer2);
-    free(buffer2);
-
-    if (ast->children != NULL && ast->children->count > 2) {
-        char* defaultStmt = astOutputChild(ast, indentLevel + 1, 2);
-        size_t length3 = strlen(defaultStmt) + 11;
-        char* buffer3 = bufferNewCharArray(length3);
-        sprintf_s(buffer, length, "%s(default %s)\n", indent, defaultStmt);
-        astConcatOutput(buffer, buffer3);
-        free(buffer3);
+    printf("%sswitchStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    if (ast->children->count > 2) {
+        astOutputChild(ast, indentLevel + 1, 2);
     }
-
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    free(indent);
 }
 
 static char* astOutputStmtThrow(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* expr = astOutputChild(ast, indentLevel, 0);
-    size_t length = strlen(indent) + strlen(expr) + 9;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(throw %s)\n", indent, expr);
-    return buffer;
+    printf("%sthrowStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
 static char* astOutputStmtTry(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* tryStmt = astOutputChild(ast, indentLevel + 1, 0);
-    char* catchStmt = astOutputChild(ast, indentLevel + 1, 1);
-    size_t length = strlen(indent) + strlen(tryStmt) + strlen(catchStmt) + 14;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(try \n%s\ncatch \n%s", indent, tryStmt, catchStmt);
-
+    printf("%stryStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
     if (ast->children->count > 2) {
-        char* finallyStmt = astOutputChild(ast, indentLevel + 1, 2);
-        size_t length2 = strlen(indent) + 10;
-        char* buffer2 = bufferNewCharArray(length);
-        sprintf_s(buffer2, length2, "%s(finally %s\n", indent, finallyStmt);
-        buffer = astConcatOutput(buffer, buffer2);
-        free(buffer2);
+        astOutputChild(ast, indentLevel + 1, 2);
     }
-
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    free(indent);
 }
 
 static char* astOutputStmtUsing(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
+    printf("%susingStmt ", indent);
     Ast* identifiers = astGetChild(ast, 0);
     Ast* identifier = astGetChild(identifiers, 0);
     char* name = tokenToString(identifier->token);
-    size_t length = strlen(indent) + strlen(name) + 15;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(using %s", indent, name);
+    printf("%s", name);
+    free(name);
 
-    for (int i = 1; i < identifiers->children->count; i++) {
+    for (int i = 0; i < identifiers->children->count; i++) {
         identifier = astGetChild(identifiers, i);
         name = tokenToString(identifier->token);
-        buffer = astConcatOutput(buffer, ".");
-        buffer = astConcatOutput(buffer, name);
+        printf(".%s", name);
+        free(name);
     }
-
-    if (ast->children->count > 1) {
-        Ast* alias = astGetChild(ast, 1);
-        name = tokenToString(alias->token);
-        buffer = astConcatOutput(buffer, " as ");
-        buffer = astConcatOutput(buffer, name);
-    }
-
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    printf("\n");
+    free(indent);
 }
 
 static char* astOutputStmtWhile(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* expr = astOutputChild(ast, indentLevel, 0);
-    char* body = astOutputChild(ast, indentLevel + 1, 1);
-    size_t length = strlen(indent) + strlen(expr) + 13;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(while %s\n%s\n)\n", indent, expr, body);
-    return buffer;
+    printf("%swhileStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
 }
 
 static char* astOutputStmtYield(Ast* ast, int indentLevel) {
-    char* expr = astOutputChild(ast, indentLevel, 0);
     char* indent = astIndent(indentLevel);
-    size_t length = strlen(expr) + strlen(indent) + 9;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(yield %s)\n", indent, expr);
-    return buffer;
+    printf("%syieldStmt\n", indent);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
 }
 
 static char* astOutputDeclClass(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* className = tokenToString(ast->token);
-    char* superClassName = astOutputChild(ast, indentLevel + 1, 0);
-    char* traitList = astOutputChild(ast, indentLevel + 1, 1);
-    char* methodList = astOutputChild(ast, indentLevel + 1, 2);
-    size_t length = strlen(indent) + strlen(className) + strlen(superClassName) + strlen(traitList) + strlen(methodList) + 19;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(classDecl %s < %s \n%s\n%s)\n", indent, className, superClassName, traitList, methodList);
-    return buffer;
+    char* indent = astIndent(indentLevel);
+    printf("%sclassDecl %s\n", indent, className);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    astOutputChild(ast, indentLevel + 1, 2);
+    free(indent);
+    free(className);
 }
 
 static char* astOutputDeclFun(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* async = ast->modifier.isAsync ? "async " : "";
-    char* name = tokenToString(ast->token);
-    char* body = astOutputChild(ast, indentLevel + 1, 0);
-    size_t length = strlen(indent) + strlen(async) + strlen(name) + strlen(body) + 12;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(funDecl %s%s\n%s)\n", indent, async, name, body);
-    return buffer;
+    char* funName = tokenToString(ast->token);
+    char* indent = astIndent(indentLevel);
+    printf("%sfunDecl %s%s\n", indent, async, funName);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
+    free(funName);
 }
 
 static char* astOutputDeclMethod(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* async = ast->modifier.isAsync ? "async " : "";
     char* _class = ast->modifier.isClass ? "class " : "";
-    char* name = tokenToString(ast->token);
-    char* body = astOutputChild(ast, indentLevel + 1, 0);
-    size_t length = strlen(indent) + strlen(async) + strlen(_class) + strlen(name) + strlen(body) + 15;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(methodDecl %s%s%s %s)\n", indent, async, _class, name, body);
-    return buffer;
+    char* methodName = tokenToString(ast->token);
+    char* indent = astIndent(indentLevel);
+    printf("%sfunDecl %s%s%s\n", indent, async, _class, methodName);
+    astOutputChild(ast, indentLevel + 1, 0);
+    free(indent);
+    free(methodName);
 }
 
 static char* astOutputDeclNamespace(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
+    printf("%snamespaceDecl ", indent);
     Ast* identifiers = astGetChild(ast, 0);
     Ast* identifier = astGetChild(identifiers, 0);
     char* name = tokenToString(identifier->token);
-    size_t length = strlen(indent) + strlen(name) + 15;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(namespaceDecl %s", indent, name);
+    printf("%s", name);
+    free(name);
 
-    for (int i = 1; i < identifiers->children->count; i++) {
+    for (int i = 0; i < identifiers->children->count; i++) {
         identifier = astGetChild(identifiers, i);
-        char* name = tokenToString(identifier->token);
-        buffer = astConcatOutput(buffer, ".");
-        buffer = astConcatOutput(buffer, name);
+        name = tokenToString(identifier->token);
+        printf(".%s", name);
+        free(name);
     }
-
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    printf("\n");
+    free(indent);
 }
 
 static char* astOutputDeclTrait(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     char* traitName = tokenToString(ast->token);
-    char* traitList = astOutputChild(ast, indentLevel + 1, 0);
-    char* methodList = astOutputChild(ast, indentLevel + 1, 1);
-    size_t length = strlen(indent) + strlen(traitName) + strlen(traitList) + strlen(methodList) + 20;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(traitDecl %s\nwith %s\n%s)\n", indent, traitName, traitList, methodList);
-    return buffer;
+    char* indent = astIndent(indentLevel);
+    printf("%straitDecl %s\n", indent, traitName);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(indent);
+    free(traitName);
 }
 
 static char* astOutputDeclVar(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* keyword = ast->modifier.isMutable ? "var" : "val";
-    char* name = tokenToString(ast->token);
-    char* expr = "";
+    char* modifier = ast->modifier.isMutable ? "var" : "val";
+    char* varName = tokenToString(ast->token);
+    printf("%svarDecl %s %s\n", indent, modifier, varName);
 
-    if (ast->children->count > 0) {
-        expr = astOutputChild(ast, indentLevel, 0);
-        expr = astConcatOutput(" = ", expr);
+    if (ast->children != NULL && ast->children->count > 0) {
+        astOutputChild(ast, indentLevel + 1, 0);
     }
-
-    size_t length = strlen(indent) + strlen(name) + strlen(expr) + 12;
-    char* buffer = bufferNewCharArray(length);
-    sprintf_s(buffer, length, "%s(varDecl %s %s%s)\n", indent, keyword, name, expr);
-    return buffer;
+    free(indent);
+    free(varName);
 }
 
 static char* astOutputListExpr(Ast* ast, int indentLevel) {
-    char* buffer = "(listExpr\n";
+    char* indent = astIndent(indentLevel);
+    printf("%slistExpr\n", indent);
     for (int i = 0; i < ast->children->count; i++) {
-        char* stmt = astOutput(astGetChild(ast, i), indentLevel);
-        buffer = astConcatOutput(buffer, stmt);
+        astOutput(astGetChild(ast, i), indentLevel + 1);
     }
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    free(indent);
 }
 
 static char* astOutputListMethod(Ast* ast, int indentLevel) {
-    char* buffer = "(listMethod\n";
+    char* indent = astIndent(indentLevel);
+    printf("%slistMethod\n", indent);
     for (int i = 0; i < ast->children->count; i++) {
-        char* stmt = astOutput(ast->children->elements[i], indentLevel);
-        buffer = astConcatOutput(buffer, stmt);
+        astOutput(astGetChild(ast, i), indentLevel + 1);
     }
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    free(indent);
 }
 
 static char* astOutputListStmt(Ast* ast, int indentLevel) {
-    char* buffer = "(listStmt\n";
+    char* indent = astIndent(indentLevel);
+    printf("%slistStmt\n", indent);
     for (int i = 0; i < ast->children->count; i++) {
-        char* stmt = astOutput(ast->children->elements[i], indentLevel);
-        buffer = astConcatOutput(buffer, stmt);
+        astOutput(ast->children->elements[i], indentLevel + 1);
     }
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    free(indent);
 }
 
 static char* astOutputListVar(Ast* ast, int indentLevel) {
-    char* buffer = "(listVar\n";
+    char* indent = astIndent(indentLevel);
+    printf("%slistVar\n", indent);
     for (int i = 0; i < ast->children->count; i++) {
-        char* stmt = astOutput(ast->children->elements[i], indentLevel);
-        buffer = astConcatOutput(buffer, stmt);
+        astOutput(ast->children->elements[i], indentLevel + 1);
     }
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
+    free(indent);
 }
 
-static char* astOutputScript(Ast* ast, int indentLevel) {
-    char* buffer = "(script \n";
+static void astOutputScript(Ast* ast, int indentLevel) {
+    printf("script\n");
     if (ast->children != NULL && ast->children->count > 0) {
         for (int i = 0; i < ast->children->count; i++) {
-            char* stmt = astOutput(ast->children->elements[i], indentLevel + 1);
-            buffer = astConcatOutput(buffer, stmt);
+            astOutput(ast->children->elements[i], indentLevel + 1);
         }
     }
-    buffer = astConcatOutput(buffer, ")\n");
-    return buffer;
 }
 
-char* astOutput(Ast* ast, int indentLevel) {
+void astOutput(Ast* ast, int indentLevel) {
     switch (ast->category) {
         case AST_CATEGORY_SCRIPT: 
-            return astOutputScript(ast, indentLevel);
+            astOutputScript(ast, indentLevel);
+            break;
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
                 case AST_EXPR_ARRAY:
-                    return astOutputExprArray(ast, indentLevel);
+                    astOutputExprArray(ast, indentLevel);
+                    break;
                 case AST_EXPR_ASSIGN:
-                    return astOutputExprAssign(ast, indentLevel);
+                    astOutputExprAssign(ast, indentLevel);
+                    break;
                 case AST_EXPR_AWAIT:
-                    return astOutputExprAwait(ast, indentLevel);
+                    astOutputExprAwait(ast, indentLevel);
+                    break;
                 case AST_EXPR_BINARY: 
-                    return astOutputExprBinary(ast, indentLevel);
+                    astOutputExprBinary(ast, indentLevel);
+                    break;
                 case AST_EXPR_CALL:
-                    return astOutputExprCall(ast, indentLevel);
+                    astOutputExprCall(ast, indentLevel);
+                    break;
                 case AST_EXPR_CLASS:
-                    return astOutputExprClass(ast, indentLevel);
+                    astOutputExprClass(ast, indentLevel);
+                    break;
                 case AST_EXPR_DICTIONARY:
-                    return astOutputExprDictionary(ast, indentLevel);
+                    astOutputExprDictionary(ast, indentLevel);
+                    break;
                 case AST_EXPR_FUNCTION:
-                    return astOutputExprFunction(ast, indentLevel);
+                    astOutputExprFunction(ast, indentLevel);
+                    break;
                 case AST_EXPR_GROUPING:
-                    return astOutputExprGrouping(ast, indentLevel);
+                    astOutputExprGrouping(ast, indentLevel);
+                    break;
                 case AST_EXPR_INVOKE:
-                    return astOutputExprInvoke(ast, indentLevel);
+                    astOutputExprInvoke(ast, indentLevel);
+                    break;
                 case AST_EXPR_INTERPOLATION:
-                    return astOutputExprInterpolation(ast, indentLevel);
+                    astOutputExprInterpolation(ast, indentLevel);
+                    break;
                 case AST_EXPR_LITERAL:
-                    return astOutputExprLiteral(ast, indentLevel);
+                    astOutputExprLiteral(ast, indentLevel);
+                    break;
                 case AST_EXPR_LOGICAL:
-                    return astOutputExprLogical(ast, indentLevel);
+                    astOutputExprLogical(ast, indentLevel);
+                    break;
                 case AST_EXPR_NIL:
-                    return astOutputExprNil(ast, indentLevel);
+                    astOutputExprNil(ast, indentLevel);
+                    break;
                 case AST_EXPR_PROPERTY_GET:
-                    return astOutputExprPropertyGet(ast, indentLevel);
+                    astOutputExprPropertyGet(ast, indentLevel);
+                    break;
                 case AST_EXPR_PROPERTY_SET:
-                    return astOutputExprPropertySet(ast, indentLevel);
+                    astOutputExprPropertySet(ast, indentLevel);
+                    break;
                 case AST_EXPR_SUBSCRIPT_GET:
-                    return astOutputExprSubscriptGet(ast, indentLevel);
+                    astOutputExprSubscriptGet(ast, indentLevel);
+                    break;
                 case AST_EXPR_SUBSCRIPT_SET:
-                    return astOutputExprSubscriptSet(ast, indentLevel);
+                    astOutputExprSubscriptSet(ast, indentLevel);
+                    break;
                 case AST_EXPR_SUPER_GET:
-                    return astOutputExprSuperGet(ast, indentLevel);
+                    astOutputExprSuperGet(ast, indentLevel);
+                    break;
                 case AST_EXPR_SUPER_INVOKE:
-                    return astOutputExprSuperInvoke(ast, indentLevel);
+                    astOutputExprSuperInvoke(ast, indentLevel);
+                    break;
                 case AST_EXPR_THIS: 
-                    return astOutputExprThis(ast, indentLevel);
+                    astOutputExprThis(ast, indentLevel);
+                    break;
                 case AST_EXPR_TRAIT:
-                    return astOutputExprTrait(ast, indentLevel);
+                    astOutputExprTrait(ast, indentLevel);
+                    break;
                 case AST_EXPR_UNARY:
-                    return astOutputExprUnary(ast, indentLevel);
+                    astOutputExprUnary(ast, indentLevel);
+                    break;
                 case AST_EXPR_VARIABLE:
-                    return astOutputExprVariable(ast, indentLevel);
+                    astOutputExprVariable(ast, indentLevel);
+                    break;
                 case AST_EXPR_YIELD:
-                    return astOutputExprYield(ast, indentLevel);
-                default: return NULL;
+                    astOutputExprYield(ast, indentLevel);
+                    break;
+                default: return;
             }
         }
         case AST_CATEGORY_STMT: {
             switch (ast->type) {
                 case AST_STMT_AWAIT:
-                    return astOutputStmtAwait(ast, indentLevel);
+                    astOutputStmtAwait(ast, indentLevel);
+                    break;
                 case AST_STMT_BLOCK:
-                    return astOutputStmtBlock(ast, indentLevel);
+                    astOutputStmtBlock(ast, indentLevel);
+                    break;
                 case AST_STMT_BREAK:
-                    return astOutputStmtBreak(ast, indentLevel);
+                    astOutputStmtBreak(ast, indentLevel);
+                    break;
                 case AST_STMT_CASE:
-                    return astOutputStmtCase(ast, indentLevel);
+                    astOutputStmtCase(ast, indentLevel);
+                    break;
                 case AST_STMT_CATCH:
-                    return astOutputStmtCatch(ast, indentLevel);
+                    astOutputStmtCatch(ast, indentLevel);
+                    break;
                 case AST_STMT_CONTINUE:
-                    return astOutputStmtContinue(ast, indentLevel);
+                    astOutputStmtContinue(ast, indentLevel);
+                    break;
                 case AST_STMT_EXPRESSION:
-                    return astOutputStmtExpression(ast, indentLevel);
+                    astOutputStmtExpression(ast, indentLevel);
+                    break;
                 case AST_STMT_FOR:
-                    return astOutputStmtFor(ast, indentLevel);
+                    astOutputStmtFor(ast, indentLevel);
+                    break;
                 case AST_STMT_IF:
-                    return astOutputStmtIf(ast, indentLevel);
+                    astOutputStmtIf(ast, indentLevel);
+                    break;
                 case AST_STMT_REQUIRE:
-                    return astOutputStmtRequire(ast, indentLevel);
+                    astOutputStmtRequire(ast, indentLevel);
+                    break;
                 case AST_STMT_RETURN:
-                    return astOutputStmtReturn(ast, indentLevel);
+                    astOutputStmtReturn(ast, indentLevel);
+                    break;
                 case AST_STMT_SWITCH:
-                    return astOutputStmtSwitch(ast, indentLevel);
+                    astOutputStmtSwitch(ast, indentLevel);
+                    break;
                 case AST_STMT_THROW:
-                    return astOutputStmtThrow(ast, indentLevel);
+                    astOutputStmtThrow(ast, indentLevel);
+                    break;
                 case AST_STMT_TRY:
-                    return astOutputStmtTry(ast, indentLevel);
+                    astOutputStmtTry(ast, indentLevel);
+                    break;
                 case AST_STMT_USING:
-                    return astOutputStmtUsing(ast, indentLevel);
+                    astOutputStmtUsing(ast, indentLevel);
+                    break;
                 case AST_STMT_WHILE:
-                    return astOutputStmtUsing(ast, indentLevel);
+                    astOutputStmtUsing(ast, indentLevel);
+                    break;
                 case AST_STMT_YIELD:
-                    return astOutputStmtYield(ast, indentLevel);
-                default: return NULL;
+                    astOutputStmtYield(ast, indentLevel);
+                    break;
+                default: return;
             }
         }
         case AST_CATEGORY_DECL: {
             switch (ast->type) {
                 case AST_DECL_CLASS:
-                    return astOutputDeclClass(ast, indentLevel);
+                    astOutputDeclClass(ast, indentLevel);
+                    break;
                 case AST_DECL_FUN:
-                    return astOutputDeclFun(ast, indentLevel);
+                    astOutputDeclFun(ast, indentLevel);
+                    break;
                 case AST_DECL_METHOD:
-                    return astOutputDeclMethod(ast, indentLevel);
+                    astOutputDeclMethod(ast, indentLevel);
+                    break;
                 case AST_DECL_NAMESPACE:
-                    return astOutputDeclNamespace(ast, indentLevel);
+                    astOutputDeclNamespace(ast, indentLevel);
+                    break;
                 case AST_DECL_TRAIT:
-                    return astOutputDeclTrait(ast, indentLevel);
+                    astOutputDeclTrait(ast, indentLevel);
+                    break;
                 case AST_DECL_VAR:
-                    return astOutputDeclVar(ast, indentLevel);
+                    astOutputDeclVar(ast, indentLevel);
+                    break;
                 default: return NULL;
             }
         }
         case AST_CATEGORY_OTHER: {
             switch (ast->type) {
                 case AST_LIST_EXPR:
-                    return astOutputListExpr(ast, indentLevel);
+                    astOutputListExpr(ast, indentLevel);
+                    break;
                 case AST_LIST_METHOD:
-                    return astOutputListMethod(ast, indentLevel);
+                    astOutputListMethod(ast, indentLevel);
+                    break;
                 case AST_LIST_STMT:
-                    return astOutputListStmt(ast, indentLevel);
+                    astOutputListStmt(ast, indentLevel);
+                    break;
                 case AST_LIST_VAR:
-                    return astOutputListVar(ast, indentLevel);
-                default: return NULL;
+                    astOutputListVar(ast, indentLevel);
+                    break;
+                default: return;
             }
         }
-        default: return NULL;
+        default: return;
     }
-    return NULL;
 }

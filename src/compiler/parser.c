@@ -1061,9 +1061,7 @@ static Ast* declaration(Parser* parser) {
     else if (match(parser, TOKEN_VAR)) {
         return varDeclaration(parser, true);
     }
-    else {
-        return statement(parser);
-    }
+    else return statement(parser);
 }
 
 void initParser(Parser* parser, Lexer* lexer) {

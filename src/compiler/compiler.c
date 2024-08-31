@@ -134,9 +134,7 @@ static void endLoop(Compiler* compiler) {
             chunk->code[offset] = OP_JUMP;
             patchJump(compiler, offset + 1);
         }
-        else {
-            offset += opCodeOffset(chunk, offset);
-        }
+        else offset += opCodeOffset(chunk, offset);
     }
 }
 
