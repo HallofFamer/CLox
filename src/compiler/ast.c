@@ -87,10 +87,13 @@ static bool astHasChild(Ast* ast) {
 }
 
 static char* astIndent(int indentLevel) {
-    char* buffer = "";
-    for (int i = 0; i < indentLevel; i++) {
-        buffer = astConcatOutput(buffer, "  ");
+    if (indentLevel) return "";
+    size_t length = indentLevel * 2;
+    char* buffer = bufferNewCharArray(length);
+    for (int i = 0; i < length; i++) {
+        buffer[i] = ' ';
     }
+    buffer[length] = '\0';
     return buffer;
 }
 
@@ -99,7 +102,6 @@ static void astOutputChild(Ast* ast, int indentLevel, int index) {
         fprintf(stderr, "Ast has no children or invalid child index specified.");
         exit(1);
     }
-
     Ast* expr = ast->children->elements[index];
     astOutput(expr, indentLevel);
 }

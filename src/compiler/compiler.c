@@ -389,9 +389,147 @@ static void compileExpression(Compiler* compiler, Ast* ast) {
     return NULL;
 }
 
-static void compileStatement(Compiler* compiler, Ast* ast) {
+static void compileAwaitStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
     return NULL;
+}
+
+static void compileBlockStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileBreakStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileCaseStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileCatchStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileContinueStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileForStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileIfStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileRequireStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileReturnStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileSwitchStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileThrowStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileTryStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileUsingStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileWhileStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileYieldStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+    return NULL;
+}
+
+static void compileStatement(Compiler* compiler, Ast* ast) {
+    switch (ast->type) {
+        case AST_STMT_AWAIT:
+            compileAwaitStatement(compiler, ast);
+            break;
+        case AST_STMT_BLOCK:
+            compileBlockStatement(compiler, ast);
+            break;
+        case AST_STMT_BREAK:
+            compileBreakStatement(compile, ast);
+            break;
+        case AST_STMT_CASE:
+            compileCaseStatement(compiler, ast);
+            break;
+        case AST_STMT_CATCH:
+            compileCatchStatement(compiler, ast);
+            break;
+        case AST_STMT_CONTINUE:
+            compileContinueStatement(compiler, ast);
+            break;
+        case AST_STMT_EXPRESSION:
+            compileExpressionStatement(compiler, ast);
+            break;
+        case AST_STMT_FOR:
+            compileForStatement(compiler, ast);
+            break;
+        case AST_STMT_IF:
+            compileIfStatement(compiler, ast);
+            break;
+        case AST_STMT_REQUIRE:
+            compileRequireStatement(compiler, ast);
+            break;
+        case AST_STMT_RETURN:
+            compileReturnStatement(compiler, ast);
+            break;
+        case AST_STMT_SWITCH:
+            compileSwitchStatement(compiler, ast);
+            break;
+        case AST_STMT_THROW:
+            compileThrowStatement(compiler, ast);
+            break;
+        case AST_STMT_TRY:
+            compileTryStatement(compiler, ast);
+            break;
+        case AST_STMT_USING:
+            compileUsingStatement(compiler, ast);
+            break;
+        case AST_STMT_WHILE:
+            compileWhileStatement(compiler, ast);
+            break;
+        case AST_STMT_YIELD:
+            compileYieldStatement(compiler, ast);
+            break;
+        default:
+            compileError(compiler, "Invalid declaration type.");
+    }
 }
 
 static void compileClassDeclaration(Compiler* compiler, Ast* ast) {
