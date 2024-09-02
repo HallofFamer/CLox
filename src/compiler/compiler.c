@@ -107,7 +107,7 @@ static uint8_t makeConstant(Compiler* compiler, Value value) {
     return (uint8_t)constant;
 }
 
-static void emitConstant(CompilerV1* compiler, Value value) {
+static void emitConstant(Compiler* compiler, Value value) {
     emitBytes(compiler, OP_CONSTANT, makeConstant(compiler, value));
 }
 
@@ -154,7 +154,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->function->isAsync = isAsync;
     if (type != COMPILE_TYPE_SCRIPT) compiler->function->name = newString(vm, name);
     initIDMap(&compiler->indexes);
-    vm->currentCompiler = compiler;
+    //vm->currentCompiler = compiler;
 
     Local* local = &compiler->locals[compiler->localCount++];
     local->depth = 0;
@@ -182,7 +182,7 @@ static ObjFunction* endCompiler(Compiler* compiler) {
 #endif
 
     freeIDMap(compiler->vm, &compiler->indexes);
-    compiler->vm->currentCompiler = compiler->enclosing;
+    //compiler->vm->currentCompiler = compiler->enclosing;
     return function;
 }
 
@@ -223,7 +223,7 @@ static uint8_t identifierConstant(Compiler* compiler, Token* name) {
     return makeIdentifier(compiler, OBJ_VAL(copyString(compiler->vm, start, length)));
 }
 
-static ObjString* identifierName(CompilerV1* compiler, uint8_t arg) {
+static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
     return AS_STRING(currentChunk(compiler)->identifiers.values[arg]);
 }
 
@@ -234,7 +234,7 @@ static bool identifiersEqual(Token* a, Token* b) {
 
 static uint8_t propertyConstant(Compiler* compiler, const char* message) {
     // To be implemented
-    return NULL;
+    return 0;
 }
 
 static int resolveLocal(Compiler* compiler, Token* name) {
@@ -347,7 +347,7 @@ static void declareVariable(Compiler* compiler, Token* name) {
     addLocal(compiler, *name);
 }
 
-static uint8_t compileVariable(Compiler* compiler, Token* name, const char* errorMessage) {
+static uint8_t makeVariable(Compiler* compiler, Token* name, const char* errorMessage) {
     declareVariable(compiler, name);
     if (compiler->scopeDepth > 0) return 0;
     return identifierConstant(compiler, name);
@@ -384,94 +384,277 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     }
 }
 
-static void compileExpression(Compiler* compiler, Ast* ast) {
+static void integer(Compiler* compiler, Token token) {
+    int value = strtol(token.start, NULL, 10);
+    emitConstant(compiler, INT_VAL(value));
+}
+
+static void number(Compiler* compiler, Token token) {
+    double value = strtod(token.start, NULL);
+    emitConstant(compiler, NUMBER_VAL(value));
+}
+
+static void string(Compiler* compiler, Token token) {
+    char* string = tokenToString(token);
+    emitConstant(compiler, OBJ_VAL(takeString(compiler->vm, string, token.length)));
+}
+
+static void compileArray(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
+}
+
+static void compileAssign(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileAwait(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileBinary(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileCall(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileClass(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileDictionary(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileFunction(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileGrouping(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileInterpolation(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileInvoke(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileLiteral(Compiler* compiler, Ast* ast) {
+    switch (ast->token.type) {
+        case TOKEN_NIL: emitByte(compiler, OP_NIL); break;
+        case TOKEN_TRUE: emitByte(compiler, OP_TRUE); break;
+        case TOKEN_FALSE: emitByte(compiler, OP_FALSE); break;
+        case TOKEN_INT: integer(compiler, ast->token); break;
+        case TOKEN_NUMBER: number(compiler, ast->token); break;
+        case TOKEN_STRING: string(compiler, ast->token); break;
+        default: compileError(compiler, "Invalid AST literal type.");
+    }
+}
+
+static void compileLogical(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileNil(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compilePropertyGet(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compilePropertySet(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileSubscriptGet(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileSubscriptSet(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileSuperGet(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileSuperInvoke(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileThis(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileTrait(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileUnary(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileVariable(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileYield(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
+static void compileExpression(Compiler* compiler, Ast* ast) {
+    switch (ast->type) {
+        case AST_EXPR_ARRAY:
+            compileArray(compiler, ast);
+            break;
+        case AST_EXPR_ASSIGN:
+            compileAssign(compiler, ast);
+            break;
+        case AST_EXPR_AWAIT:
+            compileAwait(compiler, ast);
+            break;
+        case AST_EXPR_BINARY:
+            compileBinary(compiler, ast);
+            break;
+        case AST_EXPR_CALL:
+            compileCall(compiler, ast);
+            break;
+        case AST_EXPR_CLASS:
+            compileClass(compiler, ast);
+            break;
+        case AST_EXPR_DICTIONARY:
+            compileDictionary(compiler, ast);
+            break;
+        case AST_EXPR_FUNCTION:
+            compileFunction(compiler, ast);
+            break;
+        case AST_EXPR_GROUPING:
+            compileGrouping(compiler, ast);
+            break;
+        case AST_EXPR_INTERPOLATION:
+            compileInterpolation(compiler, ast);
+            break;
+        case AST_EXPR_INVOKE:
+            compileInvoke(compiler, ast);
+            break;
+        case AST_EXPR_LITERAL:
+            compileLiteral(compiler, ast);
+            break;
+        case AST_EXPR_LOGICAL:
+            compileLogical(compiler, ast);
+            break;
+        case AST_EXPR_NIL:
+            compileNil(compiler, ast);
+            break;
+        case AST_EXPR_PROPERTY_GET:
+            compilePropertyGet(compiler, ast);
+            break;
+        case AST_EXPR_PROPERTY_SET:
+            compilePropertySet(compiler, ast);
+            break;
+        case AST_EXPR_SUBSCRIPT_GET:
+            compileSubscriptGet(compiler, ast);
+            break;
+        case AST_EXPR_SUBSCRIPT_SET:
+            compileSubscriptSet(compiler, ast);
+            break;
+        case AST_EXPR_SUPER_GET:
+            compileSuperGet(compiler, ast);
+            break;
+        case AST_EXPR_SUPER_INVOKE:
+            compileSuperInvoke(compiler, ast);
+            break;
+        case AST_EXPR_THIS:
+            compileThis(compiler, ast);
+            break;
+        case AST_EXPR_TRAIT:
+            compileTrait(compiler, ast);
+            break;
+        case AST_EXPR_UNARY:
+            compileUnary(compiler, ast);
+            break;
+        case AST_EXPR_VARIABLE:
+            compileVariable(compiler, ast);
+            break;
+        case AST_EXPR_YIELD:
+            compileYield(compiler, ast);
+            break;
+        default:
+            compileError(compiler, "Invalid AST expression type.");
+    }
 }
 
 static void compileAwaitStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileBlockStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileBreakStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileCaseStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileCatchStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileContinueStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileForStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileIfStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileRequireStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileReturnStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileSwitchStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileThrowStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileTryStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileUsingStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileWhileStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileYieldStatement(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileStatement(Compiler* compiler, Ast* ast) {
@@ -483,7 +666,7 @@ static void compileStatement(Compiler* compiler, Ast* ast) {
             compileBlockStatement(compiler, ast);
             break;
         case AST_STMT_BREAK:
-            compileBreakStatement(compile, ast);
+            compileBreakStatement(compiler, ast);
             break;
         case AST_STMT_CASE:
             compileCaseStatement(compiler, ast);
@@ -528,38 +711,32 @@ static void compileStatement(Compiler* compiler, Ast* ast) {
             compileYieldStatement(compiler, ast);
             break;
         default:
-            compileError(compiler, "Invalid declaration type.");
+            compileError(compiler, "Invalid AST statement type.");
     }
 }
 
 static void compileClassDeclaration(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileFunDeclaration(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileMethodDeclaration(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileNamespaceDeclaration(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileTraitDeclaration(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileVarDeclaration(Compiler* compiler, Ast* ast) {
     // To be implemented
-    return NULL;
 }
 
 static void compileDeclaration(Compiler* compiler, Ast* ast) {
@@ -583,7 +760,7 @@ static void compileDeclaration(Compiler* compiler, Ast* ast) {
             compileVarDeclaration(compiler, ast);
             break;
         default: 
-            compileError(compiler, "Invalid declaration type.");
+            compileError(compiler, "Invalid AST declaration type.");
     }
 }
 
