@@ -154,7 +154,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->function->isAsync = isAsync;
     if (type != COMPILE_TYPE_SCRIPT) compiler->function->name = newString(vm, name);
     initIDMap(&compiler->indexes);
-    //vm->currentCompiler = compiler;
+    vm->compiler = compiler;
 
     Local* local = &compiler->locals[compiler->localCount++];
     local->depth = 0;
@@ -182,7 +182,7 @@ static ObjFunction* endCompiler(Compiler* compiler) {
 #endif
 
     freeIDMap(compiler->vm, &compiler->indexes);
-    //compiler->vm->currentCompiler = compiler->enclosing;
+    compiler->vm->compiler = compiler->enclosing;
     return function;
 }
 
