@@ -1069,6 +1069,8 @@ void initParser(Parser* parser, Lexer* lexer) {
     parser->rootClass = syntheticToken("Object");
     parser->hadError = false;
     parser->panicMode = false;
+    advance(parser);
+    advance(parser);
 }
 
 Ast* parse(Parser* parser) {

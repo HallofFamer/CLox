@@ -87,7 +87,7 @@ static bool astHasChild(Ast* ast) {
 }
 
 static char* astIndent(int indentLevel) {
-    if (indentLevel) return "";
+    if (indentLevel == 0) return "";
     size_t length = indentLevel * 2;
     char* buffer = bufferNewCharArray(length);
     for (int i = 0; i < length; i++) {
@@ -194,6 +194,7 @@ static void astOutputExprInterpolation(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprLiteral(Ast* ast, int indentLevel) {
+    char* indent = astIndent(indentLevel);
     char* token = tokenToString(ast->token);
     switch (ast->token.type) {
         case TOKEN_NIL:
@@ -201,15 +202,16 @@ static void astOutputExprLiteral(Ast* ast, int indentLevel) {
         case TOKEN_FALSE:
         case TOKEN_INT:
         case TOKEN_NUMBER: {
-            printf("%s", token);
+            printf("%s%s\n", indent, token);
             break;
         }
         case TOKEN_STRING: {
-            printf("\"%s\"", token);
+            printf("%s\"%s\"\n", indent, token);
             break;
         }
         default: break;
     }
+    free(indent);
     free(token);
 }
 
