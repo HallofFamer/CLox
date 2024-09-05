@@ -74,7 +74,7 @@ void astAppendChild(Ast* ast, Ast* child) {
     if (child != NULL) child->parent = ast;
 }
 
-static Ast* astGetChild(Ast* ast, int index) {
+Ast* astGetChild(Ast* ast, int index) {
     if (ast->children == NULL || ast->children->count < index) {
         fprintf(stderr, "Ast has no children or invalid child index specified.");
         exit(1);
@@ -82,8 +82,12 @@ static Ast* astGetChild(Ast* ast, int index) {
     return ast->children->elements[index];
 }
 
-static bool astHasChild(Ast* ast) {
+bool astHasChild(Ast* ast) {
     return (ast->children != NULL && ast->children->count > 0);
+}
+
+int astNumChild(Ast* ast) {
+    return (ast->children != NULL) ? ast->children->count : 0;
 }
 
 static char* astIndent(int indentLevel) {
@@ -306,9 +310,9 @@ static void astOutputExprUnary(Ast* ast, int indentLevel) {
 
 static void astOutputExprVariable(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    char* modifier = ast->modifier.isMutable ? "var" : "val";
+    char* modifier = ast->modifier.isMutable ? "var " : "";
     char* name = tokenToString(ast->token);
-    printf("%s%s %s\n", indent, modifier, name);
+    printf("%s%s%s\n", indent, modifier, name);
     free(indent);
     free(name);
 }
@@ -548,7 +552,7 @@ static void astOutputDeclVar(Ast* ast, int indentLevel) {
 
 static void astOutputListExpr(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%slistExpr\n", indent);
+    printf("%slistExpr(%d)\n", indent, astNumChild(ast));
     for (int i = 0; i < ast->children->count; i++) {
         astOutput(astGetChild(ast, i), indentLevel + 1);
     }
@@ -557,7 +561,7 @@ static void astOutputListExpr(Ast* ast, int indentLevel) {
 
 static void astOutputListMethod(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%slistMethod\n", indent);
+    printf("%slistMethod(%d)\n", indent, astNumChild(ast));
     for (int i = 0; i < ast->children->count; i++) {
         astOutput(astGetChild(ast, i), indentLevel + 1);
     }
@@ -566,7 +570,7 @@ static void astOutputListMethod(Ast* ast, int indentLevel) {
 
 static void astOutputListStmt(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%slistStmt\n", indent);
+    printf("%slistStmt(%d)\n", indent, astNumChild(ast));
     for (int i = 0; i < ast->children->count; i++) {
         astOutput(ast->children->elements[i], indentLevel + 1);
     }
@@ -575,7 +579,7 @@ static void astOutputListStmt(Ast* ast, int indentLevel) {
 
 static void astOutputListVar(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%slistVar\n", indent);
+    printf("%slistVar(%d)\n", indent, astNumChild(ast));
     for (int i = 0; i < ast->children->count; i++) {
         astOutput(ast->children->elements[i], indentLevel + 1);
     }

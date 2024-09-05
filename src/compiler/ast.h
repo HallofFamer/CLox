@@ -113,7 +113,10 @@ Ast* newAst(AstNodeType type, Token token, int numChildren, ...);
 Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children);
 void freeAst(Ast* node, bool freeChildren);
 void astAppendChild(Ast* ast, Ast* child);
-char* astOutput(Ast* ast, int indentLevel);
+Ast* astGetChild(Ast* ast, int index);
+bool astHasChild(Ast* ast);
+int astNumChild(Ast* ast);
+void astOutput(Ast* ast, int indentLevel);
 
 static inline AstNodeCategory astNodeCategory(AstNodeType type) {
     if (type == AST_TYPE_NONE) return AST_CATEGORY_SCRIPT;
