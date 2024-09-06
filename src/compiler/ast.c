@@ -543,7 +543,7 @@ static void astOutputDeclVar(Ast* ast, int indentLevel) {
     char* varName = tokenToString(ast->token);
     printf("%svarDecl %s %s\n", indent, modifier, varName);
 
-    if (ast->children != NULL && ast->children->count > 0) {
+    if (astHasChild(ast)) {
         astOutputChild(ast, indentLevel + 1, 0);
     }
     free(indent);

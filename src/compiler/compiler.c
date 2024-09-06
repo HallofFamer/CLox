@@ -4,6 +4,7 @@
 
 #include "compiler.h"
 #include "parser.h"
+#include "../vm/debug.h"
 
 typedef struct {
     Token name;
@@ -50,7 +51,7 @@ static Chunk* currentChunk(Compiler* compiler) {
 }
 
 static int currentLine(Compiler* compiler) {
-    return compiler->currentToken.length;
+    return compiler->currentToken.line;
 }
 
 static void compileError(Compiler* compiler, const char* format, ...) {
@@ -176,7 +177,7 @@ static ObjFunction* endCompiler(Compiler* compiler) {
     ObjFunction* function = compiler->function;
 
 #ifdef DEBUG_PRINT_CODE
-    if (!compiler->parser->hadError) {
+    if (!compiler->hadError) {
         disassembleChunk(currentChunk(compiler), function->name != NULL ? function->name->chars : "<script>");
     }
 #endif
@@ -384,6 +385,16 @@ static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     }
 }
 
+static uint8_t argumentList(Compiler* compiler, Ast* ast) {
+    uint8_t argCount = 0;
+    int numChild = astNumChild(ast);
+    while (argCount < numChild) {
+        compileChild(compiler, ast, argCount);
+        argCount++;
+    }
+    return argCount;
+}
+
 static void integer(Compiler* compiler, Token token) {
     int value = strtol(token.start, NULL, 10);
     emitConstant(compiler, INT_VAL(value));
@@ -399,12 +410,65 @@ static void string(Compiler* compiler, Token token) {
     emitConstant(compiler, OBJ_VAL(takeString(compiler->vm, string, token.length)));
 }
 
+static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
+    switch (opCode) {
+        case OP_SET_LOCAL:
+            if (!compiler->locals[arg].isMutable) {
+                compileError(compiler, "Cannot assign to immutable local variable.");
+            }
+            break;
+        case OP_SET_UPVALUE:
+            if (!compiler->upvalues[arg].isMutable) {
+               compileError(compiler, "Cannot assign to immutable captured upvalue.");
+            }
+            break;
+        case OP_SET_GLOBAL: {
+            ObjString* name = identifierName(compiler, arg);
+            int index;
+            if (idMapGet(&compiler->vm->currentModule->valIndexes, name, &index)) {
+                compileError(compiler, "Cannot assign to immutable global variables.");
+            }
+            break;
+        }
+        default: break;
+    }
+}
+
+static void getVariable(Compiler* compiler, Ast* ast) {
+    int arg = resolveLocal(compiler, &ast->token);
+    if (arg != -1) {
+        emitBytes(compiler, OP_GET_LOCAL, (uint8_t)arg);
+    }
+    else if ((arg = resolveUpvalue(compiler, &ast->token)) != -1) {
+        emitBytes(compiler, OP_GET_UPVALUE, (uint8_t)arg);
+    }
+    else {
+        arg = identifierConstant(compiler, &ast->token);
+        emitBytes(compiler, OP_GET_GLOBAL, (uint8_t)arg);
+    }
+}
+
 static void compileArray(Compiler* compiler, Ast* ast) {
     // To be implemented
 }
 
 static void compileAssign(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    uint8_t setOp;
+    int arg = resolveLocal(compiler, &ast->token);
+    if (arg != -1) {
+        setOp = OP_SET_LOCAL;
+    }
+    else if ((arg = resolveUpvalue(compiler, &ast->token)) != -1) {
+        setOp = OP_SET_UPVALUE;
+    }
+    else {
+        arg = identifierConstant(compiler, &ast->token);
+        setOp = OP_SET_GLOBAL;
+    }
+
+    checkMutability(compiler, arg, setOp);
+    compileChild(compiler, ast, 0);
+    emitBytes(compiler, setOp, (uint8_t)arg);
 }
 
 static void compileAwait(Compiler* compiler, Ast* ast) {
@@ -412,11 +476,32 @@ static void compileAwait(Compiler* compiler, Ast* ast) {
 }
 
 static void compileBinary(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    compileChild(compiler, ast, 1);
+    TokenSymbol operatorType = ast->token.type;
+    
+    switch (operatorType) {
+        case TOKEN_BANG_EQUAL:        emitBytes(compiler, OP_EQUAL, OP_NOT); break;
+        case TOKEN_EQUAL_EQUAL:       emitByte(compiler, OP_EQUAL); break;
+        case TOKEN_GREATER:           emitByte(compiler, OP_GREATER); break;
+        case TOKEN_GREATER_EQUAL:     emitBytes(compiler, OP_LESS, OP_NOT); break;
+        case TOKEN_LESS:              emitByte(compiler, OP_LESS); break;
+        case TOKEN_LESS_EQUAL:        emitBytes(compiler, OP_GREATER, OP_NOT); break;
+        case TOKEN_PLUS:              emitByte(compiler, OP_ADD); break;
+        case TOKEN_MINUS:             emitByte(compiler, OP_SUBTRACT); break;
+        case TOKEN_STAR:              emitByte(compiler, OP_MULTIPLY); break;
+        case TOKEN_SLASH:             emitByte(compiler, OP_DIVIDE); break;
+        case TOKEN_MODULO:            emitByte(compiler, OP_MODULO); break;
+        case TOKEN_DOT_DOT:           emitByte(compiler, OP_RANGE); break;
+        default: return;
+    }
 }
 
 static void compileCall(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    Ast* args = astGetChild(ast, 1);
+    uint8_t argCount = argumentList(compiler, args);
+    emitBytes(compiler, OP_CALL, argCount);
 }
 
 static void compileClass(Compiler* compiler, Ast* ast) {
@@ -432,7 +517,7 @@ static void compileFunction(Compiler* compiler, Ast* ast) {
 }
 
 static void compileGrouping(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
 }
 
 static void compileInterpolation(Compiler* compiler, Ast* ast) {
@@ -500,7 +585,7 @@ static void compileUnary(Compiler* compiler, Ast* ast) {
 }
 
 static void compileVariable(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    getVariable(compiler, ast);
 }
 
 static void compileYield(Compiler* compiler, Ast* ast) {
@@ -614,7 +699,11 @@ static void compileContinueStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    if (compiler->type == COMPILE_TYPE_LAMBDA) {
+        emitByte(compiler, OP_RETURN);
+    }
+    else emitByte(compiler, OP_POP);
 }
 
 static void compileForStatement(Compiler* compiler, Ast* ast) {
@@ -736,7 +825,18 @@ static void compileTraitDeclaration(Compiler* compiler, Ast* ast) {
 }
 
 static void compileVarDeclaration(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    uint8_t index = makeVariable(compiler, &ast->token, "Expect variable name.");
+    bool hasValue = astHasChild(ast);
+
+    if (hasValue) {
+        compileChild(compiler, ast, 0);
+    }
+    else if (!ast->modifier.isMutable) {
+        compileError(compiler, "Immutable variable must be initialized upon declaration.");
+    }
+    else emitByte(compiler, OP_NIL);
+
+    defineVariable(compiler, index, ast->modifier.isMutable);
 }
 
 static void compileDeclaration(Compiler* compiler, Ast* ast) {
@@ -764,29 +864,32 @@ static void compileDeclaration(Compiler* compiler, Ast* ast) {
     }
 }
 
-static void compileChild(Compiler* compiler, Ast* ast) {
-    switch (ast->category) {
-        case AST_CATEGORY_SCRIPT:
-            compileAst(compiler, ast);
-            break;
-        case AST_CATEGORY_EXPR:
-            compileExpression(compiler, ast);
-            break;
-        case AST_CATEGORY_STMT:
-            compileStatement(compiler, ast);
-        case AST_CATEGORY_DECL:
-            compileDeclaration(compiler, ast);
-            break;
-        default:
-            break;
-    }
-}
-
 void compileAst(Compiler* compiler, Ast* ast) {
     if (compiler->hadError || !AST_IS_ROOT(ast)) return;
     for (int i = 0; i < ast->children->count; i++) {
-        Ast* decl = ast->children->elements[i];
-        compileChild(compiler, decl);
+        compileChild(compiler, ast, i);
+    }
+}
+
+void compileChild(Compiler* compiler, Ast* ast, int index) {
+    Ast* child = astGetChild(ast, index);
+    compiler->currentToken = child->token;
+    switch (child->category) {
+        case AST_CATEGORY_SCRIPT:
+        case AST_CATEGORY_OTHER:
+            compileAst(compiler, child);
+            break;
+        case AST_CATEGORY_EXPR:
+            compileExpression(compiler, child);
+            break;
+        case AST_CATEGORY_STMT:
+            compileStatement(compiler, child);
+            break;
+        case AST_CATEGORY_DECL:
+            compileDeclaration(compiler, child);
+            break;
+        default:
+            compileError(compiler, "Invalid AST category.");
     }
 }
 
