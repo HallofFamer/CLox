@@ -233,11 +233,6 @@ static bool identifiersEqual(Token* a, Token* b) {
     return memcmp(a->start, b->start, a->length) == 0;
 }
 
-static uint8_t propertyConstant(Compiler* compiler, const char* message) {
-    // To be implemented
-    return 0;
-}
-
 static int resolveLocal(Compiler* compiler, Token* name) {
     for (int i = compiler->localCount - 1; i >= 0; i--) {
         Local* local = &compiler->locals[i];
@@ -449,7 +444,15 @@ static void getVariable(Compiler* compiler, Ast* ast) {
 }
 
 static void compileArray(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    uint8_t elementCount = 0;
+    if (astHasChild(ast)) {
+        Ast* elements = astGetChild(ast, 0);
+        while (elementCount < elements->children->count) {
+            compileChild(compiler, elements, elementCount);
+            elementCount++;
+        }
+    }
+    emitBytes(compiler, OP_ARRAY, elementCount);
 }
 
 static void compileAssign(Compiler* compiler, Ast* ast) {
@@ -472,7 +475,13 @@ static void compileAssign(Compiler* compiler, Ast* ast) {
 }
 
 static void compileAwait(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    if (compiler->type == COMPILE_TYPE_SCRIPT) {
+        compiler->isAsync = true;
+        compiler->function->isAsync = true;
+    }
+    else if (!compiler->isAsync) compileError(compiler, "Cannot use await unless in top level code or inside async functions/methods.");
+    compileChild(compiler, ast, 0);
+    emitByte(compiler, OP_AWAIT);
 }
 
 static void compileBinary(Compiler* compiler, Ast* ast) {
@@ -509,7 +518,15 @@ static void compileClass(Compiler* compiler, Ast* ast) {
 }
 
 static void compileDictionary(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    uint8_t entryCount = 0;
+    Ast* keys = astGetChild(ast, 0);
+    Ast* values = astGetChild(ast, 1);
+    while (entryCount < keys->children->count) {
+        compileChild(compiler, keys, entryCount);
+        compileChild(compiler, values, entryCount);
+        entryCount++;
+    }
+    emitBytes(compiler, OP_DICTIONARY, entryCount);
 }
 
 static void compileFunction(Compiler* compiler, Ast* ast) {
@@ -525,7 +542,13 @@ static void compileInterpolation(Compiler* compiler, Ast* ast) {
 }
 
 static void compileInvoke(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    Ast* method = astGetChild(ast, 1);
+    Ast* args = astGetChild(ast, 2);
+    uint8_t methodIndex = identifierConstant(compiler, &method->token);
+    uint8_t argCount = argumentList(compiler, args);
+    emitBytes(compiler, OP_INVOKE, methodIndex);
+    emitByte(compiler, argCount);
 }
 
 static void compileLiteral(Compiler* compiler, Ast* ast) {

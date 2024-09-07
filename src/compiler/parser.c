@@ -420,14 +420,15 @@ static Ast* array(Parser* parser, Token token, Ast* element) {
 }
 
 static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
-    Ast* entries = newAst(AST_LIST_EXPR, token, 2, key, value);
+    Ast* keys = newAst(AST_LIST_EXPR, token, 1, key);
+    Ast* values = newAst(AST_LIST_EXPR, token, 1, value);
     uint8_t entryCount = 1;
     while (match(parser, TOKEN_COMMA)) {
         Ast* key = expression(parser);
-        astAppendChild(entries, key);
+        astAppendChild(keys, key);
         consume(parser, TOKEN_COLON, "Expect ':' after entry key.");
         Ast* value = expression(parser);
-        astAppendChild(entries, value);
+        astAppendChild(values, value);
 
         if (entryCount == UINT8_MAX) {
             error(parser, "Cannot have more than 255 entries.");
@@ -436,7 +437,7 @@ static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
     }
 
     consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after entries.");
-    return newAst(AST_EXPR_DICTIONARY, token, 1, entries);
+    return newAst(AST_EXPR_DICTIONARY, token, 2, keys, values);
 }
 
 static Ast* collection(Parser* parser, Token token, bool canAssign) { 
