@@ -82,6 +82,7 @@ typedef struct {
     bool isMutable;
     bool isOptional;
     bool isVariadic;
+    bool isWith;
 } AstModifier;
 
 struct Ast {
@@ -103,7 +104,8 @@ static inline AstModifier astInitModifier() {
         .isLambda = false,
         .isMutable = false,
         .isOptional = false,
-        .isVariadic = false
+        .isVariadic = false,
+        .isWith = false
     };
     return modifier;
 }
@@ -120,7 +122,7 @@ void astOutput(Ast* ast, int indentLevel);
 
 static inline AstNodeCategory astNodeCategory(AstNodeType type) {
     if (type == AST_TYPE_NONE) return AST_CATEGORY_SCRIPT;
-    else if (type >= AST_EXPR_ASSIGN && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
+    else if (type >= AST_EXPR_ARRAY && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
     else if (type >= AST_STMT_AWAIT && type <= AST_STMT_YIELD) return AST_CATEGORY_STMT;
     else if (type >= AST_DECL_CLASS && type <= AST_DECL_VAR) return AST_CATEGORY_DECL;
     else return AST_CATEGORY_OTHER;

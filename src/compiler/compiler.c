@@ -604,7 +604,13 @@ static void compileTrait(Compiler* compiler, Ast* ast) {
 }
 
 static void compileUnary(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    TokenSymbol operatorType = ast->token.type;
+    switch (operatorType) {
+        case TOKEN_BANG: emitByte(compiler, OP_NOT); break;
+        case TOKEN_MINUS: emitByte(compiler, OP_NEGATE); break;
+        default: return;
+    }
 }
 
 static void compileVariable(Compiler* compiler, Ast* ast) {
@@ -840,7 +846,15 @@ static void compileMethodDeclaration(Compiler* compiler, Ast* ast) {
 }
 
 static void compileNamespaceDeclaration(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    uint8_t namespaceDepth = 0;
+    Ast* identifiers = astGetChild(ast, 0);
+    while (namespaceDepth < identifiers->children->count) {
+        Ast* identifier = astGetChild(identifiers, namespaceDepth);
+        ObjString* name = copyString(compiler->vm, identifier->token.start, identifier->token.length);
+        emitBytes(compiler, OP_NAMESPACE, makeIdentifier(compiler, OBJ_VAL(name)));
+        namespaceDepth++;
+    }
+    emitBytes(compiler, OP_DECLARE_NAMESPACE, namespaceDepth);
 }
 
 static void compileTraitDeclaration(Compiler* compiler, Ast* ast) {

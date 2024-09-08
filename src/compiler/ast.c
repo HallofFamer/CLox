@@ -102,7 +102,7 @@ static char* astIndent(int indentLevel) {
 }
 
 static void astOutputChild(Ast* ast, int indentLevel, int index) {
-    if (ast->children == NULL || ast->children->count < index) {
+    if (ast->children == NULL || ast->children->count <= index) {
         fprintf(stderr, "Ast has no children or invalid child index specified.");
         exit(1);
     }
@@ -113,7 +113,7 @@ static void astOutputChild(Ast* ast, int indentLevel, int index) {
 static void astOutputExprArray(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     printf("%sarray\n", indent);
-    astOutputChild(ast, indentLevel + 1, 0);
+    if (astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
     free(indent);
 }
 
@@ -163,6 +163,7 @@ static void astOutputExprDictionary(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
     printf("%sdictionary\n", indent);
     astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
     free(indent);
 }
 
@@ -319,8 +320,9 @@ static void astOutputExprVariable(Ast* ast, int indentLevel) {
 
 static void astOutputExprYield(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%syield\n", indent);
-    astOutputChild(ast, indentLevel + 1, 0);
+    char* modifier = ast->modifier.isWith ? " with" : "";
+    printf("%syield%s\n", indent, modifier);
+    if(astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
     free(indent);
 }
 
@@ -471,8 +473,9 @@ static void astOutputStmtWhile(Ast* ast, int indentLevel) {
 
 static void astOutputStmtYield(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%syieldStmt\n", indent);
-    astOutputChild(ast, indentLevel + 1, 0);
+    char* modifier = ast->modifier.isWith ? " with" : "";
+    printf("%syieldStmt%s\n", indent, modifier);
+    if(astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
     free(indent);
 }
 
@@ -517,7 +520,7 @@ static void astOutputDeclNamespace(Ast* ast, int indentLevel) {
     printf("%s", name);
     free(name);
 
-    for (int i = 0; i < identifiers->children->count; i++) {
+    for (int i = 1; i < identifiers->children->count; i++) {
         identifier = astGetChild(identifiers, i);
         name = tokenToString(identifier->token);
         printf(".%s", name);

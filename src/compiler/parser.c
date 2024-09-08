@@ -127,7 +127,7 @@ static int unicodeEscape(Parser* parser, const char* source, char* target, int b
 }
 
 static void* resizeString(char* string, size_t newSize) {
-    void* result = realloc(string, newSize);
+    char* result = (char*)realloc(string, newSize);
     if (result == NULL) exit(1);
     return result;
 }
@@ -216,6 +216,8 @@ static char* parseString(Parser* parser, int* length) {
     }
 
     target = resizeString(target, (size_t)j + 1);
+    target[j] = '\0';
+    printf("target string: %s\n", target);
     *length = j;
     return target;
 }
@@ -385,12 +387,10 @@ static Ast* interpolation(Parser* parser, Token token, bool canAssign) {
         bool isString = false;
 
         if (parser->previous.length > 2) {
-            int length = 0;
-            char* str = parseString(parser, &length);
-            Ast* string = emptyAst(AST_EXPR_LITERAL, syntheticToken(str));
+            Ast* str = string(parser, parser->previous, false);
             concatenate = true;
             isString = true;
-            astAppendChild(exprs, string);
+            astAppendChild(exprs, str);
         }
 
         Ast* expr = expression(parser);
@@ -549,8 +549,17 @@ static Ast* unary(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* yield(Parser* parser, Token token, bool canAssign) {
+    if (match(parser, TOKEN_RIGHT_PAREN) || match(parser, TOKEN_RIGHT_BRACKET) || match(parser, TOKEN_RIGHT_BRACE)
+        || match(parser, TOKEN_COMMA) || match(parser, TOKEN_SEMICOLON)) 
+    {
+        return emptyAst(AST_EXPR_YIELD, token);
+    }
+
+    bool isWith = match(parser, TOKEN_WITH);
     Ast* expr = expression(parser);
-    return newAst(AST_EXPR_YIELD, token, 1, expr);
+    Ast* ast = newAst(AST_EXPR_YIELD, token, 1, expr);
+    ast->modifier.isWith = isWith;
+    return ast;
 }
 
 static Ast* async(Parser* parser, Token token, bool canAssign) { 
@@ -876,9 +885,16 @@ static Ast* whileStatement(Parser* parser) {
 
 static Ast* yieldStatement(Parser* parser) {
     Token token = parser->previous;
+    if (match(parser, TOKEN_SEMICOLON)) {
+        return emptyAst(AST_STMT_YIELD, token);
+    }
+
+    bool isWith = match(parser, TOKEN_WITH);
     Ast* expr = expression(parser);
     consume(parser, TOKEN_SEMICOLON, "Expect ';' after yield value.");
-    return newAst(AST_STMT_YIELD, token, 1, expr);
+    Ast* ast = newAst(AST_STMT_YIELD, token, 1, expr);
+    ast->modifier.isWith = isWith;
+    return ast;
 }
 
 static Ast* statement(Parser* parser) {
