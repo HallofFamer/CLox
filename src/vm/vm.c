@@ -1427,7 +1427,8 @@ InterpretResult run(VM* vm) {
 }
 
 InterpretResult interpret(VM* vm, const char* source) {
-    ObjFunction* function = compileV1(vm, source);
+    //ObjFunction* function = compileV1(vm, source);
+    ObjFunction* function = compile(vm, source);
     if (function == NULL) return INTERPRET_COMPILE_ERROR;
     push(vm, OBJ_VAL(function));
     ObjClosure* closure = newClosure(vm, function);

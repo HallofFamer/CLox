@@ -8,6 +8,7 @@
 #include "shape.h"
 #include "table.h"
 #include "value.h"
+#include "../compiler/compiler.h"
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
