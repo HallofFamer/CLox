@@ -96,11 +96,11 @@ set(no_group_source_files
 source_group("" FILES ${no_group_source_files})
 
 set(Source_Files__common
-    "src/common/buffer.h"
     "src/common/buffer.c"
+    "src/common/buffer.h"
     "src/common/common.h"
-    "src/common/os.h"
     "src/common/os.c"
+    "src/common/os.h"
 )
 source_group("Source Files\\common" FILES ${Source_Files__common})
 

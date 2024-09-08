@@ -13,15 +13,14 @@ Token syntheticToken(const char* text) {
 }
 
 char* tokenToString(Token token) {
-    if (token.length == 0) return "";
     char* buffer = (char*)malloc((size_t)token.length + 1);
     if (buffer != NULL) {
-        memcpy(buffer, token.start, token.length);
+        if (token.length > 0) memcpy(buffer, token.start, token.length);
         buffer[token.length] = '\0';
         return buffer;
     }
     else {
-        fprintf(stderr, "Not enough mempry to convert token to string.");
+        fprintf(stderr, "Not enough memory to convert token to string.");
         exit(1);
     }
 }

@@ -54,6 +54,10 @@ static Token makeToken(Lexer* lexer, TokenSymbol type) {
         .length = (int)(lexer->current - lexer->start),
         .line = lexer->line
     };
+
+#ifdef DEBUG_PRINT_TOKEN
+    printf("Token type: %d at line: %d\n", token.type, token.line);
+#endif
     return token;
 }
 
