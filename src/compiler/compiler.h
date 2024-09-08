@@ -7,6 +7,7 @@
 #include "../vm/vm.h"
 
 void compileAst(Compiler* compiler, Ast* ast);
+void compileChild(Compiler* compiler, Ast* ast, int index);
 ObjFunction* compile(VM* vm, const char* source);
 void markCompilerRoots(VM* vm);
 

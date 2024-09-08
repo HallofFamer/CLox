@@ -335,7 +335,7 @@ static void astOutputStmtAwait(Ast* ast, int indentLevel) {
 
 static void astOutputStmtBlock(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%sblock\n", indent);
+    printf("%sblockStmt\n", indent);
     Ast* stmtList = astGetChild(ast, 0);
     astOutput(stmtList, indentLevel + 1);
     free(indent);
@@ -343,7 +343,7 @@ static void astOutputStmtBlock(Ast* ast, int indentLevel) {
 
 static void astOutputStmtBreak(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%sbreak\n", indent);
+    printf("%sbreakStmt\n", indent);
     free(indent);
 }
 
@@ -367,7 +367,7 @@ static void astOutputStmtCatch(Ast* ast, int indentLevel) {
 
 static void astOutputStmtContinue(Ast* ast, int indentLevel) {
     char* indent = astIndent(indentLevel);
-    printf("%scontinue\n", indent);
+    printf("%scontinueStmt\n", indent);
     free(indent);
 }
 

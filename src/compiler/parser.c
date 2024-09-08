@@ -217,7 +217,6 @@ static char* parseString(Parser* parser, int* length) {
 
     target = resizeString(target, (size_t)j + 1);
     target[j] = '\0';
-    printf("target string: %s\n", target);
     *length = j;
     return target;
 }
@@ -399,6 +398,10 @@ static Ast* interpolation(Parser* parser, Token token, bool canAssign) {
     } while (match(parser, TOKEN_INTERPOLATION));
 
     consume(parser, TOKEN_STRING, "Expect end of string interpolation.");
+    if (parser->previous.length > 2) {
+        Ast* str = string(parser, parser->previous, false);
+        astAppendChild(exprs, str);
+    }
     return newAst(AST_EXPR_INTERPOLATION, token, 1, exprs);
 }
 

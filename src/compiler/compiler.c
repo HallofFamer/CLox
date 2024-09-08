@@ -538,7 +538,13 @@ static void compileGrouping(Compiler* compiler, Ast* ast) {
 }
 
 static void compileInterpolation(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    Ast* exprs = astGetChild(ast, 0);
+    for (int i = 0; i < exprs->children->count; i++) {
+        Ast* expr = astGetChild(exprs, i);
+        compileChild(compiler, expr, i);
+        invokeMethod(compiler, 0, "toString", 8);
+        if (i > 0) emitByte(compiler, OP_ADD);
+    }
 }
 
 static void compileInvoke(Compiler* compiler, Ast* ast) {
