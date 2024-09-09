@@ -539,11 +539,25 @@ static void compileGrouping(Compiler* compiler, Ast* ast) {
 
 static void compileInterpolation(Compiler* compiler, Ast* ast) {
     Ast* exprs = astGetChild(ast, 0);
-    for (int i = 0; i < exprs->children->count; i++) {
-        Ast* expr = astGetChild(exprs, i);
-        compileChild(compiler, expr, i);
+    int count = 0;
+    while (count < exprs->children->count) {
+        bool concatenate = false;
+        bool isString = false;
+        Ast* expr = astGetChild(exprs, count);
+
+        if (expr->type == AST_EXPR_LITERAL && expr->token.type == TOKEN_STRING) {
+            compileChild(compiler, exprs, count);
+            concatenate = true;
+            isString = true;
+            count++;            if (count >= exprs->children->count) break;
+        }
+
+        compileChild(compiler, exprs, count);
         invokeMethod(compiler, 0, "toString", 8);
-        if (i > 0) emitByte(compiler, OP_ADD);
+        if (concatenate || (count >= 1 && !isString)) {
+            emitByte(compiler, OP_ADD);
+        }
+        count++;
     }
 }
 
