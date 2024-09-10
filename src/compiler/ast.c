@@ -101,6 +101,10 @@ static char* astIndent(int indentLevel) {
     return buffer;
 }
 
+static void astOutputIndent(int indentLevel) {
+    printf("%*s", indentLevel * 2, "");
+}
+
 static void astOutputChild(Ast* ast, int indentLevel, int index) {
     if (ast->children == NULL || ast->children->count <= index) {
         fprintf(stderr, "Ast has no children or invalid child index specified.");
@@ -132,22 +136,19 @@ static void astOutputExprAwait(Ast* ast, int indentLevel) {
     free(indent);
 }
 
-static void astOutputExprBinary(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    char* op = tokenToString(ast->token);
-    printf("%sbinary %s\n", indent, op);
+static void astOutputExprBinary(Ast* ast, int indentLevel) {    char* op = tokenToString(ast->token);
+    astOutputIndent(indentLevel);
+    printf("binary %s\n", op);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
     free(op);
 }
 
 static void astOutputExprCall(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%scall\n", indent);
+    astOutputIndent(indentLevel);
+    printf("call\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
 }
 
 static void astOutputExprClass(Ast* ast, int indentLevel) {
@@ -176,19 +177,17 @@ static void astOutputExprFunction(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprGrouping(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sgrouping\n", indent);
+    astOutputIndent(indentLevel);
+    printf("grouping\n");
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
 }
 
 static void astOutputExprInvoke(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sinvoke\n", indent);
+    astOutputIndent(indentLevel);
+    printf("invoke\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     astOutputChild(ast, indentLevel + 1, 2);
-    free(indent);
 }
 
 static void astOutputExprInterpolation(Ast* ast, int indentLevel) {
@@ -512,13 +511,11 @@ static void astOutputDeclMethod(Ast* ast, int indentLevel) {
 }
 
 static void astOutputDeclNamespace(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%snamespaceDecl ", indent);
+    astOutputIndent(indentLevel);
     Ast* identifiers = astGetChild(ast, 0);
     Ast* identifier = astGetChild(identifiers, 0);
     char* name = tokenToString(identifier->token);
-    printf("%s", name);
-    free(name);
+    printf("namespaceDecl %s", name);    free(name);
 
     for (int i = 1; i < identifiers->children->count; i++) {
         identifier = astGetChild(identifiers, i);
@@ -527,7 +524,6 @@ static void astOutputDeclNamespace(Ast* ast, int indentLevel) {
         free(name);
     }
     printf("\n");
-    free(indent);
 }
 
 static void astOutputDeclTrait(Ast* ast, int indentLevel) {
@@ -541,25 +537,23 @@ static void astOutputDeclTrait(Ast* ast, int indentLevel) {
 }
 
 static void astOutputDeclVar(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* modifier = ast->modifier.isMutable ? "var" : "val";
     char* varName = tokenToString(ast->token);
-    printf("%svarDecl %s %s\n", indent, modifier, varName);
+    printf("varDecl %s %s\n", modifier, varName);
 
     if (astHasChild(ast)) {
         astOutputChild(ast, indentLevel + 1, 0);
     }
-    free(indent);
     free(varName);
 }
 
 static void astOutputListExpr(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%slistExpr(%d)\n", indent, astNumChild(ast));
+    astOutputIndent(indentLevel);
+    printf("listExpr(%d)\n", astNumChild(ast));
     for (int i = 0; i < ast->children->count; i++) {
         astOutput(astGetChild(ast, i), indentLevel + 1);
     }
-    free(indent);
 }
 
 static void astOutputListMethod(Ast* ast, int indentLevel) {

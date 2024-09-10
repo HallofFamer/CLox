@@ -547,9 +547,11 @@ static void compileInterpolation(Compiler* compiler, Ast* ast) {
 
         if (expr->type == AST_EXPR_LITERAL && expr->token.type == TOKEN_STRING) {
             compileChild(compiler, exprs, count);
+            if (count > 0) emitByte(compiler, OP_ADD);
             concatenate = true;
             isString = true;
-            count++;            if (count >= exprs->children->count) break;
+            count++;            
+            if (count >= exprs->children->count) break;
         }
 
         compileChild(compiler, exprs, count);
