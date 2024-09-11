@@ -694,13 +694,13 @@ static Ast* expression(Parser* parser) {
 
 static Ast* block(Parser* parser) {
     Token token = parser->previous;
-    Ast* stmtList = emptyAst(AST_STMT_BLOCK, token);
+    Ast* stmtList = emptyAst(AST_LIST_STMT, token);
     while (!check(parser, TOKEN_RIGHT_BRACE) && !check(parser, TOKEN_EOF)) {
         Ast* decl = declaration(parser);
         astAppendChild(stmtList, decl);
     }
     consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
-    return newAst(AST_LIST_STMT, token, 1, stmtList);
+    return newAst(AST_STMT_BLOCK, token, 1, stmtList);
 }
 
 static Ast* awaitStatement(Parser* parser) {

@@ -730,7 +730,10 @@ static void compileAwaitStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileBlockStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    Ast* stmts = astGetChild(ast, 0);
+    for (int i = 0; i < stmts->children->count; i++) {
+        compileChild(compiler, stmts, i);
+    }
 }
 
 static void compileBreakStatement(Compiler* compiler, Ast* ast) {
@@ -762,7 +765,17 @@ static void compileForStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileIfStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    int thenJump = emitJump(compiler, OP_JUMP_IF_FALSE);
+    emitByte(compiler, OP_POP);
+    compileChild(compiler, ast, 1);
+
+    int elseJump = emitJump(compiler, OP_JUMP);
+    patchJump(compiler, thenJump);
+    emitByte(compiler, OP_POP);
+
+    if (ast->children->count > 2) compileChild(compiler, ast, 2);
+    patchJump(compiler, elseJump);
 }
 
 static void compileRequireStatement(Compiler* compiler, Ast* ast) {
@@ -803,7 +816,9 @@ static void compileStatement(Compiler* compiler, Ast* ast) {
             compileAwaitStatement(compiler, ast);
             break;
         case AST_STMT_BLOCK:
+            beginScope(compiler);
             compileBlockStatement(compiler, ast);
+            endScope(compiler);
             break;
         case AST_STMT_BREAK:
             compileBreakStatement(compiler, ast);
@@ -965,5 +980,7 @@ ObjFunction* compile(VM* vm, const char* source) {
     initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, NULL, false);
     compileAst(&compiler, ast);
     ObjFunction* function = endCompiler(&compiler);
+    if (compiler.hadError) return NULL;
+
     return function;
 }
