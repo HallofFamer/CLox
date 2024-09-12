@@ -115,18 +115,17 @@ static void astOutputChild(Ast* ast, int indentLevel, int index) {
 }
 
 static void astOutputExprArray(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sarray\n", indent);
+    astOutputIndent(indentLevel);
+    printf("array\n");
     if (astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
 }
 
 static void astOutputExprAssign(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sassign\n", indent);
+    astOutputIndent(indentLevel);
+    char* name = tokenToString(ast->token);
+    printf("assign var %s\n", name);
     astOutputChild(ast, indentLevel + 1, 0);
-    astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
+    free(name);
 }
 
 static void astOutputExprAwait(Ast* ast, int indentLevel) {
@@ -161,11 +160,10 @@ static void astOutputExprClass(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprDictionary(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sdictionary\n", indent);
+    astOutputIndent(indentLevel);
+    printf("dictionary\n");
     astOutputChild(ast, indentLevel + 1, 0);
-    astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
+    astOutputChild(ast, indentLevel + 1, 1); 
 }
 
 static void astOutputExprFunction(Ast* ast, int indentLevel) {
@@ -191,14 +189,13 @@ static void astOutputExprInvoke(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprInterpolation(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sinterpolation\n", indent);
+    astOutputIndent(indentLevel);
+    printf("interpolation\n");
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
 }
 
 static void astOutputExprLiteral(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* token = tokenToString(ast->token);
     switch (ast->token.type) {
         case TOKEN_NIL:
@@ -206,16 +203,15 @@ static void astOutputExprLiteral(Ast* ast, int indentLevel) {
         case TOKEN_FALSE:
         case TOKEN_INT:
         case TOKEN_NUMBER: {
-            printf("%s%s\n", indent, token);
+            printf("%s\n", token);
             break;
         }
         case TOKEN_STRING: {
-            printf("%s\"%s\"\n", indent, token);
+            printf("\"%s\"\n", token);
             break;
         }
         default: break;
     }
-    free(indent);
     free(token);
 }
 
@@ -300,11 +296,10 @@ static void astOutputExprTrait(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprUnary(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* op = tokenToString(ast->token);
-    printf("%sunary %s\n", indent, op);
+    printf("unary %s\n", op);
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
     free(op);
 }
 
@@ -333,11 +328,10 @@ static void astOutputStmtAwait(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtBlock(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sblockStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("blockStmt\n");
     Ast* stmtList = astGetChild(ast, 0);
     astOutput(stmtList, indentLevel + 1);
-    free(indent);
 }
 
 static void astOutputStmtBreak(Ast* ast, int indentLevel) {
@@ -388,14 +382,13 @@ static void astOutputStmtFor(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtIf(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sifStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("ifStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     if (ast->children->count > 2) {
         astOutputChild(ast, indentLevel + 1, 2);
     }
-    free(indent);
 }
 
 static void astOutputStmtRequire(Ast* ast, int indentLevel) {
@@ -463,11 +456,10 @@ static void astOutputStmtUsing(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtWhile(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%swhileStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("whileStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
 }
 
 static void astOutputStmtYield(Ast* ast, int indentLevel) {
@@ -566,12 +558,11 @@ static void astOutputListMethod(Ast* ast, int indentLevel) {
 }
 
 static void astOutputListStmt(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%slistStmt(%d)\n", indent, astNumChild(ast));
+    astOutputIndent(indentLevel);
+    printf("listStmt(%d)\n", astNumChild(ast));
     for (int i = 0; i < ast->children->count; i++) {
         astOutput(ast->children->elements[i], indentLevel + 1);
     }
-    free(indent);
 }
 
 static void astOutputListVar(Ast* ast, int indentLevel) {
@@ -725,7 +716,7 @@ void astOutput(Ast* ast, int indentLevel) {
                     astOutputStmtUsing(ast, indentLevel);
                     break;
                 case AST_STMT_WHILE:
-                    astOutputStmtUsing(ast, indentLevel);
+                    astOutputStmtWhile(ast, indentLevel);
                     break;
                 case AST_STMT_YIELD:
                     astOutputStmtYield(ast, indentLevel);

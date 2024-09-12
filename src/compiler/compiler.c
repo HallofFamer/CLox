@@ -726,7 +726,14 @@ static void compileExpression(Compiler* compiler, Ast* ast) {
 }
 
 static void compileAwaitStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    if (compiler->type == COMPILE_TYPE_SCRIPT) {
+        compiler->isAsync = true;
+        compiler->function->isAsync = true;
+    }
+    else if (!compiler->isAsync) compileError(compiler, "Can only use 'await' in async methods or top level code.");
+
+    compileChild(compiler, ast, 0);
+    emitBytes(compiler, OP_AWAIT, OP_POP);
 }
 
 static void compileBlockStatement(Compiler* compiler, Ast* ast) {
@@ -803,7 +810,22 @@ static void compileUsingStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileWhileStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    int loopStart = compiler->innermostLoopStart;
+    int scopeDepth = compiler->innermostLoopScopeDepth;
+    compiler->innermostLoopStart = currentChunk(compiler)->count;
+    compiler->innermostLoopScopeDepth = compiler->scopeDepth;
+
+    compileChild(compiler, ast, 0);
+    int exitJump = emitJump(compiler, OP_JUMP_IF_FALSE);
+    emitByte(compiler, OP_POP);
+    compileChild(compiler, ast, 1);
+    emitLoop(compiler, compiler->innermostLoopStart);
+
+    patchJump(compiler, exitJump);
+    emitByte(compiler, OP_POP);
+    endLoop(compiler);
+    compiler->innermostLoopStart = loopStart;
+    compiler->innermostLoopScopeDepth = scopeDepth;
 }
 
 static void compileYieldStatement(Compiler* compiler, Ast* ast) {
