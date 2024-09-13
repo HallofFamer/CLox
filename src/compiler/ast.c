@@ -321,10 +321,9 @@ static void astOutputExprYield(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtAwait(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sawaitStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("awaitStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
 }
 
 static void astOutputStmtBlock(Ast* ast, int indentLevel) {
@@ -335,9 +334,8 @@ static void astOutputStmtBlock(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtBreak(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sbreakStmt\n", indent);
-    free(indent);
+    astOutputIndent(indentLevel);
+    printf("%sbreakStmt\n");
 }
 
 static void astOutputStmtCase(Ast* ast, int indentLevel) {
@@ -359,26 +357,23 @@ static void astOutputStmtCatch(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtContinue(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%scontinueStmt\n", indent);
-    free(indent);
+    astOutputIndent(indentLevel);
+    printf("%scontinueStmt\n");
 }
 
 static void astOutputStmtExpression(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sexprStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("exprStmt\n");
     Ast* expr = astGetChild(ast, 0);
     astOutput(expr, indentLevel + 1);
-    free(indent);
 }
 
 static void astOutputStmtFor(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sforStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("forStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     astOutputChild(ast, indentLevel + 1, 2);
-    free(indent);
 }
 
 static void astOutputStmtIf(Ast* ast, int indentLevel) {
@@ -566,12 +561,11 @@ static void astOutputListStmt(Ast* ast, int indentLevel) {
 }
 
 static void astOutputListVar(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%slistVar(%d)\n", indent, astNumChild(ast));
+    astOutputIndent(indentLevel);
+    printf("listVar(%d)\n", astNumChild(ast));
     for (int i = 0; i < ast->children->count; i++) {
         astOutput(ast->children->elements[i], indentLevel + 1);
     }
-    free(indent);
 }
 
 static void astOutputScript(Ast* ast, int indentLevel) {

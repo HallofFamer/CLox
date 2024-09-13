@@ -744,7 +744,11 @@ static void compileBlockStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileBreakStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    if (compiler->innermostLoopStart == -1) {
+        compileError(compiler, "Cannot use 'break' outside of a loop.");
+    }
+    discardLocals(compiler);
+    emitJump(compiler, OP_END);
 }
 
 static void compileCaseStatement(Compiler* compiler, Ast* ast) {
@@ -756,7 +760,11 @@ static void compileCatchStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileContinueStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    if (compiler->innermostLoopStart == -1) {
+        compileError(compiler, "Cannot use 'continue' outside of a loop.");
+    }
+    discardLocals(compiler);
+    emitLoop(compiler, compiler->innermostLoopStart);
 }
 
 static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
@@ -768,7 +776,62 @@ static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileForStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    beginScope(compiler);
+    Token indexToken, valueToken;
+    Ast* decl = astGetChild(ast, 0);
+
+    if (decl->children->count > 1) {
+        indexToken = decl->children->elements[0]->token;
+        valueToken = decl->children->elements[1]->token;
+    }
+    else {
+        indexToken = syntheticToken("index ");
+        valueToken = decl->children->elements[0]->token;
+    }
+
+    compileChild(compiler, ast, 1);
+    if (compiler->localCount + 3 > UINT8_MAX) {
+        compileError(compiler, "for loop can only contain up to 252 variables.");
+    }
+
+    int collectionSlot = addLocal(compiler, syntheticToken("collection "));
+    emitByte(compiler, OP_NIL);
+    int indexSlot = addLocal(compiler, indexToken);
+    markInitialized(compiler, true);
+
+    int loopStart = compiler->innermostLoopStart;
+    int scopeDepth = compiler->innermostLoopScopeDepth;
+    compiler->innermostLoopStart = currentChunk(compiler)->count;
+    compiler->innermostLoopScopeDepth = compiler->scopeDepth;
+
+    getLocal(compiler, collectionSlot);
+    getLocal(compiler, indexSlot);
+    invokeMethod(compiler, 1, "next", 4);
+    setLocal(compiler, indexSlot);
+    emitByte(compiler, OP_POP);
+    int exitJump = emitJump(compiler, OP_JUMP_IF_EMPTY);
+
+    getLocal(compiler, collectionSlot);
+    getLocal(compiler, indexSlot);
+    invokeMethod(compiler, 1, "nextValue", 9);
+
+    beginScope(compiler);
+    int valueSlot = addLocal(compiler, valueToken);
+    markInitialized(compiler, false);
+    setLocal(compiler, valueSlot);
+    compileChild(compiler, ast, 2);
+    endScope(compiler);
+
+    emitLoop(compiler, compiler->innermostLoopStart);
+    patchJump(compiler, exitJump);
+    endLoop(compiler);
+    emitByte(compiler, OP_POP);
+    emitByte(compiler, OP_POP);
+
+    compiler->localCount -= 2;
+    compiler->innermostLoopStart = loopStart;
+    compiler->innermostLoopScopeDepth = scopeDepth;
+    endScope(compiler);
 }
 
 static void compileIfStatement(Compiler* compiler, Ast* ast) {
