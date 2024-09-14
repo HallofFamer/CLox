@@ -129,10 +129,9 @@ static void astOutputExprAssign(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprAwait(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sawait\n", indent);
+    astOutputIndent(indentLevel);
+    printf("await\n");
     astOutputChild(ast, indentLevel + 1, 0);;
-    free(indent);
 }
 
 static void astOutputExprBinary(Ast* ast, int indentLevel) {    char* op = tokenToString(ast->token);
@@ -335,7 +334,7 @@ static void astOutputStmtBlock(Ast* ast, int indentLevel) {
 
 static void astOutputStmtBreak(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    printf("%sbreakStmt\n");
+    printf("breakStmt\n");
 }
 
 static void astOutputStmtCase(Ast* ast, int indentLevel) {
@@ -358,7 +357,7 @@ static void astOutputStmtCatch(Ast* ast, int indentLevel) {
 
 static void astOutputStmtContinue(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    printf("%scontinueStmt\n");
+    printf("continueStmt\n");
 }
 
 static void astOutputStmtExpression(Ast* ast, int indentLevel) {

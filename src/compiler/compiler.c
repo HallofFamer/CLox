@@ -27,6 +27,20 @@ typedef enum {
     COMPILE_TYPE_SCRIPT
 } CompileType;
 
+typedef struct {
+    struct LoopCompiler* enclosing;
+    int start;
+    int exitJump;
+    int scopeDepth;
+} LoopCompiler;
+
+typedef struct {
+    struct ClassCompiler* enclosing;
+    Token name;
+    Token superclass;
+    BehaviorType type;
+} ClassCompiler;
+
 struct Compiler {
     VM* vm;
     struct Compiler* enclosing;
@@ -38,10 +52,9 @@ struct Compiler {
     Upvalue upvalues[UINT8_COUNT];
     IDMap indexes;
     Token currentToken;
+    LoopCompiler* currentLoop;
 
     int scopeDepth;
-    int innermostLoopStart;
-    int innermostLoopScopeDepth;
     bool isAsync;
     bool hadError;
 };
@@ -80,10 +93,10 @@ static int emitJump(Compiler* compiler, uint8_t instruction) {
     return currentChunk(compiler)->count - 2;
 }
 
-static void emitLoop(Compiler* compiler, int loopStart) {
+static void emitLoop(Compiler* compiler) {
     emitByte(compiler, OP_LOOP);
 
-    int offset = currentChunk(compiler)->count - loopStart + 2;
+    int offset = currentChunk(compiler)->count - compiler->currentLoop->start + 2;
     if (offset > UINT16_MAX) compileError(compiler, "Loop body too large.");
 
     emitByte(compiler, (offset >> 8) & 0xff);
@@ -127,8 +140,16 @@ static void patchAddress(Compiler* compiler, int offset) {
     currentChunk(compiler)->code[offset + 1] = currentChunk(compiler)->count & 0xff;
 }
 
-static void endLoop(Compiler* compiler) {
-    int offset = compiler->innermostLoopStart;
+static void initLoopCompiler(Compiler* compiler, LoopCompiler* loop) {
+    loop->enclosing = compiler->currentLoop;
+    loop->start = currentChunk(compiler)->count;
+    loop->exitJump = -1;
+    loop->scopeDepth = compiler->scopeDepth;
+    compiler->currentLoop = loop;
+}
+
+static void endLoopCompiler(Compiler* compiler) {
+    int offset = compiler->currentLoop->start;
     Chunk* chunk = currentChunk(compiler);
     while (offset < chunk->count) {
         if (chunk->code[offset] == OP_END) {
@@ -137,6 +158,7 @@ static void endLoop(Compiler* compiler) {
         }
         else offset += opCodeOffset(chunk, offset);
     }
+    compiler->currentLoop = compiler->currentLoop->enclosing;
 }
 
 static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, const char* name, bool isAsync) {
@@ -144,16 +166,16 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->enclosing = enclosing;
     compiler->type = type;
     compiler->function = NULL;
+    compiler->currentLoop = NULL;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
-    compiler->innermostLoopStart = -1;
-    compiler->innermostLoopScopeDepth = 0;
     compiler->hadError = false;
 
     compiler->isAsync = isAsync;
     compiler->function = newFunction(vm);
     compiler->function->isAsync = isAsync;
     if (type != COMPILE_TYPE_SCRIPT) compiler->function->name = newString(vm, name);
+    if (enclosing != NULL) compiler->currentLoop = enclosing->currentLoop;
     initIDMap(&compiler->indexes);
     vm->compiler = compiler;
 
@@ -309,7 +331,7 @@ static void setLocal(Compiler* compiler, int slot) {
 
 static int discardLocals(Compiler* compiler) {
     int i = compiler->localCount - 1;
-    for (; i >= 0 && compiler->locals[i].depth > compiler->innermostLoopScopeDepth; i--) {
+    for (; i >= 0 && compiler->locals[i].depth > compiler->currentLoop->scopeDepth; i--) {
         if (compiler->locals[i].isCaptured) {
             emitByte(compiler, OP_CLOSE_UPVALUE);
         }
@@ -744,7 +766,7 @@ static void compileBlockStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileBreakStatement(Compiler* compiler, Ast* ast) {
-    if (compiler->innermostLoopStart == -1) {
+    if (compiler->currentLoop == NULL) {
         compileError(compiler, "Cannot use 'break' outside of a loop.");
     }
     discardLocals(compiler);
@@ -760,11 +782,11 @@ static void compileCatchStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileContinueStatement(Compiler* compiler, Ast* ast) {
-    if (compiler->innermostLoopStart == -1) {
+    if (compiler->currentLoop == NULL) {
         compileError(compiler, "Cannot use 'continue' outside of a loop.");
     }
     discardLocals(compiler);
-    emitLoop(compiler, compiler->innermostLoopStart);
+    emitLoop(compiler);
 }
 
 static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
@@ -799,17 +821,16 @@ static void compileForStatement(Compiler* compiler, Ast* ast) {
     int indexSlot = addLocal(compiler, indexToken);
     markInitialized(compiler, true);
 
-    int loopStart = compiler->innermostLoopStart;
-    int scopeDepth = compiler->innermostLoopScopeDepth;
-    compiler->innermostLoopStart = currentChunk(compiler)->count;
-    compiler->innermostLoopScopeDepth = compiler->scopeDepth;
-
+    LoopCompiler* outerLoop = compiler->currentLoop;
+    LoopCompiler innerLoop;
+    initLoopCompiler(compiler, &innerLoop);
     getLocal(compiler, collectionSlot);
     getLocal(compiler, indexSlot);
+
     invokeMethod(compiler, 1, "next", 4);
     setLocal(compiler, indexSlot);
     emitByte(compiler, OP_POP);
-    int exitJump = emitJump(compiler, OP_JUMP_IF_EMPTY);
+    compiler->currentLoop->exitJump = emitJump(compiler, OP_JUMP_IF_EMPTY);
 
     getLocal(compiler, collectionSlot);
     getLocal(compiler, indexSlot);
@@ -822,15 +843,14 @@ static void compileForStatement(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 2);
     endScope(compiler);
 
-    emitLoop(compiler, compiler->innermostLoopStart);
-    patchJump(compiler, exitJump);
-    endLoop(compiler);
+    emitLoop(compiler);
+    patchJump(compiler, compiler->currentLoop->exitJump);
+    endLoopCompiler(compiler);
     emitByte(compiler, OP_POP);
     emitByte(compiler, OP_POP);
 
     compiler->localCount -= 2;
-    compiler->innermostLoopStart = loopStart;
-    compiler->innermostLoopScopeDepth = scopeDepth;
+    compiler->currentLoop = outerLoop;
     endScope(compiler);
 }
 
@@ -873,22 +893,20 @@ static void compileUsingStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileWhileStatement(Compiler* compiler, Ast* ast) {
-    int loopStart = compiler->innermostLoopStart;
-    int scopeDepth = compiler->innermostLoopScopeDepth;
-    compiler->innermostLoopStart = currentChunk(compiler)->count;
-    compiler->innermostLoopScopeDepth = compiler->scopeDepth;
+    LoopCompiler* outerLoop = compiler->currentLoop;
+    LoopCompiler innerLoop;
+    initLoopCompiler(compiler, &innerLoop);
 
     compileChild(compiler, ast, 0);
-    int exitJump = emitJump(compiler, OP_JUMP_IF_FALSE);
+    compiler->currentLoop->exitJump = emitJump(compiler, OP_JUMP_IF_FALSE);
     emitByte(compiler, OP_POP);
     compileChild(compiler, ast, 1);
-    emitLoop(compiler, compiler->innermostLoopStart);
+    emitLoop(compiler);
 
-    patchJump(compiler, exitJump);
+    patchJump(compiler, compiler->currentLoop->exitJump);
     emitByte(compiler, OP_POP);
-    endLoop(compiler);
-    compiler->innermostLoopStart = loopStart;
-    compiler->innermostLoopScopeDepth = scopeDepth;
+    endLoopCompiler(compiler);
+    compiler->currentLoop = outerLoop;
 }
 
 static void compileYieldStatement(Compiler* compiler, Ast* ast) {
