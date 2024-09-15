@@ -27,14 +27,22 @@ typedef enum {
     COMPILE_TYPE_SCRIPT
 } CompileType;
 
-typedef struct {
+typedef struct SwitchCompiler {
+    struct SwitchCompiler* enclosing;
+    int state;
+    int caseEnds[MAX_CASES];
+    int caseCount;
+    int previousCaseSkip;
+} SwitchCompiler;
+
+typedef struct LoopCompiler {
     struct LoopCompiler* enclosing;
     int start;
     int exitJump;
     int scopeDepth;
 } LoopCompiler;
 
-typedef struct {
+typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
     Token name;
     Token superclass;
@@ -53,6 +61,7 @@ struct Compiler {
     IDMap indexes;
     Token currentToken;
     LoopCompiler* currentLoop;
+    SwitchCompiler* currentSwitch;
 
     int scopeDepth;
     bool isAsync;
@@ -161,6 +170,29 @@ static void endLoopCompiler(Compiler* compiler) {
     compiler->currentLoop = compiler->currentLoop->enclosing;
 }
 
+static void initSwitchCompiler(Compiler* compiler, SwitchCompiler* _switch) {
+    _switch->enclosing = compiler->currentSwitch;
+    _switch->state = 1;
+    _switch->caseCount = 0;
+    _switch->previousCaseSkip = -1;
+    compiler->currentSwitch = _switch;
+}
+
+static void endSwitchCompiler(Compiler* compiler) {
+    if (compiler->currentSwitch->state == 1) {
+        compiler->currentSwitch->caseEnds[compiler->currentSwitch->caseCount++] = emitJump(compiler, OP_JUMP);
+        patchJump(compiler, compiler->currentSwitch->previousCaseSkip);
+        emitByte(compiler, OP_POP);
+    }
+
+    for (int i = 0; i < compiler->currentSwitch->caseCount; i++) {
+        patchJump(compiler, compiler->currentSwitch->caseEnds[i]);
+    }
+
+    emitByte(compiler, OP_POP);
+    compiler->currentSwitch = compiler->currentSwitch->enclosing;
+}
+
 static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, const char* name, bool isAsync) {
     compiler->vm = vm;
     compiler->enclosing = enclosing;
@@ -175,9 +207,13 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->function = newFunction(vm);
     compiler->function->isAsync = isAsync;
     if (type != COMPILE_TYPE_SCRIPT) compiler->function->name = newString(vm, name);
-    if (enclosing != NULL) compiler->currentLoop = enclosing->currentLoop;
     initIDMap(&compiler->indexes);
     vm->compiler = compiler;
+
+    if (enclosing != NULL) {
+        compiler->currentLoop = enclosing->currentLoop;
+        compiler->currentSwitch = enclosing->currentSwitch;
+    }
 
     Local* local = &compiler->locals[compiler->localCount++];
     local->depth = 0;
@@ -752,7 +788,9 @@ static void compileAwaitStatement(Compiler* compiler, Ast* ast) {
         compiler->isAsync = true;
         compiler->function->isAsync = true;
     }
-    else if (!compiler->isAsync) compileError(compiler, "Can only use 'await' in async methods or top level code.");
+    else if (!compiler->isAsync) {
+        compileError(compiler, "Can only use 'await' in async methods or top level code.");
+    }
 
     compileChild(compiler, ast, 0);
     emitBytes(compiler, OP_AWAIT, OP_POP);
@@ -774,7 +812,21 @@ static void compileBreakStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileCaseStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    if (compiler->currentSwitch == NULL) {
+        compileError(compiler, "Cannot use 'case' outside of a switch.");
+        return;
+    }
+
+    emitByte(compiler, OP_DUP);
+    compileChild(compiler, ast, 0);
+    emitByte(compiler, OP_EQUAL);
+    compiler->currentSwitch->previousCaseSkip = emitJump(compiler, OP_JUMP_IF_FALSE);
+    emitByte(compiler, OP_POP);
+    compileChild(compiler, ast, 1);
+
+    compiler->currentSwitch->caseEnds[compiler->currentSwitch->caseCount++] = emitJump(compiler, OP_JUMP);
+    patchJump(compiler, compiler->currentSwitch->previousCaseSkip);
+    emitByte(compiler, OP_POP);
 }
 
 static void compileCatchStatement(Compiler* compiler, Ast* ast) {
@@ -877,7 +929,22 @@ static void compileReturnStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileSwitchStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    Ast* caseList = astGetChild(ast, 1);
+    SwitchCompiler innerSwitch;
+    initSwitchCompiler(compiler, &innerSwitch);
+
+    for (int i = 0; i < caseList->children->count; i++) {
+        compileChild(compiler, caseList, i);
+    }
+
+    if (caseList->children->count > 2) {
+        compileChild(compiler, ast, 2);
+        compiler->currentSwitch->state = 2;
+        compiler->currentSwitch->previousCaseSkip = -1;
+    }
+
+    endSwitchCompiler(compiler);
 }
 
 static void compileThrowStatement(Compiler* compiler, Ast* ast) {

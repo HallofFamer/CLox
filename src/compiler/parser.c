@@ -464,6 +464,10 @@ static Ast* lambda(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* variable(Parser* parser, Token token, bool canAssign) {
+    if (canAssign && match(parser, TOKEN_EQUAL)) {
+        Ast* expr = expression(parser);
+        return newAst(AST_EXPR_ASSIGN, token, 1, expr);
+    }
     return emptyAst(AST_EXPR_VARIABLE, token);
 }
 
