@@ -817,7 +817,8 @@ static Ast* switchStatement(Parser* parser) {
             else {
                 state = 2;
                 consume(parser, TOKEN_COLON, "Expect ':' after default.");
-                Ast* defaultStmt = statement(parser);
+                Ast* defaultBody = statement(parser);
+                Ast* defaultStmt = newAst(AST_STMT_DEFAULT, syntheticToken("default"), 1, defaultBody);
                 astAppendChild(stmt, defaultStmt);
             }
         }

@@ -193,7 +193,7 @@ static void endSwitchCompiler(Compiler* compiler) {
     compiler->currentSwitch = compiler->currentSwitch->enclosing;
 }
 
-static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, const char* name, bool isAsync) {
+static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, Token* name, bool isAsync) {
     compiler->vm = vm;
     compiler->enclosing = enclosing;
     compiler->type = type;
@@ -206,7 +206,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->isAsync = isAsync;
     compiler->function = newFunction(vm);
     compiler->function->isAsync = isAsync;
-    if (type != COMPILE_TYPE_SCRIPT) compiler->function->name = newString(vm, name);
+    if (type != COMPILE_TYPE_SCRIPT) compiler->function->name = copyString(vm, name->start, name->length);
     initIDMap(&compiler->indexes);
     vm->compiler = compiler;
 
@@ -501,6 +501,14 @@ static void getVariable(Compiler* compiler, Ast* ast) {
     }
 }
 
+static void parameters(Compiler* compiler, Ast* ast) {
+    // To be implemented...
+}
+
+static void function(Compiler* enclosing, CompileType type, Ast* ast, bool isAsync) {
+    // To be implemented...
+}
+
 static void compileArray(Compiler* compiler, Ast* ast) {
     uint8_t elementCount = 0;
     if (astHasChild(ast)) {
@@ -588,7 +596,9 @@ static void compileDictionary(Compiler* compiler, Ast* ast) {
 }
 
 static void compileFunction(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    CompileType type = ast->modifier.isLambda ? COMPILE_TYPE_LAMBDA : COMPILE_TYPE_FUNCTION;
+    bool isAsync = ast->modifier.isAsync;
+    function(compiler, type, &ast->token, isAsync);
 }
 
 static void compileGrouping(Compiler* compiler, Ast* ast) {
@@ -841,6 +851,12 @@ static void compileContinueStatement(Compiler* compiler, Ast* ast) {
     emitLoop(compiler);
 }
 
+static void compileDefaultStatement(Compiler* compiler, Ast* ast) {
+    compileChild(compiler, ast, 0);
+    compiler->currentSwitch->state = 2;
+    compiler->currentSwitch->previousCaseSkip = -1;
+}
+
 static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
     if (compiler->type == COMPILE_TYPE_LAMBDA) {
@@ -940,8 +956,6 @@ static void compileSwitchStatement(Compiler* compiler, Ast* ast) {
 
     if (caseList->children->count > 2) {
         compileChild(compiler, ast, 2);
-        compiler->currentSwitch->state = 2;
-        compiler->currentSwitch->previousCaseSkip = -1;
     }
 
     endSwitchCompiler(compiler);
@@ -1002,6 +1016,9 @@ static void compileStatement(Compiler* compiler, Ast* ast) {
         case AST_STMT_CONTINUE:
             compileContinueStatement(compiler, ast);
             break;
+        case AST_STMT_DEFAULT:
+            compileDefaultStatement(compiler, ast);
+            break;
         case AST_STMT_EXPRESSION:
             compileExpressionStatement(compiler, ast);
             break;
@@ -1045,7 +1062,7 @@ static void compileClassDeclaration(Compiler* compiler, Ast* ast) {
 }
 
 static void compileFunDeclaration(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    // To be implemented...
 }
 
 static void compileMethodDeclaration(Compiler* compiler, Ast* ast) {
