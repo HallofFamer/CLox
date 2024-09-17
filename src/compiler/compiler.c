@@ -506,7 +506,19 @@ static void parameters(Compiler* compiler, Ast* ast) {
 }
 
 static void function(Compiler* enclosing, CompileType type, Ast* ast, bool isAsync) {
-    // To be implemented...
+    Compiler compiler;
+    initCompiler(enclosing->vm, &compiler, enclosing, type, &ast->token, isAsync);
+    beginScope(&compiler);
+
+    compileChild(&compiler, ast, 0);
+    compileChild(&compiler, ast, 1);
+    ObjFunction* function = endCompiler(&compiler);
+    emitBytes(enclosing, OP_CLOSURE, makeIdentifier(enclosing, OBJ_VAL(function)));
+
+    for (int i = 0; i < function->upvalueCount; i++) {
+        emitByte(enclosing, compiler.upvalues[i].isLocal ? 1 : 0);
+        emitByte(enclosing, compiler.upvalues[i].index);
+    }
 }
 
 static void compileArray(Compiler* compiler, Ast* ast) {
@@ -1062,7 +1074,10 @@ static void compileClassDeclaration(Compiler* compiler, Ast* ast) {
 }
 
 static void compileFunDeclaration(Compiler* compiler, Ast* ast) {
-    // To be implemented...
+    uint8_t index = makeVariable(compiler, &ast->token, "Expect function name.");
+    markInitialized(compiler, false);
+    compileChild(compiler, ast, 0);
+    defineVariable(compiler, index, false);
 }
 
 static void compileMethodDeclaration(Compiler* compiler, Ast* ast) {

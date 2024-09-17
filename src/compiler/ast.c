@@ -166,11 +166,10 @@ static void astOutputExprDictionary(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprFunction(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sfunction\n", indent);
+    astOutputIndent(indentLevel);
+    printf("function\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
 }
 
 static void astOutputExprGrouping(Ast* ast, int indentLevel) {
@@ -360,6 +359,12 @@ static void astOutputStmtContinue(Ast* ast, int indentLevel) {
     printf("continueStmt\n");
 }
 
+static void astOutputStmtDefault(Ast* ast, int indentLevel) {
+    astOutputIndent(indentLevel);
+    printf("defaultStmt\n");
+    astOutputChild(ast, indentLevel + 1, 0);
+}
+
 static void astOutputStmtExpression(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     printf("exprStmt\n");
@@ -402,14 +407,13 @@ static void astOutputStmtReturn(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtSwitch(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sswitchStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("switchStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     if (ast->children->count > 2) {
         astOutputChild(ast, indentLevel + 1, 2);
     }
-    free(indent);
 }
 
 static void astOutputStmtThrow(Ast* ast, int indentLevel) {
@@ -476,12 +480,10 @@ static void astOutputDeclClass(Ast* ast, int indentLevel) {
 }
 
 static void astOutputDeclFun(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
     char* async = ast->modifier.isAsync ? "async " : "";
     char* funName = tokenToString(ast->token);
-    printf("%sfunDecl %s%s\n", indent, async, funName);
+    printf("funDecl %s%s\n", async, funName);
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
     free(funName);
 }
 
@@ -680,6 +682,9 @@ void astOutput(Ast* ast, int indentLevel) {
                     break;
                 case AST_STMT_CONTINUE:
                     astOutputStmtContinue(ast, indentLevel);
+                    break;
+                case AST_STMT_DEFAULT:
+                    astOutputStmtDefault(ast, indentLevel);
                     break;
                 case AST_STMT_EXPRESSION:
                     astOutputStmtExpression(ast, indentLevel);
