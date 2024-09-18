@@ -1,0 +1,14 @@
+namespace test.lang;
+
+val x = 0;
+val y = 1;
+
+if (x > 0 and y > 0) { 
+    println("Both x and y are greater than 0.");
+}
+else if (x == 0 or y == 0) { 
+    println("At least one of x and y is 0.");
+}
+else { 
+    println("x and y may be less than 0.");
+}

@@ -104,6 +104,18 @@ set(Source_Files__common
 )
 source_group("Source Files\\common" FILES ${Source_Files__common})
 
+set(Source_Files__compiler
+    "src/compiler/ast.c"
+    "src/compiler/ast.h"
+    "src/compiler/lexer.c"
+    "src/compiler/lexer.h"
+    "src/compiler/parser.c"
+    "src/compiler/parser.h"
+    "src/compiler/token.h"
+    "src/compiler/token.h"
+)
+source_group("Source Files\\compiler" FILES ${Source_Files__compiler})
+
 set(Source_Files__inc
     "src/inc/ini.c"
     "src/inc/ini.h"
@@ -196,6 +208,8 @@ source_group("Source Files\\vm" FILES ${Source_Files__vm})
 
 set(ALL_FILES
     ${no_group_source_files}
+    ${Source_Files__common}
+    ${Source_Files__compiler}
     ${Source_Files__inc}
     ${Source_Files__std}
     ${Source_Files__vm}

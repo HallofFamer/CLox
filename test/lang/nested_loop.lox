@@ -1,0 +1,22 @@
+namespace test.lang;
+
+println("Testing Nested loop using 'while':");
+var i = 1;
+while (i < 10) {   
+    var j = 1;
+    while (j < 10) { 
+        println("The result of ${i} x ${j} is: ${i * j}");
+        j = j + 1;
+    }
+    println("");
+    i = i + 1;
+}
+println("");
+
+println("Testing Nested loop using 'for':");
+for (var i : 1..5) { 
+    for (var j : 1..5) { 
+        println("The result of ${i} ^ ${j} is: ${i.pow(j)}");
+    }
+    println("");
+}
