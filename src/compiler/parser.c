@@ -953,28 +953,32 @@ static Ast* statement(Parser* parser) {
     }
 }
 
+static Ast* parameter(Parser* parser, const char* message) {
+    bool isMutable = match(parser, TOKEN_VAR);
+    consume(parser, TOKEN_IDENTIFIER, message);
+    Ast* param = emptyAst(AST_EXPR_PARAM, parser->previous);
+    param->modifier.isMutable = isMutable;
+    return param;
+}
+
 static Ast* parameterList(Parser* parser, Token token) {
     Ast* params = emptyAst(AST_LIST_VAR, token);
     int arity = 0;
 
     if (match(parser, TOKEN_DOT_DOT)) {
-        Ast* param = identifier(parser, "Expect parameter name.");
+        Ast* param = identifier(parser, "Expect variadic parameter name.");
         param->modifier.isVariadic = true;
         astAppendChild(params, param);
+        if (match(parser, TOKEN_COMMA)) error(parser, "Cannot have more parameters following variadic parameter.");
+        return params;
     }
 
-    do {
+    while (match(parser, TOKEN_COMMA)) {
         arity++;
-        if (arity > UINT8_MAX) {
-            errorAtCurrent(parser, "Can't have more than 255 parameters.");
-        }
-
-        bool isMutable = match(parser, TOKEN_VAR);
-        Ast* param = identifier(parser, "Expect parameter name.");
-        param->modifier.isMutable = isMutable;
+        if (arity > UINT8_MAX) errorAtCurrent(parser, "Can't have more than 255 parameters.");
+        Ast* param = parameter(parser, "Expect parameter name");
         astAppendChild(params, param);
-    } while (match(parser, TOKEN_COMMA));
-
+    }
     return params;
 }
 

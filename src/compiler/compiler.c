@@ -459,7 +459,7 @@ static void number(Compiler* compiler, Token token) {
 }
 
 static void string(Compiler* compiler, Token token) {
-    char* string = tokenToString(token);
+    char* string = tokenToCString(token);
     emitConstant(compiler, OBJ_VAL(takeString(compiler->vm, string, token.length)));
 }
 
@@ -502,7 +502,20 @@ static void getVariable(Compiler* compiler, Ast* ast) {
 }
 
 static void parameters(Compiler* compiler, Ast* ast) {
-    // To be implemented...
+    if (!astHasChild(ast)) return;
+    for (int i = 0; i < ast->children->count; i++) {
+        compileChild(compiler, ast, i);
+    }
+}
+
+static uint8_t lambdaDepth(Compiler* compiler) {
+    uint8_t depth = 1;
+    Compiler* current = compiler->enclosing;
+    while (current->type == COMPILE_TYPE_LAMBDA) {
+        depth++;
+        current = current->enclosing;
+    }
+    return depth;
 }
 
 static void function(Compiler* enclosing, CompileType type, Ast* ast, bool isAsync) {
@@ -510,7 +523,7 @@ static void function(Compiler* enclosing, CompileType type, Ast* ast, bool isAsy
     initCompiler(enclosing->vm, &compiler, enclosing, type, &ast->token, isAsync);
     beginScope(&compiler);
 
-    compileChild(&compiler, ast, 0);
+    parameters(&compiler, astGetChild(ast, 0));
     compileChild(&compiler, ast, 1);
     ObjFunction* function = endCompiler(&compiler);
     emitBytes(enclosing, OP_CLOSURE, makeIdentifier(enclosing, OBJ_VAL(function)));
@@ -610,7 +623,7 @@ static void compileDictionary(Compiler* compiler, Ast* ast) {
 static void compileFunction(Compiler* compiler, Ast* ast) {
     CompileType type = ast->modifier.isLambda ? COMPILE_TYPE_LAMBDA : COMPILE_TYPE_FUNCTION;
     bool isAsync = ast->modifier.isAsync;
-    function(compiler, type, &ast->token, isAsync);
+    function(compiler, type, ast, isAsync);
 }
 
 static void compileGrouping(Compiler* compiler, Ast* ast) {
@@ -671,6 +684,13 @@ static void compileLogical(Compiler* compiler, Ast* ast) {
 
 static void compileNil(Compiler* compiler, Ast* ast) {
     // To be implemented
+}
+
+static void compileParam(Compiler* compiler, Ast* ast) {
+    if (ast->modifier.isVariadic) compiler->function->arity = -1;
+    else compiler->function->arity++;
+    uint8_t constant = makeVariable(compiler, &ast->token, "Expect parameter name.");
+    defineVariable(compiler, constant, ast->modifier.isMutable);
 }
 
 static void compilePropertyGet(Compiler* compiler, Ast* ast) {
@@ -766,6 +786,9 @@ static void compileExpression(Compiler* compiler, Ast* ast) {
             break;
         case AST_EXPR_NIL:
             compileNil(compiler, ast);
+            break;
+        case AST_EXPR_PARAM:
+            compileParam(compiler, ast);
             break;
         case AST_EXPR_PROPERTY_GET:
             compilePropertyGet(compiler, ast);
