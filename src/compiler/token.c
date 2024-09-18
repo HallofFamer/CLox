@@ -5,14 +5,12 @@
 #include "token.h"
 
 Token syntheticToken(const char* text) {
-    Token token = { 
-        .start = text, 
-        .length = (int)strlen(text) 
+    return (Token) {
+        .type = TOKEN_EMPTY, .start = text, .length = (int)strlen(text)
     };
-    return token;
 }
 
-char* tokenToString(Token token) {
+char* tokenToCString(Token token) {
     char* buffer = (char*)malloc((size_t)token.length + 1);
     if (buffer != NULL) {
         if (token.length > 0) memcpy(buffer, token.start, token.length);

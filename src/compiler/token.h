@@ -41,7 +41,7 @@ typedef struct {
 } Token;
 
 Token syntheticToken(const char* text);
-char* tokenToString(Token token);
+char* tokenToCString(Token token);
 
 static inline Token emptyToken() {
     return syntheticToken("");

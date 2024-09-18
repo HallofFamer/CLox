@@ -76,7 +76,7 @@ static inline int bufferGrowCapacity(int capacity) {
     return capacity < 8 ? 8 : capacity * 2;
 }
 
-static inline char* bufferNewCharArray(size_t length) {
+static inline char* bufferNewCString(size_t length) {
     char* buffer = (char*)malloc(length + 1);
     if (buffer == NULL) {
         fprintf(stderr, "Not enough memory to allocate string of length %zu.", length);
@@ -86,6 +86,7 @@ static inline char* bufferNewCharArray(size_t length) {
 }
 
 DECLARE_BUFFER(ByteArray, uint8_t)
+DECLARE_BUFFER(ShortArray, short)
 DECLARE_BUFFER(IntArray, int)
 DECLARE_BUFFER(DoubleArray, double)
 DECLARE_BUFFER(CharArray, char)

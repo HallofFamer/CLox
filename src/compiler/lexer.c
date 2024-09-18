@@ -130,8 +130,7 @@ static void skipWhitespace(Lexer* lexer) {
     }
 }
 
-static TokenSymbol checkKeyword(Lexer* lexer, int start, int length,
-    const char* rest, TokenSymbol type) {
+static TokenSymbol checkKeyword(Lexer* lexer, int start, int length, const char* rest, TokenSymbol type) {
     if (lexer->current - lexer->start == start + length &&
         memcmp(lexer->start + start, rest, length) == 0) {
         return type;
