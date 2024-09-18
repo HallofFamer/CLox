@@ -114,6 +114,13 @@ static void astOutputChild(Ast* ast, int indentLevel, int index) {
     astOutput(expr, indentLevel);
 }
 
+static void astOutputExprAnd(Ast* ast, int indentLevel) {
+    astOutputIndent(indentLevel);
+    printf("and\n");
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+}
+
 static void astOutputExprArray(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     printf("array\n");
@@ -213,8 +220,11 @@ static void astOutputExprLiteral(Ast* ast, int indentLevel) {
     free(token);
 }
 
-static void astOutputExprLogical(Ast* ast, int indentLevel) {
-    astOutputExprBinary(ast, indentLevel);
+static void astOutputExprOr(Ast* ast, int indentLevel) {
+    astOutputIndent(indentLevel);
+    printf("or\n");
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
 }
 
 static void astOutputExprNil(Ast* ast, int indentLevel) {
@@ -592,6 +602,9 @@ void astOutput(Ast* ast, int indentLevel) {
             break;
         case AST_CATEGORY_EXPR: {
             switch (ast->type) {
+                case AST_EXPR_AND:
+                    astOutputExprAnd(ast, indentLevel);
+                    break;
                 case AST_EXPR_ARRAY:
                     astOutputExprArray(ast, indentLevel);
                     break;
@@ -628,11 +641,11 @@ void astOutput(Ast* ast, int indentLevel) {
                 case AST_EXPR_LITERAL:
                     astOutputExprLiteral(ast, indentLevel);
                     break;
-                case AST_EXPR_LOGICAL:
-                    astOutputExprLogical(ast, indentLevel);
-                    break;
                 case AST_EXPR_NIL:
                     astOutputExprNil(ast, indentLevel);
+                    break;
+                case AST_EXPR_OR:
+                    astOutputExprOr(ast, indentLevel);
                     break;
                 case AST_EXPR_PARAM:
                     astOutputExprParam(ast, indentLevel);

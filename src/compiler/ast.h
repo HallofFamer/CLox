@@ -19,6 +19,7 @@ typedef enum {
 
 typedef enum {
     AST_TYPE_NONE,
+    AST_EXPR_AND,
     AST_EXPR_ARRAY,
     AST_EXPR_ASSIGN,
     AST_EXPR_AWAIT,
@@ -31,8 +32,8 @@ typedef enum {
     AST_EXPR_INVOKE,
     AST_EXPR_INTERPOLATION,
     AST_EXPR_LITERAL,
-    AST_EXPR_LOGICAL,
     AST_EXPR_NIL,
+    AST_EXPR_OR,
     AST_EXPR_PARAM,
     AST_EXPR_PROPERTY_GET,
     AST_EXPR_PROPERTY_SET,
@@ -124,7 +125,7 @@ void astOutput(Ast* ast, int indentLevel);
 
 static inline AstNodeCategory astNodeCategory(AstNodeType type) {
     if (type == AST_TYPE_NONE) return AST_CATEGORY_SCRIPT;
-    else if (type >= AST_EXPR_ARRAY && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
+    else if (type >= AST_EXPR_AND && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
     else if (type >= AST_STMT_AWAIT && type <= AST_STMT_YIELD) return AST_CATEGORY_STMT;
     else if (type >= AST_DECL_CLASS && type <= AST_DECL_VAR) return AST_CATEGORY_DECL;
     else return AST_CATEGORY_OTHER;

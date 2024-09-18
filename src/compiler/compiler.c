@@ -534,6 +534,15 @@ static void function(Compiler* enclosing, CompileType type, Ast* ast, bool isAsy
     }
 }
 
+static void compileAnd(Compiler* compiler, Ast* ast) { 
+    compileChild(compiler, ast, 0);
+    int endJump = emitJump(compiler, OP_JUMP_IF_FALSE);
+    emitByte(compiler, OP_POP);
+
+    compileChild(compiler, ast, 1);
+    patchJump(compiler, endJump);
+}
+
 static void compileArray(Compiler* compiler, Ast* ast) {
     uint8_t elementCount = 0;
     if (astHasChild(ast)) {
@@ -678,13 +687,21 @@ static void compileLiteral(Compiler* compiler, Ast* ast) {
     }
 }
 
-static void compileLogical(Compiler* compiler, Ast* ast) {
-    // To be implemented
-}
-
 static void compileNil(Compiler* compiler, Ast* ast) {
     // To be implemented
 }
+
+static void compileOr(Compiler* compiler, Ast* ast) {
+    compileChild(compiler, ast, 0);
+    int elseJump = emitJump(compiler, OP_JUMP_IF_FALSE);
+    int endJump = emitJump(compiler, OP_JUMP);
+    patchJump(compiler, elseJump);
+
+    emitByte(compiler, OP_POP);
+    compileChild(compiler, ast, 1);
+    patchJump(compiler, endJump);
+}
+
 
 static void compileParam(Compiler* compiler, Ast* ast) {
     if (ast->modifier.isVariadic) compiler->function->arity = -1;
@@ -745,6 +762,9 @@ static void compileYield(Compiler* compiler, Ast* ast) {
 
 static void compileExpression(Compiler* compiler, Ast* ast) {
     switch (ast->type) {
+        case AST_EXPR_AND:
+            compileAnd(compiler, ast);
+            break;
         case AST_EXPR_ARRAY:
             compileArray(compiler, ast);
             break;
@@ -781,11 +801,11 @@ static void compileExpression(Compiler* compiler, Ast* ast) {
         case AST_EXPR_LITERAL:
             compileLiteral(compiler, ast);
             break;
-        case AST_EXPR_LOGICAL:
-            compileLogical(compiler, ast);
-            break;
         case AST_EXPR_NIL:
             compileNil(compiler, ast);
+            break;
+        case AST_EXPR_OR:
+            compileOr(compiler, ast);
             break;
         case AST_EXPR_PARAM:
             compileParam(compiler, ast);
@@ -976,7 +996,21 @@ static void compileRequireStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileReturnStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    if (compiler->type == COMPILE_TYPE_SCRIPT) {
+        compileError(compiler, "Can't return from top-level code.");
+    }
+    else if (compiler->type == COMPILE_TYPE_INITIALIZER) {
+        compileError(compiler, "Cannot return value from an initializer.");
+    }
+
+    uint8_t depth = 0;
+    if (compiler->type == COMPILE_TYPE_LAMBDA) depth = lambdaDepth(compiler);
+    if (astHasChild(ast)) {
+        compileChild(compiler, ast, 0);
+        if (compiler->type == COMPILE_TYPE_LAMBDA) emitBytes(compiler, OP_RETURN_NONLOCAL, depth);
+        else emitByte(compiler, OP_RETURN);
+    }
+    else emitReturn(compiler, depth);
 }
 
 static void compileSwitchStatement(Compiler* compiler, Ast* ast) {
