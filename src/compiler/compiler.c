@@ -60,9 +60,11 @@ struct Compiler {
     Upvalue upvalues[UINT8_COUNT];
     IDMap indexes;
     Token currentToken;
+    ClassCompiler* currentClass;
     LoopCompiler* currentLoop;
     SwitchCompiler* currentSwitch;
 
+    Token rootClass;
     int scopeDepth;
     bool isAsync;
     bool hadError;
@@ -149,6 +151,18 @@ static void patchAddress(Compiler* compiler, int offset) {
     currentChunk(compiler)->code[offset + 1] = currentChunk(compiler)->count & 0xff;
 }
 
+static void initClassCompiler(Compiler* compiler, ClassCompiler* klass, Token name, BehaviorType type) {
+    klass->enclosing = compiler->currentClass;
+    klass->name = name;
+    klass->type = type;
+    klass->superclass = compiler->rootClass;
+    compiler->currentClass = klass;
+}
+
+static void endClassCompiler(Compiler* compiler) {
+    compiler->currentClass = compiler->currentClass->enclosing;
+}
+
 static void initLoopCompiler(Compiler* compiler, LoopCompiler* loop) {
     loop->enclosing = compiler->currentLoop;
     loop->start = currentChunk(compiler)->count;
@@ -202,6 +216,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     compiler->hadError = false;
+    compiler->rootClass = syntheticToken("Object");
 
     compiler->isAsync = isAsync;
     compiler->function = newFunction(vm);

@@ -972,7 +972,7 @@ static Ast* parameterList(Parser* parser, Token token) {
     int arity = 0;
 
     if (match(parser, TOKEN_DOT_DOT)) {
-        Ast* param = identifier(parser, "Expect variadic parameter name.");
+        Ast* param = parameter(parser, "Expect variadic parameter name.");
         param->modifier.isVariadic = true;
         astAppendChild(params, param);
         if (match(parser, TOKEN_COMMA)) error(parser, "Cannot have more parameters following variadic parameter.");
