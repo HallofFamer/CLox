@@ -734,11 +734,16 @@ static void compilePropertySet(Compiler* compiler, Ast* ast) {
 }
 
 static void compileSubscriptGet(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    compileChild(compiler, ast, 1);
+    emitByte(compiler, OP_GET_SUBSCRIPT);
 }
 
 static void compileSubscriptSet(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    compileChild(compiler, ast, 1);
+    compileChild(compiler, ast, 2);
+    emitByte(compiler, OP_SET_SUBSCRIPT);
 }
 
 static void compileSuperGet(Compiler* compiler, Ast* ast) {

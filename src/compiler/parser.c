@@ -971,6 +971,7 @@ static Ast* parameterList(Parser* parser, Token token) {
     Ast* params = emptyAst(AST_LIST_VAR, token);
     int arity = 0;
 
+    if (match(parser, TOKEN_RIGHT_PAREN)) return params;
     if (match(parser, TOKEN_DOT_DOT)) {
         Ast* param = parameter(parser, "Expect variadic parameter name.");
         param->modifier.isVariadic = true;
@@ -979,18 +980,19 @@ static Ast* parameterList(Parser* parser, Token token) {
         return params;
     }
 
-    while (match(parser, TOKEN_COMMA)) {
+    do {
         arity++;
         if (arity > UINT8_MAX) errorAtCurrent(parser, "Can't have more than 255 parameters.");
         Ast* param = parameter(parser, "Expect parameter name");
         astAppendChild(params, param);
-    }
+    } while (match(parser, TOKEN_COMMA));
     return params;
 }
 
 static Ast* functionParameters(Parser* parser) {
+    Token token = parser->previous;
     consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after function keyword/name.");
-    Ast* params = parameterList(parser, parser->previous);
+    Ast* params = match(parser, TOKEN_RIGHT_PAREN)? emptyAst(AST_LIST_VAR, token) : parameterList(parser, token);
     consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
     consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before function body.");
     return params;
