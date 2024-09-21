@@ -94,6 +94,7 @@ struct Ast {
     AstModifier modifier;
     Token token;
     Ast* parent;
+    Ast* sibling;
     AstArray* children;
     uint8_t depth;
 };
@@ -118,8 +119,10 @@ Ast* newAst(AstNodeType type, Token token, int numChildren, ...);
 Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children);
 void freeAst(Ast* node, bool freeChildren);
 void astAppendChild(Ast* ast, Ast* child);
+Ast* astFirstChild(Ast* ast);
 Ast* astGetChild(Ast* ast, int index);
 bool astHasChild(Ast* ast);
+Ast* astLastChild(Ast* ast);
 int astNumChild(Ast* ast);
 void astOutput(Ast* ast, int indentLevel);
 

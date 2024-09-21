@@ -21,6 +21,7 @@ Ast* emptyAst(AstNodeType type, Token token) {
         ast->modifier = astInitModifier();
         ast->token = token;
         ast->parent = NULL;
+        ast->sibling = NULL;
         ast->children = (AstArray*)malloc(sizeof(AstArray));
         if (ast->children != NULL) AstArrayInit(ast->children);
     }
@@ -46,6 +47,7 @@ Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
         ast->modifier = astInitModifier();
         ast->token = token;
         ast->parent = NULL;
+        ast->sibling = NULL;
         if (children == NULL) {
             ast->children = (AstArray*)malloc(sizeof(AstArray));
             if (ast->children != NULL) AstArrayInit(ast->children);
@@ -70,8 +72,15 @@ void astAppendChild(Ast* ast, Ast* child) {
         exit(1);
     }
 
-    AstArrayAdd(ast->children, child);
     if (child != NULL) child->parent = ast;
+    Ast* sibling = astLastChild(ast);
+    if (sibling != NULL) sibling->sibling = child;
+    AstArrayAdd(ast->children, child);
+}
+
+Ast* astFirstChild(Ast* ast) {
+    if (!astHasChild(ast)) return NULL;
+    return ast->children->elements[0];
 }
 
 Ast* astGetChild(Ast* ast, int index) {
@@ -86,13 +95,18 @@ bool astHasChild(Ast* ast) {
     return (ast->children != NULL && ast->children->count > 0);
 }
 
+Ast* astLastChild(Ast* ast) {
+    if (!astHasChild(ast)) return NULL;
+    return ast->children->elements[ast->children->count - 1];
+}
+
 int astNumChild(Ast* ast) {
     return (ast->children != NULL) ? ast->children->count : 0;
 }
 
 static char* astIndent(int indentLevel) {
     if (indentLevel == 0) return "";
-    size_t length = indentLevel * 2;
+    size_t length = (size_t)indentLevel * 2;
     char* buffer = bufferNewCString(length);
     for (int i = 0; i < length; i++) {
         buffer[i] = ' ';
@@ -239,9 +253,10 @@ static void astOutputExprNil(Ast* ast, int indentLevel) {
 
 static void astOutputExprParam(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    char* modifier = ast->modifier.isMutable ? "var " : "";
+    char* mutable = ast->modifier.isMutable ? "var " : "";
+    char* variadic = ast->modifier.isVariadic ? ".." : "";
     char* name = tokenToCString(ast->token);
-    printf("param %s%s\n", modifier, name);
+    printf("param %s%s%s\n", mutable, variadic, name);
     free(name);
 }
 
