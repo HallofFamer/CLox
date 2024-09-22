@@ -549,6 +549,10 @@ static void function(Compiler* enclosing, CompileType type, Ast* ast, bool isAsy
     }
 }
 
+static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
+    // To be implemented
+}
+
 static void compileAnd(Compiler* compiler, Ast* ast) { 
     compileChild(compiler, ast, 0);
     int endJump = emitJump(compiler, OP_JUMP_IF_FALSE);
@@ -934,7 +938,7 @@ static void compileDefaultStatement(Compiler* compiler, Ast* ast) {
 
 static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
-    if (compiler->type == COMPILE_TYPE_LAMBDA) {
+    if (compiler->type == COMPILE_TYPE_LAMBDA && ast->sibling == NULL) {
         emitByte(compiler, OP_RETURN);
     }
     else emitByte(compiler, OP_POP);

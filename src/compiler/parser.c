@@ -1001,7 +1001,9 @@ static Ast* functionParameters(Parser* parser) {
 static Ast* lambdaParameters(Parser* parser) {
     Token token = parser->previous;
     if (!match(parser, TOKEN_PIPE)) return emptyAst(AST_LIST_VAR, token);
-    return parameterList(parser, token);
+    Ast* params = parameterList(parser, token);
+    consume(parser, TOKEN_PIPE, "Expect '|' after lambda parameters.");
+    return params;
 }
 
 static Ast* function(Parser* parser, bool isAsync, bool isLambda) {
@@ -1048,10 +1050,10 @@ static Ast* namespaceDeclaration(Parser* parser) {
 
 static Ast* traitDeclaration(Parser* parser) {
     consume(parser, TOKEN_IDENTIFIER, "Expect trait name.");
-    Token traitName = parser->previous;
-    Ast* traitList = traits(parser, &traitName);
-    Ast* methodList = methods(parser, &traitName);
-    return newAst(AST_DECL_TRAIT, traitName, 2, traitList, methodList);
+    Token name = parser->previous;
+    Ast* traitList = traits(parser, &name);
+    Ast* methodList = methods(parser, &name);
+    return newAst(AST_DECL_TRAIT, name, 2, traitList, methodList);
 }
 
 static Ast* varDeclaration(Parser* parser, bool isMutable) {
