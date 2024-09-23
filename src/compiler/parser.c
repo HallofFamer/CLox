@@ -510,6 +510,7 @@ static Ast* superclass_(Parser* parser) {
 
 static Ast* traits(Parser* parser, Token* name) {
     Ast* traitList = emptyAst(AST_LIST_VAR, *name);
+    if (!match(parser, TOKEN_WITH)) return traitList;
     uint8_t traitCount = 0;
 
     do {
@@ -518,7 +519,7 @@ static Ast* traits(Parser* parser, Token* name) {
             errorAtCurrent(parser, "Can't have more than 15 parameters.");
         }
 
-        Ast* trait = identifier(parser, "Expect class/trait name.");
+        Ast* trait = identifier(parser, "Expect trait name.");
         astAppendChild(traitList, trait);
     } while (match(parser, TOKEN_COMMA));
 
@@ -1022,7 +1023,8 @@ static Ast* classDeclaration(Parser* parser) {
     Ast* superClass = superclass_(parser);
     Ast* traitList = traits(parser, &name);
     Ast* methodList = methods(parser, &name);
-    return newAst(AST_DECL_CLASS, name, 3, superClass, traitList, methodList);
+    Ast* _class = newAst(AST_EXPR_CLASS, name, 3, superClass, traitList, methodList);
+    return newAst(AST_DECL_CLASS, name, 1, _class);
 }
 
 static Ast* funDeclaration(Parser* parser, bool isAsync) {
@@ -1053,7 +1055,8 @@ static Ast* traitDeclaration(Parser* parser) {
     Token name = parser->previous;
     Ast* traitList = traits(parser, &name);
     Ast* methodList = methods(parser, &name);
-    return newAst(AST_DECL_TRAIT, name, 2, traitList, methodList);
+    Ast* trait = newAst(AST_EXPR_TRAIT, name, 2, traitList, methodList);
+    return newAst(AST_DECL_TRAIT, name, 1, trait);
 }
 
 static Ast* varDeclaration(Parser* parser, bool isMutable) {

@@ -550,7 +550,43 @@ static void function(Compiler* enclosing, CompileType type, Ast* ast, bool isAsy
 }
 
 static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
-    // To be implemented
+    Token name = ast->token;
+    bool isAnonymous = (name.type == TOKEN_EMPTY && name.length == 1);
+    if (isAnonymous) {
+        emitBytes(compiler, OP_ANONYMOUS, type);
+        emitByte(compiler, OP_DUP);
+    }
+
+    ClassCompiler classCompiler;
+    initClassCompiler(compiler, &classCompiler, name, type);
+
+    if (type == BEHAVIOR_CLASS) {
+        Ast* superClass = astGetChild(ast, 0);
+        compiler->currentClass->superclass = superClass->token;
+        compileChild(compiler, ast, 0);
+        if (identifiersEqual(&name, &compiler->rootClass)) {
+            compileError(compiler, "Cannot redeclare root class Object.");
+        }
+        if (identifiersEqual(&name, &superClass->token)) {
+            compileError(compiler, "A class cannot inherit from itself.");
+        }
+    }
+
+    beginScope(compiler);
+    addLocal(compiler, syntheticToken("super"));
+    defineVariable(compiler, 0, false);
+    if (type == BEHAVIOR_CLASS) emitByte(compiler, OP_INHERIT);
+
+    Ast* traitList = astGetChild(ast, 1);
+    uint8_t traitCount = astNumChild(traitList);
+    if (traitCount > 0) {
+        compileChild(compiler, ast, 1);
+        emitBytes(compiler, OP_IMPLEMENT, traitCount);
+    }
+    
+    compileChild(compiler, ast, 2);
+    endScope(compiler);
+    endClassCompiler(compiler);
 }
 
 static void compileAnd(Compiler* compiler, Ast* ast) { 
@@ -633,7 +669,7 @@ static void compileCall(Compiler* compiler, Ast* ast) {
 }
 
 static void compileClass(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    behavior(compiler, BEHAVIOR_CLASS, ast);
 }
 
 static void compileDictionary(Compiler* compiler, Ast* ast) {
@@ -763,7 +799,7 @@ static void compileThis(Compiler* compiler, Ast* ast) {
 }
 
 static void compileTrait(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    behavior(compiler, BEHAVIOR_TRAIT, ast);
 }
 
 static void compileUnary(Compiler* compiler, Ast* ast) {
@@ -1151,7 +1187,11 @@ static void compileStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileClassDeclaration(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    Token* name = &ast->token;
+    uint8_t index = identifierConstant(compiler, name);
+    declareVariable(compiler, name);
+    emitBytes(compiler, OP_CLASS, index);
+    compileChild(compiler, ast, 0);
 }
 
 static void compileFunDeclaration(Compiler* compiler, Ast* ast) {
