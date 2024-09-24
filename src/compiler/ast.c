@@ -171,12 +171,11 @@ static void astOutputExprCall(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprClass(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sclass\n", indent);
+    astOutputIndent(indentLevel);
+    printf("class\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     astOutputChild(ast, indentLevel + 1, 2);
-    free(indent);
 }
 
 static void astOutputExprDictionary(Ast* ast, int indentLevel) {
@@ -280,20 +279,18 @@ static void astOutputExprPropertySet(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprSubscriptGet(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%subscriptGet\n", indent);
+    astOutputIndent(indentLevel);
+    printf("ubscriptGet\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
 }
 
 static void astOutputExprSubscriptSet(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%subscriptSet\n", indent);
+    astOutputIndent(indentLevel);
+    printf("subscriptSet\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     astOutputChild(ast, indentLevel + 1, 2);
-    free(indent);
 }
 
 static void astOutputExprSuperGet(Ast* ast, int indentLevel) {
@@ -319,11 +316,10 @@ static void astOutputExprThis(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprTrait(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%strait\n", indent);
+    astOutputIndent(indentLevel);
+    printf("trait\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
 }
 
 static void astOutputExprUnary(Ast* ast, int indentLevel) {
@@ -500,13 +496,10 @@ static void astOutputStmtYield(Ast* ast, int indentLevel) {
 }
 
 static void astOutputDeclClass(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* className = tokenToCString(ast->token);
-    printf("%sclassDecl %s\n", indent, className);
+    printf("classDecl %s\n", className);
     astOutputChild(ast, indentLevel + 1, 0);
-    astOutputChild(ast, indentLevel + 1, 1);
-    astOutputChild(ast, indentLevel + 1, 2);
-    free(indent);
     free(className);
 }
 
@@ -547,12 +540,10 @@ static void astOutputDeclNamespace(Ast* ast, int indentLevel) {
 }
 
 static void astOutputDeclTrait(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* traitName = tokenToCString(ast->token);
-    printf("%straitDecl %s\n", indent, traitName);
+    printf("traitDecl %s\n", traitName);
     astOutputChild(ast, indentLevel + 1, 0);
-    astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
     free(traitName);
 }
 
@@ -577,12 +568,11 @@ static void astOutputListExpr(Ast* ast, int indentLevel) {
 }
 
 static void astOutputListMethod(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%slistMethod(%d)\n", indent, astNumChild(ast));
+    astOutputIndent(indentLevel);
+    printf("listMethod(%d)\n", astNumChild(ast));
     for (int i = 0; i < ast->children->count; i++) {
         astOutput(astGetChild(ast, i), indentLevel + 1);
     }
-    free(indent);
 }
 
 static void astOutputListStmt(Ast* ast, int indentLevel) {

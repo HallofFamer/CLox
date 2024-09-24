@@ -1262,7 +1262,7 @@ static void compileDeclaration(Compiler* compiler, Ast* ast) {
 }
 
 void compileAst(Compiler* compiler, Ast* ast) {
-    if (compiler->hadError || !AST_IS_ROOT(ast)) return;
+    if (compiler->hadError) return;
     for (int i = 0; i < ast->children->count; i++) {
         compileChild(compiler, ast, i);
     }
