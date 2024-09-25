@@ -477,6 +477,63 @@ static Ast* variable(Parser* parser, Token token, bool canAssign) {
     return emptyAst(AST_EXPR_VARIABLE, token);
 }
 
+static Ast* parameter(Parser* parser, const char* message) {
+    bool isMutable = match(parser, TOKEN_VAR);
+    consume(parser, TOKEN_IDENTIFIER, message);
+    Ast* param = emptyAst(AST_EXPR_PARAM, parser->previous);
+    param->modifier.isMutable = isMutable;
+    return param;
+}
+
+static Ast* parameterList(Parser* parser, Token token) {
+    Ast* params = emptyAst(AST_LIST_VAR, token);
+    int arity = 0;
+
+    if (match(parser, TOKEN_RIGHT_PAREN)) return params;
+    if (match(parser, TOKEN_DOT_DOT)) {
+        Ast* param = parameter(parser, "Expect variadic parameter name.");
+        param->modifier.isVariadic = true;
+        astAppendChild(params, param);
+        if (match(parser, TOKEN_COMMA)) error(parser, "Cannot have more parameters following variadic parameter.");
+        return params;
+    }
+
+    do {
+        arity++;
+        if (arity > UINT8_MAX) errorAtCurrent(parser, "Can't have more than 255 parameters.");
+        Ast* param = parameter(parser, "Expect parameter name");
+        astAppendChild(params, param);
+    } while (match(parser, TOKEN_COMMA));
+    return params;
+}
+
+static Ast* functionParameters(Parser* parser) {
+    Token token = parser->previous;
+    consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after function keyword/name.");
+    Ast* params = check(parser, TOKEN_RIGHT_PAREN) ? emptyAst(AST_LIST_VAR, token) : parameterList(parser, token);
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+    return params;
+}
+
+static Ast* lambdaParameters(Parser* parser) {
+    Token token = parser->previous;
+    if (!match(parser, TOKEN_PIPE)) return emptyAst(AST_LIST_VAR, token);
+    Ast* params = parameterList(parser, token);
+    consume(parser, TOKEN_PIPE, "Expect '|' after lambda parameters.");
+    return params;
+}
+
+static Ast* function(Parser* parser, bool isAsync, bool isLambda) {
+    Token token = parser->previous;
+    Ast* params = isLambda ? lambdaParameters(parser) : functionParameters(parser);
+    Ast* body = block(parser);
+    Ast* func = newAst(AST_EXPR_FUNCTION, token, 2, params, body);
+    func->modifier.isAsync = isAsync;
+    func->modifier.isLambda = isLambda;
+    return func;
+}
+
 static Ast* methods(Parser* parser, Token* name) {
     consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before class/trait body.");
     Ast* methodList = emptyAst(AST_LIST_METHOD, *name);
@@ -486,11 +543,14 @@ static Ast* methods(Parser* parser, Token* name) {
         if (match(parser, TOKEN_ASYNC)) isAsync = true;
         if (match(parser, TOKEN_CLASS)) isClass = true;
         consume(parser, TOKEN_IDENTIFIER, "Expect method name.");
-
+        Token methodName = parser->previous;
         if (parser->previous.length == 8 && memcmp(parser->previous.start, "__init__", 8) == 0) {
             isInitializer = true;
         }
-        Ast* method = function(parser, isAsync, false);
+
+        Ast* methodParams = functionParameters(parser);
+        Ast* methodBody = block(parser);
+        Ast* method = newAst(AST_DECL_METHOD, methodName, 2, methodParams, methodBody);
         method->modifier.isAsync = isAsync;
         method->modifier.isClass = isClass;
         method->modifier.isInitializer = isInitializer;
@@ -958,63 +1018,6 @@ static Ast* statement(Parser* parser) {
     else {
         return expressionStatement(parser);
     }
-}
-
-static Ast* parameter(Parser* parser, const char* message) {
-    bool isMutable = match(parser, TOKEN_VAR);
-    consume(parser, TOKEN_IDENTIFIER, message);
-    Ast* param = emptyAst(AST_EXPR_PARAM, parser->previous);
-    param->modifier.isMutable = isMutable;
-    return param;
-}
-
-static Ast* parameterList(Parser* parser, Token token) {
-    Ast* params = emptyAst(AST_LIST_VAR, token);
-    int arity = 0;
-
-    if (match(parser, TOKEN_RIGHT_PAREN)) return params;
-    if (match(parser, TOKEN_DOT_DOT)) {
-        Ast* param = parameter(parser, "Expect variadic parameter name.");
-        param->modifier.isVariadic = true;
-        astAppendChild(params, param);
-        if (match(parser, TOKEN_COMMA)) error(parser, "Cannot have more parameters following variadic parameter.");
-        return params;
-    }
-
-    do {
-        arity++;
-        if (arity > UINT8_MAX) errorAtCurrent(parser, "Can't have more than 255 parameters.");
-        Ast* param = parameter(parser, "Expect parameter name");
-        astAppendChild(params, param);
-    } while (match(parser, TOKEN_COMMA));
-    return params;
-}
-
-static Ast* functionParameters(Parser* parser) {
-    Token token = parser->previous;
-    consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after function keyword/name.");
-    Ast* params = match(parser, TOKEN_RIGHT_PAREN)? emptyAst(AST_LIST_VAR, token) : parameterList(parser, token);
-    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
-    consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before function body.");
-    return params;
-}
-
-static Ast* lambdaParameters(Parser* parser) {
-    Token token = parser->previous;
-    if (!match(parser, TOKEN_PIPE)) return emptyAst(AST_LIST_VAR, token);
-    Ast* params = parameterList(parser, token);
-    consume(parser, TOKEN_PIPE, "Expect '|' after lambda parameters.");
-    return params;
-}
-
-static Ast* function(Parser* parser, bool isAsync, bool isLambda) {
-    Token token = parser->previous;
-    Ast* params = isLambda ? lambdaParameters(parser) : functionParameters(parser);
-    Ast* body = block(parser);
-    Ast* func = newAst(AST_EXPR_FUNCTION, token, 2, params, body);
-    func->modifier.isAsync = isAsync;
-    func->modifier.isLambda = isLambda;
-    return func;
 }
 
 static Ast* classDeclaration(Parser* parser) {

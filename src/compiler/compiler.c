@@ -1202,7 +1202,10 @@ static void compileFunDeclaration(Compiler* compiler, Ast* ast) {
 }
 
 static void compileMethodDeclaration(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    uint8_t index = identifierConstant(compiler, &ast->token);
+    CompileType type = ast->modifier.isInitializer ? COMPILE_TYPE_INITIALIZER : COMPILE_TYPE_METHOD;
+    function(compiler, type, ast, ast->modifier.isAsync);
+    emitBytes(compiler, ast->modifier.isClass ? OP_CLASS_METHOD : OP_INSTANCE_METHOD, index);
 }
 
 static void compileNamespaceDeclaration(Compiler* compiler, Ast* ast) {
