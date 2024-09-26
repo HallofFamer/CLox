@@ -300,18 +300,19 @@ static Ast* call(Parser* parser, Token token, Ast* left, bool canAssign) {
 }
 
 static Ast* dot(Parser* parser, Token token, Ast* left, bool canAssign) { 
-    Ast* property = identifier(parser, "Expect property name after '.'.");
+    consume(parser, TOKEN_IDENTIFIER, "Expect property name after '.'.");
+    Token property = parser->previous;
     Ast* expr = NULL;
 
     if (canAssign && match(parser, TOKEN_EQUAL)) {
         Ast* right = expression(parser);
-        expr = newAst(AST_EXPR_PROPERTY_SET, token, 3, left, property, right);
+        expr = newAst(AST_EXPR_PROPERTY_SET, property, 2, left, right);
     }
     else if (match(parser, TOKEN_LEFT_PAREN)) {
         Ast* right = argumentList(parser);
-        expr = newAst(AST_EXPR_INVOKE, token, 3, left, property, right);
+        expr = newAst(AST_EXPR_INVOKE, property, 2, left, right);
     }
-    else expr = newAst(AST_EXPR_PROPERTY_GET, token, 2, left, property);
+    else expr = newAst(AST_EXPR_PROPERTY_GET, property, 1, left);
 
     return expr;
 }

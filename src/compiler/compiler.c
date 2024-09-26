@@ -533,13 +533,20 @@ static uint8_t lambdaDepth(Compiler* compiler) {
     return depth;
 }
 
+static void block(Compiler* compiler, Ast* ast) {
+    Ast* stmts = astGetChild(ast, 0);
+    for (int i = 0; i < stmts->children->count; i++) {
+        compileChild(compiler, stmts, i);
+    }
+}
+
 static void function(Compiler* enclosing, CompileType type, Ast* ast, bool isAsync) {
     Compiler compiler;
     initCompiler(enclosing->vm, &compiler, enclosing, type, &ast->token, isAsync);
     beginScope(&compiler);
 
     parameters(&compiler, astGetChild(ast, 0));
-    compileChild(&compiler, ast, 1);
+    block(&compiler, astGetChild(ast, 1));
     ObjFunction* function = endCompiler(&compiler);
     emitBytes(enclosing, OP_CLOSURE, makeIdentifier(enclosing, OBJ_VAL(function)));
 
@@ -722,9 +729,8 @@ static void compileInterpolation(Compiler* compiler, Ast* ast) {
 
 static void compileInvoke(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
-    Ast* method = astGetChild(ast, 1);
-    Ast* args = astGetChild(ast, 2);
-    uint8_t methodIndex = identifierConstant(compiler, &method->token);
+    Ast* args = astGetChild(ast, 1);
+    uint8_t methodIndex = identifierConstant(compiler, &ast->token);
     uint8_t argCount = argumentList(compiler, args);
     emitBytes(compiler, OP_INVOKE, methodIndex);
     emitByte(compiler, argCount);
@@ -757,7 +763,6 @@ static void compileOr(Compiler* compiler, Ast* ast) {
     patchJump(compiler, endJump);
 }
 
-
 static void compileParam(Compiler* compiler, Ast* ast) {
     if (ast->modifier.isVariadic) compiler->function->arity = -1;
     else compiler->function->arity++;
@@ -766,11 +771,16 @@ static void compileParam(Compiler* compiler, Ast* ast) {
 }
 
 static void compilePropertyGet(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    uint8_t index = identifierConstant(compiler, &ast->token);
+    emitBytes(compiler, OP_GET_PROPERTY, index);
 }
 
 static void compilePropertySet(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    uint8_t index = identifierConstant(compiler, &ast->token);
+    compileChild(compiler, ast, 1);
+    emitBytes(compiler, OP_SET_PROPERTY, index);
 }
 
 static void compileSubscriptGet(Compiler* compiler, Ast* ast) {
@@ -795,7 +805,10 @@ static void compileSuperInvoke(Compiler* compiler, Ast* ast) {
 }
 
 static void compileThis(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    if (compiler->currentClass == NULL) {
+        compileError(compiler, "Cannot use 'this' outside of a class.");
+    }
+    getVariable(compiler, ast);
 }
 
 static void compileTrait(Compiler* compiler, Ast* ast) {
@@ -922,10 +935,9 @@ static void compileAwaitStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileBlockStatement(Compiler* compiler, Ast* ast) {
-    Ast* stmts = astGetChild(ast, 0);
-    for (int i = 0; i < stmts->children->count; i++) {
-        compileChild(compiler, stmts, i);
-    }
+    beginScope(compiler);
+    block(compiler, ast);
+    endScope(compiler);
 }
 
 static void compileBreakStatement(Compiler* compiler, Ast* ast) {
@@ -1129,9 +1141,7 @@ static void compileStatement(Compiler* compiler, Ast* ast) {
             compileAwaitStatement(compiler, ast);
             break;
         case AST_STMT_BLOCK:
-            beginScope(compiler);
             compileBlockStatement(compiler, ast);
-            endScope(compiler);
             break;
         case AST_STMT_BREAK:
             compileBreakStatement(compiler, ast);
