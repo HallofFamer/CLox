@@ -212,7 +212,9 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->enclosing = enclosing;
     compiler->type = type;
     compiler->function = NULL;
+    compiler->currentClass = NULL;
     compiler->currentLoop = NULL;
+    compiler->currentSwitch = NULL;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     compiler->hadError = false;
@@ -226,6 +228,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     vm->compiler = compiler;
 
     if (enclosing != NULL) {
+        compiler->currentClass = enclosing->currentClass;
         compiler->currentLoop = enclosing->currentLoop;
         compiler->currentSwitch = enclosing->currentSwitch;
     }
@@ -502,16 +505,16 @@ static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
     }
 }
 
-static void getVariable(Compiler* compiler, Ast* ast) {
-    int arg = resolveLocal(compiler, &ast->token);
+static void getVariable(Compiler* compiler, Token* token) {
+    int arg = resolveLocal(compiler, token);
     if (arg != -1) {
         emitBytes(compiler, OP_GET_LOCAL, (uint8_t)arg);
     }
-    else if ((arg = resolveUpvalue(compiler, &ast->token)) != -1) {
+    else if ((arg = resolveUpvalue(compiler, token)) != -1) {
         emitBytes(compiler, OP_GET_UPVALUE, (uint8_t)arg);
     }
     else {
-        arg = identifierConstant(compiler, &ast->token);
+        arg = identifierConstant(compiler, token);
         emitBytes(compiler, OP_GET_GLOBAL, (uint8_t)arg);
     }
 }
@@ -594,6 +597,16 @@ static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
     compileChild(compiler, ast, 2);
     endScope(compiler);
     endClassCompiler(compiler);
+}
+
+static uint8_t super_(Compiler* compiler, Ast* ast) {
+    if (compiler->currentClass == NULL) {
+        compileError(compiler, "Cannot use 'super' outside of a class.");
+    }
+    uint8_t index = identifierConstant(compiler, &ast->token);
+    Token _this = syntheticToken("this");
+    getVariable(compiler, &_this);
+    return index;
 }
 
 static void compileAnd(Compiler* compiler, Ast* ast) { 
@@ -797,18 +810,24 @@ static void compileSubscriptSet(Compiler* compiler, Ast* ast) {
 }
 
 static void compileSuperGet(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    uint8_t index = super_(compiler, ast);
+    getVariable(compiler, &compiler->currentClass->superclass);
+    emitBytes(compiler, OP_GET_SUPER, index);
 }
 
 static void compileSuperInvoke(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    uint8_t index = super_(compiler, ast);
+    uint8_t argCount = argumentList(compiler, ast);
+    getVariable(compiler, &compiler->currentClass->superclass);
+    emitBytes(compiler, OP_SUPER_INVOKE, index);
+    emitByte(compiler, argCount);
 }
 
 static void compileThis(Compiler* compiler, Ast* ast) {
     if (compiler->currentClass == NULL) {
         compileError(compiler, "Cannot use 'this' outside of a class.");
     }
-    getVariable(compiler, ast);
+    getVariable(compiler, &ast->token);
 }
 
 static void compileTrait(Compiler* compiler, Ast* ast) {
@@ -826,7 +845,7 @@ static void compileUnary(Compiler* compiler, Ast* ast) {
 }
 
 static void compileVariable(Compiler* compiler, Ast* ast) {
-    getVariable(compiler, ast);
+    getVariable(compiler, &ast->token);
 }
 
 static void compileYield(Compiler* compiler, Ast* ast) {

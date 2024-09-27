@@ -200,10 +200,11 @@ static void astOutputExprGrouping(Ast* ast, int indentLevel) {
 
 static void astOutputExprInvoke(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    printf("invoke\n");
+    char* method = tokenToCString(ast->token);
+    printf("invoke .%s\n", method);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    astOutputChild(ast, indentLevel + 1, 2);
+    free(method);
 }
 
 static void astOutputExprInterpolation(Ast* ast, int indentLevel) {
@@ -260,22 +261,20 @@ static void astOutputExprParam(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprPropertyGet(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* prop = tokenToCString(ast->token);
-    printf("%spropertyGet %s\n", indent, prop);
+    printf("propertyGet %s\n", prop);
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
     free(prop);
 }
 
 static void astOutputExprPropertySet(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    char* token = tokenToCString(ast->token);
-    printf("%spropertySet %s\n", indent, token);
+    astOutputIndent(indentLevel);
+    char* prop = tokenToCString(ast->token);
+    printf("propertySet %s\n", prop);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
-    free(token);
+    free(prop);
 }
 
 static void astOutputExprSubscriptGet(Ast* ast, int indentLevel) {
@@ -294,18 +293,17 @@ static void astOutputExprSubscriptSet(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprSuperGet(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%superGet\n", indent);
-    astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
+    astOutputIndent(indentLevel);
+    char* prop = tokenToCString(ast->token);
+    printf("superGet %s\n", prop);
+    free(prop);
 }
 
 static void astOutputExprSuperInvoke(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* method = tokenToCString(ast->token);
-    printf("%superInvoke %s\n", indent, method);
+    printf("superInvoke %s\n", method);
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
     free(method);
 }
 
@@ -398,6 +396,12 @@ static void astOutputStmtExpression(Ast* ast, int indentLevel) {
     printf("exprStmt\n");
     Ast* expr = astGetChild(ast, 0);
     astOutput(expr, indentLevel + 1);
+}
+
+static void astOutputStmtFinally(Ast* ast, int indentLevel) {
+    astOutputIndent(indentLevel);
+    printf("finallyStmt\n");
+    astOutputChild(ast, indentLevel + 1, 0);
 }
 
 static void astOutputStmtFor(Ast* ast, int indentLevel) {
@@ -513,13 +517,13 @@ static void astOutputDeclFun(Ast* ast, int indentLevel) {
 }
 
 static void astOutputDeclMethod(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* async = ast->modifier.isAsync ? "async " : "";
     char* _class = ast->modifier.isClass ? "class " : "";
     char* methodName = tokenToCString(ast->token);
-    printf("%sfunDecl %s%s%s\n", indent, async, _class, methodName);
+    printf("methodDecl %s%s%s\n", async, _class, methodName);
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
+    astOutputChild(ast, indentLevel + 1, 1);
     free(methodName);
 }
 
