@@ -6,6 +6,14 @@
 #include "parser.h"
 #include "../vm/debug.h"
 
+typedef enum {
+    COMPILE_TYPE_FUNCTION,
+    COMPILE_TYPE_INITIALIZER,
+    COMPILE_TYPE_LAMBDA,
+    COMPILE_TYPE_METHOD,
+    COMPILE_TYPE_SCRIPT
+} CompileType;
+
 typedef struct {
     Token name;
     int depth;
@@ -18,14 +26,6 @@ typedef struct {
     bool isLocal;
     bool isMutable;
 } Upvalue;
-
-typedef enum {
-    COMPILE_TYPE_FUNCTION,
-    COMPILE_TYPE_INITIALIZER,
-    COMPILE_TYPE_LAMBDA,
-    COMPILE_TYPE_METHOD,
-    COMPILE_TYPE_SCRIPT
-} CompileType;
 
 typedef struct SwitchCompiler {
     struct SwitchCompiler* enclosing;
@@ -569,11 +569,13 @@ static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
 
     ClassCompiler classCompiler;
     initClassCompiler(compiler, &classCompiler, name, type);
+    int childIndex = 0;
 
     if (type == BEHAVIOR_CLASS) {
-        Ast* superClass = astGetChild(ast, 0);
+        Ast* superClass = astGetChild(ast, childIndex);
         compiler->currentClass->superclass = superClass->token;
-        compileChild(compiler, ast, 0);
+        compileChild(compiler, ast, childIndex);
+        childIndex++;
         if (identifiersEqual(&name, &compiler->rootClass)) {
             compileError(compiler, "Cannot redeclare root class Object.");
         }
@@ -587,14 +589,15 @@ static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
     defineVariable(compiler, 0, false);
     if (type == BEHAVIOR_CLASS) emitByte(compiler, OP_INHERIT);
 
-    Ast* traitList = astGetChild(ast, 1);
+    Ast* traitList = astGetChild(ast, childIndex);
     uint8_t traitCount = astNumChild(traitList);
     if (traitCount > 0) {
-        compileChild(compiler, ast, 1);
+        compileChild(compiler, ast, childIndex);
         emitBytes(compiler, OP_IMPLEMENT, traitCount);
     }
-    
-    compileChild(compiler, ast, 2);
+
+    childIndex++; 
+    compileChild(compiler, ast, childIndex);
     endScope(compiler);
     endClassCompiler(compiler);
 }
@@ -1012,6 +1015,10 @@ static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
     else emitByte(compiler, OP_POP);
 }
 
+static void compileFinallyStatement(Compiler* compiler, Ast* ast) {
+    // To be implemented
+}
+
 static void compileForStatement(Compiler* compiler, Ast* ast) {
     beginScope(compiler);
     Token indexToken, valueToken;
@@ -1084,7 +1091,11 @@ static void compileIfStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileRequireStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    if (compiler->type != COMPILE_TYPE_SCRIPT) {
+        compileError(compiler, "Can only require source files from top-level code.");
+    }
+    compileChild(compiler, ast, 0);
+    emitByte(compiler, OP_REQUIRE);
 }
 
 static void compileReturnStatement(Compiler* compiler, Ast* ast) {
@@ -1131,7 +1142,22 @@ static void compileTryStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileUsingStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    Ast* _namespace = astGetChild(ast, 0);
+    int namespaceDepth = astNumChild(_namespace);
+    uint8_t index;
+    for (int i = 0; i < namespaceDepth; i++) {
+        Ast* subNamespace = astGetChild(_namespace, i);
+        index = identifierConstant(compiler, &subNamespace->token);
+        emitBytes(compiler, OP_NAMESPACE, index);
+    }
+    emitBytes(compiler, OP_GET_NAMESPACE, namespaceDepth);
+
+    index = makeIdentifier(compiler, OBJ_VAL(emptyString(compiler->vm)));
+    if (astNumChild(ast) > 1) {
+        Ast* alias = astGetChild(ast, 1);
+        index = identifierConstant(compiler, &alias->token);
+    }
+    emitBytes(compiler, OP_USING_NAMESPACE, index);
 }
 
 static void compileWhileStatement(Compiler* compiler, Ast* ast) {
@@ -1180,6 +1206,9 @@ static void compileStatement(Compiler* compiler, Ast* ast) {
             break;
         case AST_STMT_EXPRESSION:
             compileExpressionStatement(compiler, ast);
+            break;
+        case AST_STMT_FINALLY:
+            compileFinallyStatement(compiler, ast);
             break;
         case AST_STMT_FOR:
             compileForStatement(compiler, ast);
@@ -1251,7 +1280,11 @@ static void compileNamespaceDeclaration(Compiler* compiler, Ast* ast) {
 }
 
 static void compileTraitDeclaration(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    Token* name = &ast->token;
+    uint8_t index = identifierConstant(compiler, name);
+    declareVariable(compiler, name);
+    emitBytes(compiler, OP_TRAIT, index);
+    compileChild(compiler, ast, 0);
 }
 
 static void compileVarDeclaration(Compiler* compiler, Ast* ast) {
@@ -1336,7 +1369,8 @@ ObjFunction* compile(VM* vm, const char* source) {
     initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, NULL, false);
     compileAst(&compiler, ast);
     ObjFunction* function = endCompiler(&compiler);
-    if (compiler.hadError) return NULL;
 
+    freeAst(ast, true);
+    if (compiler.hadError) return NULL;
     return function;
 }

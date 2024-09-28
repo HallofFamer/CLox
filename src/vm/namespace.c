@@ -121,13 +121,12 @@ InterpretResult runModule(VM* vm, ObjModule* module, bool isRootModule) {
     }
 }
 
-
 bool loadModule(VM* vm, ObjString* path) {
     ObjModule* lastModule = vm->currentModule;
     vm->currentModule = newModule(vm, path);
 
     char* source = readFile(path->chars);
-    ObjFunction* function = compileV1(vm, source);
+    ObjFunction* function = compile(vm, source);
     free(source);
     if (function == NULL) return false;
     push(vm, OBJ_VAL(function));

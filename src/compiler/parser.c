@@ -918,7 +918,9 @@ static Ast* tryStatement(Parser* parser) {
         Ast* catchStmt = newAst(AST_STMT_CATCH, exceptionType, 2, exceptionVar, catchBody);
         astAppendChild(stmt, catchStmt);
     }
-    else errorAtCurrent(parser, "Must have a catch statement following a try statement.");
+    else {
+        errorAtCurrent(parser, "Must have a catch statement following a try statement.");
+    }
 
     if (match(parser, TOKEN_FINALLY)) {
         Ast* finallyBody = statement(parser);

@@ -7,12 +7,6 @@
 
 DEFINE_BUFFER(AstArray, Ast*)
 
-static void freeAstChildren(AstArray* children, bool freeChildren) {
-    for (int i = 0; i < children->count; i++) {
-        freeAst(children->elements[i], freeChildren);
-    }
-}
-
 Ast* emptyAst(AstNodeType type, Token token) {
     Ast* ast = (Ast*)malloc(sizeof(Ast));
     if (ast != NULL) {
@@ -55,6 +49,12 @@ Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
         else ast->children = children;
     }
     return ast;
+}
+
+static void freeAstChildren(AstArray* children, bool freeChildren) {
+    for (int i = 0; i < children->count; i++) {
+        freeAst(children->elements[i], freeChildren);
+    }
 }
 
 void freeAst(Ast* ast, bool freeChildren) {
@@ -362,11 +362,10 @@ static void astOutputStmtBreak(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtCase(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%scaseStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("caseStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
 }
 
 static void astOutputStmtCatch(Ast* ast, int indentLevel) {
@@ -422,10 +421,9 @@ static void astOutputStmtIf(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtRequire(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%srequireStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("requireStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
 }
 
 static void astOutputStmtReturn(Ast* ast, int indentLevel) {
@@ -465,22 +463,27 @@ static void astOutputStmtTry(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtUsing(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%susingStmt ", indent);
+    astOutputIndent(indentLevel);
     Ast* identifiers = astGetChild(ast, 0);
     Ast* identifier = astGetChild(identifiers, 0);
     char* name = tokenToCString(identifier->token);
-    printf("%s", name);
+    printf("usingStmt %s", name);
     free(name);
 
-    for (int i = 0; i < identifiers->children->count; i++) {
+    for (int i = 1; i < identifiers->children->count; i++) {
         identifier = astGetChild(identifiers, i);
         name = tokenToCString(identifier->token);
         printf(".%s", name);
         free(name);
     }
+
+    if (astNumChild(ast) > 1) {
+        Ast* alias = astGetChild(ast, 1);
+        name = tokenToCString(alias->token);
+        printf(" as %s", name);
+        free(name);
+    }
     printf("\n");
-    free(indent);
 }
 
 static void astOutputStmtWhile(Ast* ast, int indentLevel) {
