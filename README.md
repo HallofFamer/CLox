@@ -127,7 +127,7 @@ https://github.com/munificent/craftinginterpreters
 ### CLox 2.1.0
 - Enhanced type system with basic support for generics/parametric polymorphism.
 - Capability of saving bytecode into disk as .loxo file, which can be loaded later for faster compilation.
-- Allow declaration of object properties outside of class initializer, which also enables optional static typing.
+- Refactor classes in the existing standard library to use generics(in `clox.std` parent package), such as `Array<T>` and `Promise<T>`.
 - Trailing closure similar to Kotlin and Swift which allows last lambda argument to be placed outside of parenthesis.
 
 ### CLox 2.2.0
@@ -138,8 +138,8 @@ https://github.com/munificent/craftinginterpreters
 
 ### CLox 2.3.0
 - Support for structural pattern matching using `match` keyword, remove `switch` statement as it has been superceded.
-- Refine type system to be non-nullable by default for type declaration, as well as variance for method parameter/return types.
-- Allow casting variables to a static type using `as` keyword, this will pass compile time typecheck and insert runtime typecheck.
+- Improved type system with non-nullable by default for type declaration, as well as variance for method parameter/return types.
+- Allow declaration of object properties outside of class initializer, which also enables optional static typing.
 - Foreign function interface(FFI) as a way to write CLox libraries in C and load in lox script.
 
 ### CLox 2.4.0

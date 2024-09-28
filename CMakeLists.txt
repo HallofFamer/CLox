@@ -107,6 +107,8 @@ source_group("Source Files\\common" FILES ${Source_Files__common})
 set(Source_Files__compiler
     "src/compiler/ast.c"
     "src/compiler/ast.h"
+    "src/compiler/compiler.c"
+    "src/compiler/compiler.h"
     "src/compiler/lexer.c"
     "src/compiler/lexer.h"
     "src/compiler/parser.c"

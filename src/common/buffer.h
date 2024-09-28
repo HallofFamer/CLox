@@ -88,6 +88,7 @@ static inline char* bufferNewCString(size_t length) {
 DECLARE_BUFFER(ByteArray, uint8_t)
 DECLARE_BUFFER(ShortArray, short)
 DECLARE_BUFFER(IntArray, int)
+DECLARE_BUFFER(LongArray, long);
 DECLARE_BUFFER(DoubleArray, double)
 DECLARE_BUFFER(CharArray, char)
 DECLARE_BUFFER(StringArray, char*)

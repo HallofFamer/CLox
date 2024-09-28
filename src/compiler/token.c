@@ -6,7 +6,9 @@
 
 Token syntheticToken(const char* text) {
     return (Token) {
-        .type = TOKEN_EMPTY, .start = text, .length = (int)strlen(text)
+        .type = TOKEN_EMPTY, 
+        .start = text, 
+        .length = (int)strlen(text)
     };
 }
 
