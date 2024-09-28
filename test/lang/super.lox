@@ -6,7 +6,7 @@ class A {
     }
 
     toString(){ 
-        return super.toString() + " of class " + this.getClassName();
+        return "${super.toString()} of class ${this.getClassName()}";
     }
 }
 

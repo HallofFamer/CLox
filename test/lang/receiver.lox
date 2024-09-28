@@ -3,7 +3,7 @@ namespace test.lang;
 class Nested { 
     method(){ 
         fun function(){ 
-            print(this);
+            println(this);
         }
 
         function();

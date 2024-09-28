@@ -6,12 +6,17 @@ class CoffeeMaker {
     }
 
     brew(){
-        print("Enjoy your cup of " + this.coffee);
+        println("Enjoy your cup of " + this.coffee);
 
         //no reusing the grounds!
         this.coffee = nil;
     }
+
+    debug() { 
+        println("this is a coffee maker.");
+    }
 }
 
-var maker = CoffeeMaker("coffee and chicory");
+
+val maker = CoffeeMaker("coffee and chicory");
 maker.brew();
