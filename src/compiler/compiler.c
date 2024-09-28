@@ -817,7 +817,8 @@ static void compileSuperGet(Compiler* compiler, Ast* ast) {
 
 static void compileSuperInvoke(Compiler* compiler, Ast* ast) {
     uint8_t index = super_(compiler, ast);
-    uint8_t argCount = argumentList(compiler, ast);
+    Ast* args = astGetChild(ast, 0);
+    uint8_t argCount = argumentList(compiler, args);
     getVariable(compiler, &compiler->currentClass->superclass);
     emitBytes(compiler, OP_SUPER_INVOKE, index);
     emitByte(compiler, argCount);

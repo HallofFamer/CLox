@@ -608,8 +608,8 @@ static Ast* super_(Parser* parser, Token token, bool canAssign) {
     Token method = parser->previous;
 
     if (match(parser, TOKEN_LEFT_PAREN)) {
-        Ast* value = argumentList(parser);
-        return newAst(AST_EXPR_SUPER_INVOKE, method, 1, value);
+        Ast* arguments = argumentList(parser);
+        return newAst(AST_EXPR_SUPER_INVOKE, method, 1, arguments);
     }
     else return emptyAst(AST_EXPR_SUPER_GET, method);
 }
@@ -921,7 +921,8 @@ static Ast* tryStatement(Parser* parser) {
     else errorAtCurrent(parser, "Must have a catch statement following a try statement.");
 
     if (match(parser, TOKEN_FINALLY)) {
-        Ast* finallyStmt = statement(parser);
+        Ast* finallyBody = statement(parser);
+        Ast* finallyStmt = newAst(AST_STMT_FINALLY, syntheticToken("finally"), 1, finallyBody);
         astAppendChild(stmt, finallyStmt);
     }
     return stmt;

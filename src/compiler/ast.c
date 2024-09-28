@@ -308,9 +308,8 @@ static void astOutputExprSuperInvoke(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprThis(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sthis\n", indent);
-    free(indent);
+    astOutputIndent(indentLevel);
+    printf("this\n");
 }
 
 static void astOutputExprTrait(Ast* ast, int indentLevel) {
