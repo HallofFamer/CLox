@@ -445,10 +445,9 @@ static void astOutputStmtSwitch(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtThrow(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%sthrowStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("throwStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
 }
 
 static void astOutputStmtTry(Ast* ast, int indentLevel) {

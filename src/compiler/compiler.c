@@ -1134,7 +1134,8 @@ static void compileSwitchStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileThrowStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    emitByte(compiler, OP_THROW);
 }
 
 static void compileTryStatement(Compiler* compiler, Ast* ast) {
