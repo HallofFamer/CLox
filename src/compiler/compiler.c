@@ -42,6 +42,15 @@ typedef struct LoopCompiler {
     int scopeDepth;
 } LoopCompiler;
 
+typedef struct TryCompiler {
+    struct TryCompiler* enclosing;
+    int exceptionType;
+    int catchAddress;
+    int finallyAddress;
+    int catchJump;
+    int finallyJump;
+} TryCompiler;
+
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
     Token name;
@@ -63,6 +72,7 @@ struct Compiler {
     ClassCompiler* currentClass;
     LoopCompiler* currentLoop;
     SwitchCompiler* currentSwitch;
+    TryCompiler* currentTry;
 
     Token rootClass;
     int scopeDepth;
@@ -207,6 +217,24 @@ static void endSwitchCompiler(Compiler* compiler) {
     compiler->currentSwitch = compiler->currentSwitch->enclosing;
 }
 
+static void initTryCompiler(Compiler* compiler, TryCompiler* try) {
+    try->enclosing = compiler->currentTry;
+    emitByte(compiler, OP_TRY);
+    try->exceptionType = currentChunk(compiler)->count;
+    emitByte(compiler, 0xff);
+    try->catchAddress = currentChunk(compiler)->count;
+    emitBytes(compiler, 0xff, 0xff);
+    try->finallyAddress = currentChunk(compiler)->count;
+    emitBytes(compiler, 0xff, 0xff);
+    try->catchJump = -1;
+    try->finallyJump = -1;
+    compiler->currentTry = try;
+}
+
+static void endTryCompiler(Compiler* compiler) {
+    compiler->currentTry = compiler->currentTry->enclosing;
+}
+
 static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, Token* name, bool isAsync) {
     compiler->vm = vm;
     compiler->enclosing = enclosing;
@@ -215,6 +243,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->currentClass = NULL;
     compiler->currentLoop = NULL;
     compiler->currentSwitch = NULL;
+    compiler->currentTry = NULL;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     compiler->hadError = false;
@@ -231,6 +260,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
         compiler->currentClass = enclosing->currentClass;
         compiler->currentLoop = enclosing->currentLoop;
         compiler->currentSwitch = enclosing->currentSwitch;
+        compiler->currentTry = enclosing->currentTry;
     }
 
     Local* local = &compiler->locals[compiler->localCount++];
@@ -990,7 +1020,22 @@ static void compileCaseStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileCatchStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    beginScope(compiler);
+    uint8_t typeIndex = identifierConstant(compiler, &ast->token);
+    currentChunk(compiler)->code[compiler->currentTry->exceptionType] = typeIndex;
+    patchAddress(compiler, compiler->currentTry->catchAddress);
+
+    if (ast->children->count > 1) {
+        Ast* var = astGetChild(ast, 0);
+        addLocal(compiler, var->token);
+        markInitialized(compiler, false);
+        uint8_t varIndex = resolveLocal(compiler, &var->token);
+        emitBytes(compiler, OP_SET_LOCAL, varIndex);
+    }
+
+    emitByte(compiler, OP_CATCH);
+    compileChild(compiler, ast, ast->children->count - 1);
+    endScope(compiler);
 }
 
 static void compileContinueStatement(Compiler* compiler, Ast* ast) {
@@ -1016,7 +1061,15 @@ static void compileExpressionStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileFinallyStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    emitByte(compiler, OP_FALSE);
+    patchAddress(compiler, compiler->currentTry->finallyAddress);
+    compileChild(compiler, ast, 0);
+    compiler->currentTry->finallyJump = emitJump(compiler, OP_JUMP_IF_FALSE);
+
+    emitByte(compiler, OP_POP);
+    emitByte(compiler, OP_FINALLY);
+    patchJump(compiler, compiler->currentTry->finallyJump);
+    emitByte(compiler, OP_POP);
 }
 
 static void compileForStatement(Compiler* compiler, Ast* ast) {
@@ -1139,13 +1192,22 @@ static void compileThrowStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileTryStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    TryCompiler innerTry;
+    initTryCompiler(compiler, &innerTry);
+    compileChild(compiler, ast, 0);
+    emitByte(compiler, OP_CATCH);
+    compiler->currentTry->catchJump = emitJump(compiler, OP_JUMP);
+
+    compileChild(compiler, ast, 1);
+    patchJump(compiler, compiler->currentTry->catchJump);
+    if (ast->children->count > 2) compileChild(compiler, ast, 2);
+    endTryCompiler(compiler);
 }
 
 static void compileUsingStatement(Compiler* compiler, Ast* ast) {
     Ast* _namespace = astGetChild(ast, 0);
     int namespaceDepth = astNumChild(_namespace);
-    uint8_t index;
+    uint8_t index = 0;
     for (int i = 0; i < namespaceDepth; i++) {
         Ast* subNamespace = astGetChild(_namespace, i);
         index = identifierConstant(compiler, &subNamespace->token);
@@ -1273,6 +1335,7 @@ static void compileNamespaceDeclaration(Compiler* compiler, Ast* ast) {
     Ast* identifiers = astGetChild(ast, 0);
     while (namespaceDepth < identifiers->children->count) {
         Ast* identifier = astGetChild(identifiers, namespaceDepth);
+        compiler->currentToken = identifier->token;
         ObjString* name = copyString(compiler->vm, identifier->token.start, identifier->token.length);
         emitBytes(compiler, OP_NAMESPACE, makeIdentifier(compiler, OBJ_VAL(name)));
         namespaceDepth++;

@@ -369,12 +369,11 @@ static void astOutputStmtCase(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtCatch(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* type = tokenToCString(ast->token);
-    printf("%scatchStmt %s\n", indent, type);
+    printf("catchStmt %s\n", type);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
     free(type);
 }
 
@@ -451,14 +450,13 @@ static void astOutputStmtThrow(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtTry(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    printf("%stryStmt\n", indent);
+    astOutputIndent(indentLevel);
+    printf("tryStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     if (ast->children->count > 2) {
         astOutputChild(ast, indentLevel + 1, 2);
     }
-    free(indent);
 }
 
 static void astOutputStmtUsing(Ast* ast, int indentLevel) {
