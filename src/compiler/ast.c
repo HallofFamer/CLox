@@ -165,7 +165,8 @@ static void astOutputExprBinary(Ast* ast, int indentLevel) {    char* op = token
 
 static void astOutputExprCall(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    printf("call\n");
+    char* modifier = ast->modifier.isOptional ? " optional" : "";
+    printf("call%s\n", modifier);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
 }
@@ -200,8 +201,9 @@ static void astOutputExprGrouping(Ast* ast, int indentLevel) {
 
 static void astOutputExprInvoke(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
+    char* modifier = ast->modifier.isOptional ? "optional " : "";
     char* method = tokenToCString(ast->token);
-    printf("invoke .%s\n", method);
+    printf("invoke %s.%s\n", modifier, method);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     free(method);
@@ -234,21 +236,20 @@ static void astOutputExprLiteral(Ast* ast, int indentLevel) {
     free(token);
 }
 
+static void astOutputExprNil(Ast* ast, int indentLevel) {
+    astOutputIndent(indentLevel);
+    char* op = tokenToCString(ast->token);
+    printf("nil ?%s\n", op);
+    astOutputChild(ast, indentLevel + 1, 0);
+    astOutputChild(ast, indentLevel + 1, 1);
+    free(op);
+}
+
 static void astOutputExprOr(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     printf("or\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-}
-
-static void astOutputExprNil(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
-    char* op = tokenToCString(ast->token);
-    printf("%sbinary ?%s\n", indent, op);
-    astOutputChild(ast, indentLevel + 1, 0);
-    astOutputChild(ast, indentLevel + 1, 1);
-    free(indent);
-    free(op);
 }
 
 static void astOutputExprParam(Ast* ast, int indentLevel) {
@@ -262,8 +263,9 @@ static void astOutputExprParam(Ast* ast, int indentLevel) {
 
 static void astOutputExprPropertyGet(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
+    char* modifier = ast->modifier.isOptional ? "optional " : "";
     char* prop = tokenToCString(ast->token);
-    printf("propertyGet %s\n", prop);
+    printf("propertyGet %s%s\n", modifier, prop);
     astOutputChild(ast, indentLevel + 1, 0);
     free(prop);
 }
@@ -279,7 +281,8 @@ static void astOutputExprPropertySet(Ast* ast, int indentLevel) {
 
 static void astOutputExprSubscriptGet(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    printf("ubscriptGet\n");
+    char* modifier = ast->modifier.isOptional ? " optional" : "";
+    printf("subscriptGet%s\n", modifier);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
 }

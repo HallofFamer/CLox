@@ -718,7 +718,8 @@ static void compileCall(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
     Ast* args = astGetChild(ast, 1);
     uint8_t argCount = argumentList(compiler, args);
-    emitBytes(compiler, OP_CALL, argCount);
+    OpCode opCode = ast->modifier.isOptional ? OP_OPTIONAL_CALL : OP_CALL;
+    emitBytes(compiler, opCode, argCount);
 }
 
 static void compileClass(Compiler* compiler, Ast* ast) {
@@ -778,7 +779,8 @@ static void compileInvoke(Compiler* compiler, Ast* ast) {
     Ast* args = astGetChild(ast, 1);
     uint8_t methodIndex = identifierConstant(compiler, &ast->token);
     uint8_t argCount = argumentList(compiler, args);
-    emitBytes(compiler, OP_INVOKE, methodIndex);
+    OpCode opCode = ast->modifier.isOptional ? OP_OPTIONAL_INVOKE : OP_INVOKE;
+    emitBytes(compiler, opCode, methodIndex);
     emitByte(compiler, argCount);
 }
 
@@ -795,7 +797,11 @@ static void compileLiteral(Compiler* compiler, Ast* ast) {
 }
 
 static void compileNil(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    compileChild(compiler, ast, 0);
+    compileChild(compiler, ast, 1);
+    if (ast->token.type == TOKEN_QUESTION) emitByte(compiler, OP_NIL_COALESCING);
+    else if (ast->token.type == TOKEN_COLON) emitByte(compiler, OP_ELVIS);
+    else compileError(compiler, "Invalid nil handling operator specified.");
 }
 
 static void compileOr(Compiler* compiler, Ast* ast) {
@@ -819,7 +825,8 @@ static void compileParam(Compiler* compiler, Ast* ast) {
 static void compilePropertyGet(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
     uint8_t index = identifierConstant(compiler, &ast->token);
-    emitBytes(compiler, OP_GET_PROPERTY, index);
+    OpCode opCode = ast->modifier.isOptional ? OP_GET_PROPERTY_OPTIONAL : OP_GET_PROPERTY;
+    emitBytes(compiler, opCode, index);
 }
 
 static void compilePropertySet(Compiler* compiler, Ast* ast) {
@@ -832,7 +839,8 @@ static void compilePropertySet(Compiler* compiler, Ast* ast) {
 static void compileSubscriptGet(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
     compileChild(compiler, ast, 1);
-    emitByte(compiler, OP_GET_SUBSCRIPT);
+    OpCode opCode = ast->modifier.isOptional ? OP_GET_SUBSCRIPT_OPTIONAL : OP_GET_SUBSCRIPT;
+    emitByte(compiler, opCode);
 }
 
 static void compileSubscriptSet(Compiler* compiler, Ast* ast) {
