@@ -282,6 +282,36 @@ static Ast* identifier(Parser* parser, const char* message) {
     return emptyAst(AST_EXPR_VARIABLE, parser->previous);
 }
 
+static Token identifierToken(Parser* parser, const char* message) {
+    switch (parser->current.type) {
+        case TOKEN_IDENTIFIER:
+        case TOKEN_EQUAL_EQUAL:
+        case TOKEN_GREATER:
+        case TOKEN_LESS:
+        case TOKEN_PLUS:
+        case TOKEN_MINUS:
+        case TOKEN_STAR:
+        case TOKEN_SLASH:
+        case TOKEN_MODULO:
+        case TOKEN_DOT_DOT:
+            advance(parser);
+            return parser->previous;
+        case TOKEN_LEFT_BRACKET:
+            advance(parser);
+            if (match(parser, TOKEN_RIGHT_BRACKET)) {
+                return syntheticToken(match(parser, TOKEN_EQUAL) ? "[]=" : "[]");
+            }
+        case TOKEN_LEFT_PAREN:
+            advance(parser);
+            if (match(parser, TOKEN_RIGHT_PAREN)) return syntheticToken("()");
+        default:
+            break;
+    }
+
+    errorAtCurrent(parser, message);
+    return parser->previous;
+}
+
 static Ast* and_(Parser* parser, Token token, Ast* left, bool canAssign) {
     ParseRule* rule = getRule(parser->previous.type);
     Ast* right = parsePrecedence(parser, PREC_AND);
@@ -300,8 +330,7 @@ static Ast* call(Parser* parser, Token token, Ast* left, bool canAssign) {
 }
 
 static Ast* dot(Parser* parser, Token token, Ast* left, bool canAssign) { 
-    consume(parser, TOKEN_IDENTIFIER, "Expect property name after '.'.");
-    Token property = parser->previous;
+    Token property = identifierToken(parser, "Expect property name after '.'.");
     Ast* expr = NULL;
 
     if (canAssign && match(parser, TOKEN_EQUAL)) {
@@ -543,8 +572,7 @@ static Ast* methods(Parser* parser, Token* name) {
         bool isAsync = false, isClass = false, isInitializer = false;
         if (match(parser, TOKEN_ASYNC)) isAsync = true;
         if (match(parser, TOKEN_CLASS)) isClass = true;
-        consume(parser, TOKEN_IDENTIFIER, "Expect method name.");
-        Token methodName = parser->previous;
+        Token methodName = identifierToken(parser, "Expect method name.");
         if (parser->previous.length == 8 && memcmp(parser->previous.start, "__init__", 8) == 0) {
             isInitializer = true;
         }
