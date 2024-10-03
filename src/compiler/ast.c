@@ -339,11 +339,10 @@ static void astOutputExprVariable(Ast* ast, int indentLevel) {
 }
 
 static void astOutputExprYield(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* modifier = ast->modifier.isWith ? " with" : "";
-    printf("%syield%s\n", indent, modifier);
+    printf("yield%s\n", modifier);
     if(astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
 }
 
 static void astOutputStmtAwait(Ast* ast, int indentLevel) {
@@ -494,11 +493,10 @@ static void astOutputStmtWhile(Ast* ast, int indentLevel) {
 }
 
 static void astOutputStmtYield(Ast* ast, int indentLevel) {
-    char* indent = astIndent(indentLevel);
+    astOutputIndent(indentLevel);
     char* modifier = ast->modifier.isWith ? " with" : "";
-    printf("%syieldStmt%s\n", indent, modifier);
+    printf("yieldStmt%s\n", modifier);
     if(astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
-    free(indent);
 }
 
 static void astOutputDeclClass(Ast* ast, int indentLevel) {

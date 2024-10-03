@@ -643,6 +643,36 @@ static uint8_t super_(Compiler* compiler, Ast* ast) {
     return index;
 }
 
+static void yield(Compiler* compiler, Ast* ast) {
+    if (compiler->type == COMPILE_TYPE_SCRIPT) {
+        compileError(compiler, "Can't yield from top-level code.");
+    }
+    else if (compiler->type == COMPILE_TYPE_INITIALIZER) {
+        compileError(compiler, "Cannot yield from an initializer.");
+    }
+    compiler->function->isGenerator = true;
+
+    if (!astHasChild(ast)) {
+        emitBytes(compiler, OP_NIL, OP_YIELD);
+    }
+    else {
+        compileChild(compiler, ast, 0);
+        emitByte(compiler, ast->modifier.isWith ? OP_YIELD_WITH : OP_YIELD);
+    }
+}
+
+static void await(Compiler* compiler, Ast* ast) {
+    if (compiler->type == COMPILE_TYPE_SCRIPT) {
+        compiler->isAsync = true;
+        compiler->function->isAsync = true;
+    }
+    else if (!compiler->isAsync) {
+        compileError(compiler, "Cannot use await unless in top level code or inside async functions/methods.");
+    }
+    compileChild(compiler, ast, 0);
+    emitByte(compiler, OP_AWAIT);
+}
+
 static void compileAnd(Compiler* compiler, Ast* ast) { 
     compileChild(compiler, ast, 0);
     int endJump = emitJump(compiler, OP_JUMP_IF_FALSE);
@@ -684,13 +714,7 @@ static void compileAssign(Compiler* compiler, Ast* ast) {
 }
 
 static void compileAwait(Compiler* compiler, Ast* ast) {
-    if (compiler->type == COMPILE_TYPE_SCRIPT) {
-        compiler->isAsync = true;
-        compiler->function->isAsync = true;
-    }
-    else if (!compiler->isAsync) compileError(compiler, "Cannot use await unless in top level code or inside async functions/methods.");
-    compileChild(compiler, ast, 0);
-    emitByte(compiler, OP_AWAIT);
+    await(compiler, ast);
 }
 
 static void compileBinary(Compiler* compiler, Ast* ast) {
@@ -894,7 +918,7 @@ static void compileVariable(Compiler* compiler, Ast* ast) {
 }
 
 static void compileYield(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    yield(compiler, ast);
 }
 
 static void compileExpression(Compiler* compiler, Ast* ast) {
@@ -986,16 +1010,8 @@ static void compileExpression(Compiler* compiler, Ast* ast) {
 }
 
 static void compileAwaitStatement(Compiler* compiler, Ast* ast) {
-    if (compiler->type == COMPILE_TYPE_SCRIPT) {
-        compiler->isAsync = true;
-        compiler->function->isAsync = true;
-    }
-    else if (!compiler->isAsync) {
-        compileError(compiler, "Can only use 'await' in async methods or top level code.");
-    }
-
-    compileChild(compiler, ast, 0);
-    emitBytes(compiler, OP_AWAIT, OP_POP);
+    await(compiler, ast);
+    emitByte(compiler, OP_POP);
 }
 
 static void compileBlockStatement(Compiler* compiler, Ast* ast) {
@@ -1252,7 +1268,8 @@ static void compileWhileStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileYieldStatement(Compiler* compiler, Ast* ast) {
-    // To be implemented
+    yield(compiler, ast);
+    emitByte(compiler, OP_POP);
 }
 
 static void compileStatement(Compiler* compiler, Ast* ast) {
