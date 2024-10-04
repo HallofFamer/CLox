@@ -104,17 +104,6 @@ int astNumChild(Ast* ast) {
     return (ast->children != NULL) ? ast->children->count : 0;
 }
 
-static char* astIndent(int indentLevel) {
-    if (indentLevel == 0) return "";
-    size_t length = (size_t)indentLevel * 2;
-    char* buffer = bufferNewCString(length);
-    for (int i = 0; i < length; i++) {
-        buffer[i] = ' ';
-    }
-    buffer[length] = '\0';
-    return buffer;
-}
-
 static void astOutputIndent(int indentLevel) {
     printf("%*s", indentLevel * 2, "");
 }

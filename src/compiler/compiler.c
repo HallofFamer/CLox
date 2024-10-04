@@ -28,13 +28,12 @@ typedef struct {
     bool isMutable;
 } Upvalue;
 
-typedef struct SwitchCompiler {
-    struct SwitchCompiler* enclosing;
-    int state;
-    int caseEnds[MAX_CASES];
-    int caseCount;
-    int previousCaseSkip;
-} SwitchCompiler;
+typedef struct ClassCompiler {
+    struct ClassCompiler* enclosing;
+    Token name;
+    Token superclass;
+    BehaviorType type;
+} ClassCompiler;
 
 typedef struct LoopCompiler {
     struct LoopCompiler* enclosing;
@@ -42,6 +41,14 @@ typedef struct LoopCompiler {
     int exitJump;
     int scopeDepth;
 } LoopCompiler;
+
+typedef struct SwitchCompiler {
+    struct SwitchCompiler* enclosing;
+    int state;
+    int caseEnds[MAX_CASES];
+    int caseCount;
+    int previousCaseSkip;
+} SwitchCompiler;
 
 typedef struct TryCompiler {
     struct TryCompiler* enclosing;
@@ -51,13 +58,6 @@ typedef struct TryCompiler {
     int catchJump;
     int finallyJump;
 } TryCompiler;
-
-typedef struct ClassCompiler {
-    struct ClassCompiler* enclosing;
-    Token name;
-    Token superclass;
-    BehaviorType type;
-} ClassCompiler;
 
 struct Compiler {
     VM* vm;
@@ -139,7 +139,6 @@ static uint8_t makeConstant(Compiler* compiler, Value value) {
         compileError(compiler, "Too many constants in one chunk.");
         return 0;
     }
-
     return (uint8_t)constant;
 }
 
@@ -152,7 +151,6 @@ static void patchJump(Compiler* compiler, int offset) {
     if (jump > UINT16_MAX) {
         compileError(compiler, "Too much code to jump over.");
     }
-
     currentChunk(compiler)->code[offset] = (jump >> 8) & 0xff;
     currentChunk(compiler)->code[offset + 1] = jump & 0xff;
 }
@@ -1209,7 +1207,6 @@ static void compileSwitchStatement(Compiler* compiler, Ast* ast) {
     if (caseList->children->count > 2) {
         compileChild(compiler, ast, 2);
     }
-
     endSwitchCompiler(compiler);
 }
 
@@ -1383,9 +1380,7 @@ static void compileVarDeclaration(Compiler* compiler, Ast* ast) {
     uint8_t index = makeVariable(compiler, &ast->token, "Expect variable name.");
     bool hasValue = astHasChild(ast);
 
-    if (hasValue) {
-        compileChild(compiler, ast, 0);
-    }
+    if (hasValue) compileChild(compiler, ast, 0);
     else if (!ast->modifier.isMutable) {
         compileError(compiler, "Immutable variable must be initialized upon declaration.");
     }
