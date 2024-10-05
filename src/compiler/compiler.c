@@ -1456,8 +1456,8 @@ ObjFunction* compile(VM* vm, const char* source) {
     initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, NULL, false);
     compileAst(&compiler, ast);
     ObjFunction* function = endCompiler(&compiler);
+    if (compiler.hadError) return NULL;
 
     freeAst(ast, true);
-    if (compiler.hadError) return NULL;
     return function;
 }

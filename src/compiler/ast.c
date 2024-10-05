@@ -190,7 +190,7 @@ static void astOutputExprGrouping(Ast* ast, int indentLevel) {
 
 static void astOutputExprInvoke(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    char* modifier = ast->modifier.isOptional ? "optional " : "";
+    char* modifier = ast->modifier.isOptional ? "?" : "";
     char* method = tokenToCString(ast->token);
     printf("invoke %s.%s\n", modifier, method);
     astOutputChild(ast, indentLevel + 1, 0);
