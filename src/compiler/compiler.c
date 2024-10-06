@@ -418,9 +418,7 @@ static int discardLocals(Compiler* compiler) {
         if (compiler->locals[i].isCaptured) {
             emitByte(compiler, OP_CLOSE_UPVALUE);
         }
-        else {
-            emitByte(compiler, OP_POP);
-        }
+        else emitByte(compiler, OP_POP);
     }
     return compiler->localCount - i - 1;
 }
@@ -605,10 +603,11 @@ static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
         compiler->currentClass->superclass = superClass->token;
         compileChild(compiler, ast, childIndex);
         childIndex++;
+
         if (identifiersEqual(&name, &compiler->rootClass)) {
             compileError(compiler, "Cannot redeclare root class Object.");
         }
-        if (identifiersEqual(&name, &superClass->token)) {
+        else if (identifiersEqual(&name, &superClass->token)) {
             compileError(compiler, "A class cannot inherit from itself.");
         }
     }
@@ -1188,7 +1187,9 @@ static void compileReturnStatement(Compiler* compiler, Ast* ast) {
     if (compiler->type == COMPILE_TYPE_LAMBDA) depth = lambdaDepth(compiler);
     if (astHasChild(ast)) {
         compileChild(compiler, ast, 0);
-        if (compiler->type == COMPILE_TYPE_LAMBDA) emitBytes(compiler, OP_RETURN_NONLOCAL, depth);
+        if (compiler->type == COMPILE_TYPE_LAMBDA) {
+            emitBytes(compiler, OP_RETURN_NONLOCAL, depth);
+        }
         else emitByte(compiler, OP_RETURN);
     }
     else emitReturn(compiler, depth);

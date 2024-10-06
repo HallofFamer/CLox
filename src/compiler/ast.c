@@ -154,7 +154,7 @@ static void astOutputExprBinary(Ast* ast, int indentLevel) {    char* op = token
 
 static void astOutputExprCall(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    char* modifier = ast->modifier.isOptional ? " optional" : "";
+    char* modifier = ast->modifier.isOptional ? "?" : "";
     printf("call%s\n", modifier);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
@@ -270,7 +270,7 @@ static void astOutputExprPropertySet(Ast* ast, int indentLevel) {
 
 static void astOutputExprSubscriptGet(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    char* modifier = ast->modifier.isOptional ? " optional" : "";
+    char* modifier = ast->modifier.isOptional ? "?" : "";
     printf("subscriptGet%s\n", modifier);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
