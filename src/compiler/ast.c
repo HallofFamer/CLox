@@ -133,7 +133,7 @@ static void astOutputExprArray(Ast* ast, int indentLevel) {
 static void astOutputExprAssign(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     char* name = tokenToCString(ast->token);
-    printf("assign var %s\n", name);
+    printf("assign %s\n", name);
     astOutputChild(ast, indentLevel + 1, 0);
     free(name);
 }
