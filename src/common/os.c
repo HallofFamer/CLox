@@ -56,6 +56,9 @@ void runAtStartup() {
     if (result != NO_ERROR) {
         exit(60);
     }
+
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 #endif
 
     curl_global_init(CURL_GLOBAL_ALL);

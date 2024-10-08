@@ -43,6 +43,11 @@ typedef struct {
     const char* path;
     const char* timezone;
 
+    bool debugToken;
+    bool debugAst;
+    bool debugSymtab;
+    bool debugCode;
+
     const char* gcType;
     size_t gcHeapSize;
     size_t gcGrowthFactor;

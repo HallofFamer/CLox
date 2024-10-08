@@ -107,6 +107,14 @@ int addConstant(VM* vm, Chunk* chunk, Value value);
 int addIdentifier(VM* vm, Chunk* chunk, Value value);
 int opCodeOffset(Chunk* chunk, int ip);
 
+static inline uint8_t firstOPCode(Chunk* chunk) {
+    return chunk->code[0];
+}
+
+static inline uint8_t lastOPCode(Chunk* chunk) {
+    return chunk->code[chunk->count - 1];
+}
+
 static inline void writeInlineCache(InlineCache* inlineCache, InlineCacheType type, int id, int index) {
     inlineCache->type = type;
     inlineCache->id = id;

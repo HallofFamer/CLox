@@ -75,7 +75,7 @@ static int closureInstruction(const char* name, Chunk* chunk, int offset) {
     for (int j = 0; j < function->upvalueCount; j++) {
         int isLocal = chunk->code[offset++];
         int index = chunk->code[offset++];
-        printf("%04d      |                     %s %d\n", offset - 2, isLocal ? "local" : "upvalue", index);
+        printf("%04d    |                     %s %d\n", offset - 2, isLocal ? "local" : "upvalue", index);
     }
     return offset;
 }
@@ -176,7 +176,7 @@ int disassembleInstruction(Chunk* chunk, int offset) {
         case OP_OPTIONAL_INVOKE:
             return identifierInstruction("OP_OPTIONAL_INVOKE", chunk, offset);
         case OP_CLOSURE:
-            return identifierInstruction("OP_CLOSURE", chunk, offset);
+            return closureInstruction("OP_CLOSURE", chunk, offset);
         case OP_CLOSE_UPVALUE:
             return simpleInstruction("OP_CLOSE_UPVALUE", offset);
         case OP_CLASS:

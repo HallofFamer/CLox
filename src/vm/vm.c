@@ -104,6 +104,18 @@ static int parseConfiguration(void* data, const char* section, const char* name,
     else if (HAS_CONFIG("basic", "timezone")) {
         config->timezone = _strdup(value);
     }
+    else if (HAS_CONFIG("debug", "debugToken")) {
+        config->debugToken = (bool)atoi(value);
+    }
+    else if (HAS_CONFIG("debug", "debugAst")) {
+        config->debugAst = (bool)atoi(value);
+    }
+    else if (HAS_CONFIG("debug", "debugSymtab")) {
+        config->debugSymtab = (bool)atoi(value);
+    }
+    else if (HAS_CONFIG("debug", "debugCode")) {
+        config->debugCode = (bool)atoi(value);
+    }
     else if (HAS_CONFIG("gc", "gcType")) {
         config->gcType = _strdup(value);
     }
