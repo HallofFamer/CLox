@@ -49,13 +49,13 @@ print("Function sum is variadic: ");
 println(sum.isVariadic());
 println("");
 
-var lambda0 = { 5 };
-var lambda1 = {|x| x * 2 };
+var lambda0 = { 5; };
+var lambda1 = {|x| x * 2; };
 var lambda2 = {
     |x, y|
     var z = x.pow(y);
     z = x + 2;
-    z
+    z;
 };
 println("Creating lambda closures: ");
 print("Evaluate lambda without parameter: ");

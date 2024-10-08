@@ -25,9 +25,9 @@ Promise.all([promiseD1, promiseD2])
        .then({|addresses| 
            addresses.eachIndex({|index, address| 
                println("Domain IPs for Domain ${index + 1}: ${address}");
-           })
+           });
        })
-       .catch({|exception| println("promise all failed: ${exception.message}") });
+       .catch({|exception| println("promise all failed: ${exception.message}"); });
 
 val ip3 = net.IPAddress("204.15.11.70");
 println("IP3 address: ${ip3.toString()}");

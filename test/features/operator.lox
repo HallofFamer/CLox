@@ -44,6 +44,18 @@ class Complex {
         return (this.real.hypot(this.imaginary)) < (that.real.hypot(that.imaginary));
     }
 
+    [](key) { 
+        if (key == "real") return this.real;
+        if (key == "imaginary") return this.imaginary;
+        throw UnsupportedOperationException("Only real and imaginary keys are supported."); 
+    }
+
+    []=(key, value) {
+        if (key == "real") this.real = value;
+        if (key == "imaginary") this.imaginary = value;
+        throw UnsupportedOperationException("Only real and imaginary keys are supported.");        
+    }
+
     toString(){ 
         if(this.real == 0){ 
             if(this.imaginary == 0) return "0";
