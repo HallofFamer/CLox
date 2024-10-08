@@ -3,11 +3,12 @@
 
 #include "lexer.h"
 
-void initLexer(Lexer* lexer, const char* source) {
+void initLexer(Lexer* lexer, const char* source, bool debugToken) {
     lexer->start = source;
     lexer->current = source;
     lexer->line = 1;
     lexer->interpolationDepth = 0;
+    lexer->debugToken = debugToken;
 }
 
 static bool isAlpha(char c) {
@@ -55,9 +56,7 @@ static Token makeToken(Lexer* lexer, TokenSymbol type) {
         .line = lexer->line
     };
 
-#ifdef DEBUG_PRINT_TOKEN
-    printf("Token type: %d at line: %d\n", token.type, token.line);
-#endif
+    if (lexer->debugToken) outputToken(token);
     return token;
 }
 
@@ -170,7 +169,13 @@ static TokenSymbol identifierType(Lexer* lexer) {
                 }
             }
         case 'd': return checkKeyword(lexer, 1, 6, "efault", TOKEN_DEFAULT);
-        case 'e': return checkKeyword(lexer, 1, 3, "lse", TOKEN_ELSE);
+        case 'e': 
+            if (lexer->current - lexer->start > 1) {
+                switch (lexer->start[1]) {
+                    case 'l': return checkKeyword(lexer, 2, 2, "se", TOKEN_ELSE);
+                    case 'x': return checkKeyword(lexer, 2, 5, "tends", TOKEN_EXTENDS);
+                }
+            }
         case 'f':
             if (lexer->current - lexer->start > 1) {
                 switch (lexer->start[1]) {

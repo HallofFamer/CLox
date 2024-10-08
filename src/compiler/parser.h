@@ -13,12 +13,13 @@ typedef struct {
     Token current;
     Token next;
     Token rootClass;
+    bool debugAst;
     bool hadError;
     bool panicMode;
     jmp_buf jumpBuffer;
 } Parser;
 
-void initParser(Parser* parser, Lexer* lexer);
+void initParser(Parser* parser, Lexer* lexer, bool debugAst);
 Ast* parse(Parser* parser);
 
 #endif // !clox_parser_h

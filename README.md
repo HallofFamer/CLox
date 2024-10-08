@@ -54,6 +54,7 @@ https://github.com/munificent/craftinginterpreters
 - Separated integer values(`Int`) and floating point(`Float`) values from `Number`.
 - Improved string concatenation, addition of string interpolation and UTF-8 strings.
 - C style For Loop replaced with Python/Kotlin style for-in Loop.
+- Introduction of keyword `extends` instead of using `<` operator for class inheritance.
 - Global variables are scoped within the file it is declared, effectively becoming module variable.
 - Function/Method parameters become immutable by default, but may be mutable with `var` keyword.
 - Built-in and user defined classes/functions become immutable, and cannot be accidentally overwritten.

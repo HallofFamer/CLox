@@ -591,7 +591,7 @@ static Ast* methods(Parser* parser, Token* name) {
 }
 
 static Ast* superclass_(Parser* parser) {
-    if (match(parser, TOKEN_LESS)) {
+    if (match(parser, TOKEN_EXTENDS)) {
         return identifier(parser, "Expect super class name.");
     }
     return emptyAst(AST_EXPR_VARIABLE, parser->rootClass);
@@ -727,6 +727,7 @@ ParseRule parseRules[] = {
     [TOKEN_CONTINUE]       = {NULL,          NULL,        PREC_NONE},
     [TOKEN_DEFAULT]        = {NULL,          NULL,        PREC_NONE},
     [TOKEN_ELSE]           = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_EXTENDS]        = {NULL,          NULL,        PREC_NONE},
     [TOKEN_FALSE]          = {literal,       NULL,        PREC_NONE},
     [TOKEN_FINALLY]        = {NULL,          NULL,        PREC_NONE},
     [TOKEN_FOR]            = {NULL,          NULL,        PREC_NONE},
@@ -1141,9 +1142,10 @@ static Ast* declaration(Parser* parser) {
     else return statement(parser);
 }
 
-void initParser(Parser* parser, Lexer* lexer) {
+void initParser(Parser* parser, Lexer* lexer, bool debugAst) {
     parser->lexer = lexer;
     parser->rootClass = syntheticToken("Object");
+    parser->debugAst = debugAst;
     parser->hadError = false;
     parser->panicMode = false;
     advance(parser);
@@ -1160,9 +1162,9 @@ Ast* parse(Parser* parser) {
         else synchronize(parser);
     }
 
-#ifdef DEBUG_PRINT_AST
-    astOutput(ast, 0);
-#endif
-
+    if (parser->debugAst) {
+        astOutput(ast, 0);
+        printf("\n");
+    }
     return ast;
 }

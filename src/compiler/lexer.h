@@ -9,9 +9,10 @@ typedef struct {
     const char* current;
     int line;
     int interpolationDepth;
+    bool debugToken;
 } Lexer;
 
-void initLexer(Lexer* lexer, const char* source);
+void initLexer(Lexer* lexer, const char* source, bool debugToken);
 Token scanToken(Lexer* lexer);
 
 #endif // !clox_lexer_h
