@@ -4,6 +4,7 @@
 
 #include "../common/buffer.h"
 #include "../common/common.h"
+#include "symbol.h"
 #include "token.h"
 
 typedef struct Ast Ast;
@@ -97,7 +98,7 @@ struct Ast {
     Ast* parent;
     Ast* sibling;
     AstArray* children;
-    uint8_t depth;
+    SymbolTable* symtab;
 };
 
 #define AST_IS_ROOT(ast) (ast->category == AST_CATEGORY_SCRIPT)

@@ -18,6 +18,7 @@ Ast* emptyAst(AstNodeType type, Token token) {
         ast->sibling = NULL;
         ast->children = (AstArray*)malloc(sizeof(AstArray));
         if (ast->children != NULL) AstArrayInit(ast->children);
+        ast->symtab = NULL;
     }
     return ast;
 }
@@ -47,6 +48,7 @@ Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
             if (ast->children != NULL) AstArrayInit(ast->children);
         }
         else ast->children = children;
+        ast->symtab = NULL;
     }
     return ast;
 }
@@ -144,8 +146,9 @@ static void astOutputExprAwait(Ast* ast, int indentLevel) {
     astOutputChild(ast, indentLevel + 1, 0);;
 }
 
-static void astOutputExprBinary(Ast* ast, int indentLevel) {    char* op = tokenToCString(ast->token);
+static void astOutputExprBinary(Ast* ast, int indentLevel) {    
     astOutputIndent(indentLevel);
+    char* op = tokenToCString(ast->token);
     printf("binary %s\n", op);
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
@@ -252,9 +255,9 @@ static void astOutputExprParam(Ast* ast, int indentLevel) {
 
 static void astOutputExprPropertyGet(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
-    char* modifier = ast->modifier.isOptional ? "optional " : "";
+    char* modifier = ast->modifier.isOptional ? "?" : "";
     char* prop = tokenToCString(ast->token);
-    printf("propertyGet %s%s\n", modifier, prop);
+    printf("propertyGet %s.%s\n", modifier, prop);
     astOutputChild(ast, indentLevel + 1, 0);
     free(prop);
 }
@@ -419,7 +422,7 @@ static void astOutputStmtRequire(Ast* ast, int indentLevel) {
 static void astOutputStmtReturn(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     printf("returnStmt\n");
-    if (ast->children != NULL && ast->children->count > 0) {
+    if (astHasChild(ast)) {
         astOutputChild(ast, indentLevel + 1, 0);
     }
 }

@@ -7,11 +7,7 @@
 #include <stdint.h>
 
 #define NAN_BOXING
-//#define DEBUG_PRINT_TOKEN
-//#define DEBUG_PRINT_AST
-//#define DEBUG_PRINT_CODE
 //#define DEBUG_TRACE_EXECUTION
-
 //#define DEBUG_PRINT_SHAPE
 //#define DEBUG_TRACE_CACHE
 

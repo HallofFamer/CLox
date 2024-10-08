@@ -78,6 +78,7 @@ struct Compiler {
     Token rootClass;
     int scopeDepth;
     bool isAsync;
+    bool debugCode;
     bool hadError;
 };
 
@@ -234,7 +235,7 @@ static void endTryCompiler(Compiler* compiler) {
     compiler->currentTry = compiler->currentTry->enclosing;
 }
 
-static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, Token* name, bool isAsync) {
+static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, CompileType type, Token* name, bool isAsync, bool debugCode) {
     compiler->vm = vm;
     compiler->enclosing = enclosing;
     compiler->type = type;
@@ -245,10 +246,11 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->currentTry = NULL;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
-    compiler->hadError = false;
     compiler->rootClass = syntheticToken("Object");
 
     compiler->isAsync = isAsync;
+    compiler->debugCode = debugCode;
+    compiler->hadError = false;
     compiler->function = newFunction(vm);
     compiler->function->isAsync = isAsync;
     if (type != COMPILE_TYPE_SCRIPT) compiler->function->name = copyString(vm, name->start, name->length);
@@ -280,12 +282,9 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
 static ObjFunction* endCompiler(Compiler* compiler) {
     emitReturn(compiler, 0);
     ObjFunction* function = compiler->function;
-
-#ifdef DEBUG_PRINT_CODE
-    if (!compiler->hadError) {
+    if (compiler->debugCode && !compiler->hadError) {
         disassembleChunk(currentChunk(compiler), function->name != NULL ? function->name->chars : "<script>");
     }
-#endif
 
     freeIDMap(compiler->vm, &compiler->indexes);
     compiler->vm->compiler = compiler->enclosing;
@@ -572,7 +571,7 @@ static void block(Compiler* compiler, Ast* ast) {
 
 static void function(Compiler* enclosing, CompileType type, Ast* ast, bool isAsync) {
     Compiler compiler;
-    initCompiler(enclosing->vm, &compiler, enclosing, type, &ast->token, isAsync);
+    initCompiler(enclosing->vm, &compiler, enclosing, type, &ast->token, isAsync, enclosing->debugCode);
     beginScope(&compiler);
 
     parameters(&compiler, astGetChild(ast, 0));
@@ -1446,15 +1445,15 @@ void compileChild(Compiler* compiler, Ast* ast, int index) {
 
 ObjFunction* compile(VM* vm, const char* source) {
     Lexer lexer;
-    initLexer(&lexer, source);
+    initLexer(&lexer, source, vm->config.debugToken);
 
     Parser parser;
-    initParser(&parser, &lexer);
+    initParser(&parser, &lexer, vm->config.debugAst);
     Ast* ast = parse(&parser);
     if (parser.hadError) return NULL;
-    
+
     Compiler compiler;
-    initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, NULL, false);
+    initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, NULL, false, vm->config.debugCode);
     compileAst(&compiler, ast);
     ObjFunction* function = endCompiler(&compiler);
     if (compiler.hadError) return NULL;

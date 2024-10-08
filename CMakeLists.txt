@@ -113,7 +113,9 @@ set(Source_Files__compiler
     "src/compiler/lexer.h"
     "src/compiler/parser.c"
     "src/compiler/parser.h"
-    "src/compiler/token.h"
+    "src/compiler/symbol.c"
+    "src/compiler/symbol.h"
+    "src/compiler/token.c"
     "src/compiler/token.h"
 )
 source_group("Source Files\\compiler" FILES ${Source_Files__compiler})
