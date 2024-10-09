@@ -548,10 +548,7 @@ static void astOutputDeclVar(Ast* ast, int indentLevel) {
     char* modifier = ast->modifier.isMutable ? "var" : "val";
     char* varName = tokenToCString(ast->token);
     printf("varDecl %s %s\n", modifier, varName);
-
-    if (astHasChild(ast)) {
-        astOutputChild(ast, indentLevel + 1, 0);
-    }
+    if (astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
     free(varName);
 }
 
