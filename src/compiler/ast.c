@@ -65,6 +65,7 @@ void freeAst(Ast* ast, bool freeChildren) {
         AstArrayFree(ast->children);
         free(ast->children);
     }
+    if (ast->symtab != NULL) freeSymbolTable(ast->symtab);
     free(ast);
 }
 
@@ -586,7 +587,7 @@ static void astOutputListVar(Ast* ast, int indentLevel) {
 
 static void astOutputScript(Ast* ast, int indentLevel) {
     printf("script\n");
-    if (ast->children != NULL && ast->children->count > 0) {
+    if (astHasChild(ast)) {
         for (int i = 0; i < ast->children->count; i++) {
             astOutput(ast->children->elements[i], indentLevel + 1);
         }

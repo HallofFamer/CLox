@@ -87,8 +87,49 @@ bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value) {
     SymbolEntry* entry = findSymbolEntry(symtab->entries, symtab->capacity, key);
     if (entry->key != NULL) return false;
     symtab->count++;
-
     entry->key = key;
     entry->value = value;
     return true;
+}
+
+static void symbolTableOutputScope(SymbolScope scope) {
+    switch (scope) {
+        case SYMBOL_SCOPE_GLOBAL: 
+            printf("global");
+            break;
+        case SYMBOL_SCOPE_MODULE: 
+            printf("module");
+            break;
+        case SYMBOL_SCOPE_BEHAVIOR: 
+            printf("behavior");
+            break;
+        case SYMBOL_SCOPE_FUNCTION: 
+            printf("function");
+            break;
+        case SYMBOL_SCOPE_METHOD: 
+            printf("method");
+            break;
+        case SYMBOL_SCOPE_BLOCK: 
+            printf("block");
+            break;
+        default: 
+            printf("none");
+    }
+}
+
+static void symbolTableOutputEntry(SymbolEntry* entry) {
+    printf("  symbol %s - category: %d, index: %d\n", entry->key->chars, entry->value->category, entry->value->index);
+}
+
+void symbolTableOutput(SymbolTable* symtab) {
+    printf("Symbol table - scope: ");
+    symbolTableOutputScope(symtab->scope);
+    printf("\n");
+
+    for (int i = 0; i < symtab->capacity; i++) {
+        SymbolEntry* entry = &symtab->entries[i];
+        if (entry != NULL && entry->key != NULL) {
+            symbolTableOutputEntry(entry);
+        }
+    }
 }
