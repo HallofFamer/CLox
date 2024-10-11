@@ -1100,10 +1100,7 @@ static Ast* varDeclaration(Parser* parser, bool isMutable) {
     Token identifier = parser->previous;
     Ast* varDecl = emptyAst(AST_DECL_VAR, identifier);
     varDecl->modifier.isMutable = isMutable;
-    if (!isMutable && !check(parser, TOKEN_EQUAL)) {
-        error(parser, "Immutable variable must be initialized upon declaration.");
-    }
-    else if (match(parser, TOKEN_EQUAL)) {
+    if (match(parser, TOKEN_EQUAL)) {
         Ast* expr = expression(parser);
         astAppendChild(varDecl, expr);
     }

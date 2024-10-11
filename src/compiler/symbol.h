@@ -2,6 +2,7 @@
 #ifndef clox_symbol_h
 #define clox_symbol_h
 
+#include "token.h"
 #include "../vm/value.h"
 
 typedef struct SymbolTable SymbolTable;
@@ -24,7 +25,7 @@ typedef enum {
 } SymbolCategory;
 
 typedef struct {
-    ObjString* symbol;
+    Token token;
     SymbolCategory category;
     uint8_t index;
     //TypeInfo type;
@@ -43,7 +44,7 @@ struct SymbolTable {
     SymbolEntry* entries;
 };
 
-SymbolItem* newSymbolItem(ObjString* symbol, SymbolCategory category);
+SymbolItem* newSymbolItem(Token token, SymbolCategory category);
 void freeSymbolItem(SymbolItem* item);
 SymbolTable* newSymbolTable(SymbolTable* parent, SymbolScope scope);
 void freeSymbolTable(SymbolTable* symTab);

@@ -8,10 +8,10 @@
 
 #define SYMBOL_TABLE_MAX_LOAD 0.75
 
-SymbolItem* newSymbolItem(ObjString* symbol, SymbolCategory category) {
+SymbolItem* newSymbolItem(Token token, SymbolCategory category) {
     SymbolItem* item = (SymbolItem*)malloc(sizeof(SymbolItem));
     if (item != NULL) {
-        item->symbol = symbol;
+        item->token = token;
         item->category = category;
         item->index = -1;
     }
