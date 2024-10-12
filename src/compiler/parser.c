@@ -88,7 +88,6 @@ static int hexDigit(Parser* parser, char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return c - 'a' + 10;
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-
     error(parser, "Invalid hex escape sequence.");
     return -1;
 }
@@ -331,19 +330,16 @@ static Ast* call(Parser* parser, Token token, Ast* left, bool canAssign) {
 
 static Ast* dot(Parser* parser, Token token, Ast* left, bool canAssign) { 
     Token property = identifierToken(parser, "Expect property name after '.'.");
-    Ast* expr = NULL;
 
     if (canAssign && match(parser, TOKEN_EQUAL)) {
         Ast* right = expression(parser);
-        expr = newAst(AST_EXPR_PROPERTY_SET, property, 2, left, right);
+        return newAst(AST_EXPR_PROPERTY_SET, property, 2, left, right);
     }
     else if (match(parser, TOKEN_LEFT_PAREN)) {
         Ast* right = argumentList(parser);
-        expr = newAst(AST_EXPR_INVOKE, property, 2, left, right);
+        return newAst(AST_EXPR_INVOKE, property, 2, left, right);
     }
-    else expr = newAst(AST_EXPR_PROPERTY_GET, property, 1, left);
-
-    return expr;
+    else return newAst(AST_EXPR_PROPERTY_GET, property, 1, left);
 }
 
 static Ast* nil(Parser* parser, Token token, Ast* left, bool canAssign) {
@@ -358,16 +354,16 @@ static Ast* or_(Parser* parser, Token token, Ast* left, bool canAssign) {
 }
 
 static Ast* subscript(Parser* parser, Token token, Ast* left, bool canAssign) {
-    Ast* expr = NULL;
     Ast* index = expression(parser);
     consume(parser, TOKEN_RIGHT_BRACKET, "Expect ']' after subscript.");
 
     if (canAssign && match(parser, TOKEN_EQUAL)) {
         Ast* right = expression(parser);
-        expr = newAst(AST_EXPR_SUBSCRIPT_SET, token, 3, left, index, right);
+        return newAst(AST_EXPR_SUBSCRIPT_SET, token, 3, left, index, right);
     }
-    else expr = newAst(AST_EXPR_SUBSCRIPT_GET, token, 2, left, index);
-    return expr;
+    else {
+        return newAst(AST_EXPR_SUBSCRIPT_GET, token, 2, left, index);
+    }
 }
 
 static Ast* question(Parser* parser, Token token, Ast* left, bool canAssign) { 
@@ -444,6 +440,7 @@ static Ast* interpolation(Parser* parser, Token token, bool canAssign) {
 static Ast* array(Parser* parser, Token token, Ast* element) {
     Ast* elements = newAst(AST_LIST_EXPR, token, 1, element);
     uint8_t elementCount = 1;
+
     while (match(parser, TOKEN_COMMA)) {
         element = expression(parser);
         astAppendChild(elements, element);
@@ -462,6 +459,7 @@ static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
     Ast* keys = newAst(AST_LIST_EXPR, token, 1, key);
     Ast* values = newAst(AST_LIST_EXPR, token, 1, value);
     uint8_t entryCount = 1;
+
     while (match(parser, TOKEN_COMMA)) {
         Ast* key = expression(parser);
         astAppendChild(keys, key);
@@ -947,9 +945,7 @@ static Ast* tryStatement(Parser* parser) {
         Ast* catchStmt = newAst(AST_STMT_CATCH, exceptionType, 2, exceptionVar, catchBody);
         astAppendChild(stmt, catchStmt);
     }
-    else {
-        errorAtCurrent(parser, "Must have a catch statement following a try statement.");
-    }
+    else errorAtCurrent(parser, "Must have a catch statement following a try statement.");
 
     if (match(parser, TOKEN_FINALLY)) {
         Ast* finallyBody = statement(parser);
@@ -1048,9 +1044,7 @@ static Ast* statement(Parser* parser) {
     else if (match(parser, TOKEN_LEFT_BRACE)) {
         return block(parser);
     }
-    else {
-        return expressionStatement(parser);
-    }
+    else return expressionStatement(parser);
 }
 
 static Ast* classDeclaration(Parser* parser) {
@@ -1074,6 +1068,7 @@ static Ast* namespaceDeclaration(Parser* parser) {
     Token token = parser->previous;
     Ast* _namespace = emptyAst(AST_LIST_VAR, token);
     uint8_t namespaceDepth = 0;
+
     do {
         if (namespaceDepth > UINT4_MAX) {
             errorAtCurrent(parser, "Can't have more than 15 levels of namespace depth.");
@@ -1100,6 +1095,7 @@ static Ast* varDeclaration(Parser* parser, bool isMutable) {
     Token identifier = parser->previous;
     Ast* varDecl = emptyAst(AST_DECL_VAR, identifier);
     varDecl->modifier.isMutable = isMutable;
+
     if (match(parser, TOKEN_EQUAL)) {
         Ast* expr = expression(parser);
         astAppendChild(varDecl, expr);

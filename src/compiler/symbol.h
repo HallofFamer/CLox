@@ -17,11 +17,11 @@ typedef enum {
 } SymbolScope;
 
 typedef enum {
-    SYMBOL_ITEM_LOCAL,
-    SYMBOL_ITEM_UPVALUE,
-    SYMBOL_ITEM_GLOBAL,
-    SYMBOL_ITEM_FUNCTION,
-    SYMBOL_ITEM_METHOD
+    SYMBOL_CATEGORY_LOCAL,
+    SYMBOL_CATEGORY_UPVALUE,
+    SYMBOL_CATEGORY_GLOBAL,
+    SYMBOL_CATEGORY_FUNCTION,
+    SYMBOL_CATEGORY_METHOD
 } SymbolCategory;
 
 typedef struct {
@@ -44,7 +44,7 @@ struct SymbolTable {
     SymbolEntry* entries;
 };
 
-SymbolItem* newSymbolItem(Token token, SymbolCategory category);
+SymbolItem* newSymbolItem(Token token, SymbolCategory category, uint8_t index);
 void freeSymbolItem(SymbolItem* item);
 SymbolTable* newSymbolTable(SymbolTable* parent, SymbolScope scope);
 void freeSymbolTable(SymbolTable* symTab);
