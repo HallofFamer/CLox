@@ -5,6 +5,7 @@
 
 #include "compiler.h"
 #include "parser.h"
+#include "resolver.h"
 #include "../vm/debug.h"
 
 typedef enum {
@@ -1379,13 +1380,8 @@ static void compileTraitDeclaration(Compiler* compiler, Ast* ast) {
 static void compileVarDeclaration(Compiler* compiler, Ast* ast) {
     uint8_t index = makeVariable(compiler, &ast->token, "Expect variable name.");
     bool hasValue = astHasChild(ast);
-
     if (hasValue) compileChild(compiler, ast, 0);
-    else if (!ast->modifier.isMutable) {
-        compileError(compiler, "Immutable variable must be initialized upon declaration.");
-    }
     else emitByte(compiler, OP_NIL);
-
     defineVariable(compiler, index, ast->modifier.isMutable);
 }
 
@@ -1451,6 +1447,11 @@ ObjFunction* compile(VM* vm, const char* source) {
     initParser(&parser, &lexer, vm->config.debugAst);
     Ast* ast = parse(&parser);
     if (parser.hadError) return NULL;
+
+    Resolver resolver;
+    initResolver(vm, &resolver, vm->config.debugSymtab);
+    resolve(&resolver, ast);
+    if (resolver.hadError) return NULL;
 
     Compiler compiler;
     initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, NULL, false, vm->config.debugCode);
