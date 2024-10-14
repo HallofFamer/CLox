@@ -59,6 +59,14 @@ static bool insertSymbol(Resolver* resolver, Ast* ast, SymbolCategory category) 
     return symbolTableSet(ast->symtab, symbol, item);
 }
 
+static SymbolTable* beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
+    return newSymbolTable(ast->symtab, scope);
+}
+
+static void endScope(Resolver* resolver) {
+    // To be implemented
+}
+
 static void declareVariable(Resolver* resolver, Ast* ast) {
     if (!insertSymbol(resolver, ast, resolver->scopeDepth == 0 ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL)) {
         semanticError(resolver, "Already a variable with this name in this scope.");

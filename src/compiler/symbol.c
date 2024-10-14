@@ -92,6 +92,19 @@ bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value) {
     return true;
 }
 
+SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key) {
+    SymbolTable* currentSymtab = symtab;
+    SymbolItem* item = NULL;
+
+    do {
+        item = symbolTableGet(currentSymtab, key);
+        if (item != NULL) break;
+        currentSymtab = currentSymtab->parent;
+    } while (currentSymtab != NULL);
+
+    return item;
+}
+
 static void symbolTableOutputScope(SymbolScope scope) {
     switch (scope) {
         case SYMBOL_SCOPE_GLOBAL: 
