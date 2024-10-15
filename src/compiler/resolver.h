@@ -12,7 +12,7 @@ typedef struct {
     Token currentToken;
     ClassResolver* currentClass;
     FunctionResolver* currentFunction;
-    int scopeDepth;
+    int currentScope;
     int numSlots;
     bool debugSymtab;
     bool hadError;

@@ -87,6 +87,7 @@ bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value) {
     SymbolEntry* entry = findSymbolEntry(symtab->entries, symtab->capacity, key);
     if (entry->key != NULL) return false;
     symtab->count++;
+
     entry->key = key;
     entry->value = value;
     return true;

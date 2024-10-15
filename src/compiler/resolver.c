@@ -9,14 +9,14 @@ struct ClassResolver {
     ClassResolver* enclosing;
     Token name;
     Token superClass;
-    int scopeDepth;
+    int currentScope;
     BehaviorType type;
 };
 
 struct FunctionResolver {
     FunctionResolver* enclosing;
     Token name;
-    int scopeDepth;
+    int currentScope;
     int numSlots;
     bool isMethod;
     bool isLambda;
@@ -42,7 +42,7 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->vm = vm;
     resolver->currentClass = NULL;
     resolver->currentFunction = NULL;
-    resolver->scopeDepth = 0;
+    resolver->currentScope = 0;
     resolver->numSlots = 1;
     resolver->debugSymtab = debugSymtab;
     resolver->hadError = false;
@@ -59,16 +59,17 @@ static bool insertSymbol(Resolver* resolver, Ast* ast, SymbolCategory category) 
     return symbolTableSet(ast->symtab, symbol, item);
 }
 
-static SymbolTable* beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
-    return newSymbolTable(ast->symtab, scope);
+static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
+    ast->symtab = newSymbolTable(ast->symtab, scope);
+    resolver->currentScope++;
 }
 
 static void endScope(Resolver* resolver) {
-    // To be implemented
+    resolver->currentScope--;
 }
 
 static void declareVariable(Resolver* resolver, Ast* ast) {
-    if (!insertSymbol(resolver, ast, resolver->scopeDepth == 0 ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL)) {
+    if (!insertSymbol(resolver, ast, resolver->currentScope == 0 ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL)) {
         semanticError(resolver, "Already a variable with this name in this scope.");
     }
     // To be implemented
