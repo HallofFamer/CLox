@@ -24,11 +24,12 @@ void freeSymbolItem(SymbolItem* item) {
     }
 }
 
-SymbolTable* newSymbolTable(SymbolTable* parent, SymbolScope scope) {
+SymbolTable* newSymbolTable(SymbolTable* parent, SymbolScope scope, uint8_t depth) {
     SymbolTable* symtab = (SymbolTable*)malloc(sizeof(SymbolTable));
     if (symtab != NULL) {
         symtab->parent = parent;
         symtab->scope = scope;
+        symtab->depth = depth;
         symtab->count = 0;
         symtab->capacity = 0;
         symtab->entries = NULL;

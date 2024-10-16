@@ -315,7 +315,7 @@ static uint8_t makeIdentifier(Compiler* compiler, Value value) {
         identifier = addIdentifier(compiler->vm, currentChunk(compiler), value);
         if (identifier > UINT8_MAX) {
             compileError(compiler, "Too many identifiers in one chunk.");
-            return 0;
+            return -1;
         }
         idMapSet(compiler->vm, &compiler->indexes, name, identifier);
     }
@@ -649,9 +649,7 @@ static void yield(Compiler* compiler, Ast* ast) {
     }
     compiler->function->isGenerator = true;
 
-    if (!astHasChild(ast)) {
-        emitBytes(compiler, OP_NIL, OP_YIELD);
-    }
+    if (!astHasChild(ast)) emitBytes(compiler, OP_NIL, OP_YIELD);
     else {
         compileChild(compiler, ast, 0);
         emitByte(compiler, ast->modifier.isWith ? OP_YIELD_WITH : OP_YIELD);
