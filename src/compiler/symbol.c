@@ -19,9 +19,7 @@ SymbolItem* newSymbolItem(Token token, SymbolCategory category, uint8_t index) {
 }
 
 void freeSymbolItem(SymbolItem* item) {
-    if (item != NULL) {
-        free(item);
-    }
+    if (item != NULL) free(item);
 }
 
 SymbolTable* newSymbolTable(SymbolTable* parent, SymbolScope scope, uint8_t depth) {

@@ -16,8 +16,11 @@ Ast* emptyAst(AstNodeType type, Token token) {
         ast->token = token;
         ast->parent = NULL;
         ast->sibling = NULL;
+
         ast->children = (AstArray*)malloc(sizeof(AstArray));
-        if (ast->children != NULL) AstArrayInit(ast->children);
+        if (ast->children != NULL) {
+            AstArrayInit(ast->children);
+        }
         ast->symtab = NULL;
     }
     return ast;
@@ -43,6 +46,7 @@ Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
         ast->token = token;
         ast->parent = NULL;
         ast->sibling = NULL;
+
         if (children == NULL) {
             ast->children = (AstArray*)malloc(sizeof(AstArray));
             if (ast->children != NULL) AstArrayInit(ast->children);
