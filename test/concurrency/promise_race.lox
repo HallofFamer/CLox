@@ -21,5 +21,5 @@ val promise3 = Promise({|fulfill, reject|
 });
 
 Promise.race([promise, promise2, promise3])
-       .then({|result| println("promise race fulfilled with result: ${result}") })
-       .catch({|exception| println("promise race failed: ${exception.message}") });
+       .then({|result| println("promise race fulfilled with result: ${result}"); })
+       .catch({|exception| println("promise race failed: ${exception.message}"); });

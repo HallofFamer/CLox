@@ -12,6 +12,6 @@ val promise2 = Promise({|fulfill, reject|
 
 println("Promise created: ${promise}");
 promise.then({|value| println("Promise fulfilled: ${value}"); })
-       .catch({|exception| println("promise failed: ${exception.message}") });
+       .catch({|exception| println("promise failed: ${exception.message}"); });
 promise2.then({|value| println("Promise2 fulfilled: ${value}"); })
-        .catch({|exception| println("promise2 failed: ${exception.message}") });
+        .catch({|exception| println("promise2 failed: ${exception.message}"); });
