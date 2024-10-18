@@ -664,17 +664,16 @@ static Ast* yield(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* async(Parser* parser, Token token, bool canAssign) { 
-    Ast* func = NULL;
     if (match(parser, TOKEN_FUN)) {
-        func = function(parser, true, false);
+        return function(parser, true, false);
     }
     else if (match(parser, TOKEN_LEFT_BRACE)) {
-        func = function(parser, true, true);
+        return function(parser, true, true);
     }
     else {
         error(parser, "Can only use async as expression modifier for anonymous functions or lambda.");
+        return NULL;
     }
-    return func;
 }
 
 static Ast* await(Parser* parser, Token token, bool canAssign) { 

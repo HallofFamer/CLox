@@ -1182,7 +1182,10 @@ static void compileReturnStatement(Compiler* compiler, Ast* ast) {
     }
 
     uint8_t depth = 0;
-    if (compiler->type == COMPILE_TYPE_LAMBDA) depth = lambdaDepth(compiler);
+    if (compiler->type == COMPILE_TYPE_LAMBDA) {
+        depth = lambdaDepth(compiler);
+    }
+
     if (astHasChild(ast)) {
         compileChild(compiler, ast, 0);
         if (compiler->type == COMPILE_TYPE_LAMBDA) {

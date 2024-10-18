@@ -41,6 +41,7 @@ typedef struct {
 } Token;
 
 Token syntheticToken(const char* text);
+bool tokensEqual(Token* token, Token* token2);
 char* tokenToCString(Token token);
 void outputToken(Token token);
 

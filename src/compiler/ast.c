@@ -61,13 +61,18 @@ static void freeAstChildren(AstArray* children, bool freeChildren) {
     }
 }
 
+static bool astOwnsSymbolTable(Ast* ast) {
+    if (ast->symtab == NULL) return false;
+    return ast->parent == NULL || (ast->symtab != ast->parent->symtab);
+}
+
 void freeAst(Ast* ast, bool freeChildren) {
     if (ast->children != NULL) {
         if (freeChildren) freeAstChildren(ast->children, freeChildren);
         AstArrayFree(ast->children);
         free(ast->children);
     }
-    if (ast->symtab != NULL) freeSymbolTable(ast->symtab);
+    if (astOwnsSymbolTable(ast)) freeSymbolTable(ast->symtab);
     free(ast);
 }
 

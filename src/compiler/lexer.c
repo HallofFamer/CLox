@@ -134,7 +134,6 @@ static TokenSymbol checkKeyword(Lexer* lexer, int start, int length, const char*
         memcmp(lexer->start + start, rest, length) == 0) {
         return type;
     }
-
     return TOKEN_IDENTIFIER;
 }
 
