@@ -14,13 +14,11 @@ Ast* emptyAst(AstNodeType type, Token token) {
         ast->type = type;
         ast->modifier = astInitModifier();
         ast->token = token;
+
         ast->parent = NULL;
         ast->sibling = NULL;
-
         ast->children = (AstArray*)malloc(sizeof(AstArray));
-        if (ast->children != NULL) {
-            AstArrayInit(ast->children);
-        }
+        if (ast->children != NULL) AstArrayInit(ast->children);
         ast->symtab = NULL;
     }
     return ast;
@@ -44,9 +42,9 @@ Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
         ast->type = type;
         ast->modifier = astInitModifier();
         ast->token = token;
+
         ast->parent = NULL;
         ast->sibling = NULL;
-
         if (children == NULL) {
             ast->children = (AstArray*)malloc(sizeof(AstArray));
             if (ast->children != NULL) AstArrayInit(ast->children);
@@ -686,7 +684,8 @@ void astOutput(Ast* ast, int indentLevel) {
                 case AST_EXPR_YIELD:
                     astOutputExprYield(ast, indentLevel);
                     break;
-                default: return;
+                default: 
+                    return;
             }
         }
         case AST_CATEGORY_STMT: {
@@ -745,7 +744,8 @@ void astOutput(Ast* ast, int indentLevel) {
                 case AST_STMT_YIELD:
                     astOutputStmtYield(ast, indentLevel);
                     break;
-                default: return;
+                default: 
+                    return;
             }
         }
         case AST_CATEGORY_DECL: {
@@ -768,7 +768,8 @@ void astOutput(Ast* ast, int indentLevel) {
                 case AST_DECL_VAR:
                     astOutputDeclVar(ast, indentLevel);
                     break;
-                default: return;
+                default: 
+                    return;
             }
         }
         case AST_CATEGORY_OTHER: {
@@ -785,7 +786,8 @@ void astOutput(Ast* ast, int indentLevel) {
                 case AST_LIST_VAR:
                     astOutputListVar(ast, indentLevel);
                     break;
-                default: return;
+                default: 
+                    return;
             }
         }
         default: return;

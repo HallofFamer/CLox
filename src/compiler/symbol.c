@@ -8,11 +8,12 @@
 
 #define SYMBOL_TABLE_MAX_LOAD 0.75
 
-SymbolItem* newSymbolItem(Token token, SymbolCategory category, uint8_t index) {
+SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState state, uint8_t index) {
     SymbolItem* item = (SymbolItem*)malloc(sizeof(SymbolItem));
     if (item != NULL) {
         item->token = token;
         item->category = category;
+        item->state = state;
         item->index = index;
     }
     return item;

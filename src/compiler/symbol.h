@@ -8,6 +8,14 @@
 typedef struct SymbolTable SymbolTable;
 
 typedef enum {
+    SYMBOL_CATEGORY_LOCAL,
+    SYMBOL_CATEGORY_UPVALUE,
+    SYMBOL_CATEGORY_GLOBAL,
+    SYMBOL_CATEGORY_FUNCTION,
+    SYMBOL_CATEGORY_METHOD
+} SymbolCategory;
+
+typedef enum {
     SYMBOL_SCOPE_GLOBAL,
     SYMBOL_SCOPE_MODULE,
     SYMBOL_SCOPE_BEHAVIOR,
@@ -17,16 +25,16 @@ typedef enum {
 } SymbolScope;
 
 typedef enum {
-    SYMBOL_CATEGORY_LOCAL,
-    SYMBOL_CATEGORY_UPVALUE,
-    SYMBOL_CATEGORY_GLOBAL,
-    SYMBOL_CATEGORY_FUNCTION,
-    SYMBOL_CATEGORY_METHOD
-} SymbolCategory;
+    SYMBOL_STATE_DECLARED,
+    SYMBOL_STATE_DEFINED,
+    SYMBOL_STATE_ACCESSED,
+    SYMBOL_STATE_MODIFIED
+} SymbolState;
 
 typedef struct {
     Token token;
     SymbolCategory category;
+    SymbolState state;
     uint8_t index;
     //TypeInfo type;
 } SymbolItem;
@@ -45,7 +53,7 @@ struct SymbolTable {
     SymbolEntry* entries;
 };
 
-SymbolItem* newSymbolItem(Token token, SymbolCategory category, uint8_t index);
+SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState state, uint8_t index);
 void freeSymbolItem(SymbolItem* item);
 SymbolTable* newSymbolTable(SymbolTable* parent, SymbolScope scope, uint8_t depth);
 void freeSymbolTable(SymbolTable* symTab);
