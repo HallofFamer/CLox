@@ -106,6 +106,28 @@ SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key) {
     return item;
 }
 
+static void symbolTableOutputCategory(SymbolCategory category) {
+    switch (category) {
+        case SYMBOL_CATEGORY_GLOBAL:
+            printf("global");
+            break;
+        case SYMBOL_CATEGORY_LOCAL:
+            printf("local");
+            break;
+        case SYMBOL_CATEGORY_UPVALUE:
+            printf("upvalue");
+            break;
+        case SYMBOL_CATEGORY_FUNCTION:
+            printf("function");
+            break;
+        case SYMBOL_CATEGORY_METHOD:
+            printf("method");
+            break;
+        default:
+            printf("none");
+    }
+}
+
 static void symbolTableOutputScope(SymbolScope scope) {
     switch (scope) {
         case SYMBOL_SCOPE_GLOBAL: 
@@ -132,11 +154,15 @@ static void symbolTableOutputScope(SymbolScope scope) {
 }
 
 static void symbolTableOutputEntry(SymbolEntry* entry) {
-    printf("  symbol %s - category: %d, index: %d\n", entry->key->chars, entry->value->category, entry->value->index);
+    printf("  symbol %s:\n    category: ", entry->key->chars);
+    symbolTableOutputCategory(entry->value->category);
+    printf("\n");
+    printf("    index: %d", entry->value->index);
+    printf("\n");
 }
 
 void symbolTableOutput(SymbolTable* symtab) {
-    printf("Symbol table - scope: ");
+    printf("Symbol table scope: ");
     symbolTableOutputScope(symtab->scope);
     printf("\n");
 
@@ -146,4 +172,5 @@ void symbolTableOutput(SymbolTable* symtab) {
             symbolTableOutputEntry(entry);
         }
     }
+    printf("\n");
 }

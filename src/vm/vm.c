@@ -148,6 +148,7 @@ void initVM(VM* vm) {
     vm->currentModule = NULL;
     vm->currentCompiler = NULL;
     vm->currentClass = NULL;
+    vm->symtab = newSymbolTable(NULL, SYMBOL_SCOPE_GLOBAL, -1);
     vm->objects = NULL;
     vm->objectIndex = 0;
     vm->bytesAllocated = 0;
@@ -189,6 +190,7 @@ void freeVM(VM* vm) {
     freeShapeTree(vm, &vm->shapes);
     freeGenericIDMap(vm, &vm->genericIDMap);
     vm->initString = NULL;
+    freeSymbolTable(vm->symtab);
     freeObjects(vm);
     freeLoop(vm);
 }

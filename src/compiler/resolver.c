@@ -157,6 +157,8 @@ void resolveAst(Resolver* resolver, Ast* ast) {
 static void resolveChild(Resolver* resolver, Ast* ast, int index) {
     Ast* child = astGetChild(ast, index);
     resolver->currentToken = child->token;
+    child->symtab = ast->symtab;
+
     switch (child->category) {
         case AST_CATEGORY_SCRIPT:
         case AST_CATEGORY_OTHER:

@@ -113,6 +113,8 @@ set(Source_Files__compiler
     "src/compiler/lexer.h"
     "src/compiler/parser.c"
     "src/compiler/parser.h"
+    "src/compiler/resolver.c"
+    "src/compiler/resolver.h"
     "src/compiler/symbol.c"
     "src/compiler/symbol.h"
     "src/compiler/token.c"

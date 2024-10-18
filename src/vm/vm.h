@@ -97,6 +97,7 @@ struct VM {
     Configuration config;
     CompilerV1* currentCompiler;
     ClassCompilerV1* currentClass;
+    SymbolTable* symtab;
     Compiler* compiler;
 
     int behaviorCount;
