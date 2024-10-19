@@ -86,8 +86,144 @@ static void resolveExpression(Resolver* resolver, Ast* ast) {
     // To be implemented
 }
 
-static void resolveStatement(Resolver* resolver, Ast* ast) {
+static void resolverAwaitStatement(Resolver* resolver, Ast* ast) {
     // To be implemented
+}
+
+static void resolveBlockStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveBreakStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveCaseStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveCatchStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveContinueStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveDefaultStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveExpressionStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveFinallyStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveForStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveIfStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveRequireStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveReturnStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveSwitchStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveThrowStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveTryStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveWhileStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveYieldStatement(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveStatement(Resolver* resolver, Ast* ast) {
+    switch (ast->type) {
+        case AST_STMT_AWAIT:
+            resolverAwaitStatement(resolver, ast);
+            break;
+        case AST_STMT_BLOCK:
+            resolveBlockStatement(resolver, ast);
+            break;
+        case AST_STMT_BREAK:
+            resolveBreakStatement(resolver, ast);
+            break;
+        case AST_STMT_CASE:
+            resolveCaseStatement(resolver, ast);
+            break;
+        case AST_STMT_CATCH:
+            resolveCatchStatement(resolver, ast);
+            break;
+        case AST_STMT_CONTINUE:
+            resolveContinueStatement(resolver, ast);
+            break;
+        case AST_STMT_DEFAULT:
+            resolveDefaultStatement(resolver, ast);
+            break;
+        case AST_STMT_EXPRESSION:
+            resolveExpressionStatement(resolver, ast);
+            break;
+        case AST_STMT_FINALLY:
+            resolveFinallyStatement(resolver, ast);
+            break;
+        case AST_STMT_FOR:
+            resolveForStatement(resolver, ast);
+            break;
+        case AST_STMT_IF:
+            resolveIfStatement(resolver, ast);
+            break;
+        case AST_STMT_REQUIRE:
+            resolveRequireStatement(resolver, ast);
+            break;
+        case AST_STMT_RETURN:
+            resolveReturnStatement(resolver, ast);
+            break;
+        case AST_STMT_SWITCH:
+            resolveSwitchStatement(resolver, ast);
+            break;
+        case AST_STMT_THROW:
+            resolveThrowStatement(resolver, ast);
+            break;
+        case AST_STMT_TRY:
+            resolveTryStatement(resolver, ast);
+            break;
+        case AST_STMT_USING:
+            resolveUsingStatement(resolver, ast);
+            break;
+        case AST_STMT_WHILE:
+            resolveWhileStatement(resolver, ast);
+            break;
+        case AST_STMT_YIELD:
+            resolveYieldStatement(resolver, ast);
+            break;
+        default:
+            semanticError(resolver, "Invalid AST statement type.");
+    }
 }
 
 static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
