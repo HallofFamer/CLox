@@ -44,6 +44,8 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->currentFunction = NULL;
     resolver->symtab = NULL;
     resolver->numSlots = 1;
+    resolver->loopDepth = 0;
+    resolver->switchDepth = 0;
     resolver->debugSymtab = debugSymtab;
     resolver->hadError = false;
 }
@@ -61,11 +63,12 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
 }
 
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
-    ast->symtab = newSymbolTable(ast->symtab, scope, ast->symtab->scope + 1);
+    resolver->symtab = newSymbolTable(resolver->symtab, scope, resolver->symtab->scope + 1);
+    ast->symtab = resolver->symtab;
 }
 
 static void endScope(Resolver* resolver, Ast* ast) {
-    if (resolver->debugSymtab) symbolTableOutput(ast->symtab);
+    if (resolver->debugSymtab) symbolTableOutput(resolver->symtab);
     resolver->symtab = resolver->symtab->parent;
 }
 
@@ -91,7 +94,12 @@ static void resolverAwaitStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveBlockStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    beginScope(resolver, ast, SYMBOL_SCOPE_BLOCK);
+    Ast* stmts = astGetChild(ast, 0);
+    for (int i = 0; i < stmts->children->count; i++) {
+        resolveChild(resolver, stmts, i);
+    }
+    endScope(resolver, ast);
 }
 
 static void resolveBreakStatement(Resolver* resolver, Ast* ast) {

@@ -14,6 +14,8 @@ typedef struct {
     FunctionResolver* currentFunction;
     SymbolTable* symtab;
     int numSlots;
+    int loopDepth;
+    int switchDepth;
     bool debugSymtab;
     bool hadError;
 } Resolver;
