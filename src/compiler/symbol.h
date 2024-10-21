@@ -10,9 +10,7 @@ typedef struct SymbolTable SymbolTable;
 typedef enum {
     SYMBOL_CATEGORY_LOCAL,
     SYMBOL_CATEGORY_UPVALUE,
-    SYMBOL_CATEGORY_GLOBAL,
-    SYMBOL_CATEGORY_FUNCTION,
-    SYMBOL_CATEGORY_METHOD
+    SYMBOL_CATEGORY_GLOBAL
 } SymbolCategory;
 
 typedef enum {
@@ -61,5 +59,9 @@ SymbolItem* symbolTableGet(SymbolTable* symtab, ObjString* key);
 bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value);
 SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key);
 void symbolTableOutput(SymbolTable* symtab);
+
+static inline SymbolCategory symbolScopeToCategory(SymbolScope scope) {
+    return (scope == SYMBOL_SCOPE_GLOBAL || scope == SYMBOL_SCOPE_MODULE) ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL;
+}
 
 #endif // !clox_symbol_h

@@ -5,23 +5,30 @@
 #include "resolver.h"
 #include "../vm/vm.h"
 
+typedef struct {
+    bool isAsync;
+    bool isClass;
+    bool isGenerator;
+    bool isInitializer;
+    bool isLambda;
+    bool isMethod;
+    bool isScript;
+} ResolverModifier;
+
 struct ClassResolver {
     ClassResolver* enclosing;
     Token name;
     Token superClass;
-    int currentScope;
+    int scopeDepth;
     BehaviorType type;
 };
 
 struct FunctionResolver {
     FunctionResolver* enclosing;
     Token name;
-    int currentScope;
+    int scopeDepth;
     int numSlots;
-    bool isMethod;
-    bool isLambda;
-    bool isGenerator;
-    bool isAsync;
+    ResolverModifier modifier;
 };
 
 static int currentLine(Resolver* resolver) {
@@ -38,12 +45,37 @@ static void semanticError(Resolver* resolver, const char* format, ...) {
     resolver->hadError = true;
 }
 
+static ResolverModifier resolverInitModifier() {
+    ResolverModifier modifier = {
+        .isAsync = false,
+        .isClass = false,
+        .isGenerator = false,
+        .isInitializer = false,
+        .isLambda = false,
+        .isMethod = false,
+        .isScript = false
+    };
+    return modifier;
+}
+
+static void initFunctionResolver(Resolver* resolver, FunctionResolver* function, FunctionResolver* enclosing, Token name, int scopeDepth) {
+    function->enclosing = enclosing;
+    function->name = name;
+    function->scopeDepth = scopeDepth;
+    function->modifier = resolverInitModifier();
+    resolver->currentFunction = function;
+}
+
+static void endFunctionResolver(Resolver* resolver) {
+    resolver->currentFunction = resolver->currentFunction->enclosing;
+}
+
 void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->vm = vm;
     resolver->currentClass = NULL;
     resolver->currentFunction = NULL;
     resolver->symtab = NULL;
-    resolver->numSlots = 1;
+    resolver->numSlots = 0;
     resolver->loopDepth = 0;
     resolver->switchDepth = 0;
     resolver->debugSymtab = debugSymtab;
@@ -52,7 +84,8 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
 
 static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state) {
     ObjString* symbol = copyString(resolver->vm, token.start, token.length);
-    SymbolItem* item = newSymbolItem(token, category, state, resolver->symtab->count++);
+    uint8_t index = (category == SYMBOL_CATEGORY_LOCAL) ? ++resolver->numSlots : 0;
+    SymbolItem* item = newSymbolItem(token, category, state, index);
     bool inserted = symbolTableSet(resolver->symtab, symbol, item);
 
     if (inserted) return item;
@@ -63,7 +96,7 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
 }
 
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
-    resolver->symtab = newSymbolTable(resolver->symtab, scope, resolver->symtab->scope + 1);
+    resolver->symtab = newSymbolTable(resolver->symtab, scope, resolver->symtab->depth + 1);
     ast->symtab = resolver->symtab;
 }
 
@@ -73,7 +106,7 @@ static void endScope(Resolver* resolver, Ast* ast) {
 }
 
 static void declareVariable(Resolver* resolver, Token token) {
-    SymbolCategory category = (resolver->symtab->scope == SYMBOL_SCOPE_GLOBAL) ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL;
+    SymbolCategory category = symbolScopeToCategory(resolver->symtab->scope);
     SymbolItem* item = insertSymbol(resolver, token, category, SYMBOL_STATE_DECLARED);
     if (item == NULL) semanticError(resolver, "Already a variable with this name in this scope.");
 }
@@ -292,7 +325,6 @@ static void resolveDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 void resolveAst(Resolver* resolver, Ast* ast) {
-    ast->symtab = resolver->symtab;
     for (int i = 0; i < ast->children->count; i++) {
         resolveChild(resolver, ast, i);
     }

@@ -83,11 +83,10 @@ bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value) {
         int capacity = bufferGrowCapacity(symtab->capacity);
         symbolTableAdjustCapacity(symtab, capacity);
     }
-
     SymbolEntry* entry = findSymbolEntry(symtab->entries, symtab->capacity, key);
     if (entry->key != NULL) return false; 
-    symtab->count++;
 
+    symtab->count++;
     entry->key = key;
     entry->value = value;
     return true;
@@ -116,12 +115,6 @@ static void symbolTableOutputCategory(SymbolCategory category) {
             break;
         case SYMBOL_CATEGORY_UPVALUE:
             printf("upvalue");
-            break;
-        case SYMBOL_CATEGORY_FUNCTION:
-            printf("function");
-            break;
-        case SYMBOL_CATEGORY_METHOD:
-            printf("method");
             break;
         default:
             printf("none");
