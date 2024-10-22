@@ -61,6 +61,7 @@ static ResolverModifier resolverInitModifier() {
 static void initFunctionResolver(Resolver* resolver, FunctionResolver* function, FunctionResolver* enclosing, Token name, int scopeDepth) {
     function->enclosing = enclosing;
     function->name = name;
+    function->numSlots = 0;
     function->scopeDepth = scopeDepth;
     function->modifier = resolverInitModifier();
     resolver->currentFunction = function;
@@ -75,7 +76,6 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->currentClass = NULL;
     resolver->currentFunction = NULL;
     resolver->symtab = NULL;
-    resolver->numSlots = 0;
     resolver->loopDepth = 0;
     resolver->switchDepth = 0;
     resolver->debugSymtab = debugSymtab;
@@ -84,7 +84,7 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
 
 static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state) {
     ObjString* symbol = copyString(resolver->vm, token.start, token.length);
-    uint8_t index = (category == SYMBOL_CATEGORY_LOCAL) ? ++resolver->numSlots : 0;
+    uint8_t index = (category == SYMBOL_CATEGORY_LOCAL) ? ++resolver->currentFunction->numSlots : 0;
     SymbolItem* item = newSymbolItem(token, category, state, index);
     bool inserted = symbolTableSet(resolver->symtab, symbol, item);
 
@@ -355,7 +355,11 @@ static void resolveChild(Resolver* resolver, Ast* ast, int index) {
 }
 
 void resolve(Resolver* resolver, Ast* ast) {
+    FunctionResolver functionResolver;
+    initFunctionResolver(resolver, &functionResolver, NULL, syntheticToken("script"), 0);
+    resolver->currentFunction->modifier.isScript = true;
     resolver->symtab = newSymbolTable(resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
     resolveAst(resolver, ast);
+    endFunctionResolver(resolver);
     if (resolver->debugSymtab) symbolTableOutput(resolver->symtab);
 }

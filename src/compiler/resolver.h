@@ -13,7 +13,6 @@ typedef struct {
     ClassResolver* currentClass;
     FunctionResolver* currentFunction;
     SymbolTable* symtab;
-    int numSlots;
     int loopDepth;
     int switchDepth;
     bool debugSymtab;
