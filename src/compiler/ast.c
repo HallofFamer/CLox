@@ -456,6 +456,7 @@ static void astOutputStmtTry(Ast* ast, int indentLevel) {
     printf("tryStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
+
     if (ast->children->count > 2) {
         astOutputChild(ast, indentLevel + 1, 2);
     }
@@ -496,7 +497,10 @@ static void astOutputStmtYield(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     char* modifier = ast->modifier.isWith ? " with" : "";
     printf("yieldStmt%s\n", modifier);
-    if(astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
+
+    if (astHasChild(ast)) {
+        astOutputChild(ast, indentLevel + 1, 0);
+    }
 }
 
 static void astOutputDeclClass(Ast* ast, int indentLevel) {
@@ -556,7 +560,10 @@ static void astOutputDeclVar(Ast* ast, int indentLevel) {
     char* modifier = ast->modifier.isMutable ? "var" : "val";
     char* varName = tokenToCString(ast->token);
     printf("varDecl %s %s\n", modifier, varName);
-    if (astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
+
+    if (astHasChild(ast)) {
+        astOutputChild(ast, indentLevel + 1, 0);
+    }
     free(varName);
 }
 

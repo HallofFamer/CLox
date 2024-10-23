@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "resolver.h"
+#include "../vm/id.h"
 #include "../vm/vm.h"
 
 typedef struct {
@@ -27,7 +28,8 @@ struct FunctionResolver {
     FunctionResolver* enclosing;
     Token name;
     int scopeDepth;
-    int numSlots;
+    int numLocals;
+    int numGlobals;
     ResolverModifier modifier;
 };
 
@@ -61,7 +63,8 @@ static ResolverModifier resolverInitModifier() {
 static void initFunctionResolver(Resolver* resolver, FunctionResolver* function, FunctionResolver* enclosing, Token name, int scopeDepth) {
     function->enclosing = enclosing;
     function->name = name;
-    function->numSlots = 0;
+    function->numLocals = 0;
+    function->numGlobals = 0;
     function->scopeDepth = scopeDepth;
     function->modifier = resolverInitModifier();
     resolver->currentFunction = function;
@@ -82,9 +85,24 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->hadError = false;
 }
 
+static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
+    switch (category) {
+        case SYMBOL_CATEGORY_LOCAL:
+            return ++resolver->currentFunction->numLocals;
+        case SYMBOL_CATEGORY_UPVALUE:
+            // To be implemented
+            return -1;
+        case SYMBOL_CATEGORY_GLOBAL:
+            return resolver->currentFunction->numGlobals++;
+        default:
+            semanticError(resolver, "Invalid symbol category specified.");
+            return -1;
+    }
+}
+
 static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state) {
     ObjString* symbol = copyString(resolver->vm, token.start, token.length);
-    uint8_t index = (category == SYMBOL_CATEGORY_LOCAL) ? ++resolver->currentFunction->numSlots : 0;
+    uint8_t index = nextSymbolIndex(resolver, category);
     SymbolItem* item = newSymbolItem(token, category, state, index);
     bool inserted = symbolTableSet(resolver->symtab, symbol, item);
 
@@ -280,7 +298,13 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    uint8_t namespaceDepth = 0;
+    Ast* identifiers = astGetChild(ast, 0);
+    while (namespaceDepth < identifiers->children->count) {
+        Ast* identifier = astGetChild(identifiers, namespaceDepth);
+        insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED);
+        namespaceDepth++;
+    }
 }
 
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
