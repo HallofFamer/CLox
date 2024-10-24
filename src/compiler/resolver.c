@@ -29,6 +29,7 @@ struct FunctionResolver {
     Token name;
     int scopeDepth;
     int numLocals;
+    int numUpvalues;
     int numGlobals;
     ResolverModifier modifier;
 };
@@ -90,8 +91,7 @@ static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
         case SYMBOL_CATEGORY_LOCAL:
             return ++resolver->currentFunction->numLocals;
         case SYMBOL_CATEGORY_UPVALUE:
-            // To be implemented
-            return -1;
+            return resolver->currentFunction->numUpvalues++;
         case SYMBOL_CATEGORY_GLOBAL:
             return resolver->currentFunction->numGlobals++;
         default:
