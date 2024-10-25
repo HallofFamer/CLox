@@ -15,6 +15,7 @@ typedef struct {
     SymbolTable* symtab;
     int loopDepth;
     int switchDepth;
+    int tryDepth;
     bool debugSymtab;
     bool hadError;
 } Resolver;

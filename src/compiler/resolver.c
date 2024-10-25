@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "resolver.h"
-#include "../vm/id.h"
 #include "../vm/vm.h"
 
 typedef struct {
@@ -82,6 +81,7 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->symtab = NULL;
     resolver->loopDepth = 0;
     resolver->switchDepth = 0;
+    resolver->tryDepth = 0;
     resolver->debugSymtab = debugSymtab;
     resolver->hadError = false;
 }
@@ -136,8 +136,200 @@ static void defineVariable(Resolver* resolver, Token token) {
     else item->state = SYMBOL_STATE_DEFINED;
 }
 
-static void resolveExpression(Resolver* resolver, Ast* ast) {
+static void resolveAnd(Resolver* resolver, Ast* ast) {
     // To be implemented
+}
+
+static void resolveArray(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveAssign(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveAwait(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveBinary(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveCall(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveClass(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveDictionary(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveFunction(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveGrouping(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveInterpolation(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveInvoke(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveLiteral(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveNil(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveOr(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveParam(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolvePropertyGet(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolvePropertySet(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveSubscriptGet(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveSubscriptSet(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveSuperGet(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveSuperInvoke(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveThis(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveTrait(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveUnary(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveVariable(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveYield(Resolver* resolver, Ast* ast) {
+    // To be implemented
+}
+
+static void resolveExpression(Resolver* resolver, Ast* ast) {
+    switch (ast->type) {
+        case AST_EXPR_AND:
+            resolveAnd(resolver, ast);
+            break;
+        case AST_EXPR_ARRAY:
+            resolveArray(resolver, ast);
+            break;
+        case AST_EXPR_ASSIGN:
+            resolveAssign(resolver, ast);
+            break;
+        case AST_EXPR_AWAIT:
+            resolveAwait(resolver, ast);
+            break;
+        case AST_EXPR_BINARY:
+            resolveBinary(resolver, ast);
+            break;
+        case AST_EXPR_CALL:
+            resolveCall(resolver, ast);
+            break;
+        case AST_EXPR_CLASS:
+            resolveClass(resolver, ast);
+            break;
+        case AST_EXPR_DICTIONARY:
+            resolveDictionary(resolver, ast);
+            break;
+        case AST_EXPR_FUNCTION:
+            resolveFunction(resolver, ast);
+            break;
+        case AST_EXPR_GROUPING:
+            resolveGrouping(resolver, ast);
+            break;
+        case AST_EXPR_INTERPOLATION:
+            resolveInterpolation(resolver, ast);
+            break;
+        case AST_EXPR_INVOKE:
+            resolveInvoke(resolver, ast);
+            break;
+        case AST_EXPR_LITERAL:
+            resolveLiteral(resolver, ast);
+            break;
+        case AST_EXPR_NIL:
+            resolveNil(resolver, ast);
+            break;
+        case AST_EXPR_OR:
+            resolveOr(resolver, ast);
+            break;
+        case AST_EXPR_PARAM:
+            resolveParam(resolver, ast);
+            break;
+        case AST_EXPR_PROPERTY_GET:
+            resolvePropertyGet(resolver, ast);
+            break;
+        case AST_EXPR_PROPERTY_SET:
+            resolvePropertySet(resolver, ast);
+            break;
+        case AST_EXPR_SUBSCRIPT_GET:
+            resolveSubscriptGet(resolver, ast);
+            break;
+        case AST_EXPR_SUBSCRIPT_SET:
+            resolveSubscriptSet(resolver, ast);
+            break;
+        case AST_EXPR_SUPER_GET:
+            resolveSuperGet(resolver, ast);
+            break;
+        case AST_EXPR_SUPER_INVOKE:
+            resolveSuperInvoke(resolver, ast);
+            break;
+        case AST_EXPR_THIS:
+            resolveThis(resolver, ast);
+            break;
+        case AST_EXPR_TRAIT:
+            resolveTrait(resolver, ast);
+            break;
+        case AST_EXPR_UNARY:
+            resolveUnary(resolver, ast);
+            break;
+        case AST_EXPR_VARIABLE:
+            resolveVariable(resolver, ast);
+            break;
+        case AST_EXPR_YIELD:
+            resolveYield(resolver, ast);
+            break;
+        default:
+            semanticError(resolver, "Invalid AST expression type.");
+    }
 }
 
 static void resolverAwaitStatement(Resolver* resolver, Ast* ast) {
