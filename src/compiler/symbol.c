@@ -177,8 +177,7 @@ static void symbolTableOutputState(SymbolState state) {
 static void symbolTableOutputEntry(SymbolEntry* entry) {
     printf("  %s -> category: ", entry->key->chars);
     symbolTableOutputCategory(entry->value->category);
-    printf(", index: %d", entry->value->index);
-    printf(", state: ");
+    printf(", index: %d, state: ", entry->value->index);
     symbolTableOutputState(entry->value->state);
     printf("\n");
 }

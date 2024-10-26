@@ -1241,7 +1241,6 @@ static void compileUsingStatement(Compiler* compiler, Ast* ast) {
     }
     emitBytes(compiler, OP_GET_NAMESPACE, namespaceDepth);
 
-    index = makeIdentifier(compiler, OBJ_VAL(emptyString(compiler->vm)));
     if (astNumChild(ast) > 1) {
         Ast* alias = astGetChild(ast, 1);
         index = identifierConstant(compiler, &alias->token);

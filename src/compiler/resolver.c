@@ -402,7 +402,14 @@ static void resolveTryStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    Ast* _namespace = astGetChild(ast, 0);
+    int namespaceDepth = astNumChild(_namespace);
+    uint8_t index = 0;
+
+    for (int i = 0; i < namespaceDepth; i++) {
+        Ast* subNamespace = astGetChild(_namespace, i);
+        insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED);
+    }
 }
 
 static void resolveWhileStatement(Resolver* resolver, Ast* ast) {
