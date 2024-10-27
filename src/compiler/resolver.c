@@ -410,6 +410,11 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
         Ast* subNamespace = astGetChild(_namespace, i);
         insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED);
     }
+
+    if (astNumChild(ast) > 1) {
+        Ast* alias = astGetChild(ast, 1);
+        insertSymbol(resolver, alias->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED);
+    }
 }
 
 static void resolveWhileStatement(Resolver* resolver, Ast* ast) {

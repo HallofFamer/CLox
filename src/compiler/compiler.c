@@ -128,7 +128,9 @@ static void emitLoop(Compiler* compiler) {
 }
 
 static void emitReturn(Compiler* compiler, uint8_t depth) {
-    if (compiler->type == COMPILE_TYPE_INITIALIZER) emitBytes(compiler, OP_GET_LOCAL, 0);
+    if (compiler->type == COMPILE_TYPE_INITIALIZER) {
+        emitBytes(compiler, OP_GET_LOCAL, 0);
+    }
     else emitByte(compiler, OP_NIL);
 
     if (depth == 0) emitByte(compiler, OP_RETURN);
