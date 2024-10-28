@@ -89,6 +89,7 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
     push(vm, OBJ_VAL(functionName));
     push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, isAsync, function)));
     tableSet(vm, &vm->rootNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
+    insertGlobalSymbolTable(vm, name);
     pop(vm);
     pop(vm);
 }
@@ -217,6 +218,12 @@ ObjNamespace* getNativeNamespace(VM* vm, const char* name) {
         exit(70);
     }
     return AS_NAMESPACE(namespace);
+}
+
+void insertGlobalSymbolTable(VM* vm, const char* symbolName) {
+    ObjString* symbol = newString(vm, symbolName);
+    SymbolItem* item = newSymbolItem(syntheticToken(symbolName), SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, 0, false);
+    symbolTableSet(vm->symtab, symbol, item);
 }
 
 void loadSourceFile(VM* vm, const char* filePath) {

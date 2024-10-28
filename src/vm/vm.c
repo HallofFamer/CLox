@@ -116,6 +116,12 @@ static int parseConfiguration(void* data, const char* section, const char* name,
     else if (HAS_CONFIG("debug", "debugCode")) {
         config->debugCode = (bool)atoi(value);
     }
+    else if (HAS_CONFIG("flag", "flagUnusedVariable")) {
+        config->flagUnusedVariable = (uint8_t)atoi(value);
+    }
+    else if (HAS_CONFIG("flag", "flagMutableVariable")) {
+        config->flagMutableVariable = (uint8_t)atoi(value);
+    }
     else if (HAS_CONFIG("gc", "gcType")) {
         config->gcType = _strdup(value);
     }
@@ -1227,7 +1233,7 @@ InterpretResult run(VM* vm) {
                 ObjString* alias = READ_STRING();
                 int index;
 
-               if (alias->length > 0) {
+                if (alias->length > 0) {
                     if (idMapGet(&vm->currentModule->valIndexes, alias, &index)) {
                         vm->currentModule->valFields.values[index] = value;
                     }

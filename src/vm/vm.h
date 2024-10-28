@@ -48,6 +48,9 @@ typedef struct {
     bool debugSymtab;
     bool debugCode;
 
+    uint8_t flagUnusedVariable;
+    uint8_t flagMutableVariable;
+
     const char* gcType;
     size_t gcHeapSize;
     size_t gcGrowthFactor;

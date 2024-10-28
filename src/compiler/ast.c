@@ -42,9 +42,9 @@ Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
         ast->type = type;
         ast->modifier = astInitModifier();
         ast->token = token;
-
         ast->parent = NULL;
         ast->sibling = NULL;
+
         if (children == NULL) {
             ast->children = (AstArray*)malloc(sizeof(AstArray));
             if (ast->children != NULL) AstArrayInit(ast->children);
@@ -72,7 +72,10 @@ void freeAst(Ast* ast, bool freeChildren) {
         AstArrayFree(ast->children);
         free(ast->children);
     }
-    if (astOwnsSymbolTable(ast)) freeSymbolTable(ast->symtab);
+
+    if (astOwnsSymbolTable(ast)) {
+        freeSymbolTable(ast->symtab);
+    }
     free(ast);
 }
 
@@ -430,9 +433,7 @@ static void astOutputStmtRequire(Ast* ast, int indentLevel) {
 static void astOutputStmtReturn(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     printf("returnStmt\n");
-    if (astHasChild(ast)) {
-        astOutputChild(ast, indentLevel + 1, 0);
-    }
+    if (astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
 }
 
 static void astOutputStmtSwitch(Ast* ast, int indentLevel) {
@@ -440,9 +441,7 @@ static void astOutputStmtSwitch(Ast* ast, int indentLevel) {
     printf("switchStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    if (ast->children->count > 2) {
-        astOutputChild(ast, indentLevel + 1, 2);
-    }
+    if (astNumChild(ast) > 2) astOutputChild(ast, indentLevel + 1, 2);
 }
 
 static void astOutputStmtThrow(Ast* ast, int indentLevel) {
@@ -560,10 +559,7 @@ static void astOutputDeclVar(Ast* ast, int indentLevel) {
     char* modifier = ast->modifier.isMutable ? "var" : "val";
     char* varName = tokenToCString(ast->token);
     printf("varDecl %s %s\n", modifier, varName);
-
-    if (astHasChild(ast)) {
-        astOutputChild(ast, indentLevel + 1, 0);
-    }
+    if (astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
     free(varName);
 }
 
