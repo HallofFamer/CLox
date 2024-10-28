@@ -1,0 +1,27 @@
+namespace test.lang;
+using clox.std.collection.Array;
+
+val x = 0;
+{ 
+    val x = 1;
+    val y = -1;
+    { 
+        val x = 2;
+        { 
+            val x = 3;
+            val y = -2;
+            println("Inner x: ${x}.");
+            println("Inner y: ${y}.");
+        }
+        println("Middle x: ${x}.");
+    }
+    println("Outer x: ${x}.");
+    println("Outer y: ${y}.");
+}
+
+fun sum(a, b) { 
+    println(x);
+    return x + a + b;
+}
+
+println("Top level x: ${x}.");

@@ -86,7 +86,7 @@ print("Vehicle is instance of trait TTruck: ");
 println(vehicle.instanceOf(TTruck));
 println("");
 
-class Truck < Vehicle with TTruck { 
+class Truck extends Vehicle with TTruck { 
     __init__(color, speed, load) { 
         super.__init__(color, speed);
         this.load = load;

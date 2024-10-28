@@ -16,7 +16,7 @@ val listenerTrait = trait {
     }
 };
 
-val listenerClass = class < Listener with listenerTrait { 
+val listenerClass = class extends Listener with listenerTrait { 
     listen(port){
         if(this.isValidPort(port)){ 
             super.listen(port);

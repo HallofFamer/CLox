@@ -10,7 +10,7 @@ class A {
     }
 }
 
-class B < A { 
+class B extends A { 
     method(){ 
         println("B method");
     }
@@ -20,7 +20,7 @@ class B < A {
     }
 }
 
-class C < B { }
+class C extends B { }
 
 var a = A();
 var b = B();
