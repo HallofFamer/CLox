@@ -136,6 +136,13 @@ static void defineVariable(Resolver* resolver, Token token) {
     else item->state = SYMBOL_STATE_DEFINED;
 }
 
+static void accessVariable(Resolver* resolver, Token token) {
+    ObjString* symbol = copyString(resolver->vm, token.start, token.length);
+    SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
+    if (item == NULL) semanticError(resolver, "Variable %s does not exist in this scope.");
+    else item->state = SYMBOL_STATE_ACCESSED;
+}
+
 static void resolveAnd(Resolver* resolver, Ast* ast) {
     // To be implemented
 }
@@ -494,7 +501,10 @@ static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    declareVariable(resolver, ast->token);
+    resolveChild(resolver, ast, 0);
+    if (resolver->currentFunction->modifier.isScript) accessVariable(resolver, ast->token);
+    else defineVariable(resolver, ast->token);
 }
 
 static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {

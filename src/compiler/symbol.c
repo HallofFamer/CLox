@@ -138,8 +138,11 @@ static void symbolTableOutputScope(SymbolScope scope) {
         case SYMBOL_SCOPE_MODULE: 
             printf("module");
             break;
-        case SYMBOL_SCOPE_BEHAVIOR: 
-            printf("behavior");
+        case SYMBOL_SCOPE_CLASS: 
+            printf("class");
+            break;
+        case SYMBOL_SCOPE_TRAIT:
+            printf("trait");
             break;
         case SYMBOL_SCOPE_FUNCTION: 
             printf("function");

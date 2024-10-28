@@ -91,8 +91,8 @@ Token syntheticToken(const char* text) {
 }
 
 bool tokensEqual(Token* token, Token* token2) {
-    if (token->length != token->length) return false;
-    return memcmp(token->start, token->start, token->length) == 0;
+    if (token->length != token2->length) return false;
+    return memcmp(token->start, token2->start, token->length) == 0;
 }
 
 char* tokenToCString(Token token) {

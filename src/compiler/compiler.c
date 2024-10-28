@@ -335,15 +335,10 @@ static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
     return AS_STRING(currentChunk(compiler)->identifiers.values[arg]);
 }
 
-static bool identifiersEqual(Token* a, Token* b) {
-    if (a->length != b->length) return false;
-    return memcmp(a->start, b->start, a->length) == 0;
-}
-
 static int resolveLocal(Compiler* compiler, Token* name) {
     for (int i = compiler->localCount - 1; i >= 0; i--) {
         Local* local = &compiler->locals[i];
-        if (identifiersEqual(name, &local->name)) {
+        if (tokensEqual(name, &local->name)) {
             if (local->depth == -1) {
                 compileError(compiler, "Can't read local variable in its own initializer.");
             }
@@ -441,7 +436,7 @@ static void declareVariable(Compiler* compiler, Token* name) {
             break;
         }
 
-        if (identifiersEqual(name, &local->name)) {
+        if (tokensEqual(name, &local->name)) {
             compileError(compiler, "Already a variable with this name in this scope.");
         }
     }
@@ -606,10 +601,10 @@ static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
         compileChild(compiler, ast, childIndex);
         childIndex++;
 
-        if (identifiersEqual(&name, &compiler->rootClass)) {
+        if (tokensEqual(&name, &compiler->rootClass)) {
             compileError(compiler, "Cannot redeclare root class Object.");
         }
-        else if (identifiersEqual(&name, &superClass->token)) {
+        else if (tokensEqual(&name, &superClass->token)) {
             compileError(compiler, "A class cannot inherit from itself.");
         }
     }
