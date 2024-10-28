@@ -19,6 +19,10 @@ static bool isDigit(char c) {
     return c >= '0' && c <= '9';
 }
 
+static bool isAlphaNumeric(char c) {
+    return isAlpha(c) || isDigit(c);
+}
+
 static bool isAtEnd(Lexer* lexer) {
     return *lexer->current == '\0';
 }

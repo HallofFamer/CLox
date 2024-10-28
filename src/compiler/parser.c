@@ -840,7 +840,9 @@ static Ast* forStatement(Parser* parser) {
         astAppendChild(decl, identifier(parser, "Expect second variable name after ','."));
         consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after second variable declaration.");
     }
-    else astAppendChild(decl, identifier(parser, "Expect variable name after 'var'."));
+    else {
+        astAppendChild(decl, identifier(parser, "Expect variable name after 'var'."));
+    }
 
     consume(parser, TOKEN_COLON, "Expect ':' after variable name.");
     Ast* expr = expression(parser);
@@ -944,7 +946,9 @@ static Ast* tryStatement(Parser* parser) {
         Ast* catchStmt = newAst(AST_STMT_CATCH, exceptionType, 2, exceptionVar, catchBody);
         astAppendChild(stmt, catchStmt);
     }
-    else errorAtCurrent(parser, "Must have a catch statement following a try statement.");
+    else {
+        errorAtCurrent(parser, "Must have a catch statement following a try statement.");
+    }
 
     if (match(parser, TOKEN_FINALLY)) {
         Ast* finallyBody = statement(parser);

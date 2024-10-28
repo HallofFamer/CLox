@@ -100,10 +100,10 @@ static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
     }
 }
 
-static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state) {
+static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state, bool isMutable) {
     ObjString* symbol = copyString(resolver->vm, token.start, token.length);
     uint8_t index = nextSymbolIndex(resolver, category);
-    SymbolItem* item = newSymbolItem(token, category, state, index);
+    SymbolItem* item = newSymbolItem(token, category, state, index, isMutable);
     bool inserted = symbolTableSet(resolver->symtab, symbol, item);
 
     if (inserted) return item;
@@ -123,9 +123,9 @@ static void endScope(Resolver* resolver, Ast* ast) {
     resolver->symtab = resolver->symtab->parent;
 }
 
-static void declareVariable(Resolver* resolver, Token token) {
+static void declareVariable(Resolver* resolver, Token token, bool isMutable) {
     SymbolCategory category = symbolScopeToCategory(resolver->symtab->scope);
-    SymbolItem* item = insertSymbol(resolver, token, category, SYMBOL_STATE_DECLARED);
+    SymbolItem* item = insertSymbol(resolver, token, category, SYMBOL_STATE_DECLARED, isMutable);
     if (item == NULL) semanticError(resolver, "Already a variable with this name in this scope.");
 }
 
@@ -133,14 +133,7 @@ static void defineVariable(Resolver* resolver, Token token) {
     ObjString* symbol = copyString(resolver->vm, token.start, token.length);
     SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
     if (item == NULL) semanticError(resolver, "Variable %s does not exist in this scope.");
-    else item->state = SYMBOL_STATE_DEFINED;
-}
-
-static void accessVariable(Resolver* resolver, Token token) {
-    ObjString* symbol = copyString(resolver->vm, token.start, token.length);
-    SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
-    if (item == NULL) semanticError(resolver, "Variable %s does not exist in this scope.");
-    else item->state = SYMBOL_STATE_ACCESSED;
+    else item->state = resolver->currentFunction->modifier.isScript ? SYMBOL_STATE_ACCESSED : SYMBOL_STATE_DEFINED;
 }
 
 static void resolveAnd(Resolver* resolver, Ast* ast) {
@@ -415,12 +408,12 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
 
     for (int i = 0; i < namespaceDepth; i++) {
         Ast* subNamespace = astGetChild(_namespace, i);
-        insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED);
+        insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
     }
 
     if (astNumChild(ast) > 1) {
         Ast* alias = astGetChild(ast, 1);
-        insertSymbol(resolver, alias->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED);
+        insertSymbol(resolver, alias->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
     }
 }
 
@@ -501,10 +494,9 @@ static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
-    declareVariable(resolver, ast->token);
+    declareVariable(resolver, ast->token, false);
     resolveChild(resolver, ast, 0);
-    if (resolver->currentFunction->modifier.isScript) accessVariable(resolver, ast->token);
-    else defineVariable(resolver, ast->token);
+    defineVariable(resolver, ast->token);
 }
 
 static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
@@ -516,7 +508,7 @@ static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
     Ast* identifiers = astGetChild(ast, 0);
     while (namespaceDepth < identifiers->children->count) {
         Ast* identifier = astGetChild(identifiers, namespaceDepth);
-        insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED);
+        insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
         namespaceDepth++;
     }
 }
@@ -526,7 +518,7 @@ static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveVarDeclaration(Resolver* resolver, Ast* ast) {
-    declareVariable(resolver, ast->token);
+    declareVariable(resolver, ast->token, ast->modifier.isMutable);
     bool hasValue = astHasChild(ast);
     if (hasValue) {
         resolveChild(resolver, ast, 0);

@@ -8,13 +8,14 @@
 
 #define SYMBOL_TABLE_MAX_LOAD 0.75
 
-SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState state, uint8_t index) {
+SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState state, uint8_t index, bool isMutable) {
     SymbolItem* item = (SymbolItem*)malloc(sizeof(SymbolItem));
     if (item != NULL) {
         item->token = token;
         item->category = category;
         item->state = state;
         item->index = index;
+        item->isMutable = isMutable;
     }
     return item;
 }
@@ -43,7 +44,10 @@ void freeSymbolTable(SymbolTable* symtab) {
             freeSymbolItem(entry->value);
         }
     }
-    if (symtab->entries != NULL) free(symtab->entries);
+
+    if (symtab->entries != NULL) {
+        free(symtab->entries);
+    }
     free(symtab);
 }
 
@@ -182,7 +186,7 @@ static void symbolTableOutputEntry(SymbolEntry* entry) {
     symbolTableOutputCategory(entry->value->category);
     printf(", index: %d, state: ", entry->value->index);
     symbolTableOutputState(entry->value->state);
-    printf("\n");
+    printf(", isMutable: %s\n", entry->value->isMutable ? "true" : "false");
 }
 
 void symbolTableOutput(SymbolTable* symtab) {

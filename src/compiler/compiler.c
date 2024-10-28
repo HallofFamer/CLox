@@ -818,9 +818,7 @@ static void compileNil(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 1);
     if (ast->token.type == TOKEN_QUESTION) emitByte(compiler, OP_NIL_COALESCING);
     else if (ast->token.type == TOKEN_COLON) emitByte(compiler, OP_ELVIS);
-    else {
-        compileError(compiler, "Invalid nil handling operator specified.");
-    }
+    else compileError(compiler, "Invalid nil handling operator specified.");
 }
 
 static void compileOr(Compiler* compiler, Ast* ast) {
