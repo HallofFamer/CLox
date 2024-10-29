@@ -490,7 +490,9 @@ static void resolveStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    declareVariable(resolver, ast->token, false);
+    resolveChild(resolver, ast, 0);
+    defineVariable(resolver, ast->token);
 }
 
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
