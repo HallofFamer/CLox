@@ -516,7 +516,9 @@ static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    declareVariable(resolver, ast->token, false);
+    resolveChild(resolver, ast, 0);
+    defineVariable(resolver, ast->token);
 }
 
 static void resolveVarDeclaration(Resolver* resolver, Ast* ast) {

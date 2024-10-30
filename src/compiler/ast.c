@@ -42,9 +42,9 @@ Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
         ast->type = type;
         ast->modifier = astInitModifier();
         ast->token = token;
+
         ast->parent = NULL;
         ast->sibling = NULL;
-
         if (children == NULL) {
             ast->children = (AstArray*)malloc(sizeof(AstArray));
             if (ast->children != NULL) AstArrayInit(ast->children);
