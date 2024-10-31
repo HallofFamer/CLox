@@ -71,6 +71,7 @@ static void symbolTableAdjustCapacity(SymbolTable* symtab, int capacity) {
         entries[i].key = NULL;
         entries[i].value = NULL;
     }
+
     symtab->capacity = capacity;
     symtab->entries = entries;
 }

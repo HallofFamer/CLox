@@ -345,7 +345,10 @@ static void astOutputExprYield(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     char* modifier = ast->modifier.isWith ? " with" : "";
     printf("yield%s\n", modifier);
-    if(astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
+
+    if (astHasChild(ast)) {
+        astOutputChild(ast, indentLevel + 1, 0);
+    }
 }
 
 static void astOutputStmtAwait(Ast* ast, int indentLevel) {
@@ -441,7 +444,10 @@ static void astOutputStmtSwitch(Ast* ast, int indentLevel) {
     printf("switchStmt\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
-    if (astNumChild(ast) > 2) astOutputChild(ast, indentLevel + 1, 2);
+
+    if (astNumChild(ast) > 2) {
+        astOutputChild(ast, indentLevel + 1, 2);
+    }
 }
 
 static void astOutputStmtThrow(Ast* ast, int indentLevel) {

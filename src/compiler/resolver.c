@@ -123,17 +123,23 @@ static void endScope(Resolver* resolver, Ast* ast) {
     resolver->symtab = resolver->symtab->parent;
 }
 
-static void declareVariable(Resolver* resolver, Token token, bool isMutable) {
-    SymbolCategory category = symbolScopeToCategory(resolver->symtab->scope);
-    SymbolItem* item = insertSymbol(resolver, token, category, SYMBOL_STATE_DECLARED, isMutable);
-    if (item == NULL) semanticError(resolver, "Already a variable with this name in this scope.");
+static void markVariableInitialized(Resolver* resolver, SymbolItem* item) {
+    item->state = resolver->currentFunction->modifier.isScript ? SYMBOL_STATE_ACCESSED : SYMBOL_STATE_DEFINED;
 }
 
-static void defineVariable(Resolver* resolver, Token token) {
-    ObjString* symbol = copyString(resolver->vm, token.start, token.length);
+static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable) {
+    SymbolCategory category = symbolScopeToCategory(resolver->symtab->scope);
+    SymbolItem* item = insertSymbol(resolver, ast->token, category, SYMBOL_STATE_DECLARED, isMutable);
+    if (item == NULL) semanticError(resolver, "Already a variable with this name in this scope.");
+    return item;
+}
+
+static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
+    ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
     SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
     if (item == NULL) semanticError(resolver, "Variable %s does not exist in this scope.");
-    else item->state = resolver->currentFunction->modifier.isScript ? SYMBOL_STATE_ACCESSED : SYMBOL_STATE_DEFINED;
+    else markVariableInitialized(resolver, item);
+    return item;
 }
 
 static void resolveAnd(Resolver* resolver, Ast* ast) {
@@ -490,19 +496,21 @@ static void resolveStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
-    declareVariable(resolver, ast->token, false);
+    SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    defineVariable(resolver, ast->token);
+    markVariableInitialized(resolver, item);
 }
 
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
-    declareVariable(resolver, ast->token, false);
+    SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    defineVariable(resolver, ast->token);
+    markVariableInitialized(resolver, item);
 }
 
 static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    SymbolItem* item = declareVariable(resolver, ast, false);
+    resolveChild(resolver, ast, 0);
+    markVariableInitialized(resolver, item);
 }
 
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
@@ -516,17 +524,17 @@ static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
-    declareVariable(resolver, ast->token, false);
+    SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    defineVariable(resolver, ast->token);
+    markVariableInitialized(resolver, item);
 }
 
 static void resolveVarDeclaration(Resolver* resolver, Ast* ast) {
-    declareVariable(resolver, ast->token, ast->modifier.isMutable);
+    declareVariable(resolver, ast, ast->modifier.isMutable);
     bool hasValue = astHasChild(ast);
     if (hasValue) {
         resolveChild(resolver, ast, 0);
-        defineVariable(resolver, ast->token);
+        defineVariable(resolver, ast);
     }
     else if (!ast->modifier.isMutable) {
         semanticError(resolver, "Immutable variable must be initialized upon declaration.");
