@@ -88,10 +88,11 @@ bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value) {
         int capacity = bufferGrowCapacity(symtab->capacity);
         symbolTableAdjustCapacity(symtab, capacity);
     }
+
     SymbolEntry* entry = findSymbolEntry(symtab->entries, symtab->capacity, key);
     if (entry->key != NULL) return false; 
-
     symtab->count++;
+
     entry->key = key;
     entry->value = value;
     return true;

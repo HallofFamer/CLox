@@ -345,7 +345,6 @@ static void astOutputExprYield(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     char* modifier = ast->modifier.isWith ? " with" : "";
     printf("yield%s\n", modifier);
-
     if (astHasChild(ast)) {
         astOutputChild(ast, indentLevel + 1, 0);
     }
@@ -804,6 +803,7 @@ void astOutput(Ast* ast, int indentLevel) {
                     return;
             }
         }
-        default: return;
+        default: 
+            return;
     }
 }

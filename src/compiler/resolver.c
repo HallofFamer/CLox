@@ -142,6 +142,30 @@ static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
     return item;
 }
 
+static void yield(Resolver* resolver, Ast* ast) {
+    if (resolver->currentFunction->modifier.isScript) {
+        semanticError(resolver, "Can't yield from top-level code.");
+    }
+    else if (resolver->currentFunction->modifier.isInitializer) {
+        semanticError(resolver, "Cannot yield from an initializer.");
+    }
+
+    resolver->currentFunction->modifier.isGenerator = true;
+    if (astHasChild(ast)) {
+        resolveChild(resolver, ast, 0);
+    }
+}
+
+static void await(Resolver* resolver, Ast* ast) {
+    if (resolver->currentFunction->modifier.isScript) {
+        resolver->currentFunction->modifier.isAsync = true;
+    }
+    else if (!resolver->currentFunction->modifier.isAsync) {
+        semanticError(resolver, "Cannot use await unless in top level code or inside async functions/methods.");
+    }
+    resolveChild(resolver, ast, 0);
+}
+
 static void resolveAnd(Resolver* resolver, Ast* ast) {
     // To be implemented
 }
@@ -155,7 +179,7 @@ static void resolveAssign(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveAwait(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    await(resolver, ast);
 }
 
 static void resolveBinary(Resolver* resolver, Ast* ast) {
@@ -247,7 +271,7 @@ static void resolveVariable(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveYield(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    yield(resolver, ast);
 }
 
 static void resolveExpression(Resolver* resolver, Ast* ast) {
@@ -339,7 +363,7 @@ static void resolveExpression(Resolver* resolver, Ast* ast) {
 }
 
 static void resolverAwaitStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    await(resolver, ast);
 }
 
 static void resolveBlockStatement(Resolver* resolver, Ast* ast) {
@@ -424,11 +448,14 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveWhileStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolver->loopDepth++;
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
+    resolver->loopDepth--;
 }
 
 static void resolveYieldStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    yield(resolver, ast);
 }
 
 static void resolveStatement(Resolver* resolver, Ast* ast) {
