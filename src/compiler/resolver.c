@@ -7,12 +7,11 @@
 
 typedef struct {
     bool isAsync;
-    bool isClass;
+    bool isClassMethod;
     bool isGenerator;
     bool isInitializer;
+    bool isInstanceMethod;
     bool isLambda;
-    bool isMethod;
-    bool isScript;
 } ResolverModifier;
 
 struct ClassResolver {
@@ -50,12 +49,11 @@ static void semanticError(Resolver* resolver, const char* format, ...) {
 static ResolverModifier resolverInitModifier() {
     ResolverModifier modifier = {
         .isAsync = false,
-        .isClass = false,
+        .isClassMethod = false,
         .isGenerator = false,
         .isInitializer = false,
-        .isLambda = false,
-        .isMethod = false,
-        .isScript = false
+        .isInstanceMethod = false,
+        .isLambda = false
     };
     return modifier;
 }
@@ -64,14 +62,17 @@ static void initFunctionResolver(Resolver* resolver, FunctionResolver* function,
     function->enclosing = enclosing;
     function->name = name;
     function->numLocals = 0;
+    function->numUpvalues = 0;
     function->numGlobals = 0;
     function->scopeDepth = scopeDepth;
     function->modifier = resolverInitModifier();
     resolver->currentFunction = function;
+    if (resolver->currentFunction->enclosing != NULL) resolver->isTopLevel = false;
 }
 
 static void endFunctionResolver(Resolver* resolver) {
     resolver->currentFunction = resolver->currentFunction->enclosing;
+    if (resolver->currentFunction == NULL || resolver->currentFunction->enclosing == NULL) resolver->isTopLevel = true;
 }
 
 void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
@@ -82,6 +83,7 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->loopDepth = 0;
     resolver->switchDepth = 0;
     resolver->tryDepth = 0;
+    resolver->isTopLevel = true;
     resolver->debugSymtab = debugSymtab;
     resolver->hadError = false;
 }
@@ -123,8 +125,8 @@ static void endScope(Resolver* resolver, Ast* ast) {
     resolver->symtab = resolver->symtab->parent;
 }
 
-static void markVariableInitialized(Resolver* resolver, SymbolItem* item) {
-    item->state = resolver->currentFunction->modifier.isScript ? SYMBOL_STATE_ACCESSED : SYMBOL_STATE_DEFINED;
+static void markVariableInitialized(Resolver* resolver, SymbolItem* item, bool isAccessed) {
+    item->state = isAccessed ? SYMBOL_STATE_ACCESSED : SYMBOL_STATE_DEFINED;
 }
 
 static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable) {
@@ -138,12 +140,12 @@ static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
     SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
     if (item == NULL) semanticError(resolver, "Variable %s does not exist in this scope.");
-    else markVariableInitialized(resolver, item);
+    else markVariableInitialized(resolver, item, false);
     return item;
 }
 
 static void yield(Resolver* resolver, Ast* ast) {
-    if (resolver->currentFunction->modifier.isScript) {
+    if (resolver->isTopLevel) {
         semanticError(resolver, "Can't yield from top-level code.");
     }
     else if (resolver->currentFunction->modifier.isInitializer) {
@@ -157,7 +159,7 @@ static void yield(Resolver* resolver, Ast* ast) {
 }
 
 static void await(Resolver* resolver, Ast* ast) {
-    if (resolver->currentFunction->modifier.isScript) {
+    if (resolver->isTopLevel) {
         resolver->currentFunction->modifier.isAsync = true;
     }
     else if (!resolver->currentFunction->modifier.isAsync) {
@@ -376,7 +378,9 @@ static void resolveBlockStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveBreakStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    if (resolver->loopDepth == 0) {
+        semanticError(resolver, "Cannot use 'break' outside of a loop.");
+    }
 }
 
 static void resolveCaseStatement(Resolver* resolver, Ast* ast) {
@@ -388,7 +392,9 @@ static void resolveCatchStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveContinueStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    if (resolver->loopDepth == 0) {
+        semanticError(resolver, "Cannot use 'break' outside of a loop.");
+    }
 }
 
 static void resolveDefaultStatement(Resolver* resolver, Ast* ast) {
@@ -525,19 +531,19 @@ static void resolveStatement(Resolver* resolver, Ast* ast) {
 static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    markVariableInitialized(resolver, item);
+    markVariableInitialized(resolver, item, true);
 }
 
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    markVariableInitialized(resolver, item);
+    markVariableInitialized(resolver, item, true);
 }
 
 static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    markVariableInitialized(resolver, item);
+    markVariableInitialized(resolver, item, true);
 }
 
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
@@ -553,7 +559,7 @@ static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    markVariableInitialized(resolver, item);
+    markVariableInitialized(resolver, item, true);
 }
 
 static void resolveVarDeclaration(Resolver* resolver, Ast* ast) {
@@ -626,7 +632,6 @@ static void resolveChild(Resolver* resolver, Ast* ast, int index) {
 void resolve(Resolver* resolver, Ast* ast) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, NULL, syntheticToken("script"), 0);
-    resolver->currentFunction->modifier.isScript = true;
     resolver->symtab = newSymbolTable(resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);

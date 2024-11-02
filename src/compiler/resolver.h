@@ -16,6 +16,7 @@ typedef struct {
     int loopDepth;
     int switchDepth;
     int tryDepth;
+    bool isTopLevel;
     bool debugSymtab;
     bool hadError;
 } Resolver;
