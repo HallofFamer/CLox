@@ -102,8 +102,12 @@ static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
     }
 }
 
+static ObjString* createSymbol(Resolver* resolver, Token token) {
+    return copyString(resolver->vm, token.start, token.length);
+}
+
 static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state, bool isMutable) {
-    ObjString* symbol = copyString(resolver->vm, token.start, token.length);
+    ObjString* symbol = createSymbol(resolver, token);
     uint8_t index = nextSymbolIndex(resolver, category);
     SymbolItem* item = newSymbolItem(token, category, state, index, isMutable);
     bool inserted = symbolTableSet(resolver->symtab, symbol, item);
@@ -125,10 +129,6 @@ static void endScope(Resolver* resolver, Ast* ast) {
     resolver->symtab = resolver->symtab->parent;
 }
 
-static void markVariableInitialized(Resolver* resolver, SymbolItem* item, bool isAccessed) {
-    item->state = isAccessed ? SYMBOL_STATE_ACCESSED : SYMBOL_STATE_DEFINED;
-}
-
 static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable) {
     SymbolCategory category = symbolScopeToCategory(resolver->symtab->scope);
     SymbolItem* item = insertSymbol(resolver, ast->token, category, SYMBOL_STATE_DECLARED, isMutable);
@@ -140,7 +140,7 @@ static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
     SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
     if (item == NULL) semanticError(resolver, "Variable %s does not exist in this scope.");
-    else markVariableInitialized(resolver, item, false);
+    else item->state = SYMBOL_STATE_DEFINED;
     return item;
 }
 
@@ -384,7 +384,11 @@ static void resolveBreakStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveCaseStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    if (resolver->switchDepth == 0) {
+        semanticError(resolver, "Cannot use 'case' outside of a switch.");
+    }
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
 }
 
 static void resolveCatchStatement(Resolver* resolver, Ast* ast) {
@@ -398,15 +402,15 @@ static void resolveContinueStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveDefaultStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolveExpressionStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolveFinallyStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolveForStatement(Resolver* resolver, Ast* ast) {
@@ -531,19 +535,19 @@ static void resolveStatement(Resolver* resolver, Ast* ast) {
 static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    markVariableInitialized(resolver, item, true);
+    item->state = SYMBOL_STATE_ACCESSED;
 }
 
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    markVariableInitialized(resolver, item, true);
+    item->state = SYMBOL_STATE_ACCESSED;
 }
 
 static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    markVariableInitialized(resolver, item, true);
+    item->state = SYMBOL_STATE_ACCESSED;
 }
 
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
@@ -559,7 +563,7 @@ static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
-    markVariableInitialized(resolver, item, true);
+    item->state = SYMBOL_STATE_ACCESSED;
 }
 
 static void resolveVarDeclaration(Resolver* resolver, Ast* ast) {
@@ -635,5 +639,7 @@ void resolve(Resolver* resolver, Ast* ast) {
     resolver->symtab = newSymbolTable(resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);
-    if (resolver->debugSymtab) symbolTableOutput(resolver->symtab);
+    if (resolver->debugSymtab) {
+        symbolTableOutput(resolver->symtab);
+    }
 }

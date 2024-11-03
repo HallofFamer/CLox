@@ -21,7 +21,9 @@ SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState stat
 }
 
 void freeSymbolItem(SymbolItem* item) {
-    if (item != NULL) free(item);
+    if (item != NULL) {
+        free(item);
+    }
 }
 
 SymbolTable* newSymbolTable(SymbolTable* parent, SymbolScope scope, uint8_t depth) {
@@ -122,14 +124,14 @@ SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key) {
 
 static void symbolTableOutputCategory(SymbolCategory category) {
     switch (category) {
-        case SYMBOL_CATEGORY_GLOBAL:
-            printf("global");
-            break;
         case SYMBOL_CATEGORY_LOCAL:
             printf("local");
             break;
         case SYMBOL_CATEGORY_UPVALUE:
             printf("upvalue");
+            break;
+        case SYMBOL_CATEGORY_GLOBAL:
+            printf("global");
             break;
         default:
             printf("none");
