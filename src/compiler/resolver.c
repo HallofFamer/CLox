@@ -434,11 +434,15 @@ static void resolveSwitchStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveThrowStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolveTryStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolver->tryDepth++;
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
+    if (astNumChild(ast) > 2) resolveChild(resolver, ast, 2);
+    resolver->tryDepth--;
 }
 
 static void resolveUsingStatement(Resolver* resolver, Ast* ast) {

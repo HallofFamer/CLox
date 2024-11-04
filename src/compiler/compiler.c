@@ -1221,7 +1221,7 @@ static void compileTryStatement(Compiler* compiler, Ast* ast) {
 
     compileChild(compiler, ast, 1);
     patchJump(compiler, compiler->currentTry->catchJump);
-    if (ast->children->count > 2) compileChild(compiler, ast, 2);
+    if (astNumChild(ast) > 2) compileChild(compiler, ast, 2);
     endTryCompiler(compiler);
 }
 
