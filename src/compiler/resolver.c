@@ -385,7 +385,7 @@ static void resolveBreakStatement(Resolver* resolver, Ast* ast) {
 
 static void resolveCaseStatement(Resolver* resolver, Ast* ast) {
     if (resolver->switchDepth == 0) {
-        semanticError(resolver, "Cannot use 'case' outside of a switch.");
+        semanticError(resolver, "Cannot use 'case' outside of switch statement.");
     }
     resolveChild(resolver, ast, 0);
     resolveChild(resolver, ast, 1);
@@ -402,6 +402,9 @@ static void resolveContinueStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveDefaultStatement(Resolver* resolver, Ast* ast) {
+    if (resolver->switchDepth == 0) {
+        semanticError(resolver, "Cannot use 'default' outside of switch statement.");
+    }
     resolveChild(resolver, ast, 0);
 }
 
@@ -422,15 +425,37 @@ static void resolveIfStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveRequireStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    if (resolver->isTopLevel) {
+        semanticError(resolver, "Can only require source files from top-level code.");
+    }
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolveReturnStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    if (resolver->isTopLevel) {
+        semanticError(resolver, "Can't return from top-level code.");
+    }
+    else if (resolver->currentFunction->modifier.isInitializer) {
+        semanticError(resolver, "Cannot return value from an initializer.");
+    }
+    else if (astHasChild(ast)) {
+        resolveChild(resolver, ast, 0);
+    }
 }
 
 static void resolveSwitchStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolver->switchDepth++;
+    resolveChild(resolver, ast, 0);
+    Ast* caseList = astGetChild(ast, 1);
+
+    for (int i = 0; i < caseList->children->count; i++) {
+        resolveChild(resolve, caseList, i);
+    }
+
+    if (astNumChild(caseList) > 2) {
+        resolveChild(resolver, ast, 2);
+    }
+    resolver->switchDepth--;
 }
 
 static void resolveThrowStatement(Resolver* resolver, Ast* ast) {
