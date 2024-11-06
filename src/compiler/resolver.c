@@ -392,7 +392,10 @@ static void resolveCaseStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveCatchStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    beginScope(resolver, ast, SYMBOL_SCOPE_BLOCK);
+    resolveChild(resolver, ast, 0);
+    if (astNumChild(ast) > 1) resolveChild(resolver, ast, 1);
+    endScope(resolver, ast);
 }
 
 static void resolveContinueStatement(Resolver* resolver, Ast* ast) {
@@ -417,11 +420,22 @@ static void resolveFinallyStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveForStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolver->loopDepth++;
+    beginScope(resolver, ast, SYMBOL_SCOPE_BLOCK);
+    Ast* decl = astGetChild(ast, 0);
+    resolveChild(resolver, decl, 0);
+    if (astNumChild(decl) > 1) resolveChild(resolver, decl, 1);
+
+    resolveChild(resolver, ast, 1);
+    resolveChild(resolver, ast, 2);
+    endScope(resolver, ast);
+    resolver->loopDepth--;
 }
 
 static void resolveIfStatement(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
+    if (astNumChild(ast) > 2) resolveChild(resolver, ast, 2);
 }
 
 static void resolveRequireStatement(Resolver* resolver, Ast* ast) {
@@ -449,7 +463,7 @@ static void resolveSwitchStatement(Resolver* resolver, Ast* ast) {
     Ast* caseList = astGetChild(ast, 1);
 
     for (int i = 0; i < caseList->children->count; i++) {
-        resolveChild(resolve, caseList, i);
+        resolveChild(resolver, caseList, i);
     }
 
     if (astNumChild(caseList) > 2) {

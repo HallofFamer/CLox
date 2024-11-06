@@ -1094,7 +1094,7 @@ static void compileForStatement(Compiler* compiler, Ast* ast) {
     Token indexToken, valueToken;
     Ast* decl = astGetChild(ast, 0);
 
-    if (decl->children->count > 1) {
+    if (astNumChild(decl) > 1) {
         indexToken = decl->children->elements[0]->token;
         valueToken = decl->children->elements[1]->token;
     }
@@ -1156,7 +1156,7 @@ static void compileIfStatement(Compiler* compiler, Ast* ast) {
     patchJump(compiler, thenJump);
     emitByte(compiler, OP_POP);
 
-    if (ast->children->count > 2) compileChild(compiler, ast, 2);
+    if (astNumChild(ast) > 2) compileChild(compiler, ast, 2);
     patchJump(compiler, elseJump);
 }
 
