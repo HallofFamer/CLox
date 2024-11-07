@@ -185,7 +185,8 @@ static void resolveAwait(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveBinary(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
 }
 
 static void resolveCall(Resolver* resolver, Ast* ast) {
@@ -265,7 +266,7 @@ static void resolveTrait(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveUnary(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolveVariable(Resolver* resolver, Ast* ast) {
