@@ -59,7 +59,6 @@ SymbolTable* newSymbolTable(SymbolTable* parent, SymbolScope scope, uint8_t dept
 void freeSymbolTable(SymbolTable* symTab);
 SymbolItem* symbolTableGet(SymbolTable* symtab, ObjString* key);
 bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value);
-void symbolTableAddAll(SymbolTable* from, SymbolTable* to);
 SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key);
 void symbolTableOutput(SymbolTable* symtab);
 

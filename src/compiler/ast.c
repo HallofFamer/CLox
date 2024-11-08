@@ -35,26 +35,6 @@ Ast* newAst(AstNodeType type, Token token, int numChildren, ...) {
     return ast;
 }
 
-Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children) {
-    Ast* ast = (Ast*)malloc(sizeof(Ast));
-    if (ast != NULL) {
-        ast->category = astNodeCategory(type);
-        ast->type = type;
-        ast->modifier = astInitModifier();
-        ast->token = token;
-
-        ast->parent = NULL;
-        ast->sibling = NULL;
-        if (children == NULL) {
-            ast->children = (AstArray*)malloc(sizeof(AstArray));
-            if (ast->children != NULL) AstArrayInit(ast->children);
-        }
-        else ast->children = children;
-        ast->symtab = NULL;
-    }
-    return ast;
-}
-
 static void freeAstChildren(AstArray* children, bool freeChildren) {
     for (int i = 0; i < children->count; i++) {
         freeAst(children->elements[i], freeChildren);

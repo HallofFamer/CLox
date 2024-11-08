@@ -100,15 +100,6 @@ bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value) {
     return true;
 }
 
-void symbolTableAddAll(SymbolTable* from, SymbolTable* to) {
-    for (int i = 0; i < from->capacity; i++) {
-        SymbolEntry* entry = &from->entries[i];
-        if (entry->key != NULL) {
-            symbolTableSet(to, entry->key, entry->value);
-        }
-    }
-}
-
 SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key) {
     SymbolTable* currentSymtab = symtab;
     SymbolItem* item = NULL;

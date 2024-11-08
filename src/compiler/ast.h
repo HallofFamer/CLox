@@ -118,7 +118,6 @@ static inline AstModifier astInitModifier() {
 
 Ast* emptyAst(AstNodeType type, Token token);
 Ast* newAst(AstNodeType type, Token token, int numChildren, ...);
-Ast* newAstWithChildren(AstNodeType type, Token token, AstArray* children);
 void freeAst(Ast* node, bool freeChildren);
 void astAppendChild(Ast* ast, Ast* child);
 Ast* astFirstChild(Ast* ast);

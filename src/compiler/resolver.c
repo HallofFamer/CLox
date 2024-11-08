@@ -191,7 +191,8 @@ static void resolveBinary(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveCall(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
 }
 
 static void resolveClass(Resolver* resolver, Ast* ast) {
