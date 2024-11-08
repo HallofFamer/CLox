@@ -116,6 +116,9 @@ static int parseConfiguration(void* data, const char* section, const char* name,
     else if (HAS_CONFIG("debug", "debugCode")) {
         config->debugCode = (bool)atoi(value);
     }
+    else if (HAS_CONFIG("flag", "flagUnusedImport")) {
+        config->flagUnusedImport = (uint8_t)atoi(value);
+    }
     else if (HAS_CONFIG("flag", "flagUnusedVariable")) {
         config->flagUnusedVariable = (uint8_t)atoi(value);
     }

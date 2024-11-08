@@ -48,6 +48,7 @@ typedef struct {
     bool debugSymtab;
     bool debugCode;
 
+    uint8_t flagUnusedImport;
     uint8_t flagUnusedVariable;
     uint8_t flagMutableVariable;
 

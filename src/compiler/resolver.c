@@ -174,7 +174,12 @@ static void resolveAnd(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveArray(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    if (astHasChild(ast)) {
+        Ast* elements = astGetChild(ast, 0);
+        for (int i = 0; i < elements->children->count; i++) {
+            resolveChild(resolver, elements, i);
+        }
+    }
 }
 
 static void resolveAssign(Resolver* resolver, Ast* ast) {
@@ -216,7 +221,9 @@ static void resolveInterpolation(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveInvoke(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
+    insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
 }
 
 static void resolveLiteral(Resolver* resolver, Ast* ast) {
