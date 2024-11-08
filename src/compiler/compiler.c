@@ -1042,7 +1042,7 @@ static void compileCatchStatement(Compiler* compiler, Ast* ast) {
     currentChunk(compiler)->code[compiler->currentTry->exceptionType] = typeIndex;
     patchAddress(compiler, compiler->currentTry->catchAddress);
 
-    if (ast->children->count > 1) {
+    if (astNumChild(ast) > 1) {
         Ast* var = astGetChild(ast, 0);
         addLocal(compiler, var->token);
         markInitialized(compiler, false);

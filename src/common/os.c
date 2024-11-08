@@ -53,10 +53,7 @@ void runAtStartup() {
 #ifdef _WIN32
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != NO_ERROR) {
-        exit(60);
-    }
-
+    if (result != NO_ERROR) exit(60);
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 #endif

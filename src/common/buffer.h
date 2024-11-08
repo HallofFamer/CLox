@@ -23,7 +23,7 @@
         buffer->capacity = 0; \
         buffer->count = 0; \
         buffer->elements = NULL; \
-    }\
+    } \
     \
     void name##Free(name* buffer) { \
         free(buffer->elements); \
@@ -37,7 +37,7 @@
             type* elements = (type*)realloc(buffer->elements, sizeof(type) * buffer->capacity); \
             if(elements != NULL) buffer->elements = elements; \
             else exit(1); \
-        }\
+        } \
         buffer->elements[buffer->count] = element; \
         buffer->count++; \
     } \
@@ -61,7 +61,7 @@
             if (buffer->elements[i] == element) return i; \
         } \
         return -1;\
-    }\
+    } \
     \
     type name##Delete(name* buffer, int index) { \
         type element = buffer->elements[index]; \
@@ -88,7 +88,8 @@ static inline char* bufferNewCString(size_t length) {
 DECLARE_BUFFER(ByteArray, uint8_t)
 DECLARE_BUFFER(ShortArray, short)
 DECLARE_BUFFER(IntArray, int)
-DECLARE_BUFFER(LongArray, long);
+DECLARE_BUFFER(LongArray, long)
+DECLARE_BUFFER(FloatArray, float)
 DECLARE_BUFFER(DoubleArray, double)
 DECLARE_BUFFER(CharArray, char)
 DECLARE_BUFFER(StringArray, char*)
