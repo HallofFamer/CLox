@@ -261,12 +261,17 @@ static Token identifier(Lexer* lexer) {
 
 static Token keywordIdentifier(Lexer* lexer) {
     advance(lexer);
-    while (isAlpha(peek(lexer)) || isDigit(peek(lexer))) advance(lexer);
+    while (isAlpha(peek(lexer)) || isDigit(peek(lexer))) {
+        advance(lexer);
+    }
+
     if (peek(lexer) == '`') {
         advance(lexer);
         return makeToken(lexer, TOKEN_IDENTIFIER);
     }
-    else return errorToken(lexer, "Keyword identifiers must end with a closing backtick.");
+    else {
+        return errorToken(lexer, "Keyword identifiers must end with a closing backtick.");
+    }
 }
 
 static Token number(Lexer* lexer) {
@@ -305,7 +310,6 @@ static Token string(Lexer* lexer) {
 Token scanToken(Lexer* lexer) {
     skipWhitespace(lexer);
     lexer->start = lexer->current;
-
     if (isAtEnd(lexer)) return makeToken(lexer, TOKEN_EOF);
 
     char c = advance(lexer);
@@ -349,5 +353,6 @@ Token scanToken(Lexer* lexer) {
         case '"':
             return string(lexer);
     }
+
     return errorToken(lexer, "Unexpected character.");
 }

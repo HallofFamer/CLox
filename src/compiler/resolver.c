@@ -169,7 +169,8 @@ static void await(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveAnd(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
 }
 
 static void resolveArray(Resolver* resolver, Ast* ast) {
@@ -206,7 +207,7 @@ static void resolveFunction(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveGrouping(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolveInterpolation(Resolver* resolver, Ast* ast) {
@@ -226,7 +227,8 @@ static void resolveNil(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveOr(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
 }
 
 static void resolveParam(Resolver* resolver, Ast* ast) {

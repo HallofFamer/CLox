@@ -875,7 +875,9 @@ static Ast* requireStatement(Parser* parser) {
 
 static Ast* returnStatement(Parser* parser) {
     Token token = parser->previous;
-    if (match(parser, TOKEN_SEMICOLON)) return emptyAst(AST_STMT_RETURN, token);
+    if (match(parser, TOKEN_SEMICOLON)) {
+        return emptyAst(AST_STMT_RETURN, token);
+    }
     else {
         Ast* expr = expression(parser);
         consume(parser, TOKEN_SEMICOLON, "Expect ';' after return value.");
@@ -946,9 +948,7 @@ static Ast* tryStatement(Parser* parser) {
         Ast* catchStmt = newAst(AST_STMT_CATCH, exceptionType, 2, exceptionVar, catchBody);
         astAppendChild(stmt, catchStmt);
     }
-    else {
-        errorAtCurrent(parser, "Must have a catch statement following a try statement.");
-    }
+    else errorAtCurrent(parser, "Must have a catch statement following a try statement.");
 
     if (match(parser, TOKEN_FINALLY)) {
         Ast* finallyBody = statement(parser);
@@ -977,6 +977,7 @@ static Ast* usingStatement(Parser* parser) {
         alias = emptyAst(AST_EXPR_VARIABLE, parser->previous);
         astAppendChild(stmt, alias);
     }
+
     consume(parser, TOKEN_SEMICOLON, "Expect ';' after using statement.");
     return stmt;
 }
@@ -999,6 +1000,7 @@ static Ast* yieldStatement(Parser* parser) {
     bool isWith = match(parser, TOKEN_WITH);
     Ast* expr = expression(parser);
     consume(parser, TOKEN_SEMICOLON, "Expect ';' after yield value.");
+
     Ast* ast = newAst(AST_STMT_YIELD, token, 1, expr);
     ast->modifier.isWith = isWith;
     return ast;
