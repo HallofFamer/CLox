@@ -205,7 +205,14 @@ static void resolveClass(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveDictionary(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    uint8_t entryCount = 0;
+    Ast* keys = astGetChild(ast, 0);
+    Ast* values = astGetChild(ast, 1);
+    while (entryCount < keys->children->count) {
+        resolveChild(resolver, keys, entryCount);
+        resolveChild(resolver, values, entryCount);
+        entryCount++;
+    }
 }
 
 static void resolveFunction(Resolver* resolver, Ast* ast) {
