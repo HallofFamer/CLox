@@ -1169,13 +1169,6 @@ static void compileRequireStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileReturnStatement(Compiler* compiler, Ast* ast) {
-    if (compiler->type == COMPILE_TYPE_SCRIPT) {
-        compileError(compiler, "Can't return from top-level code.");
-    }
-    else if (compiler->type == COMPILE_TYPE_INITIALIZER) {
-        compileError(compiler, "Cannot return value from an initializer.");
-    }
-
     uint8_t depth = 0;
     if (compiler->type == COMPILE_TYPE_LAMBDA) {
         depth = lambdaDepth(compiler);

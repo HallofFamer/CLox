@@ -106,6 +106,12 @@ static ObjString* createSymbol(Resolver* resolver, Token token) {
     return copyString(resolver->vm, token.start, token.length);
 }
 
+static bool findSymbol(Resolver* resolver, Token token) {
+    ObjString* symbol = createSymbol(resolver, token);
+    SymbolItem* item = symbolTableGet(resolver->symtab, symbol);
+    return (item != NULL);
+}
+
 static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state, bool isMutable) {
     ObjString* symbol = createSymbol(resolver, token);
     uint8_t index = nextSymbolIndex(resolver, category);
@@ -267,15 +273,20 @@ static void resolveSubscriptSet(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveSuperGet(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolveSuperInvoke(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    if (!findSymbol(resolver, ast->token)) {
+        insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
+    }
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolveThis(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    if (resolver->currentClass == NULL) {
+        semanticError(resolver, "Cannot use 'this' outside of a class.");
+    }
 }
 
 static void resolveTrait(Resolver* resolver, Ast* ast) {
