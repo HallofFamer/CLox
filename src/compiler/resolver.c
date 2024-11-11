@@ -265,11 +265,14 @@ static void resolvePropertySet(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveSubscriptGet(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
 }
 
 static void resolveSubscriptSet(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
+    resolveChild(resolver, ast, 2);
 }
 
 static void resolveSuperGet(Resolver* resolver, Ast* ast) {

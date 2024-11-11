@@ -1011,9 +1011,6 @@ static void compileBlockStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileBreakStatement(Compiler* compiler, Ast* ast) {
-    if (compiler->currentLoop == NULL) {
-        compileError(compiler, "Cannot use 'break' outside of a loop.");
-    }
     discardLocals(compiler);
     emitJump(compiler, OP_END);
 }
@@ -1056,9 +1053,6 @@ static void compileCatchStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileContinueStatement(Compiler* compiler, Ast* ast) {
-    if (compiler->currentLoop == NULL) {
-        compileError(compiler, "Cannot use 'continue' outside of a loop.");
-    }
     discardLocals(compiler);
     emitLoop(compiler);
 }
