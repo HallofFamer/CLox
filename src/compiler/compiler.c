@@ -1155,9 +1155,6 @@ static void compileIfStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileRequireStatement(Compiler* compiler, Ast* ast) {
-    if (compiler->type != COMPILE_TYPE_SCRIPT) {
-        compileError(compiler, "Can only require source files from top-level code.");
-    }
     compileChild(compiler, ast, 0);
     emitByte(compiler, OP_REQUIRE);
 }

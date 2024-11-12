@@ -189,7 +189,15 @@ static void resolveArray(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveAssign(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    ObjString* symbol = createSymbol(resolver, ast->token);
+    SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
+    if (item == NULL) semanticError(resolver, "Undefined variable '%s'.", symbol->chars);
+    else if (!item->isMutable) semanticError(resolver, "Cannot assign to immutable variable '%s'.", symbol->chars);
+    else {
+        if (item->state == SYMBOL_STATE_DECLARED) item->state = SYMBOL_STATE_DEFINED;
+        else item->state = SYMBOL_STATE_MODIFIED;
+        resolveChild(resolver, ast, 0);
+    }
 }
 
 static void resolveAwait(Resolver* resolver, Ast* ast) {
@@ -244,7 +252,8 @@ static void resolveLiteral(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveNil(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
 }
 
 static void resolveOr(Resolver* resolver, Ast* ast) {
