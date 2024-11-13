@@ -1016,11 +1016,6 @@ static void compileBreakStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileCaseStatement(Compiler* compiler, Ast* ast) {
-    if (compiler->currentSwitch == NULL) {
-        compileError(compiler, "Cannot use 'case' outside of a switch.");
-        return;
-    }
-
     emitByte(compiler, OP_DUP);
     compileChild(compiler, ast, 0);
     emitByte(compiler, OP_EQUAL);

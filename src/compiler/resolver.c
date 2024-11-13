@@ -266,11 +266,12 @@ static void resolveParam(Resolver* resolver, Ast* ast) {
 }
 
 static void resolvePropertyGet(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
 }
 
 static void resolvePropertySet(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    resolveChild(resolver, ast, 0);
+    resolveChild(resolver, ast, 1);
 }
 
 static void resolveSubscriptGet(Resolver* resolver, Ast* ast) {
@@ -310,7 +311,7 @@ static void resolveUnary(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveVariable(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    printf("resolving variable.\n");
 }
 
 static void resolveYield(Resolver* resolver, Ast* ast) {
