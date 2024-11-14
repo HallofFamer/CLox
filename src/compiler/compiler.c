@@ -883,9 +883,6 @@ static void compileSuperInvoke(Compiler* compiler, Ast* ast) {
 }
 
 static void compileThis(Compiler* compiler, Ast* ast) {
-    if (compiler->currentClass == NULL) {
-        compileError(compiler, "Cannot use 'this' outside of a class.");
-    }
     getVariable(compiler, &ast->token);
 }
 

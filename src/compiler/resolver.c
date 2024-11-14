@@ -150,6 +150,13 @@ static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
     return item;
 }
 
+static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
+    ObjString* symbol = createSymbol(resolver, ast->token);
+    SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
+    if (item == NULL) semanticError(resolver, "Undefined variable '%s'.", symbol->chars);
+    return item;
+}
+
 static void yield(Resolver* resolver, Ast* ast) {
     if (resolver->isTopLevel) {
         semanticError(resolver, "Can't yield from top-level code.");
@@ -189,10 +196,9 @@ static void resolveArray(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveAssign(Resolver* resolver, Ast* ast) {
-    ObjString* symbol = createSymbol(resolver, ast->token);
-    SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
-    if (item == NULL) semanticError(resolver, "Undefined variable '%s'.", symbol->chars);
-    else if (!item->isMutable) semanticError(resolver, "Cannot assign to immutable variable '%s'.", symbol->chars);
+    SymbolItem* item = getVariable(resolver, ast);
+    if (item == NULL) return;
+    else if (!item->isMutable) semanticError(resolver, "Cannot assign to immutable variable '%s'.", ast->token.start);
     else {
         if (item->state == SYMBOL_STATE_DECLARED) item->state = SYMBOL_STATE_DEFINED;
         else item->state = SYMBOL_STATE_MODIFIED;
@@ -311,7 +317,7 @@ static void resolveUnary(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveVariable(Resolver* resolver, Ast* ast) {
-    printf("resolving variable.\n");
+    getVariable(resolver, ast);
 }
 
 static void resolveYield(Resolver* resolver, Ast* ast) {
