@@ -638,14 +638,7 @@ static uint8_t super_(Compiler* compiler, Ast* ast) {
 }
 
 static void yield(Compiler* compiler, Ast* ast) {
-    if (compiler->type == COMPILE_TYPE_SCRIPT) {
-        compileError(compiler, "Can't yield from top-level code.");
-    }
-    else if (compiler->type == COMPILE_TYPE_INITIALIZER) {
-        compileError(compiler, "Cannot yield from an initializer.");
-    }
     compiler->function->isGenerator = true;
-
     if (!astHasChild(ast)) emitBytes(compiler, OP_NIL, OP_YIELD);
     else {
         compileChild(compiler, ast, 0);

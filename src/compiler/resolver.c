@@ -268,7 +268,8 @@ static void resolveOr(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveParam(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    SymbolItem* item = declareVariable(resolver, ast, ast->modifier.isMutable);
+    item->state = SYMBOL_STATE_DEFINED;
 }
 
 static void resolvePropertyGet(Resolver* resolver, Ast* ast) {
