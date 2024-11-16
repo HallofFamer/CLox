@@ -58,8 +58,8 @@ static ResolverModifier resolverInitModifier() {
     return modifier;
 }
 
-static void initFunctionResolver(Resolver* resolver, FunctionResolver* function, FunctionResolver* enclosing, Token name, int scopeDepth) {
-    function->enclosing = enclosing;
+static void initFunctionResolver(Resolver* resolver, FunctionResolver* function, Token name, int scopeDepth) {
+    function->enclosing = resolver->currentFunction;
     function->name = name;
     function->numLocals = 0;
     function->numUpvalues = 0;
@@ -72,7 +72,9 @@ static void initFunctionResolver(Resolver* resolver, FunctionResolver* function,
 
 static void endFunctionResolver(Resolver* resolver) {
     resolver->currentFunction = resolver->currentFunction->enclosing;
-    if (resolver->currentFunction == NULL || resolver->currentFunction->enclosing == NULL) resolver->isTopLevel = true;
+    if (resolver->currentFunction == NULL || resolver->currentFunction->enclosing == NULL) {
+        resolver->isTopLevel = true;
+    }
 }
 
 void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
@@ -130,7 +132,7 @@ static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
     ast->symtab = resolver->symtab;
 }
 
-static void endScope(Resolver* resolver, Ast* ast) {
+static void endScope(Resolver* resolver) {
     if (resolver->debugSymtab) symbolTableOutput(resolver->symtab);
     resolver->symtab = resolver->symtab->parent;
 }
@@ -155,6 +157,30 @@ static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
     SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
     if (item == NULL) semanticError(resolver, "Undefined variable '%s'.", symbol->chars);
     return item;
+}
+
+static void parameters(Resolver* resolver, Ast* ast) {
+    if (!astHasChild(ast)) return;
+    for (int i = 0; i < ast->children->count; i++) {
+        resolveChild(resolver, ast, i);
+    }
+}
+
+static void block(Resolver* resolver, Ast* ast) {
+    Ast* stmts = astGetChild(ast, 0);
+    for (int i = 0; i < stmts->children->count; i++) {
+        resolveChild(resolver, stmts, i);
+    }
+}
+
+static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) {
+    FunctionResolver functionResolver;
+    initFunctionResolver(resolver, &functionResolver, ast->token, resolver->currentFunction->scopeDepth + 1);
+    beginScope(resolver, ast, SYMBOL_SCOPE_FUNCTION);
+    parameters(resolver, astGetChild(ast, 0));
+    block(resolver, astGetChild(ast, 1));
+    endScope(resolver);
+    endFunctionResolver(resolver);
 }
 
 static void yield(Resolver* resolver, Ast* ast) {
@@ -236,7 +262,7 @@ static void resolveDictionary(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveFunction(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    function(resolver, ast, ast->modifier.isLambda, ast->modifier.isAsync);
 }
 
 static void resolveGrouping(Resolver* resolver, Ast* ast) {
@@ -293,10 +319,16 @@ static void resolveSubscriptSet(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveSuperGet(Resolver* resolver, Ast* ast) {
+    if (resolver->currentClass == NULL) {
+        semanticError(resolver, "Cannot use 'super' outside of a class.");
+    }
     resolveChild(resolver, ast, 0);
 }
 
 static void resolveSuperInvoke(Resolver* resolver, Ast* ast) {
+    if (resolver->currentClass == NULL) {
+        semanticError(resolver, "Cannot use 'super' outside of a class.");
+    }
     if (!findSymbol(resolver, ast->token)) {
         insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
     }
@@ -419,11 +451,8 @@ static void resolverAwaitStatement(Resolver* resolver, Ast* ast) {
 
 static void resolveBlockStatement(Resolver* resolver, Ast* ast) {
     beginScope(resolver, ast, SYMBOL_SCOPE_BLOCK);
-    Ast* stmts = astGetChild(ast, 0);
-    for (int i = 0; i < stmts->children->count; i++) {
-        resolveChild(resolver, stmts, i);
-    }
-    endScope(resolver, ast);
+    block(resolver, ast);
+    endScope(resolver);
 }
 
 static void resolveBreakStatement(Resolver* resolver, Ast* ast) {
@@ -444,7 +473,7 @@ static void resolveCatchStatement(Resolver* resolver, Ast* ast) {
     beginScope(resolver, ast, SYMBOL_SCOPE_BLOCK);
     resolveChild(resolver, ast, 0);
     if (astNumChild(ast) > 1) resolveChild(resolver, ast, 1);
-    endScope(resolver, ast);
+    endScope(resolver);
 }
 
 static void resolveContinueStatement(Resolver* resolver, Ast* ast) {
@@ -477,7 +506,7 @@ static void resolveForStatement(Resolver* resolver, Ast* ast) {
 
     resolveChild(resolver, ast, 1);
     resolveChild(resolver, ast, 2);
-    endScope(resolver, ast);
+    endScope(resolver);
     resolver->loopDepth--;
 }
 
@@ -727,7 +756,7 @@ static void resolveChild(Resolver* resolver, Ast* ast, int index) {
 
 void resolve(Resolver* resolver, Ast* ast) {
     FunctionResolver functionResolver;
-    initFunctionResolver(resolver, &functionResolver, NULL, syntheticToken("script"), 0);
+    initFunctionResolver(resolver, &functionResolver, syntheticToken("script"), 0);
     resolver->symtab = newSymbolTable(resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);

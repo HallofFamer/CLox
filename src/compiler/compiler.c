@@ -628,9 +628,6 @@ static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
 }
 
 static uint8_t super_(Compiler* compiler, Ast* ast) {
-    if (compiler->currentClass == NULL) {
-        compileError(compiler, "Cannot use 'super' outside of a class.");
-    }
     uint8_t index = identifierConstant(compiler, &ast->token);
     Token _this = syntheticToken("this");
     getVariable(compiler, &_this);
