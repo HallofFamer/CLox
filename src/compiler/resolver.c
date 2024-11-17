@@ -152,6 +152,19 @@ static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
     return item;
 }
 
+static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
+    SymbolTable* currentSymtab = resolver->symtab;
+    ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
+    SymbolItem* item = NULL;
+
+    do {
+        item = symbolTableGet(currentSymtab, symbol);
+        if (item != NULL || symbolScopeAtBoundary(currentSymtab->scope)) break;
+        currentSymtab = currentSymtab->parent;
+    } while (currentSymtab != NULL);
+    return item;
+}
+
 static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = createSymbol(resolver, ast->token);
     SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
@@ -270,7 +283,30 @@ static void resolveGrouping(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveInterpolation(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    Ast* exprs = astGetChild(ast, 0);
+    int count = 0;
+    ObjString* toStringMethodName = copyString(resolver->vm, "toString", 8);
+
+    while (count < exprs->children->count) {
+        bool concatenate = false;
+        bool isString = false;
+        Ast* expr = astGetChild(exprs, count);
+
+        if (expr->type == AST_EXPR_LITERAL && expr->token.type == TOKEN_STRING) {
+            resolveChild(resolver, exprs, count);
+            concatenate = true;
+            isString = true;
+            count++;
+            if (count >= exprs->children->count) break;
+        }
+
+        resolveChild(resolver, exprs, count);
+        if (!symbolTableLookup(resolver->symtab, toStringMethodName)) {
+            insertSymbol(resolver, syntheticToken("toString"), SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
+        }
+
+        count++;
+    }
 }
 
 static void resolveInvoke(Resolver* resolver, Ast* ast) {
