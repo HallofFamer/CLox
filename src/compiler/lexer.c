@@ -261,7 +261,7 @@ static Token identifier(Lexer* lexer) {
 
 static Token keywordIdentifier(Lexer* lexer) {
     advance(lexer);
-    while (isAlpha(peek(lexer)) || isDigit(peek(lexer))) {
+    while (isAlphaNumeric(peek(lexer))) {
         advance(lexer);
     }
 

@@ -797,6 +797,7 @@ static Ast* block(Parser* parser) {
         Ast* decl = declaration(parser);
         astAppendChild(stmtList, decl);
     }
+
     consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
     return newAst(AST_STMT_BLOCK, token, 1, stmtList);
 }

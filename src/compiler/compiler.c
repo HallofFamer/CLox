@@ -651,9 +651,6 @@ static void await(Compiler* compiler, Ast* ast) {
         compiler->isAsync = true;
         compiler->function->isAsync = true;
     }
-    else if (!compiler->isAsync) {
-        compileError(compiler, "Cannot use await unless in top level code or inside async functions/methods.");
-    }
     compileChild(compiler, ast, 0);
     emitByte(compiler, OP_AWAIT);
 }

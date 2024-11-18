@@ -25,6 +25,7 @@ struct ClassResolver {
 struct FunctionResolver {
     FunctionResolver* enclosing;
     Token name;
+    SymbolTable* symtab;
     int scopeDepth;
     int numLocals;
     int numUpvalues;
@@ -69,6 +70,7 @@ static ResolverModifier resolverInitModifier() {
 
 static void initFunctionResolver(Resolver* resolver, FunctionResolver* function, Token name, int scopeDepth) {
     function->enclosing = resolver->currentFunction;
+    function->symtab = NULL;
     function->name = name;
     function->numLocals = 0;
     function->numUpvalues = 0;
@@ -139,6 +141,9 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
     resolver->symtab = newSymbolTable(resolver->symtab, scope, resolver->symtab->depth + 1);
     ast->symtab = resolver->symtab;
+    if (scope == SYMBOL_SCOPE_FUNCTION || scope == SYMBOL_SCOPE_METHOD) {
+        resolver->currentFunction->symtab = resolver->symtab;
+    }
 }
 
 static void endScope(Resolver* resolver) {
@@ -168,7 +173,23 @@ static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
 
     do {
         item = symbolTableGet(currentSymtab, symbol);
-        if (item != NULL || symbolScopeAtBoundary(currentSymtab->scope)) break;
+        if (item != NULL || currentSymtab == resolver->currentFunction->symtab) break;
+        currentSymtab = currentSymtab->parent;
+    } while (currentSymtab != NULL);
+    return item;
+}
+
+static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
+    SymbolTable* currentSymtab = resolver->currentFunction->enclosing;
+    ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
+    FunctionResolver* functionResolver = resolver->currentFunction;
+    SymbolItem* item = NULL;
+
+    do {
+        if (functionResolver->enclosing == NULL) break;
+        item = symbolTableGet(currentSymtab, symbol);
+        if (currentSymtab == functionResolver->symtab) functionResolver = functionResolver->enclosing;
+        if (item != NULL) break;
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
     return item;
@@ -803,6 +824,7 @@ void resolve(Resolver* resolver, Ast* ast) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, syntheticToken("script"), 0);
     resolver->symtab = newSymbolTable(resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
+    resolver->currentFunction->symtab = resolver->symtab;
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);
     if (resolver->debugSymtab) {
