@@ -2,7 +2,6 @@
 #ifndef clox_object_h
 #define clox_object_h
 
-#include "chunk.h"
 #include "exception.h"
 #include "generator.h"
 #include "id.h"
@@ -12,6 +11,7 @@
 #include "promise.h"
 #include "table.h"
 #include "value.h"
+#include "../compiler/chunk.h"
 
 #define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass)
 #define ALLOCATE_CLASS(classClass) ALLOCATE_OBJ(ObjClass, OBJ_CLASS, classClass)

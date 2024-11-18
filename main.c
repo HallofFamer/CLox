@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "src/compiler/chunk.h"
 #include "src/common/common.h"
 #include "src/common/os.h"
 #include "src/inc/ini.h"
-#include "src/vm/chunk.h"
 #include "src/vm/debug.h"
 #include "src/vm/vm.h"
 
