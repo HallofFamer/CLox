@@ -109,7 +109,6 @@ SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key) {
         if (item != NULL) break;
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
-
     return item;
 }
 
@@ -195,6 +194,5 @@ void symbolTableOutput(SymbolTable* symtab) {
             symbolTableOutputEntry(entry);
         }
     }
-
     printf("\n");
 }

@@ -36,6 +36,15 @@ static int currentLine(Resolver* resolver) {
     return resolver->currentToken.line;
 }
 
+static void semanticWarning(Resolver* resolver, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    fprintf(stderr, "[line %d] Semantic Warning: ", currentLine(resolver));
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+}
+
 static void semanticError(Resolver* resolver, const char* format, ...) {
     va_list args;
     va_start(args, format);

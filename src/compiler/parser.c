@@ -890,6 +890,7 @@ static Ast* switchStatement(Parser* parser) {
     consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'switch'.");
     Ast* expr = expression(parser);
     astAppendChild(stmt, expr);
+
     consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after value.");
     consume(parser, TOKEN_LEFT_BRACE, "Expect '{' before switch cases.");
     Ast* caseListStmt = emptyAst(AST_LIST_STMT, parser->previous);

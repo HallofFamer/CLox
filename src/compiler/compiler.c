@@ -256,7 +256,10 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->hadError = false;
     compiler->function = newFunction(vm);
     compiler->function->isAsync = isAsync;
-    if (type != COMPILE_TYPE_SCRIPT) compiler->function->name = copyString(vm, name->start, name->length);
+
+    if (type != COMPILE_TYPE_SCRIPT) {
+        compiler->function->name = copyString(vm, name->start, name->length);
+    }
     initIDMap(&compiler->indexes);
     vm->compiler = compiler;
 
