@@ -107,6 +107,8 @@ source_group("Source Files\\common" FILES ${Source_Files__common})
 set(Source_Files__compiler
     "src/compiler/ast.c"
     "src/compiler/ast.h"
+    "src/vm/chunk.c"
+    "src/vm/chunk.h"
     "src/compiler/compiler.c"
     "src/compiler/compiler.h"
     "src/compiler/lexer.c"
@@ -155,8 +157,6 @@ source_group("Source Files\\std" FILES ${Source_Files__std})
 set(Source_Files__vm
     "src/vm/assert.c"
     "src/vm/assert.h"
-    "src/vm/chunk.c"
-    "src/vm/chunk.h"
     "src/vm/compiler_v1.c"
     "src/vm/compiler_v1.h"
     "src/vm/date.c"

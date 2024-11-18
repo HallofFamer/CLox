@@ -20,8 +20,9 @@ val x = 0;
 }
 
 fun sum(a, b) { 
+    val c = 1;
     println(x);
-    return x + a + b;
+    return x + a + b + c;
 }
 
 println("Top level x: ${x}.");

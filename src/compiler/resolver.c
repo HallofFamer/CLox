@@ -138,6 +138,17 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
     }
 }
 
+static void checkUnusedVariables(Resolver* resolver, int flag) {
+    for (int i = 0; i < resolver->symtab->capacity; i++) {
+        SymbolEntry* entry = &resolver->symtab->entries[i];
+        if (entry->key == NULL) continue;
+        else if (entry->value->state == SYMBOL_STATE_DECLARED || entry->value->state == SYMBOL_STATE_DEFINED) {
+            if (flag == 1) semanticWarning(resolver, "Unused variable '%s'.", entry->key->chars);
+            else if (flag == 2) semanticError(resolver, "Unused variable '%s'.", entry->key->chars);
+        }
+    }
+}
+
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
     resolver->symtab = newSymbolTable(resolver->symtab, scope, resolver->symtab->depth + 1);
     ast->symtab = resolver->symtab;
@@ -147,6 +158,7 @@ static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
 }
 
 static void endScope(Resolver* resolver) {
+    checkUnusedVariables(resolver, resolver->vm->config.flagUnusedVariable);
     if (resolver->debugSymtab) symbolTableOutput(resolver->symtab);
     resolver->symtab = resolver->symtab->parent;
 }
@@ -180,7 +192,7 @@ static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
 }
 
 static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
-    SymbolTable* currentSymtab = resolver->currentFunction->enclosing;
+    SymbolTable* currentSymtab = resolver->currentFunction->enclosing->symtab;
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
     FunctionResolver* functionResolver = resolver->currentFunction;
     SymbolItem* item = NULL;
@@ -199,6 +211,7 @@ static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = createSymbol(resolver, ast->token);
     SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
     if (item == NULL) semanticError(resolver, "Undefined variable '%s'.", symbol->chars);
+    else if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
     return item;
 }
 

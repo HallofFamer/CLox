@@ -66,8 +66,4 @@ static inline SymbolCategory symbolScopeToCategory(SymbolScope scope) {
     return (scope == SYMBOL_SCOPE_GLOBAL || scope == SYMBOL_SCOPE_MODULE) ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL;
 }
 
-static inline bool symbolScopeAtBoundary(SymbolScope scope) {
-    return (scope == SYMBOL_SCOPE_GLOBAL || scope == SYMBOL_SCOPE_FUNCTION || scope == SYMBOL_SCOPE_METHOD);
-}
-
 #endif // !clox_symbol_h
