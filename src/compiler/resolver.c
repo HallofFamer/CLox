@@ -143,8 +143,19 @@ static void checkUnusedVariables(Resolver* resolver, int flag) {
         SymbolEntry* entry = &resolver->symtab->entries[i];
         if (entry->key == NULL) continue;
         else if (entry->value->state == SYMBOL_STATE_DECLARED || entry->value->state == SYMBOL_STATE_DEFINED) {
-            if (flag == 1) semanticWarning(resolver, "Unused variable '%s'.", entry->key->chars);
-            else if (flag == 2) semanticError(resolver, "Unused variable '%s'.", entry->key->chars);
+            if (flag == 1) semanticWarning(resolver, "Variable '%s' is never used.", entry->key->chars);
+            else if (flag == 2) semanticError(resolver, "Variable '%s' is never used.", entry->key->chars);
+        }
+    }
+}
+
+static void checkMutableVariables(Resolver* resolver, int flag) {
+    for (int i = 0; i < resolver->symtab->capacity; i++) {
+        SymbolEntry* entry = &resolver->symtab->entries[i];
+        if (entry->key == NULL) continue;
+        else if (entry->value->isMutable && entry->value->state != SYMBOL_STATE_MODIFIED) {
+            if (flag == 1) semanticWarning(resolver, "Mutable variable '%s' is not modified.", entry->key->chars);
+            else if (flag == 2) semanticError(resolver, "Mutable variable '%s' is not modified.", entry->key->chars);
         }
     }
 }
@@ -159,6 +170,7 @@ static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
 
 static void endScope(Resolver* resolver) {
     checkUnusedVariables(resolver, resolver->vm->config.flagUnusedVariable);
+    checkMutableVariables(resolver, resolver->vm->config.flagMutableVariable);
     if (resolver->debugSymtab) symbolTableOutput(resolver->symtab);
     resolver->symtab = resolver->symtab->parent;
 }
