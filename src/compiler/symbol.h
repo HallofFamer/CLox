@@ -45,6 +45,7 @@ typedef struct {
 } SymbolEntry;
 
 struct SymbolTable {
+    int id;
     struct SymbolTable* parent;
     SymbolScope scope;
     uint8_t depth;
@@ -55,7 +56,7 @@ struct SymbolTable {
 
 SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState state, uint8_t index, bool isMutable);
 void freeSymbolItem(SymbolItem* item);
-SymbolTable* newSymbolTable(SymbolTable* parent, SymbolScope scope, uint8_t depth);
+SymbolTable* newSymbolTable(int id, SymbolTable* parent, SymbolScope scope, uint8_t depth);
 void freeSymbolTable(SymbolTable* symTab);
 SymbolItem* symbolTableGet(SymbolTable* symtab, ObjString* key);
 bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value);
