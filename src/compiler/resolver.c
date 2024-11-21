@@ -115,6 +115,10 @@ static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
     }
 }
 
+static int nextSymbolTableIndex(Resolver* resolver) {
+    return ++resolver->symtab;
+}
+
 static ObjString* createSymbol(Resolver* resolver, Token token) {
     return copyString(resolver->vm, token.start, token.length);
 }
@@ -126,10 +130,11 @@ static bool findSymbol(Resolver* resolver, Token token) {
 }
 
 static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state, bool isMutable) {
+    SymbolTable* symtab = (category == SYMBOL_CATEGORY_GLOBAL) ? resolver->currentFunction->symtab : resolver->symtab;
     ObjString* symbol = createSymbol(resolver, token);
     uint8_t index = nextSymbolIndex(resolver, category);
     SymbolItem* item = newSymbolItem(token, category, state, index, isMutable);
-    bool inserted = symbolTableSet(resolver->symtab, symbol, item);
+    bool inserted = symbolTableSet(symtab, symbol, item);
 
     if (inserted) return item;
     else {
@@ -161,7 +166,7 @@ static void checkMutableVariables(Resolver* resolver, int flag) {
 }
 
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
-    resolver->symtab = newSymbolTable(resolver->symtab, scope, resolver->symtab->depth + 1);
+    resolver->symtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->symtab, scope, resolver->symtab->depth + 1);
     ast->symtab = resolver->symtab;
     if (scope == SYMBOL_SCOPE_FUNCTION || scope == SYMBOL_SCOPE_METHOD) {
         resolver->currentFunction->symtab = resolver->symtab;
@@ -848,7 +853,7 @@ static void resolveChild(Resolver* resolver, Ast* ast, int index) {
 void resolve(Resolver* resolver, Ast* ast) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, syntheticToken("script"), 0);
-    resolver->symtab = newSymbolTable(resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
+    resolver->symtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
     resolver->currentFunction->symtab = resolver->symtab;
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);
