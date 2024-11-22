@@ -93,6 +93,7 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->currentClass = NULL;
     resolver->currentFunction = NULL;
     resolver->symtab = NULL;
+    resolver->numSymtabs = 0;
     resolver->loopDepth = 0;
     resolver->switchDepth = 0;
     resolver->tryDepth = 0;
@@ -116,7 +117,7 @@ static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
 }
 
 static int nextSymbolTableIndex(Resolver* resolver) {
-    return ++resolver->symtab;
+    return ++resolver->numSymtabs;
 }
 
 static ObjString* createSymbol(Resolver* resolver, Token token) {
@@ -202,7 +203,7 @@ static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
 
     do {
         item = symbolTableGet(currentSymtab, symbol);
-        if (item != NULL || currentSymtab == resolver->currentFunction->symtab) break;
+        if (item != NULL || currentSymtab->id == resolver->currentFunction->symtab->id) break;
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
     return item;
@@ -217,7 +218,7 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
     do {
         if (functionResolver->enclosing == NULL) break;
         item = symbolTableGet(currentSymtab, symbol);
-        if (currentSymtab == functionResolver->symtab) functionResolver = functionResolver->enclosing;
+        if (currentSymtab->id == functionResolver->symtab->id) functionResolver = functionResolver->enclosing;
         if (item != NULL) break;
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
