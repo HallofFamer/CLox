@@ -82,6 +82,7 @@ static void initFunctionResolver(Resolver* resolver, FunctionResolver* function,
 }
 
 static void endFunctionResolver(Resolver* resolver) {
+    printf("function num locals: %d, num globals: %d\n", resolver->currentFunction->numLocals, resolver->currentFunction->numGlobals);
     resolver->currentFunction = resolver->currentFunction->enclosing;
     if (resolver->currentFunction == NULL || resolver->currentFunction->enclosing == NULL) {
         resolver->isTopLevel = true;
@@ -219,9 +220,24 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
         if (functionResolver->enclosing == NULL) break;
         item = symbolTableGet(currentSymtab, symbol);
         if (currentSymtab->id == functionResolver->symtab->id) functionResolver = functionResolver->enclosing;
-        if (item != NULL) break;
+
+        if (item != NULL) {
+            return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, item->isMutable);
+        }
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
+    return NULL;
+}
+
+static SymbolItem* findGlobal(Resolver* resolver, Ast* ast) {
+    ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
+    SymbolItem* item = symbolTableGet(resolver->currentFunction->symtab, symbol);
+    if (item == NULL) {
+        item = symbolTableGet(resolver->vm->symtab, symbol);
+        if (item != NULL) {
+            return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, item->isMutable);
+        }
+    }
     return item;
 }
 
@@ -230,6 +246,13 @@ static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
     SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
     if (item == NULL) semanticError(resolver, "Undefined variable '%s'.", symbol->chars);
     else if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
+
+    if (item != NULL && item->category == SYMBOL_CATEGORY_GLOBAL) {
+        SymbolItem* item2 = symbolTableGet(resolver->currentFunction->symtab, symbol);
+        if (item2 == NULL) {
+            return insertSymbol(resolver, ast->token, item->category, item->state, item->isMutable);
+        }
+    }
     return item;
 }
 

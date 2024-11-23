@@ -186,7 +186,7 @@ static void symbolTableOutputEntry(SymbolEntry* entry) {
 }
 
 void symbolTableOutput(SymbolTable* symtab) {
-    printf("Symbol table -> scope: ");
+    printf("Symbol table -> id: %d, scope: ", symtab->id);
     symbolTableOutputScope(symtab->scope);
     printf(", depth: %d, count: %d\n", symtab->depth, symtab->count);
 
