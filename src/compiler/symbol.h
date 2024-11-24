@@ -63,8 +63,4 @@ bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value);
 SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key);
 void symbolTableOutput(SymbolTable* symtab);
 
-static inline SymbolCategory symbolScopeToCategory(SymbolScope scope) {
-    return (scope == SYMBOL_SCOPE_GLOBAL || scope == SYMBOL_SCOPE_MODULE) ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL;
-}
-
 #endif // !clox_symbol_h
