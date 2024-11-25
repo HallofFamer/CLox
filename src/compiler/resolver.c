@@ -483,7 +483,6 @@ static void resolveThis(Resolver* resolver, Ast* ast) {
     if (resolver->currentClass == NULL) {
         semanticError(resolver, "Cannot use 'this' outside of a class.");
     }
-    insertSymbol(resolver, syntheticToken("this"), SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
 }
 
 static void resolveTrait(Resolver* resolver, Ast* ast) {

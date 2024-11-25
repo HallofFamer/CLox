@@ -461,15 +461,9 @@ static void markInitialized(Compiler* compiler, bool isMutable) {
 static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
     if (compiler->scopeDepth > 0) {
         markInitialized(compiler, isMutable);
-        return;
     }
     else {
         ObjString* name = identifierName(compiler, global);
-        int index;
-        if (idMapGet(&compiler->vm->currentModule->varIndexes, name, &index)) {
-            compileError(compiler, "Cannot redeclare global variable.");
-        }
-
         if (isMutable) {
             idMapSet(compiler->vm, &compiler->vm->currentModule->varIndexes, name, compiler->vm->currentModule->varFields.count);
             valueArrayWrite(compiler->vm, &compiler->vm->currentModule->varFields, NIL_VAL);
