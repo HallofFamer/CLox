@@ -438,10 +438,6 @@ static void declareVariable(Compiler* compiler, Token* name) {
         if (local->depth != -1 && local->depth < compiler->scopeDepth) {
             break;
         }
-
-        if (tokensEqual(name, &local->name)) {
-            compileError(compiler, "Already a variable with this name in this scope.");
-        }
     }
     addLocal(compiler, *name);
 }

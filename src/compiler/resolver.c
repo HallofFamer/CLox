@@ -299,10 +299,22 @@ static void block(Resolver* resolver, Ast* ast) {
     }
 }
 
+static bool functionScope(Ast* ast) {
+    return (ast->parent != NULL && ast->parent->type == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
+}
+
 static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, ast->token, resolver->currentFunction->scopeDepth + 1);
-    beginScope(resolver, ast, SYMBOL_SCOPE_FUNCTION);
+    functionResolver.modifier.isLambda = isLambda;
+    functionResolver.modifier.isAsync = isAsync;
+
+    SymbolScope scope = functionScope(ast);
+    beginScope(resolver, ast, scope);
+    if (scope == SYMBOL_SCOPE_METHOD) {
+        insertSymbol(resolver, syntheticToken("this"), SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
+    }
+
     parameters(resolver, astGetChild(ast, 0));
     block(resolver, astGetChild(ast, 1));
     endScope(resolver);
