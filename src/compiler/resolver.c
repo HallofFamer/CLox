@@ -321,6 +321,39 @@ static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) 
     endFunctionResolver(resolver);
 }
 
+static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
+    Token name = ast->token;
+    ClassResolver classResolver;
+    initClassResolver(resolver, &classResolver, name, resolver->currentFunction->scopeDepth + 1, type);
+    int childIndex = 0;
+    Token rootClass = syntheticToken("Object");
+
+    if (type == BEHAVIOR_CLASS) {
+        Ast* superClass = astGetChild(ast, childIndex);
+        classResolver.superClass = superClass->token;
+        resolveChild(resolver, ast, childIndex);
+        childIndex++;
+
+
+        if (tokensEqual(&name, &rootClass)) {
+            semanticError(resolver, "Cannot redeclare root class Object.");
+        }
+        else if (tokensEqual(&name, &superClass->token)) {
+            semanticError(resolver, "A class cannot inherit from itself.");
+        }
+    }
+
+    beginScope(resolver, ast, (type == BEHAVIOR_TRAIT) ? SYMBOL_SCOPE_TRAIT : SYMBOL_SCOPE_CLASS);
+    Ast* traitList = astGetChild(ast, childIndex);
+    uint8_t traitCount = astNumChild(traitList);
+    if (traitCount > 0) resolveChild(resolver, ast, childIndex);
+
+    childIndex++;
+    resolveChild(resolver, ast, childIndex);
+    endScope(resolver);
+    endClassResolver(resolver);
+}
+
 static void yield(Resolver* resolver, Ast* ast) {
     if (resolver->isTopLevel) {
         semanticError(resolver, "Can't yield from top-level code.");
@@ -385,7 +418,7 @@ static void resolveCall(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveClass(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    behavior(resolver, BEHAVIOR_CLASS, ast);
 }
 
 static void resolveDictionary(Resolver* resolver, Ast* ast) {
@@ -498,7 +531,7 @@ static void resolveThis(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveTrait(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    behavior(resolver, BEHAVIOR_TRAIT, ast);
 }
 
 static void resolveUnary(Resolver* resolver, Ast* ast) {
