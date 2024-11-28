@@ -13,6 +13,7 @@ typedef struct {
     ClassResolver* currentClass;
     FunctionResolver* currentFunction;
     SymbolTable* symtab;
+    Token rootClass;
     int numSymtabs;
     int loopDepth;
     int switchDepth;

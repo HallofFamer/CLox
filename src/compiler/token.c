@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "token.h"
+#include "../common/buffer.h"
 
 typedef struct {
     char* lexeme;
@@ -96,7 +97,7 @@ bool tokensEqual(Token* token, Token* token2) {
 }
 
 char* tokenToCString(Token token) {
-    char* buffer = (char*)malloc((size_t)token.length + 1);
+    char* buffer = bufferNewCString((size_t)token.length);
     if (buffer != NULL) {
         if (token.length > 0) memcpy(buffer, token.start, token.length);
         buffer[token.length] = '\0';

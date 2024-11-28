@@ -108,6 +108,7 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->currentFunction = NULL;
     resolver->symtab = NULL;
     resolver->numSymtabs = 0;
+    resolver->rootClass = syntheticToken("Object");
     resolver->loopDepth = 0;
     resolver->switchDepth = 0;
     resolver->tryDepth = 0;
@@ -326,7 +327,6 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
     ClassResolver classResolver;
     initClassResolver(resolver, &classResolver, name, resolver->currentFunction->scopeDepth + 1, type);
     int childIndex = 0;
-    Token rootClass = syntheticToken("Object");
 
     if (type == BEHAVIOR_CLASS) {
         Ast* superClass = astGetChild(ast, childIndex);
@@ -335,7 +335,7 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
         childIndex++;
 
 
-        if (tokensEqual(&name, &rootClass)) {
+        if (tokensEqual(&name, &resolver->rootClass)) {
             semanticError(resolver, "Cannot redeclare root class Object.");
         }
         else if (tokensEqual(&name, &superClass->token)) {

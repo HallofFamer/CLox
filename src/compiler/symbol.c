@@ -48,9 +48,7 @@ void freeSymbolTable(SymbolTable* symtab) {
         }
     }
 
-    if (symtab->entries != NULL) {
-        free(symtab->entries);
-    }
+    if (symtab->entries != NULL) free(symtab->entries);
     free(symtab);
 }
 

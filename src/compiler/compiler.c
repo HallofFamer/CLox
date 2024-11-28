@@ -593,13 +593,6 @@ static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
         compiler->currentClass->superclass = superClass->token;
         compileChild(compiler, ast, childIndex);
         childIndex++;
-
-        if (tokensEqual(&name, &compiler->rootClass)) {
-            compileError(compiler, "Cannot redeclare root class Object.");
-        }
-        else if (tokensEqual(&name, &superClass->token)) {
-            compileError(compiler, "A class cannot inherit from itself.");
-        }
     }
 
     beginScope(compiler);
