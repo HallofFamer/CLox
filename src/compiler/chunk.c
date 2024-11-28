@@ -61,6 +61,7 @@ int addIdentifier(VM* vm, Chunk* chunk, Value value) {
 
 int opCodeOffset(Chunk* chunk, int ip) {
     OpCode code = chunk->code[ip];
+
     switch (code) {
         case OP_CONSTANT: return 2;
         case OP_NAMESPACE: return 2;

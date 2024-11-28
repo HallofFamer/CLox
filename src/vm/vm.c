@@ -157,7 +157,8 @@ void initVM(VM* vm) {
     vm->currentModule = NULL;
     vm->currentCompiler = NULL;
     vm->currentClass = NULL;
-    vm->symtab = newSymbolTable(NULL, SYMBOL_SCOPE_GLOBAL, -1);
+    vm->numSymtabs = 0;
+    vm->symtab = newSymbolTable(vm->numSymtabs++, NULL, SYMBOL_SCOPE_GLOBAL, -1);
     vm->objects = NULL;
     vm->objectIndex = 0;
     vm->bytesAllocated = 0;

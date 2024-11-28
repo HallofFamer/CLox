@@ -102,6 +102,7 @@ struct VM {
     CompilerV1* currentCompiler;
     ClassCompilerV1* currentClass;
     SymbolTable* symtab;
+    int numSymtabs;
     Compiler* compiler;
 
     int behaviorCount;

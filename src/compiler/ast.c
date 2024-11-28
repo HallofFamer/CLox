@@ -443,7 +443,7 @@ static void astOutputStmtTry(Ast* ast, int indentLevel) {
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
 
-    if (ast->children->count > 2) {
+    if (astNumChild(ast) > 2) {
         astOutputChild(ast, indentLevel + 1, 2);
     }
 }
