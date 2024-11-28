@@ -341,12 +341,7 @@ static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
 static int resolveLocal(Compiler* compiler, Token* name) {
     for (int i = compiler->localCount - 1; i >= 0; i--) {
         Local* local = &compiler->locals[i];
-        if (tokensEqual(name, &local->name)) {
-            if (local->depth == -1) {
-                compileError(compiler, "Can't read local variable in its own initializer.");
-            }
-            return i;
-        }
+        if (tokensEqual(name, &local->name)) return i;
     }
     return -1;
 }

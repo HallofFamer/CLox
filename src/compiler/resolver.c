@@ -109,6 +109,8 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->symtab = NULL;
     resolver->numSymtabs = 0;
     resolver->rootClass = syntheticToken("Object");
+    resolver->thisVar = syntheticToken("this");
+    resolver->superVar = syntheticToken("super");
     resolver->loopDepth = 0;
     resolver->switchDepth = 0;
     resolver->tryDepth = 0;
@@ -313,7 +315,7 @@ static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) 
     SymbolScope scope = functionScope(ast);
     beginScope(resolver, ast, scope);
     if (scope == SYMBOL_SCOPE_METHOD) {
-        insertSymbol(resolver, syntheticToken("this"), SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
+        insertSymbol(resolver, resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
     }
 
     parameters(resolver, astGetChild(ast, 0));
@@ -539,7 +541,12 @@ static void resolveUnary(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveVariable(Resolver* resolver, Ast* ast) {
-    getVariable(resolver, ast);
+    SymbolItem* item = getVariable(resolver, ast);
+    if (item != NULL && item->state == SYMBOL_STATE_DECLARED) {
+        char* name = tokenToCString(ast->token);
+        semanticError(resolver, "Cannot use variable '%s' before it is defined.", name);
+        free(name);
+    }
 }
 
 static void resolveYield(Resolver* resolver, Ast* ast) {

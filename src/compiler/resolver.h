@@ -14,6 +14,8 @@ typedef struct {
     FunctionResolver* currentFunction;
     SymbolTable* symtab;
     Token rootClass;
+    Token thisVar;
+    Token superVar;
     int numSymtabs;
     int loopDepth;
     int switchDepth;
