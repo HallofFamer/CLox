@@ -2,11 +2,11 @@
 #ifndef clox_object_h
 #define clox_object_h
 
+#include "class.h"
 #include "exception.h"
 #include "generator.h"
 #include "id.h"
 #include "interceptor.h"
-#include "klass.h"
 #include "loop.h"
 #include "promise.h"
 #include "table.h"

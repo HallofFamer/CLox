@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "class.h"
 #include "interceptor.h"
-#include "klass.h"
 #include "vm.h"
 
 static bool isInterceptorMethod(ObjString* name) {

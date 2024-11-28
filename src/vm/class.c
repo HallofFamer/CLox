@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "klass.h"
+#include "class.h"
 #include "vm.h"
 #include "../common/os.h"
 
