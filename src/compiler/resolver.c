@@ -191,9 +191,9 @@ static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
 }
 
 static void endScope(Resolver* resolver) {
+    if (resolver->debugSymtab) symbolTableOutput(resolver->symtab);
     checkUnusedVariables(resolver, resolver->vm->config.flagUnusedVariable);
     checkUnmodifiedVariables(resolver, resolver->vm->config.flagMutableVariable);
-    if (resolver->debugSymtab) symbolTableOutput(resolver->symtab);
     resolver->symtab = resolver->symtab->parent;
 }
 

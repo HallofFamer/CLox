@@ -450,9 +450,7 @@ static void markInitialized(Compiler* compiler, bool isMutable) {
 }
 
 static void defineVariable(Compiler* compiler, uint8_t global, bool isMutable) {
-    if (compiler->scopeDepth > 0) {
-        markInitialized(compiler, isMutable);
-    }
+    if (compiler->scopeDepth > 0) markInitialized(compiler, isMutable);
     else {
         ObjString* name = identifierName(compiler, global);
         if (isMutable) {
