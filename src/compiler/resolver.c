@@ -182,12 +182,18 @@ static void checkUnmodifiedVariables(Resolver* resolver, int flag) {
     }
 }
 
+static bool isFunctionScope(SymbolScope scope) {
+    return (scope == SYMBOL_SCOPE_FUNCTION || scope == SYMBOL_SCOPE_METHOD);
+}
+
+static SymbolScope getFunctionScope(Ast* ast) {
+    return (ast->parent != NULL && ast->parent->type == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
+}
+
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
     resolver->symtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->symtab, scope, resolver->symtab->depth + 1);
     ast->symtab = resolver->symtab;
-    if (scope == SYMBOL_SCOPE_FUNCTION || scope == SYMBOL_SCOPE_METHOD) {
-        resolver->currentFunction->symtab = resolver->symtab;
-    }
+    if (isFunctionScope(scope)) resolver->currentFunction->symtab = resolver->symtab;
 }
 
 static void endScope(Resolver* resolver) {
@@ -302,17 +308,13 @@ static void block(Resolver* resolver, Ast* ast) {
     }
 }
 
-static bool functionScope(Ast* ast) {
-    return (ast->parent != NULL && ast->parent->type == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
-}
-
 static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, ast->token, resolver->currentFunction->scopeDepth + 1);
     functionResolver.modifier.isLambda = isLambda;
     functionResolver.modifier.isAsync = isAsync;
 
-    SymbolScope scope = functionScope(ast);
+    SymbolScope scope = getFunctionScope(ast);
     beginScope(resolver, ast, scope);
     if (scope == SYMBOL_SCOPE_METHOD) {
         insertSymbol(resolver, resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);

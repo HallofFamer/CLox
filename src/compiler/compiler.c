@@ -635,7 +635,6 @@ static void compileAnd(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
     int endJump = emitJump(compiler, OP_JUMP_IF_FALSE);
     emitByte(compiler, OP_POP);
-
     compileChild(compiler, ast, 1);
     patchJump(compiler, endJump);
 }
