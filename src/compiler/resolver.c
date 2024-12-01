@@ -222,6 +222,11 @@ static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
     return item;
 }
 
+static SymbolItem* accessLocal(SymbolItem* item) {
+    if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
+    return item;
+}
+
 static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
     SymbolTable* currentSymtab = resolver->symtab;
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
@@ -235,10 +240,16 @@ static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
     return item;
 }
 
+static SymbolItem* addUpvalue(Resolver* resolver, SymbolItem* item) {
+    accessLocal(item);
+    return insertSymbol(resolver, item->token, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, item->isMutable);
+}
+
 static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
+    if (resolver->currentFunction->enclosing == NULL) return NULL;
     SymbolTable* currentSymtab = resolver->currentFunction->enclosing->symtab;
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
-    FunctionResolver* functionResolver = resolver->currentFunction;
+    FunctionResolver* functionResolver = resolver->currentFunction->enclosing;
     SymbolItem* item = NULL;
 
     do {
@@ -246,9 +257,7 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
         item = symbolTableGet(currentSymtab, symbol);
         if (currentSymtab->id == functionResolver->symtab->id) functionResolver = functionResolver->enclosing;
 
-        if (item != NULL) {
-            return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, item->isMutable);
-        }
+        if (item != NULL) return addUpvalue(resolver, item);
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
     return NULL;
@@ -288,10 +297,17 @@ static void checkMutability(Resolver* resolver, SymbolItem* item) {
 
 static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = createSymbol(resolver, ast->token);
+    SymbolItem* item = findLocal(resolver, ast);
+    if (item != NULL) return accessLocal(item);
+    item = findUpvalue(resolver, ast);
+    if (item != NULL) return item;
+    return findGlobal(resolver, ast);
+    /*
     SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
     if (item == NULL) semanticError(resolver, "Undefined variable '%s'.", symbol->chars);
     else if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
     return item;
+    */
 }
 
 static void parameters(Resolver* resolver, Ast* ast) {
@@ -469,7 +485,6 @@ static void resolveInterpolation(Resolver* resolver, Ast* ast) {
 static void resolveInvoke(Resolver* resolver, Ast* ast) {
     resolveChild(resolver, ast, 0);
     resolveChild(resolver, ast, 1);
-    insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
 }
 
 static void resolveLiteral(Resolver* resolver, Ast* ast) {

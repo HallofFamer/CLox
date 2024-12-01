@@ -1315,8 +1315,7 @@ static void compileTraitDeclaration(Compiler* compiler, Ast* ast) {
 
 static void compileVarDeclaration(Compiler* compiler, Ast* ast) {
     uint8_t index = makeVariable(compiler, &ast->token, "Expect variable name.");
-    bool hasValue = astHasChild(ast);
-    if (hasValue) compileChild(compiler, ast, 0);
+    if (astHasChild(ast)) compileChild(compiler, ast, 0);
     else emitByte(compiler, OP_NIL);
     defineVariable(compiler, index, ast->modifier.isMutable);
 }
