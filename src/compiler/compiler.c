@@ -491,30 +491,6 @@ static void string(Compiler* compiler, Token token) {
     emitConstant(compiler, OBJ_VAL(takeString(compiler->vm, string, token.length)));
 }
 
-static void checkMutability(Compiler* compiler, int arg, uint8_t opCode) {
-    switch (opCode) {
-        case OP_SET_LOCAL:
-            if (!compiler->locals[arg].isMutable) {
-                compileError(compiler, "Cannot assign to immutable local variable.");
-            }
-            break;
-        case OP_SET_UPVALUE:
-            if (!compiler->upvalues[arg].isMutable) {
-               compileError(compiler, "Cannot assign to immutable captured upvalue.");
-            }
-            break;
-        case OP_SET_GLOBAL: {
-            ObjString* name = identifierName(compiler, arg);
-            int index;
-            if (idMapGet(&compiler->vm->currentModule->valIndexes, name, &index)) {
-                compileError(compiler, "Cannot assign to immutable global variables.");
-            }
-            break;
-        }
-        default: break;
-    }
-}
-
 static void getVariable(Compiler* compiler, Token* token) {
     int arg = resolveLocal(compiler, token);
     if (arg != -1) {
@@ -665,7 +641,6 @@ static void compileAssign(Compiler* compiler, Ast* ast) {
         setOp = OP_SET_GLOBAL;
     }
 
-    checkMutability(compiler, arg, setOp);
     compileChild(compiler, ast, 0);
     emitBytes(compiler, setOp, (uint8_t)arg);
 }

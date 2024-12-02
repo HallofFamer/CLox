@@ -222,11 +222,6 @@ static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
     return item;
 }
 
-static SymbolItem* accessLocal(SymbolItem* item) {
-    if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
-    return item;
-}
-
 static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
     SymbolTable* currentSymtab = resolver->symtab;
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
@@ -241,7 +236,8 @@ static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
 }
 
 static SymbolItem* addUpvalue(Resolver* resolver, SymbolItem* item) {
-    accessLocal(item);
+    item->isCaptured = true;
+    if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
     return insertSymbol(resolver, item->token, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, item->isMutable);
 }
 
@@ -298,16 +294,14 @@ static void checkMutability(Resolver* resolver, SymbolItem* item) {
 static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = createSymbol(resolver, ast->token);
     SymbolItem* item = findLocal(resolver, ast);
-    if (item != NULL) return accessLocal(item);
+    if (item != NULL) {
+        if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
+        return item;
+    }
+
     item = findUpvalue(resolver, ast);
     if (item != NULL) return item;
     return findGlobal(resolver, ast);
-    /*
-    SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
-    if (item == NULL) semanticError(resolver, "Undefined variable '%s'.", symbol->chars);
-    else if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
-    return item;
-    */
 }
 
 static void parameters(Resolver* resolver, Ast* ast) {
