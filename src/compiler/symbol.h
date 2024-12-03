@@ -36,6 +36,7 @@ typedef struct {
     SymbolState state;
     uint8_t index;
     bool isMutable;
+    bool isCaptured;
     //TypeInfo type;
 } SymbolItem;
 

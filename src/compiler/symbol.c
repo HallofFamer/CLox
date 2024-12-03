@@ -16,6 +16,7 @@ SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState stat
         item->state = state;
         item->index = index;
         item->isMutable = isMutable;
+        item->isCaptured = false;
     }
     return item;
 }
@@ -180,7 +181,8 @@ static void symbolTableOutputEntry(SymbolEntry* entry) {
     symbolTableOutputCategory(entry->value->category);
     printf(", index: %d, state: ", entry->value->index);
     symbolTableOutputState(entry->value->state);
-    printf(", isMutable: %s\n", entry->value->isMutable ? "true" : "false");
+    printf(", isMutable: %s", entry->value->isMutable ? "true" : "false");
+    printf(", isCaptured: %s\n", entry->value->isCaptured ? "true" : "false");
 }
 
 void symbolTableOutput(SymbolTable* symtab) {
