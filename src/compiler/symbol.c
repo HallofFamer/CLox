@@ -118,8 +118,11 @@ static void symbolTableOutputCategory(SymbolCategory category) {
         case SYMBOL_CATEGORY_LOCAL:
             printf("local");
             break;
-        case SYMBOL_CATEGORY_UPVALUE:
-            printf("upvalue");
+        case SYMBOL_CATEGORY_UPVALUE_DIRECT:
+            printf("upvalue(direct)");
+            break;
+        case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
+            printf("upvalue(indirect)");
             break;
         case SYMBOL_CATEGORY_GLOBAL:
             printf("global");
