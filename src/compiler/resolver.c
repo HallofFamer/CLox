@@ -106,7 +106,9 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->vm = vm;
     resolver->currentClass = NULL;
     resolver->currentFunction = NULL;
-    resolver->symtab = NULL;
+    resolver->currentSymtab = NULL;
+    resolver->globalSymtab = NULL;
+    resolver->rootSymtab = NULL;
     resolver->numSymtabs = 0;
     resolver->rootClass = syntheticToken("Object");
     resolver->thisVar = syntheticToken("this");
@@ -123,7 +125,8 @@ static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
     switch (category) {
         case SYMBOL_CATEGORY_LOCAL:
             return ++resolver->currentFunction->numLocals;
-        case SYMBOL_CATEGORY_UPVALUE:
+        case SYMBOL_CATEGORY_UPVALUE_DIRECT:
+        case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
             return resolver->currentFunction->numUpvalues++;
         case SYMBOL_CATEGORY_GLOBAL:
             return resolver->currentFunction->numGlobals++;
@@ -143,7 +146,7 @@ static ObjString* createSymbol(Resolver* resolver, Token token) {
 
 static bool findSymbol(Resolver* resolver, Token token) {
     ObjString* symbol = createSymbol(resolver, token);
-    SymbolItem* item = symbolTableGet(resolver->symtab, symbol);
+    SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
     return (item != NULL);
 }
 
@@ -151,7 +154,7 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
     ObjString* symbol = createSymbol(resolver, token);
     uint8_t index = nextSymbolIndex(resolver, category);
     SymbolItem* item = newSymbolItem(token, category, state, index, isMutable);
-    bool inserted = symbolTableSet(resolver->symtab, symbol, item);
+    bool inserted = symbolTableSet(resolver->currentSymtab, symbol, item);
 
     if (inserted) return item;
     else {
@@ -161,8 +164,8 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
 }
 
 static void checkUnusedVariables(Resolver* resolver, int flag) {
-    for (int i = 0; i < resolver->symtab->capacity; i++) {
-        SymbolEntry* entry = &resolver->symtab->entries[i];
+    for (int i = 0; i < resolver->currentSymtab->capacity; i++) {
+        SymbolEntry* entry = &resolver->currentSymtab->entries[i];
         if (entry->key == NULL) continue;
         else if (entry->value->state == SYMBOL_STATE_DECLARED || entry->value->state == SYMBOL_STATE_DEFINED) {
             if (flag == 1) semanticWarning(resolver, "Variable '%s' is never used.", entry->key->chars);
@@ -172,14 +175,18 @@ static void checkUnusedVariables(Resolver* resolver, int flag) {
 }
 
 static void checkUnmodifiedVariables(Resolver* resolver, int flag) {
-    for (int i = 0; i < resolver->symtab->capacity; i++) {
-        SymbolEntry* entry = &resolver->symtab->entries[i];
+    for (int i = 0; i < resolver->currentSymtab->capacity; i++) {
+        SymbolEntry* entry = &resolver->currentSymtab->entries[i];
         if (entry->key == NULL) continue;
         else if (entry->value->isMutable && entry->value->state != SYMBOL_STATE_MODIFIED) {
             if (flag == 1) semanticWarning(resolver, "Mutable variable '%s' is not modified.", entry->key->chars);
             else if (flag == 2) semanticError(resolver, "Mutable variable '%s' is not modified.", entry->key->chars);
         }
     }
+}
+
+static bool isTopLevel(Resolver* resolver) {
+    return (resolver->currentFunction->enclosing == NULL);
 }
 
 static bool isFunctionScope(SymbolScope scope) {
@@ -191,16 +198,18 @@ static SymbolScope getFunctionScope(Ast* ast) {
 }
 
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
-    resolver->symtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->symtab, scope, resolver->symtab->depth + 1);
-    ast->symtab = resolver->symtab;
-    if (isFunctionScope(scope)) resolver->currentFunction->symtab = resolver->symtab;
+    resolver->currentSymtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->currentSymtab, scope, resolver->currentSymtab->depth + 1);
+    ast->symtab = resolver->currentSymtab;
+    if (isFunctionScope(scope)) resolver->currentFunction->symtab = resolver->currentSymtab;
+    if (isTopLevel(resolver)) resolver->globalSymtab = resolver->currentSymtab;
 }
 
 static void endScope(Resolver* resolver) {
-    if (resolver->debugSymtab) symbolTableOutput(resolver->symtab);
+    if (resolver->debugSymtab) symbolTableOutput(resolver->currentSymtab);
     checkUnusedVariables(resolver, resolver->vm->config.flagUnusedVariable);
     checkUnmodifiedVariables(resolver, resolver->vm->config.flagMutableVariable);
-    resolver->symtab = resolver->symtab->parent;
+    resolver->currentSymtab = resolver->currentSymtab->parent;
+    if (isTopLevel(resolver)) resolver->globalSymtab = resolver->currentSymtab;
 }
 
 static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable) {
@@ -216,29 +225,51 @@ static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable)
 
 static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
-    SymbolItem* item = symbolTableLookup(resolver->symtab, symbol);
+    SymbolItem* item = symbolTableLookup(resolver->currentSymtab, symbol);
     if (item == NULL) semanticError(resolver, "Variable %s does not exist in this scope.");
     else item->state = SYMBOL_STATE_DEFINED;
     return item;
 }
 
 static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
-    SymbolTable* currentSymtab = resolver->symtab;
+    SymbolTable* currentSymtab = resolver->currentSymtab;
+    SymbolTable* functionSymtab = resolver->currentFunction->symtab;
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
     SymbolItem* item = NULL;
 
     do {
         item = symbolTableGet(currentSymtab, symbol);
-        if (item != NULL || currentSymtab->id == resolver->currentFunction->symtab->id) break;
+        if (item != NULL || currentSymtab->id == functionSymtab->id) {
+            break;
+        }
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
     return item;
 }
 
-static SymbolItem* addUpvalue(Resolver* resolver, SymbolItem* item) {
-    item->isCaptured = true;
+static void modifyLocal(Resolver* resolver, SymbolItem* item) {
+    item->state = SYMBOL_STATE_MODIFIED;
+    if (item->category != SYMBOL_CATEGORY_LOCAL) {
+        SymbolTable* currentSymtab = resolver->currentFunction->enclosing->symtab;
+        ObjString* symbol = copyString(resolver->vm, item->token.start, item->token.length);
+        SymbolItem* local = NULL;
+
+        do {
+            item = symbolTableGet(currentSymtab, symbol);
+            if (item != NULL) {
+                item->state = SYMBOL_STATE_MODIFIED;
+                if(item->category == SYMBOL_CATEGORY_LOCAL) return;
+            }
+            currentSymtab = currentSymtab->parent;
+        } while (currentSymtab != NULL);
+    }
+}
+
+static SymbolItem* addUpvalue(Resolver* resolver, SymbolItem* item, bool isDirect) {
+    SymbolCategory category = isDirect ? SYMBOL_CATEGORY_UPVALUE_DIRECT : SYMBOL_CATEGORY_UPVALUE_INDIRECT;
+    if(item->category == SYMBOL_CATEGORY_LOCAL) item->isCaptured = true;
     if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
-    return insertSymbol(resolver, item->token, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, item->isMutable);
+    return insertSymbol(resolver, item->token, category, SYMBOL_STATE_ACCESSED, item->isMutable);
 }
 
 static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
@@ -247,13 +278,17 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
     FunctionResolver* functionResolver = resolver->currentFunction->enclosing;
     SymbolItem* item = NULL;
+    bool isDirect = true;
 
     do {
         if (functionResolver->enclosing == NULL) break;
         item = symbolTableGet(currentSymtab, symbol);
-        if (currentSymtab->id == functionResolver->symtab->id) functionResolver = functionResolver->enclosing;
+        if (item != NULL) addUpvalue(resolver, item, isDirect);
 
-        if (item != NULL) return addUpvalue(resolver, item);
+        if (currentSymtab->id == functionResolver->symtab->id) {
+            functionResolver = functionResolver->enclosing;
+            isDirect = false;
+        }
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
     return NULL;
@@ -261,9 +296,9 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
 
 static SymbolItem* findGlobal(Resolver* resolver, Ast* ast) {
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
-    SymbolItem* item = symbolTableGet(resolver->currentFunction->symtab, symbol);
+    SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
     if (item == NULL) {
-        item = symbolTableGet(resolver->vm->symtab, symbol);
+        item = symbolTableGet(resolver->globalSymtab, symbol);
         if (item != NULL) {
             return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, item->isMutable);
         }
@@ -278,7 +313,8 @@ static void checkMutability(Resolver* resolver, SymbolItem* item) {
             case SYMBOL_CATEGORY_LOCAL:
                 semanticError(resolver, "Cannot assign to immutable local variable '%s'.", name);
                 break;
-            case SYMBOL_CATEGORY_UPVALUE:
+            case SYMBOL_CATEGORY_UPVALUE_DIRECT:
+            case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
                 semanticError(resolver, "Cannot assign to immutable captured upvalue '%s'.", name);
                 break;
             case SYMBOL_CATEGORY_GLOBAL:
@@ -411,7 +447,8 @@ static void resolveAssign(Resolver* resolver, Ast* ast) {
     if (item == NULL) return;
     else {
         checkMutability(resolver, item);
-        if (item->state == SYMBOL_STATE_DECLARED) item->state = SYMBOL_STATE_DEFINED;
+        if (SymbolCategoryIsUpvalue(item->category)) modifyLocal(resolver, item);
+        else if (item->state == SYMBOL_STATE_DECLARED) item->state = SYMBOL_STATE_DEFINED;
         else item->state = SYMBOL_STATE_MODIFIED;
         resolveChild(resolver, ast, 0);
     }
@@ -964,11 +1001,13 @@ static void resolveChild(Resolver* resolver, Ast* ast, int index) {
 void resolve(Resolver* resolver, Ast* ast) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, syntheticToken("script"), 0);
-    resolver->symtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
-    resolver->currentFunction->symtab = resolver->symtab;
+    resolver->currentSymtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
+    resolver->currentFunction->symtab = resolver->currentSymtab;
+    resolver->globalSymtab = resolver->currentSymtab;
+    resolver->rootSymtab = resolver->currentSymtab;
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);
     if (resolver->debugSymtab) {
-        symbolTableOutput(resolver->symtab);
+        symbolTableOutput(resolver->rootSymtab);
     }
 }

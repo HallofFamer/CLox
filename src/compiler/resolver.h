@@ -12,7 +12,9 @@ typedef struct {
     Token currentToken;
     ClassResolver* currentClass;
     FunctionResolver* currentFunction;
-    SymbolTable* symtab;
+    SymbolTable* currentSymtab;
+    SymbolTable* globalSymtab;
+    SymbolTable* rootSymtab;
     Token rootClass;
     Token thisVar;
     Token superVar;
