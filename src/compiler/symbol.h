@@ -66,4 +66,8 @@ bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value);
 SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key);
 void symbolTableOutput(SymbolTable* symtab);
 
+static inline bool SymbolCategoryIsUpvalue(SymbolCategory category) {
+    return (category == SYMBOL_CATEGORY_UPVALUE_DIRECT || category == SYMBOL_CATEGORY_UPVALUE_INDIRECT);
+}
+
 #endif // !clox_symbol_h

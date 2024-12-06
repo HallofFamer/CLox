@@ -194,7 +194,7 @@ static bool isFunctionScope(SymbolScope scope) {
 }
 
 static SymbolScope getFunctionScope(Ast* ast) {
-    return (ast->parent != NULL && ast->parent->type == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
+    return (ast->type == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
 }
 
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
@@ -247,7 +247,7 @@ static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
     return item;
 }
 
-static void modifyLocal(Resolver* resolver, SymbolItem* item) {
+static void assignLocal(Resolver* resolver, SymbolItem* item) {
     item->state = SYMBOL_STATE_MODIFIED;
     if (item->category != SYMBOL_CATEGORY_LOCAL) {
         SymbolTable* currentSymtab = resolver->currentFunction->enclosing->symtab;
@@ -447,7 +447,7 @@ static void resolveAssign(Resolver* resolver, Ast* ast) {
     if (item == NULL) return;
     else {
         checkMutability(resolver, item);
-        if (SymbolCategoryIsUpvalue(item->category)) modifyLocal(resolver, item);
+        if (SymbolCategoryIsUpvalue(item->category)) assignLocal(resolver, item);
         else if (item->state == SYMBOL_STATE_DECLARED) item->state = SYMBOL_STATE_DEFINED;
         else item->state = SYMBOL_STATE_MODIFIED;
         resolveChild(resolver, ast, 0);
@@ -912,6 +912,7 @@ static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
 static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     resolveChild(resolver, ast, 0);
+    function(resolver, ast, false, ast->modifier.isAsync);
     item->state = SYMBOL_STATE_ACCESSED;
 }
 
