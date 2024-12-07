@@ -226,7 +226,7 @@ static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable)
 static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
     SymbolItem* item = symbolTableLookup(resolver->currentSymtab, symbol);
-    if (item == NULL) semanticError(resolver, "Variable %s does not exist in this scope.");
+    if (item == NULL) semanticError(resolver, "Variable name '%s' does not exist in this scope.");
     else item->state = SYMBOL_STATE_DEFINED;
     return item;
 }
@@ -299,9 +299,7 @@ static SymbolItem* findGlobal(Resolver* resolver, Ast* ast) {
     SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
     if (item == NULL) {
         item = symbolTableGet(resolver->globalSymtab, symbol);
-        if (item != NULL) {
-            return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, item->isMutable);
-        }
+        if (item != NULL) return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, item->isMutable);
     }
     return item;
 }
@@ -383,7 +381,6 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
         classResolver.superClass = superClass->token;
         resolveChild(resolver, ast, childIndex);
         childIndex++;
-
 
         if (tokensEqual(&name, &resolver->rootClass)) {
             semanticError(resolver, "Cannot redeclare root class Object.");

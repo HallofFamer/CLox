@@ -44,8 +44,9 @@ static void freeAstChildren(AstArray* children, bool freeChildren) {
 }
 
 static bool astOwnsSymbolTable(Ast* ast) {
-    if (ast->symtab == NULL) return false;
-    return ast->parent == NULL || (ast->symtab != ast->parent->symtab);
+    if (ast->symtab == NULL || ast->symtab->id < 0) return false;
+    if (ast->parent == NULL || ast->parent->symtab == NULL) return false;
+    return (ast->symtab->id != ast->parent->symtab->id);
 }
 
 void freeAst(Ast* ast, bool freeChildren) {
@@ -54,7 +55,7 @@ void freeAst(Ast* ast, bool freeChildren) {
         AstArrayFree(ast->children);
         free(ast->children);
     }
-
+    
     if (astOwnsSymbolTable(ast)) {
         freeSymbolTable(ast->symtab);
     }
@@ -66,7 +67,7 @@ void astAppendChild(Ast* ast, Ast* child) {
         fprintf(stderr, "Not enough memory to add child AST node to parent.");
         exit(1);
     }
-
+     
     if (child != NULL) child->parent = ast;
     Ast* sibling = astLastChild(ast);
     if (sibling != NULL) sibling->sibling = child;
