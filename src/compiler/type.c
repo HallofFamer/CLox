@@ -94,3 +94,41 @@ bool typeTableSet(TypeTable* typetab, ObjString* key, TypeInfo* value) {
     entry->value = value;
     return true;
 }
+
+static void typeTableOutputCategory(TypeCategory category) {
+    switch (category) {
+        case TYPE_CATEGORY_CLASS:
+            printf("class");
+            break;
+        case TYPE_CATEGORY_TRAIT:
+            printf("trait");
+            break;
+        case TYPE_CATEGORY_FUNCTION:
+            printf("function");
+            break;
+        case TYPE_CATEGORY_METHOD:
+            printf("method");
+            break;
+        default:
+            printf("none");
+    }
+}
+
+static void typeTableOutputEntry(TypeEntry* entry) {
+    printf("  %s(%s) -> id: %d, category: ", entry->value->shortName->chars, entry->value->fullName->chars, entry->value->id);
+    typeTableOutputCategory(entry->value->category);
+    printf("\n");
+}
+
+void typeTableOutput(TypeTable* typetab) {
+    printf("type table(count: %d)\n", typetab->count);
+
+    for (int i = 0; i < typetab->capacity; i++) {
+        TypeEntry* entry = &typetab->entries[i];
+        if (entry != NULL && entry->key != NULL) {
+            typeTableOutputEntry(entry);
+        }
+    }
+
+    printf("\n");
+}

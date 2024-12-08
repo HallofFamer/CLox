@@ -46,6 +46,7 @@ typedef struct {
     bool debugToken;
     bool debugAst;
     bool debugSymtab;
+    bool debugTypetab;
     bool debugCode;
 
     uint8_t flagUnusedImport;
@@ -102,6 +103,7 @@ struct VM {
     CompilerV1* currentCompiler;
     ClassCompilerV1* currentClass;
     SymbolTable* symtab;
+    TypeTable* typetab;
     int numSymtabs;
     Compiler* compiler;
 

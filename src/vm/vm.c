@@ -113,6 +113,9 @@ static int parseConfiguration(void* data, const char* section, const char* name,
     else if (HAS_CONFIG("debug", "debugSymtab")) {
         config->debugSymtab = (bool)atoi(value);
     }
+    else if (HAS_CONFIG("debug", "debugTypetab")) {
+        config->debugTypetab = (bool)atoi(value);
+    }
     else if (HAS_CONFIG("debug", "debugCode")) {
         config->debugCode = (bool)atoi(value);
     }
@@ -159,6 +162,7 @@ void initVM(VM* vm) {
     vm->currentClass = NULL;
     vm->numSymtabs = 0;
     vm->symtab = newSymbolTable(vm->numSymtabs++, NULL, SYMBOL_SCOPE_GLOBAL, -1);
+    vm->typetab = newTypeTable();
     vm->objects = NULL;
     vm->objectIndex = 0;
     vm->bytesAllocated = 0;
@@ -201,6 +205,8 @@ void freeVM(VM* vm) {
     freeGenericIDMap(vm, &vm->genericIDMap);
     vm->initString = NULL;
     freeSymbolTable(vm->symtab);
+    if (vm->config.debugTypetab) typeTableOutput(vm->typetab);
+    freeTypeTable(vm->typetab);
     freeObjects(vm);
     freeLoop(vm);
 }

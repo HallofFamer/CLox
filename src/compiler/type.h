@@ -40,5 +40,6 @@ TypeTable* newTypeTable();
 void freeTypeTable(TypeTable* typeTable);
 TypeInfo* typeTableGet(TypeTable* typetab, ObjString* key);
 bool typeTableSet(TypeTable* typetab, ObjString* key, TypeInfo* value);
+void typeTableOutput(TypeTable* typetab);
 
 #endif // !clox_type_h

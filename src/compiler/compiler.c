@@ -715,7 +715,7 @@ static void compileInterpolation(Compiler* compiler, Ast* ast) {
         bool isString = false;
         Ast* expr = astGetChild(exprs, count);
 
-        if (expr->type == AST_EXPR_LITERAL && expr->token.type == TOKEN_STRING) {
+        if (expr->kind == AST_EXPR_LITERAL && expr->token.type == TOKEN_STRING) {
             compileChild(compiler, exprs, count);
             if (count > 0) emitByte(compiler, OP_ADD);
             concatenate = true;
@@ -851,7 +851,7 @@ static void compileYield(Compiler* compiler, Ast* ast) {
 }
 
 static void compileExpression(Compiler* compiler, Ast* ast) {
-    switch (ast->type) {
+    switch (ast->kind) {
         case AST_EXPR_AND:
             compileAnd(compiler, ast);
             break;
@@ -1184,7 +1184,7 @@ static void compileYieldStatement(Compiler* compiler, Ast* ast) {
 }
 
 static void compileStatement(Compiler* compiler, Ast* ast) {
-    switch (ast->type) {
+    switch (ast->kind) {
         case AST_STMT_AWAIT:
             compileAwaitStatement(compiler, ast);
             break;
@@ -1298,7 +1298,7 @@ static void compileVarDeclaration(Compiler* compiler, Ast* ast) {
 }
 
 static void compileDeclaration(Compiler* compiler, Ast* ast) {
-    switch (ast->type) {
+    switch (ast->kind) {
         case AST_DECL_CLASS:
             compileClassDeclaration(compiler, ast);
             break;
