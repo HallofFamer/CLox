@@ -17,6 +17,7 @@ SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState stat
         item->index = index;
         item->isMutable = isMutable;
         item->isCaptured = false;
+        item->type = NULL;
     }
     return item;
 }

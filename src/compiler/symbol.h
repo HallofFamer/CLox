@@ -3,6 +3,7 @@
 #define clox_symbol_h
 
 #include "token.h"
+#include "type.h"
 #include "../vm/value.h"
 
 typedef struct SymbolTable SymbolTable;
@@ -39,7 +40,7 @@ typedef struct {
     uint8_t index;
     bool isMutable;
     bool isCaptured;
-    //TypeInfo type;
+    TypeInfo* type;
 } SymbolItem;
 
 typedef struct {

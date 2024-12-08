@@ -255,7 +255,7 @@ static TokenSymbol identifierType(Lexer* lexer) {
 }
 
 static Token identifier(Lexer* lexer) {
-    while (isAlpha(peek(lexer)) || isDigit(peek(lexer))) advance(lexer);
+    while (isAlphaNumeric(peek(lexer))) advance(lexer);
     return makeToken(lexer, identifierType(lexer));
 }
 

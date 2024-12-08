@@ -308,7 +308,9 @@ static void endScope(Compiler* compiler) {
         if (compiler->locals[compiler->localCount - 1].isCaptured) {
             emitByte(compiler, OP_CLOSE_UPVALUE);
         }
-        else emitByte(compiler, OP_POP);
+        else {
+            emitByte(compiler, OP_POP);
+        }
         compiler->localCount--;
     }
 }

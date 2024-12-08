@@ -357,13 +357,9 @@ static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) 
     initFunctionResolver(resolver, &functionResolver, ast->token, resolver->currentFunction->scopeDepth + 1);
     functionResolver.modifier.isLambda = isLambda;
     functionResolver.modifier.isAsync = isAsync;
-
     SymbolScope scope = getFunctionScope(ast);
-    beginScope(resolver, ast, scope);
-    if (scope == SYMBOL_SCOPE_METHOD) {
-        insertSymbol(resolver, resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
-    }
 
+    beginScope(resolver, ast, scope);
     parameters(resolver, astGetChild(ast, 0));
     block(resolver, astGetChild(ast, 1));
     endScope(resolver);
@@ -574,6 +570,12 @@ static void resolveSuperInvoke(Resolver* resolver, Ast* ast) {
 static void resolveThis(Resolver* resolver, Ast* ast) {
     if (resolver->currentClass == NULL) {
         semanticError(resolver, "Cannot use 'this' outside of a class.");
+    }
+    ObjString* symbol = createSymbol(resolver, resolver->thisVar);
+    SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
+    if (item == NULL) {
+        item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, 0, false);
+        symbolTableSet(resolver->currentSymtab, symbol, item);
     }
 }
 
