@@ -77,7 +77,7 @@ typedef enum {
     AST_LIST_STMT,
     AST_LIST_VAR,
     AST_TYPE_ERROR
-} AstNodeType;
+} AstNodeKind;
 
 typedef struct {
     bool isAsync;
@@ -92,14 +92,14 @@ typedef struct {
 
 struct Ast {
     AstNodeCategory category;
-    AstNodeType type;
+    AstNodeKind kind;
     AstModifier modifier;
     Token token;
     Ast* parent;
     Ast* sibling;
     AstArray* children;
     SymbolTable* symtab;
-    TypeInfo* typeInfo;
+    TypeInfo* type;
 };
 
 #define AST_IS_ROOT(ast) (ast->category == AST_CATEGORY_SCRIPT)
@@ -117,8 +117,8 @@ static inline AstModifier astInitModifier() {
     return modifier;
 }
 
-Ast* emptyAst(AstNodeType type, Token token);
-Ast* newAst(AstNodeType type, Token token, int numChildren, ...);
+Ast* emptyAst(AstNodeKind kind, Token token);
+Ast* newAst(AstNodeKind kind, Token token, int numChildren, ...);
 void freeAst(Ast* node, bool freeChildren);
 void astAppendChild(Ast* ast, Ast* child);
 Ast* astFirstChild(Ast* ast);
@@ -128,11 +128,11 @@ Ast* astLastChild(Ast* ast);
 int astNumChild(Ast* ast);
 void astOutput(Ast* ast, int indentLevel);
 
-static inline AstNodeCategory astNodeCategory(AstNodeType type) {
-    if (type == AST_TYPE_NONE) return AST_CATEGORY_SCRIPT;
-    else if (type >= AST_EXPR_AND && type <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
-    else if (type >= AST_STMT_AWAIT && type <= AST_STMT_YIELD) return AST_CATEGORY_STMT;
-    else if (type >= AST_DECL_CLASS && type <= AST_DECL_VAR) return AST_CATEGORY_DECL;
+static inline AstNodeCategory astNodeCategory(AstNodeKind kind) {
+    if (kind == AST_TYPE_NONE) return AST_CATEGORY_SCRIPT;
+    else if (kind >= AST_EXPR_AND && kind <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
+    else if (kind >= AST_STMT_AWAIT && kind <= AST_STMT_YIELD) return AST_CATEGORY_STMT;
+    else if (kind >= AST_DECL_CLASS && kind <= AST_DECL_VAR) return AST_CATEGORY_DECL;
     else return AST_CATEGORY_OTHER;
 }
 

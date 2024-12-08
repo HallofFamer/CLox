@@ -77,10 +77,14 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     nativeClass->isNative = true;
     nativeClass->obj.klass->isNative = true;
     push(vm, OBJ_VAL(nativeClass));
+
     tableSet(vm, &vm->classes, nativeClass->fullName, OBJ_VAL(nativeClass));
     tableSet(vm, &vm->currentNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]); 
     pop(vm);
     pop(vm);
+    if (nativeClass->behaviorType != BEHAVIOR_METACLASS) {
+        insertTypeTable(vm, TYPE_CATEGORY_CLASS, className, nativeClass->fullName);
+    }
     return nativeClass;
 }
 
@@ -155,10 +159,12 @@ ObjClass* defineNativeTrait(VM* vm, const char* name) {
     ObjClass* nativeTrait = createTrait(vm, traitName);
     nativeTrait->isNative = true;
     push(vm, OBJ_VAL(nativeTrait));
+
     tableSet(vm, &vm->classes, nativeTrait->fullName, OBJ_VAL(nativeTrait));
     tableSet(vm, &vm->currentNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
+    insertTypeTable(vm, TYPE_CATEGORY_TRAIT, traitName, nativeTrait->fullName);
     return nativeTrait;
 }
 
@@ -224,6 +230,12 @@ void insertGlobalSymbolTable(VM* vm, const char* symbolName) {
     ObjString* symbol = newString(vm, symbolName);
     SymbolItem* item = newSymbolItem(syntheticToken(symbolName), SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, 0, false);
     symbolTableSet(vm->symtab, symbol, item);
+}
+
+void insertTypeTable(VM* vm, TypeCategory category, ObjString* shortName, ObjString* fullName) {
+    int id = vm->typetab->count + 1;
+    TypeInfo* typeInfo = newTypeInfo(vm->typetab->count + 1, category, shortName, fullName, NULL);
+    typeTableSet(vm->typetab, fullName, typeInfo);
 }
 
 void loadSourceFile(VM* vm, const char* filePath) {

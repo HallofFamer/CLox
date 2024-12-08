@@ -7,11 +7,11 @@
 
 DEFINE_BUFFER(AstArray, Ast*)
 
-Ast* emptyAst(AstNodeType type, Token token) {
+Ast* emptyAst(AstNodeKind kind, Token token) {
     Ast* ast = (Ast*)malloc(sizeof(Ast));
     if (ast != NULL) {
-        ast->category = astNodeCategory(type);
-        ast->type = type;
+        ast->category = astNodeCategory(kind);
+        ast->kind = kind;
         ast->modifier = astInitModifier();
         ast->token = token;
 
@@ -20,13 +20,13 @@ Ast* emptyAst(AstNodeType type, Token token) {
         ast->children = (AstArray*)malloc(sizeof(AstArray));
         if (ast->children != NULL) AstArrayInit(ast->children);
         ast->symtab = NULL;
-        ast->typeInfo = NULL;
+        ast->type = NULL;
     }
     return ast;
 }
 
-Ast* newAst(AstNodeType type, Token token, int numChildren, ...) {
-    Ast* ast = emptyAst(type, token);
+Ast* newAst(AstNodeKind kind, Token token, int numChildren, ...) {
+    Ast* ast = emptyAst(kind, token);
     va_list children;
     va_start(children, numChildren);
 
@@ -599,7 +599,7 @@ void astOutput(Ast* ast, int indentLevel) {
             astOutputScript(ast, indentLevel);
             break;
         case AST_CATEGORY_EXPR: {
-            switch (ast->type) {
+            switch (ast->kind) {
                 case AST_EXPR_AND:
                     astOutputExprAnd(ast, indentLevel);
                     break;
@@ -686,7 +686,7 @@ void astOutput(Ast* ast, int indentLevel) {
             }
         }
         case AST_CATEGORY_STMT: {
-            switch (ast->type) {
+            switch (ast->kind) {
                 case AST_STMT_AWAIT:
                     astOutputStmtAwait(ast, indentLevel);
                     break;
@@ -746,7 +746,7 @@ void astOutput(Ast* ast, int indentLevel) {
             }
         }
         case AST_CATEGORY_DECL: {
-            switch (ast->type) {
+            switch (ast->kind) {
                 case AST_DECL_CLASS:
                     astOutputDeclClass(ast, indentLevel);
                     break;
@@ -770,7 +770,7 @@ void astOutput(Ast* ast, int indentLevel) {
             }
         }
         case AST_CATEGORY_OTHER: {
-            switch (ast->type) {
+            switch (ast->kind) {
                 case AST_LIST_EXPR:
                     astOutputListExpr(ast, indentLevel);
                     break;

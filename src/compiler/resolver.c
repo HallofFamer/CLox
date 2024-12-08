@@ -194,7 +194,7 @@ static bool isFunctionScope(SymbolScope scope) {
 }
 
 static SymbolScope getFunctionScope(Ast* ast) {
-    return (ast->type == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
+    return (ast->kind == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
 }
 
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
@@ -493,7 +493,7 @@ static void resolveInterpolation(Resolver* resolver, Ast* ast) {
         bool isString = false;
         Ast* expr = astGetChild(exprs, count);
 
-        if (expr->type == AST_EXPR_LITERAL && expr->token.type == TOKEN_STRING) {
+        if (expr->kind == AST_EXPR_LITERAL && expr->token.type == TOKEN_STRING) {
             resolveChild(resolver, exprs, count);
             concatenate = true;
             isString = true;
@@ -601,7 +601,7 @@ static void resolveYield(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveExpression(Resolver* resolver, Ast* ast) {
-    switch (ast->type) {
+    switch (ast->kind) {
         case AST_EXPR_AND:
             resolveAnd(resolver, ast);
             break;
@@ -833,7 +833,7 @@ static void resolveYieldStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveStatement(Resolver* resolver, Ast* ast) {
-    switch (ast->type) {
+    switch (ast->kind) {
         case AST_STMT_AWAIT:
             resolverAwaitStatement(resolver, ast);
             break;
@@ -944,7 +944,7 @@ static void resolveVarDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveDeclaration(Resolver* resolver, Ast* ast) {
-    switch (ast->type) {
+    switch (ast->kind) {
         case AST_DECL_CLASS:
             resolveClassDeclaration(resolver, ast);
             break;

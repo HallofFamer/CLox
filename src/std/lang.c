@@ -1769,9 +1769,13 @@ static ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behav
     ObjClass* nativeClass = createClass(vm, className, NULL, behavior);
     nativeClass->isNative = true;
     push(vm, OBJ_VAL(nativeClass));
+
     tableSet(vm, &vm->rootNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
+    if (nativeClass->behaviorType != BEHAVIOR_METACLASS) {
+        insertTypeTable(vm, TYPE_CATEGORY_CLASS, className, nativeClass->fullName);
+    }
     return nativeClass;
 }
 
