@@ -20,6 +20,7 @@ Ast* emptyAst(AstNodeType type, Token token) {
         ast->children = (AstArray*)malloc(sizeof(AstArray));
         if (ast->children != NULL) AstArrayInit(ast->children);
         ast->symtab = NULL;
+        ast->typeInfo = NULL;
     }
     return ast;
 }

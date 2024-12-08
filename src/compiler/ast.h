@@ -99,6 +99,7 @@ struct Ast {
     Ast* sibling;
     AstArray* children;
     SymbolTable* symtab;
+    TypeInfo* typeInfo;
 };
 
 #define AST_IS_ROOT(ast) (ast->category == AST_CATEGORY_SCRIPT)
