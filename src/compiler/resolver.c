@@ -325,6 +325,11 @@ static void checkMutability(Resolver* resolver, SymbolItem* item) {
     }
 }
 
+static void addAstType(Resolver* resolver, Ast* ast, const char* name) {
+    ObjString* type = newString(resolver->vm, name);
+    ast->type = typeTableGet(resolver->vm->typetab, type);
+}
+
 static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = createSymbol(resolver, ast->token);
     SymbolItem* item = findLocal(resolver, ast);
@@ -512,7 +517,26 @@ static void resolveInvoke(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveLiteral(Resolver* resolver, Ast* ast) {
-    // To be implemented
+    switch (ast->token.type) {
+        case TOKEN_NIL: 
+            addAstType(resolver, ast, "clox.std.lang.Nil");
+            break;
+        case TOKEN_TRUE:
+        case TOKEN_FALSE:
+            addAstType(resolver, ast, "clox.std.lang.Bool");
+            break;
+        case TOKEN_INT:
+            addAstType(resolver, ast, "clox.std.lang.Int");
+            break;
+        case TOKEN_NUMBER:
+            addAstType(resolver, ast, "clox.std.lang.Float");
+            break;
+        case TOKEN_STRING:
+            addAstType(resolver, ast, "clox.std.lang.String");
+            break;
+        default:
+            semanticError(resolver, "Invalid AST literal type.");
+    }
 }
 
 static void resolveNil(Resolver* resolver, Ast* ast) {
