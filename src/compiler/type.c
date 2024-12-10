@@ -62,14 +62,26 @@ static TypeEntry* findTypeEntry(TypeEntry* entries, int capacity, ObjString* key
 
 static void typeTableAdjustCapacity(TypeTable* typetab, int capacity) {
     int oldCapacity = typetab->capacity;
-    TypeEntry* entries = (TypeEntry*)realloc(typetab->entries, sizeof(TypeTable) * capacity);
+    TypeEntry* entries = (TypeEntry*)malloc(sizeof(TypeTable) * capacity);
     if (entries == NULL) exit(1);
 
-    for (int i = oldCapacity; i < capacity; i++) {
+    for (int i = 0; i < capacity; i++) {
         entries[i].key = NULL;
         entries[i].value = NULL;
     }
 
+    typetab->count = 0;
+    for (int i = 0; i < typetab->capacity; i++) {
+        TypeEntry* entry = &typetab->entries[i];
+        if (entry->key == NULL) continue;
+
+        TypeEntry* dest = findTypeEntry(entries, capacity, entry->key);
+        dest->key = entry->key;
+        dest->value = entry->value;
+        typetab->count++;
+    }
+
+    free(typetab->entries);
     typetab->capacity = capacity;
     typetab->entries = entries;
 }
