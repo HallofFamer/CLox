@@ -325,10 +325,16 @@ static void checkMutability(Resolver* resolver, SymbolItem* item) {
     }
 }
 
-static void defineAstType(Resolver* resolver, Ast* ast, char* name) {
+static void defineAstType(Resolver* resolver, Ast* ast, const char* name) {
     ObjString* typeName = newString(resolver->vm, name);
     TypeInfo* typeInfo = typeTableGet(resolver->vm->typetab, typeName);
     ast->type = typeInfo;
+}
+
+static void deriveAstType(Ast* source, int index, SymbolItem* item) {
+    Ast* target = astGetChild(source, index);
+    source->type = target->type;
+    if (item != NULL) item->type = target->type;
 }
 
 static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
@@ -957,11 +963,12 @@ static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveVarDeclaration(Resolver* resolver, Ast* ast) {
-    declareVariable(resolver, ast, ast->modifier.isMutable);
+    SymbolItem* item = declareVariable(resolver, ast, ast->modifier.isMutable);
     bool hasValue = astHasChild(ast);
     if (hasValue) {
         resolveChild(resolver, ast, 0);
         defineVariable(resolver, ast);
+        deriveAstType(ast, 0, item);
     }
     else if (!ast->modifier.isMutable) {
         semanticError(resolver, "Immutable variable must be initialized upon declaration.");

@@ -93,9 +93,9 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
     push(vm, OBJ_VAL(functionName));
     push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, isAsync, function)));
     tableSet(vm, &vm->rootNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
+    pop(vm);
+    pop(vm);
     insertGlobalSymbolTable(vm, name);
-    pop(vm);
-    pop(vm);
 }
 
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bool isAsync, NativeMethod method) {
@@ -200,7 +200,7 @@ ObjNativeFunction* getNativeFunction(VM* vm, const char* name) {
     Value function;
     tableGet(&vm->rootNamespace->values, newString(vm, name), &function);
     if (!IS_NATIVE_FUNCTION(function)) {
-        runtimeError(vm, "Native function %s is undefined.", name);
+        runtimeError(vm, "Native function '%s' is undefined.", name);
         exit(70);
     }
     return AS_NATIVE_FUNCTION(function);
@@ -210,7 +210,7 @@ ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
     Value method;
     tableGet(&klass->methods, newString(vm, name), &method);
     if (!IS_NATIVE_METHOD(method)) {
-        runtimeError(vm, "Native method %s::%s is undefined.", klass->name->chars, name);
+        runtimeError(vm, "Native method '%s::%s' is undefined.", klass->name->chars, name);
         exit(70);
     }
     return AS_NATIVE_METHOD(method);
@@ -220,7 +220,7 @@ ObjNamespace* getNativeNamespace(VM* vm, const char* name) {
     Value namespace;
     tableGet(&vm->namespaces, newString(vm, name), &namespace);
     if (!IS_NAMESPACE(namespace)) {
-        runtimeError(vm, "Namespace %s is undefined.", name);
+        runtimeError(vm, "Namespace '%s' is undefined.", name);
         exit(70);
     }
     return AS_NAMESPACE(namespace);
