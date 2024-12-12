@@ -183,6 +183,7 @@ static void symbolTableOutputState(SymbolState state) {
 static void symbolTableOutputEntry(SymbolEntry* entry) {
     printf("  %s -> category: ", entry->key->chars);
     symbolTableOutputCategory(entry->value->category);
+    printf(", type: %s", entry->value->type != NULL ? entry->value->type->fullName->chars : "dynamic");
     printf(", index: %d, state: ", entry->value->index);
     symbolTableOutputState(entry->value->state);
     printf(", isMutable: %s", entry->value->isMutable ? "true" : "false");

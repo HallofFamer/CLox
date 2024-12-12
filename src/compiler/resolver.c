@@ -327,14 +327,32 @@ static void checkMutability(Resolver* resolver, SymbolItem* item) {
 
 static void defineAstType(Resolver* resolver, Ast* ast, const char* name) {
     ObjString* typeName = newString(resolver->vm, name);
-    TypeInfo* typeInfo = typeTableGet(resolver->vm->typetab, typeName);
-    ast->type = typeInfo;
+    ast->type = typeTableGet(resolver->vm->typetab, typeName);
 }
 
-static void deriveAstType(Ast* source, int index, SymbolItem* item) {
-    Ast* target = astGetChild(source, index);
-    source->type = target->type;
-    if (item != NULL) item->type = target->type;
+static void deriveAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
+    Ast* child = astGetChild(ast, childIndex);
+    ast->type = child->type;
+    if (item != NULL) item->type = ast->type;
+}
+
+static void deriveAstTypeFromUnary(Resolver* resolver, Ast* ast, int childIndex, SymbolItem* item) {
+    Ast* child = astGetChild(ast, childIndex);
+    switch (ast->token.type) {
+        case TOKEN_BANG:
+            defineAstType(resolver, ast, "clox.std.lang.Bool");
+            break;
+        case TOKEN_MINUS:
+            if (strcmp(child->type->fullName->chars, "clox.std.lang.Int") == 0) {
+                defineAstType(resolver, ast, "clox.std.lang.Int");
+            }
+            else if (strcmp(child->type->fullName->chars, "clox.std.lang.Float") == 0) {
+                defineAstType(resolver, ast, "clox.std.lang.Float");
+            }
+            break;
+        default: 
+            break;
+    }
 }
 
 static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
@@ -445,6 +463,7 @@ static void resolveArray(Resolver* resolver, Ast* ast) {
             resolveChild(resolver, elements, i);
         }
     }
+    defineAstType(resolver, ast, "clox.std.collection.Array");
 }
 
 static void resolveAssign(Resolver* resolver, Ast* ast) {
@@ -486,6 +505,7 @@ static void resolveDictionary(Resolver* resolver, Ast* ast) {
         resolveChild(resolver, values, entryCount);
         entryCount++;
     }
+    defineAstType(resolver, ast, "clox.std.collection.Dictionary");
 }
 
 static void resolveFunction(Resolver* resolver, Ast* ast) {
@@ -616,14 +636,18 @@ static void resolveTrait(Resolver* resolver, Ast* ast) {
 
 static void resolveUnary(Resolver* resolver, Ast* ast) {
     resolveChild(resolver, ast, 0);
+    deriveAstTypeFromUnary(resolver, ast, 0, NULL);
 }
 
 static void resolveVariable(Resolver* resolver, Ast* ast) {
     SymbolItem* item = getVariable(resolver, ast);
-    if (item != NULL && item->state == SYMBOL_STATE_DECLARED) {
-        char* name = tokenToCString(ast->token);
-        semanticError(resolver, "Cannot use variable '%s' before it is defined.", name);
-        free(name);
+    if (item != NULL) {
+        ast->type = item->type;
+        if (item->state == SYMBOL_STATE_DECLARED) {
+            char* name = tokenToCString(ast->token);
+            semanticError(resolver, "Cannot use variable '%s' before it is defined.", name);
+            free(name);
+        }
     }
 }
 
@@ -968,7 +992,7 @@ static void resolveVarDeclaration(Resolver* resolver, Ast* ast) {
     if (hasValue) {
         resolveChild(resolver, ast, 0);
         defineVariable(resolver, ast);
-        deriveAstType(ast, 0, item);
+        deriveAstTypeFromChild(ast, 0, item);
     }
     else if (!ast->modifier.isMutable) {
         semanticError(resolver, "Immutable variable must be initialized upon declaration.");
