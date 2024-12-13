@@ -186,8 +186,7 @@ static void symbolTableOutputEntry(SymbolEntry* entry) {
     printf(", type: %s", entry->value->type != NULL ? entry->value->type->fullName->chars : "dynamic");
     printf(", index: %d, state: ", entry->value->index);
     symbolTableOutputState(entry->value->state);
-    printf(", isMutable: %s", entry->value->isMutable ? "true" : "false");
-    printf(", isCaptured: %s\n", entry->value->isCaptured ? "true" : "false");
+    printf(", isMutable: %s\n", entry->value->isMutable ? "true" : "false");
 }
 
 void symbolTableOutput(SymbolTable* symtab) {

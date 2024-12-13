@@ -150,10 +150,11 @@ static bool findSymbol(Resolver* resolver, Token token) {
     return (item != NULL);
 }
 
-static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state, bool isMutable) {
+static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state, TypeInfo* type, bool isMutable) {
     ObjString* symbol = createSymbol(resolver, token);
     uint8_t index = nextSymbolIndex(resolver, category);
     SymbolItem* item = newSymbolItem(token, category, state, index, isMutable);
+    item->type = type;
     bool inserted = symbolTableSet(resolver->currentSymtab, symbol, item);
 
     if (inserted) return item;
@@ -214,7 +215,7 @@ static void endScope(Resolver* resolver) {
 
 static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable) {
     SymbolCategory category = (resolver->currentFunction->enclosing == NULL) ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL;
-    SymbolItem* item = insertSymbol(resolver, ast->token, category, SYMBOL_STATE_DECLARED, isMutable);
+    SymbolItem* item = insertSymbol(resolver, ast->token, category, SYMBOL_STATE_DECLARED, NULL, isMutable);
     if (item == NULL) {
         char* name = tokenToCString(ast->token);
         semanticError(resolver, "Already a variable with name '%s' in this scope.", name);
@@ -269,7 +270,7 @@ static SymbolItem* addUpvalue(Resolver* resolver, SymbolItem* item, bool isDirec
     SymbolCategory category = isDirect ? SYMBOL_CATEGORY_UPVALUE_DIRECT : SYMBOL_CATEGORY_UPVALUE_INDIRECT;
     if(item->category == SYMBOL_CATEGORY_LOCAL) item->isCaptured = true;
     if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
-    return insertSymbol(resolver, item->token, category, SYMBOL_STATE_ACCESSED, item->isMutable);
+    return insertSymbol(resolver, item->token, category, SYMBOL_STATE_ACCESSED, item->type, item->isMutable);
 }
 
 static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
@@ -299,7 +300,7 @@ static SymbolItem* findGlobal(Resolver* resolver, Ast* ast) {
     SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
     if (item == NULL) {
         item = symbolTableGet(resolver->globalSymtab, symbol);
-        if (item != NULL) return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, item->isMutable);
+        if (item != NULL) return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, item->type, item->isMutable);
     }
     return item;
 }
@@ -612,9 +613,6 @@ static void resolveSuperInvoke(Resolver* resolver, Ast* ast) {
     if (resolver->currentClass == NULL) {
         semanticError(resolver, "Cannot use 'super' outside of a class.");
     }
-    if (!findSymbol(resolver, ast->token)) {
-        insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
-    }
     resolveChild(resolver, ast, 0);
 }
 
@@ -867,12 +865,12 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
 
     for (int i = 0; i < namespaceDepth; i++) {
         Ast* subNamespace = astGetChild(_namespace, i);
-        insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
+        insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
     }
 
     if (astNumChild(ast) > 1) {
         Ast* alias = astGetChild(ast, 1);
-        insertSymbol(resolver, alias->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
+        insertSymbol(resolver, alias->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
     }
 }
 
@@ -973,9 +971,11 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
     uint8_t namespaceDepth = 0;
     Ast* identifiers = astGetChild(ast, 0);
+    TypeInfo* type = typeTableGet(resolver->vm->typetab, newString(resolver->vm, "clox.std.lang.Namespace"));
+
     while (namespaceDepth < identifiers->children->count) {
         Ast* identifier = astGetChild(identifiers, namespaceDepth);
-        insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
+        insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
         namespaceDepth++;
     }
 }
