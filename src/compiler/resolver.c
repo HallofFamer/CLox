@@ -164,6 +164,24 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
     }
 }
 
+static SymbolItem* insertThis(Resolver* resolver, ObjString* symbol) {
+    SymbolItem* item = NULL;
+    uint8_t index = 0;
+    if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
+        item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, index, false);
+    }
+    else if (resolver->currentSymtab->parent->scope == SYMBOL_SCOPE_METHOD){
+        index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE_DIRECT);
+        item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_DIRECT, SYMBOL_STATE_ACCESSED, index, false);
+    }
+    else {
+        index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE_INDIRECT);
+        item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_INDIRECT, SYMBOL_STATE_ACCESSED, index, false);
+    }
+    symbolTableSet(resolver->currentSymtab, symbol, item);
+    return item;
+}
+
 static void checkUnusedVariables(Resolver* resolver, int flag) {
     for (int i = 0; i < resolver->currentSymtab->capacity; i++) {
         SymbolEntry* entry = &resolver->currentSymtab->entries[i];
@@ -622,10 +640,7 @@ static void resolveThis(Resolver* resolver, Ast* ast) {
     }
     ObjString* symbol = createSymbol(resolver, resolver->thisVar);
     SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
-    if (item == NULL) {
-        item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, 0, false);
-        symbolTableSet(resolver->currentSymtab, symbol, item);
-    }
+    if (item == NULL) insertThis(resolver, symbol);
 }
 
 static void resolveTrait(Resolver* resolver, Ast* ast) {
@@ -963,7 +978,6 @@ static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
-    resolveChild(resolver, ast, 0);
     function(resolver, ast, false, ast->modifier.isAsync);
     item->state = SYMBOL_STATE_ACCESSED;
 }
