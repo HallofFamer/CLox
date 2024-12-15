@@ -130,6 +130,9 @@ static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
             return resolver->currentFunction->numUpvalues++;
         case SYMBOL_CATEGORY_GLOBAL:
             return resolver->currentFunction->numGlobals++;
+        case SYMBOL_CATEGORY_PROPERTY:
+        case SYMBOL_CATEGORY_METHOD:
+            return 0;
         default:
             semanticError(resolver, "Invalid symbol category specified.");
             return -1;
@@ -233,6 +236,7 @@ static void endScope(Resolver* resolver) {
 
 static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable) {
     SymbolCategory category = (resolver->currentFunction->enclosing == NULL) ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL;
+    if (ast->kind == AST_DECL_METHOD) category = SYMBOL_CATEGORY_METHOD;
     SymbolItem* item = insertSymbol(resolver, ast->token, category, SYMBOL_STATE_DECLARED, NULL, isMutable);
     if (item == NULL) {
         char* name = tokenToCString(ast->token);
@@ -812,8 +816,11 @@ static void resolveForStatement(Resolver* resolver, Ast* ast) {
     resolver->loopDepth++;
     beginScope(resolver, ast, SYMBOL_SCOPE_BLOCK);
     Ast* decl = astGetChild(ast, 0);
-    resolveChild(resolver, decl, 0);
-    if (astNumChild(decl) > 1) resolveChild(resolver, decl, 1);
+    for (int i = 0; i < decl->children->count; i++) {
+        Ast* varDecl = astGetChild(decl, i);
+        SymbolItem* item = declareVariable(resolver, varDecl, varDecl->modifier.isMutable);
+        item->state = SYMBOL_STATE_DEFINED;
+    }
 
     resolveChild(resolver, ast, 1);
     resolveChild(resolver, ast, 2);

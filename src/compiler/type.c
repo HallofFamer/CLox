@@ -4,7 +4,6 @@
 
 #include "type.h"
 #include "../common/buffer.h"
-#include "../vm/memory.h"
 #include "../vm/object.h"
 
 #define TYPE_TABLE_MAX_LOAD 0.75
