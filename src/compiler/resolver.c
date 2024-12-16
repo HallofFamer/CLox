@@ -359,8 +359,10 @@ static void deriveAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
     if (item != NULL) item->type = ast->type;
 }
 
-static void deriveAstTypeFromUnary(Resolver* resolver, Ast* ast, int childIndex, SymbolItem* item) {
-    Ast* child = astGetChild(ast, childIndex);
+static void deriveAstTypeFromUnary(Resolver* resolver, Ast* ast, SymbolItem* item) {
+    Ast* child = astGetChild(ast, 0);
+    if (child->type == NULL) return;
+
     switch (ast->token.type) {
         case TOKEN_BANG:
             defineAstType(resolver, ast, "clox.std.lang.Bool");
@@ -372,6 +374,57 @@ static void deriveAstTypeFromUnary(Resolver* resolver, Ast* ast, int childIndex,
             else if (strcmp(child->type->fullName->chars, "clox.std.lang.Float") == 0) {
                 defineAstType(resolver, ast, "clox.std.lang.Float");
             }
+            break;
+        default: 
+            break;
+    }
+}
+
+static void deriveAstTypeFromBinary(Resolver* resolver, Ast* ast, SymbolItem* item) {
+    Ast* left = astGetChild(ast, 0);
+    Ast* right = astGetChild(ast, 1);
+    if (left->type == NULL || right->type == NULL) return;
+
+    switch (ast->token.type) {
+        case TOKEN_BANG_EQUAL:
+        case TOKEN_EQUAL_EQUAL:
+        case TOKEN_GREATER:
+        case TOKEN_GREATER_EQUAL:
+        case TOKEN_LESS:
+        case TOKEN_LESS_EQUAL:
+            defineAstType(resolver, ast, "Clox.std.lang.Bool");
+            break;
+        case TOKEN_PLUS:
+            if (strcmp(left->type->fullName->chars, "clox.std.lang.String") == 0 && strcmp(right->type->fullName->chars, "clox.std.lang.String") == 0) {
+                defineAstType(resolver, ast, "clox.std.lang.String");
+            }
+            else if (strcmp(left->type->fullName->chars, "clox.std.lang.Int") == 0 && strcmp(right->type->fullName->chars, "clox.std.lang.Int") == 0) {
+                defineAstType(resolver, ast, "clox.std.lang.Int");
+            }
+            else if (strcmp(left->type->fullName->chars, "clox.std.lang.Float") == 0 || strcmp(right->type->fullName->chars, "clox.std.lang.Float") == 0) {
+                defineAstType(resolver, ast, "clox.std.lang.Float");
+            }
+            break;
+        case TOKEN_MINUS:
+        case TOKEN_STAR:
+        case TOKEN_MODULO:
+            if (strcmp(left->type->fullName->chars, "clox.std.lang.Int") == 0 && strcmp(right->type->fullName->chars, "clox.std.lang.Int") == 0) {
+                defineAstType(resolver, ast, "clox.std.lang.Int");
+            }
+            else if (strcmp(left->type->fullName->chars, "clox.std.lang.Float") == 0 || strcmp(right->type->fullName->chars, "clox.std.lang.Float") == 0) {
+                defineAstType(resolver, ast, "clox.std.lang.Float");
+            }
+            break;
+        case TOKEN_SLASH:
+            if (strcmp(left->type->fullName->chars, "clox.std.lang.Int") == 0 && strcmp(right->type->fullName->chars, "clox.std.lang.Int") == 0) {
+                defineAstType(resolver, ast, "clox.std.lang.Float");
+            }
+            else if (strcmp(left->type->fullName->chars, "clox.std.lang.Float") == 0 || strcmp(right->type->fullName->chars, "clox.std.lang.Float") == 0) {
+                defineAstType(resolver, ast, "clox.std.lang.Float");
+            }
+            break;
+        case TOKEN_DOT_DOT:
+            defineAstType(resolver, ast, "Clox.std.collection.Range");
             break;
         default: 
             break;
@@ -508,6 +561,7 @@ static void resolveAwait(Resolver* resolver, Ast* ast) {
 static void resolveBinary(Resolver* resolver, Ast* ast) {
     resolveChild(resolver, ast, 0);
     resolveChild(resolver, ast, 1);
+    deriveAstTypeFromBinary(resolver, ast, NULL);
 }
 
 static void resolveCall(Resolver* resolver, Ast* ast) {
@@ -653,7 +707,7 @@ static void resolveTrait(Resolver* resolver, Ast* ast) {
 
 static void resolveUnary(Resolver* resolver, Ast* ast) {
     resolveChild(resolver, ast, 0);
-    deriveAstTypeFromUnary(resolver, ast, 0, NULL);
+    deriveAstTypeFromUnary(resolver, ast, NULL);
 }
 
 static void resolveVariable(Resolver* resolver, Ast* ast) {
