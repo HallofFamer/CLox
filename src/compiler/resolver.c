@@ -348,6 +348,14 @@ static void checkMutability(Resolver* resolver, SymbolItem* item) {
     }
 }
 
+static bool checkAstType(Ast* ast, const char* name) {
+    return (strcmp(ast->type->fullName->chars, name) == 0);
+}
+
+static bool checkAstTypes(Ast* ast, const char* name, const char* name2) {
+    return (strcmp(ast->type->fullName->chars, name) == 0 || strcmp(ast->type->fullName->chars, name2) == 0);
+}
+
 static void defineAstType(Resolver* resolver, Ast* ast, const char* name) {
     ObjString* typeName = newString(resolver->vm, name);
     ast->type = typeTableGet(resolver->vm->typetab, typeName);
@@ -395,31 +403,28 @@ static void deriveAstTypeFromBinary(Resolver* resolver, Ast* ast, SymbolItem* it
             defineAstType(resolver, ast, "Clox.std.lang.Bool");
             break;
         case TOKEN_PLUS:
-            if (strcmp(left->type->fullName->chars, "clox.std.lang.String") == 0 && strcmp(right->type->fullName->chars, "clox.std.lang.String") == 0) {
+            if (checkAstType(left, "clox.std.lang.String") && checkAstType(right, "clox.std.lang.String")) {
                 defineAstType(resolver, ast, "clox.std.lang.String");
             }
-            else if (strcmp(left->type->fullName->chars, "clox.std.lang.Int") == 0 && strcmp(right->type->fullName->chars, "clox.std.lang.Int") == 0) {
+            else if (checkAstType(left, "clox.std.lang.Int") && checkAstType(right, "clox.std.lang.Int")) {
                 defineAstType(resolver, ast, "clox.std.lang.Int");
             }
-            else if (strcmp(left->type->fullName->chars, "clox.std.lang.Float") == 0 || strcmp(right->type->fullName->chars, "clox.std.lang.Float") == 0) {
+            else if (checkAstTypes(left, "clox.std.lang.Int", "clox.std.lang.Float") || checkAstTypes(right, "clox.std.lang.Int", "clox.std.lang.Float")) {
                 defineAstType(resolver, ast, "clox.std.lang.Float");
             }
             break;
         case TOKEN_MINUS:
         case TOKEN_STAR:
         case TOKEN_MODULO:
-            if (strcmp(left->type->fullName->chars, "clox.std.lang.Int") == 0 && strcmp(right->type->fullName->chars, "clox.std.lang.Int") == 0) {
+            if (checkAstType(left, "clox.std.lang.Int") && checkAstType(right, "clox.std.lang.Int")) {
                 defineAstType(resolver, ast, "clox.std.lang.Int");
             }
-            else if (strcmp(left->type->fullName->chars, "clox.std.lang.Float") == 0 || strcmp(right->type->fullName->chars, "clox.std.lang.Float") == 0) {
+            else if (checkAstTypes(left, "clox.std.lang.Int", "clox.std.lang.Float") || checkAstTypes(right, "clox.std.lang.Int", "clox.std.lang.Float")) {
                 defineAstType(resolver, ast, "clox.std.lang.Float");
             }
             break;
         case TOKEN_SLASH:
-            if (strcmp(left->type->fullName->chars, "clox.std.lang.Int") == 0 && strcmp(right->type->fullName->chars, "clox.std.lang.Int") == 0) {
-                defineAstType(resolver, ast, "clox.std.lang.Float");
-            }
-            else if (strcmp(left->type->fullName->chars, "clox.std.lang.Float") == 0 || strcmp(right->type->fullName->chars, "clox.std.lang.Float") == 0) {
+            if (checkAstTypes(left, "clox.std.lang.Int", "clox.std.lang.Float") || checkAstTypes(right, "clox.std.lang.Int", "clox.std.lang.Float")) {
                 defineAstType(resolver, ast, "clox.std.lang.Float");
             }
             break;
