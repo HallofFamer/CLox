@@ -648,6 +648,12 @@ static void resolveLiteral(Resolver* resolver, Ast* ast) {
     }
 }
 
+static void resolveName(Resolver* resolver, Ast* ast) {
+    if (ast->modifier.isQualified) {
+        resolveChild(resolver, ast, 0);
+    }
+}
+
 static void resolveNil(Resolver* resolver, Ast* ast) {
     resolveChild(resolver, ast, 0);
     resolveChild(resolver, ast, 1);
@@ -771,6 +777,9 @@ static void resolveExpression(Resolver* resolver, Ast* ast) {
             break;
         case AST_EXPR_LITERAL:
             resolveLiteral(resolver, ast);
+            break;
+        case AST_EXPR_NAME: 
+            resolveName(resolver, ast);
             break;
         case AST_EXPR_NIL:
             resolveNil(resolver, ast);

@@ -33,6 +33,7 @@ typedef enum {
     AST_EXPR_INVOKE,
     AST_EXPR_INTERPOLATION,
     AST_EXPR_LITERAL,
+    AST_EXPR_NAME,
     AST_EXPR_NIL,
     AST_EXPR_OR,
     AST_EXPR_PARAM,
@@ -86,6 +87,7 @@ typedef struct {
     bool isLambda;
     bool isMutable;
     bool isOptional;
+    bool isQualified;
     bool isVariadic;
     bool isWith;
 } AstModifier;
@@ -111,6 +113,7 @@ static inline AstModifier astInitModifier() {
         .isLambda = false,
         .isMutable = false,
         .isOptional = false,
+        .isQualified = false,
         .isVariadic = false,
         .isWith = false
     };
