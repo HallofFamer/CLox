@@ -1058,15 +1058,19 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
-    uint8_t namespaceDepth = 0;
     Ast* identifiers = astGetChild(ast, 0);
     TypeInfo* type = typeTableGet(resolver->vm->typetab, newString(resolver->vm, "clox.std.lang.Namespace"));
+    Ast* identifier = astGetChild(identifiers, 0);
+    insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
 
-    while (namespaceDepth < identifiers->children->count) {
-        Ast* identifier = astGetChild(identifiers, namespaceDepth);
-        insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
-        namespaceDepth++;
+    const char* start = identifier->token.start;
+    int length = identifier->token.length;
+    for (int i = 1; i < identifiers->children->count; i++) {
+        identifier = astGetChild(identifiers, i);
+        length += identifier->token.length + 1;
     }
+
+    resolver->currentNamespace = copyString(resolver->vm, start, length);
 }
 
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {

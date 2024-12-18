@@ -7,6 +7,7 @@
 #include "../vm/value.h"
 
 typedef struct TypeInfo TypeInfo;
+typedef struct TypeTable TypeTable;
 DECLARE_BUFFER(TypeInfoArray, TypeInfo*)
 
 typedef enum {
@@ -20,6 +21,7 @@ typedef enum {
 typedef struct {
     TypeInfo* superclassType;
     TypeInfoArray* traitTypes;
+    TypeTable* methods;
 } BehaviorTypeInfo;
 
 typedef struct {
@@ -41,13 +43,13 @@ typedef struct {
     TypeInfo* value;
 } TypeEntry;
 
-typedef struct {
+struct TypeTable {
     int count;
     int capacity;
     TypeEntry* entries;
-} TypeTable;
+};
 
-BehaviorTypeInfo* newBehaviorInfo(TypeInfo* superclass, int numTraits, ...);
+BehaviorTypeInfo* newBehaviorInfo(int id, TypeInfo* superclass, int numTraits, ...);
 void freeBehaviorTypeInfo(BehaviorTypeInfo* behavior);
 FunctionTypeInfo* newFunctionInfo(TypeInfo* returnType, int numParams, ...);
 void freeFunctionTypeInfo(FunctionTypeInfo* function);

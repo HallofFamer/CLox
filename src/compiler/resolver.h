@@ -10,6 +10,7 @@ typedef struct FunctionResolver FunctionResolver;
 typedef struct {
     VM* vm;
     Token currentToken;
+    ObjString* currentNamespace;
     ClassResolver* currentClass;
     FunctionResolver* currentFunction;
     SymbolTable* currentSymtab;

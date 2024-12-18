@@ -9,15 +9,18 @@
 #define TYPE_TABLE_MAX_LOAD 0.75
 DEFINE_BUFFER(TypeInfoArray, TypeInfo*)
 
-BehaviorTypeInfo* newBehaviorInfo(TypeInfo* superclassType, int numTraits, ...) {
+BehaviorTypeInfo* newBehaviorInfo(int id, TypeInfo* superclassType, int numTraits, ...) {
     BehaviorTypeInfo* behavior = (BehaviorTypeInfo*)malloc(sizeof(BehaviorTypeInfo));
     if (behavior != NULL) {
         behavior->superclassType = superclassType;
         behavior->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        behavior->methods = newTypeTable();
+
         if (behavior->traitTypes != NULL) {
             TypeInfoArrayInit(behavior->traitTypes);
             va_list args;
             va_start(args, numTraits);
+
             for (int i = 0; i < numTraits; i++) {
                 TypeInfo* type = va_arg(args, TypeInfo*);
                 TypeInfoArrayAdd(behavior->traitTypes, type);
@@ -32,6 +35,7 @@ void freeBehaviorTypeInfo(BehaviorTypeInfo* behavior) {
     if (behavior->traitTypes != NULL) {
         TypeInfoArrayFree(behavior->traitTypes);
     }
+    freeTypeTable(behavior->methods);
     free(behavior);
 }
 

@@ -495,9 +495,7 @@ static void string(Compiler* compiler, Token token) {
 
 static void getVariable(Compiler* compiler, Token* token) {
     int arg = resolveLocal(compiler, token);
-    if (arg != -1) {
-        emitBytes(compiler, OP_GET_LOCAL, (uint8_t)arg);
-    }
+    if (arg != -1) emitBytes(compiler, OP_GET_LOCAL, (uint8_t)arg);
     else if ((arg = resolveUpvalue(compiler, token)) != -1) {
         emitBytes(compiler, OP_GET_UPVALUE, (uint8_t)arg);
     }

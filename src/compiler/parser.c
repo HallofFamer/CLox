@@ -311,7 +311,7 @@ static Token identifierToken(Parser* parser, const char* message) {
     return parser->previous;
 }
 
-static Ast* name(Parser* parser, const char* message) {
+static Ast* name_(Parser* parser, const char* message) {
     consume(parser, TOKEN_IDENTIFIER, message);
     Token name = parser->previous;
     if (!match(parser, TOKEN_DOT)) return emptyAst(AST_EXPR_NAME, name);
@@ -612,7 +612,7 @@ static Ast* methods(Parser* parser, Token* name) {
 
 static Ast* superclass_(Parser* parser) {
     if (match(parser, TOKEN_EXTENDS)) {
-        return name(parser, "Expect super class name.");
+        return name_(parser, "Expect super class name.");
     }
     return emptyAst(AST_EXPR_VARIABLE, parser->rootClass);
 }
@@ -628,7 +628,7 @@ static Ast* traits(Parser* parser, Token* name) {
             errorAtCurrent(parser, "Can't have more than 15 parameters.");
         }
 
-        Ast* trait = identifier(parser, "Expect trait name.");
+        Ast* trait = name_(parser, "Expect trait name.");
         astAppendChild(traitList, trait);
     } while (match(parser, TOKEN_COMMA));
 
