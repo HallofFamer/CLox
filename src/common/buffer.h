@@ -85,6 +85,7 @@ static inline char* bufferNewCString(size_t length) {
     return buffer;
 }
 
+DECLARE_BUFFER(BoolArray, bool)
 DECLARE_BUFFER(ByteArray, uint8_t)
 DECLARE_BUFFER(ShortArray, short)
 DECLARE_BUFFER(IntArray, int)

@@ -4,6 +4,7 @@
 
 #include "buffer.h"
 
+DEFINE_BUFFER(BoolArray, bool)
 DEFINE_BUFFER(ByteArray, uint8_t)
 DEFINE_BUFFER(ShortArray, short)
 DEFINE_BUFFER(IntArray, int)

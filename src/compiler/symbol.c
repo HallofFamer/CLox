@@ -67,14 +67,26 @@ static SymbolEntry* findSymbolEntry(SymbolEntry* entries, int capacity, ObjStrin
 
 static void symbolTableAdjustCapacity(SymbolTable* symtab, int capacity) {
     int oldCapacity = symtab->capacity;
-    SymbolEntry* entries = (SymbolEntry*)realloc(symtab->entries, sizeof(SymbolTable) * capacity);
+    SymbolEntry* entries = (SymbolEntry*)malloc(sizeof(SymbolTable) * capacity);
     if (entries == NULL) exit(1);
-    
-    for (int i = oldCapacity; i < capacity; i++) {
+
+    for (int i = 0; i < capacity; i++) {
         entries[i].key = NULL;
         entries[i].value = NULL;
     }
 
+    symtab->count = 0;
+    for (int i = 0; i < symtab->capacity; i++) {
+        SymbolEntry* entry = &symtab->entries[i];
+        if (entry->key == NULL) continue;
+
+        SymbolEntry* dest = findSymbolEntry(entries, capacity, entry->key);
+        dest->key = entry->key;
+        dest->value = entry->value;
+        symtab->count++;
+    }
+
+    free(symtab->entries);
     symtab->capacity = capacity;
     symtab->entries = entries;
 }
@@ -125,14 +137,14 @@ static void symbolTableOutputCategory(SymbolCategory category) {
         case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
             printf("upvalue(indirect)");
             break;
+        case SYMBOL_CATEGORY_GLOBAL:
+            printf("global");
+            break;
         case SYMBOL_CATEGORY_PROPERTY:
             printf("property");
             break;
         case SYMBOL_CATEGORY_METHOD:
             printf("method");
-            break;
-        case SYMBOL_CATEGORY_GLOBAL:
-            printf("global");
             break;
         default:
             printf("none");

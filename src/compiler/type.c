@@ -7,21 +7,77 @@
 #include "../vm/object.h"
 
 #define TYPE_TABLE_MAX_LOAD 0.75
+DEFINE_BUFFER(TypeInfoArray, TypeInfo*)
 
-TypeInfo* newTypeInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclass) {
+BehaviorTypeInfo* newBehaviorInfo(TypeInfo* superclassType, int numTraits, ...) {
+    BehaviorTypeInfo* behavior = (BehaviorTypeInfo*)malloc(sizeof(BehaviorTypeInfo));
+    if (behavior != NULL) {
+        behavior->superclassType = superclassType;
+        behavior->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        if (behavior->traitTypes != NULL) {
+            TypeInfoArrayInit(behavior->traitTypes);
+            va_list args;
+            va_start(args, numTraits);
+            for (int i = 0; i < numTraits; i++) {
+                TypeInfo* type = va_arg(args, TypeInfo*);
+                TypeInfoArrayAdd(behavior->traitTypes, type);
+            }
+            va_end(args);
+        }
+    }
+    return behavior;
+}
+
+void freeBehaviorTypeInfo(BehaviorTypeInfo* behavior) {
+    if (behavior->traitTypes != NULL) {
+        TypeInfoArrayFree(behavior->traitTypes);
+    }
+    free(behavior);
+}
+
+FunctionTypeInfo* newFunctionInfo(TypeInfo* returnType, int numParams, ...) {
+    FunctionTypeInfo* function = (FunctionTypeInfo*)malloc(sizeof(FunctionTypeInfo));
+    if (function != NULL) {
+        function->returnType = returnType;
+        function->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        if (function->paramTypes != NULL) {
+            TypeInfoArrayInit(function->paramTypes);
+            va_list args;
+            va_start(args, numParams);
+            for (int i = 0; i < numParams; i++) {
+                TypeInfo* type = va_arg(args, TypeInfo*);
+                TypeInfoArrayAdd(function->paramTypes, type);
+            }
+            va_end(args);
+        }
+    }
+    return function;
+}
+
+void freeFunctionTypeInfo(FunctionTypeInfo* function) {
+    if (function->paramTypes != NULL) {
+        TypeInfoArrayFree(function->paramTypes);
+    }
+    free(function);
+}
+
+TypeInfo* newTypeInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, BehaviorTypeInfo* behavior, FunctionTypeInfo* function) {
     TypeInfo* type = (TypeInfo*)malloc(sizeof(TypeInfo));
     if (type != NULL) {
         type->id = id;
         type->category = category;
         type->shortName = shortName;
         type->fullName = fullName;
-        type->superclass = superclass;
+        type->behavior = behavior;
+        type->function = function;
     }
     return type;
 }
 
 void freeTypeInfo(TypeInfo* type) {
     if (type != NULL) {
+        if (type->behavior != NULL) freeBehaviorTypeInfo(type->behavior);
+        if (type->function != NULL) freeFunctionTypeInfo(type->function);
         free(type);
     }
 }

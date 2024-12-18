@@ -2,10 +2,12 @@
 #ifndef clox_type_h
 #define clox_type_h
 
+#include "../common/buffer.h"
 #include "../common/common.h"
 #include "../vm/value.h"
 
 typedef struct TypeInfo TypeInfo;
+DECLARE_BUFFER(TypeInfoArray, TypeInfo*)
 
 typedef enum {
     TYPE_CATEGORY_NONE,
@@ -15,12 +17,23 @@ typedef enum {
     TYPE_CATEGORY_METHOD
 } TypeCategory;
 
+typedef struct {
+    TypeInfo* superclassType;
+    TypeInfoArray* traitTypes;
+} BehaviorTypeInfo;
+
+typedef struct {
+    TypeInfo* returnType;
+    TypeInfoArray* paramTypes;
+} FunctionTypeInfo;
+
 struct TypeInfo {
     int id;
     TypeCategory category;
     ObjString* shortName;
     ObjString* fullName;
-    TypeInfo* superclass;
+    BehaviorTypeInfo* behavior;
+    FunctionTypeInfo* function;
 };
 
 typedef struct {
@@ -34,7 +47,11 @@ typedef struct {
     TypeEntry* entries;
 } TypeTable;
 
-TypeInfo* newTypeInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclass);
+BehaviorTypeInfo* newBehaviorInfo(TypeInfo* superclass, int numTraits, ...);
+void freeBehaviorTypeInfo(BehaviorTypeInfo* behavior);
+FunctionTypeInfo* newFunctionInfo(TypeInfo* returnType, int numParams, ...);
+void freeFunctionTypeInfo(FunctionTypeInfo* function);
+TypeInfo* newTypeInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, BehaviorTypeInfo* behavior, FunctionTypeInfo* function);
 void freeTypeInfo(TypeInfo* type);
 TypeTable* newTypeTable();
 void freeTypeTable(TypeTable* typeTable);
