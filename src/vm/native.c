@@ -226,16 +226,18 @@ ObjNamespace* getNativeNamespace(VM* vm, const char* name) {
     return AS_NAMESPACE(namespace);
 }
 
-void insertGlobalSymbolTable(VM* vm, const char* symbolName) {
+SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName) {
     ObjString* symbol = newString(vm, symbolName);
     SymbolItem* item = newSymbolItem(syntheticToken(symbolName), SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, 0, false);
     symbolTableSet(vm->symtab, symbol, item);
+    return item;
 }
 
-void insertTypeTable(VM* vm, TypeCategory category, ObjString* shortName, ObjString* fullName) {
+TypeInfo* insertTypeTable(VM* vm, TypeCategory category, ObjString* shortName, ObjString* fullName) {
     int id = vm->typetab->count + 1;
-    TypeInfo* typeInfo = newTypeInfo(vm->typetab->count + 1, category, shortName, fullName, NULL);
+    TypeInfo* typeInfo = newTypeInfo(vm->typetab->count + 1, category, shortName, fullName, NULL, NULL);
     typeTableSet(vm->typetab, fullName, typeInfo);
+    return typeInfo;
 }
 
 void loadSourceFile(VM* vm, const char* filePath) {

@@ -102,9 +102,9 @@ struct VM {
     Configuration config;
     CompilerV1* currentCompiler;
     ClassCompilerV1* currentClass;
+    int numSymtabs;
     SymbolTable* symtab;
     TypeTable* typetab;
-    int numSymtabs;
     Compiler* compiler;
 
     int behaviorCount;

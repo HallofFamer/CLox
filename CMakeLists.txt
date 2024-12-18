@@ -159,6 +159,8 @@ source_group("Source Files\\std" FILES ${Source_Files__std})
 set(Source_Files__vm
     "src/vm/assert.c"
     "src/vm/assert.h"
+    "src/vm/class.c"
+    "src/vm/class.h"
     "src/vm/compiler_v1.c"
     "src/vm/compiler_v1.h"
     "src/vm/date.c"
@@ -181,8 +183,6 @@ set(Source_Files__vm
     "src/vm/id.h"
     "src/vm/interceptor.c"
     "src/vm/interceptor.h"
-    "src/vm/klass.c"
-    "src/vm/klass.h"
     "src/vm/loop.c"
     "src/vm/loop.h"
     "src/vm/memory.c"

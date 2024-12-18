@@ -53,8 +53,8 @@ int addIdentifier(VM* vm, Chunk* chunk, Value value) {
         chunk->inlineCaches = GROW_ARRAY(InlineCache, chunk->inlineCaches, oldCapacity, chunk->identifiers.capacity);
     }
     InlineCache inlineCache = { .type = CACHE_NONE, .id = 0, .index = 0 };
+    
     chunk->inlineCaches[oldCount] = inlineCache;
-
     pop(vm);
     return chunk->identifiers.count - 1;
 }

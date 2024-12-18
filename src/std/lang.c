@@ -1759,7 +1759,8 @@ static void bindNamespaceClass(VM* vm) {
     for (int i = 0; i < vm->namespaces.capacity; i++) {
         Entry* entry = &vm->namespaces.entries[i];
         if (entry->key == NULL) continue;
-        entry->key->obj.klass = vm->namespaceClass;
+        ObjNamespace* namespace = AS_NAMESPACE(entry->value);
+        namespace->obj.klass = vm->namespaceClass;
     }
 }
 
