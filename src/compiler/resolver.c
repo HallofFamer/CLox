@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "resolver.h"
+#include "../vm/native.h"
 #include "../vm/vm.h"
 
 typedef struct {
@@ -147,6 +148,16 @@ static ObjString* createSymbol(Resolver* resolver, Token token) {
     return copyString(resolver->vm, token.start, token.length);
 }
 
+static ObjString* getSymbolFullName(Resolver* resolver, Token token) {
+    int length = resolver->currentNamespace->length + token.length + 1;
+    char* fullName = bufferNewCString(length);
+    memcpy(fullName, resolver->currentNamespace->chars, resolver->currentNamespace->length);
+    fullName[resolver->currentNamespace->length] = '.';
+    memcpy(fullName + resolver->currentNamespace->length + 1, token.start, token.length);
+    fullName[length] = '\0';
+    return takeString(resolver->vm, fullName, length);
+}
+
 static bool findSymbol(Resolver* resolver, Token token) {
     ObjString* symbol = createSymbol(resolver, token);
     SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
@@ -182,6 +193,13 @@ static SymbolItem* insertThis(Resolver* resolver, ObjString* symbol) {
         item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_INDIRECT, SYMBOL_STATE_ACCESSED, index, false);
     }
     symbolTableSet(resolver->currentSymtab, symbol, item);
+    return item;
+}
+
+static SymbolItem* insertType(Resolver* resolver, SymbolItem* item, TypeCategory category) {
+    ObjString* shortName = copyString(resolver->vm, item->token.start, item->token.length);
+    ObjString* fullName = (category == TYPE_CATEGORY_FUNCTION) ? shortName : getSymbolFullName(resolver, item->token);
+    insertTypeTable(resolver->vm, category, shortName, fullName);
     return item;
 }
 
@@ -1041,6 +1059,7 @@ static void resolveStatement(Resolver* resolver, Ast* ast) {
 
 static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
+    insertType(resolver, item, TYPE_CATEGORY_CLASS);
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
 }
@@ -1150,7 +1169,8 @@ static void resolveChild(Resolver* resolver, Ast* ast, int index) {
 void resolve(Resolver* resolver, Ast* ast) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, syntheticToken("script"), 0);
-    resolver->currentSymtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
+    int symtabIndex = nextSymbolTableIndex(resolver);
+    resolver->currentSymtab = newSymbolTable(symtabIndex, resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
     resolver->currentFunction->symtab = resolver->currentSymtab;
     resolver->globalSymtab = resolver->currentSymtab;
     resolver->rootSymtab = resolver->currentSymtab;

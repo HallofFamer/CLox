@@ -185,9 +185,16 @@ static void typeTableOutputCategory(TypeCategory category) {
     }
 }
 
+static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
+    if (behavior->superclassType) {
+        printf(", superclass: %s", behavior->superclassType->fullName->chars);
+    }
+}
+
 static void typeTableOutputEntry(TypeEntry* entry) {
     printf("  %s(%s) -> id: %d, category: ", entry->value->shortName->chars, entry->value->fullName->chars, entry->value->id);
     typeTableOutputCategory(entry->value->category);
+    if (entry->value->behavior != NULL) typeTableOutputBehavior(entry->value->behavior);
     printf("\n");
 }
 
