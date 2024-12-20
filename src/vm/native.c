@@ -96,6 +96,7 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
     pop(vm);
     pop(vm);
     insertGlobalSymbolTable(vm, name);
+    insertTypeTable(vm, TYPE_CATEGORY_FUNCTION, functionName, functionName);
 }
 
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bool isAsync, NativeMethod method) {

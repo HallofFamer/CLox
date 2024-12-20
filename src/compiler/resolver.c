@@ -105,6 +105,7 @@ static void endFunctionResolver(Resolver* resolver) {
 
 void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->vm = vm;
+    resolver->currentNamespace = emptyString(vm);
     resolver->currentClass = NULL;
     resolver->currentFunction = NULL;
     resolver->currentSymtab = NULL;
@@ -1066,6 +1067,7 @@ static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
+    insertType(resolver, item, TYPE_CATEGORY_FUNCTION);
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
 }
@@ -1094,6 +1096,7 @@ static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
+    insertType(resolver, item, TYPE_CATEGORY_TRAIT);
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
 }
