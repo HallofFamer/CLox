@@ -236,7 +236,7 @@ SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName) {
 
 TypeInfo* insertTypeTable(VM* vm, TypeCategory category, ObjString* shortName, ObjString* fullName) {
     int id = vm->typetab->count + 1;
-    TypeInfo* typeInfo = newTypeInfo(vm->typetab->count + 1, category, shortName, fullName, NULL, NULL);
+    TypeInfo* typeInfo = newTypeInfo(vm->typetab->count + 1, category, shortName, fullName, NULL);
     typeTableSet(vm->typetab, fullName, typeInfo);
     return typeInfo;
 }

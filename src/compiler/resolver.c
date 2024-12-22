@@ -182,6 +182,8 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
 static SymbolItem* insertThis(Resolver* resolver, ObjString* symbol) {
     SymbolItem* item = NULL;
     uint8_t index = 0;
+    ObjString* klass = getSymbolFullName(resolver, resolver->currentClass->name);
+
     if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
         item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, index, false);
     }
@@ -193,6 +195,8 @@ static SymbolItem* insertThis(Resolver* resolver, ObjString* symbol) {
         index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE_INDIRECT);
         item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_INDIRECT, SYMBOL_STATE_ACCESSED, index, false);
     }
+
+    item->type = typeTableGet(resolver->vm->typetab, klass);
     symbolTableSet(resolver->currentSymtab, symbol, item);
     return item;
 }
@@ -200,7 +204,7 @@ static SymbolItem* insertThis(Resolver* resolver, ObjString* symbol) {
 static SymbolItem* insertType(Resolver* resolver, SymbolItem* item, TypeCategory category) {
     ObjString* shortName = copyString(resolver->vm, item->token.start, item->token.length);
     ObjString* fullName = (category == TYPE_CATEGORY_FUNCTION) ? shortName : getSymbolFullName(resolver, item->token);
-    insertTypeTable(resolver->vm, category, shortName, fullName);
+    item->type = insertTypeTable(resolver->vm, category, shortName, fullName);
     return item;
 }
 
