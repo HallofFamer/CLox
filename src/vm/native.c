@@ -88,7 +88,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     return nativeClass;
 }
 
-void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, NativeFunction function) {
+void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, NativeFunction function, ...) {
     ObjString* functionName = newString(vm, name);
     push(vm, OBJ_VAL(functionName));
     push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, isAsync, function)));
@@ -96,7 +96,20 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
     pop(vm);
     pop(vm);
     insertGlobalSymbolTable(vm, name);
-    insertTypeTable(vm, TYPE_CATEGORY_FUNCTION, functionName, functionName);
+    TypeInfo* type = insertTypeTable(vm, TYPE_CATEGORY_FUNCTION, functionName, functionName);
+
+    va_list args;
+    va_start(args, function);
+    char* returnTypeName = va_arg(args, char*);
+    TypeInfo* returnType = returnTypeName == NULL ? NULL : typeTableGet(vm->typetab, newString(vm, returnTypeName));
+    type->function = newFunctionInfo(returnType);
+
+    for (int i = 0; i < arity; i++) {
+        char* paramTypeName = va_arg(args, char*);
+        TypeInfo* paramType = typeTableGet(vm->typetab, newString(vm, paramTypeName));
+        TypeInfoArrayAdd(type->function->paramTypes, paramType);
+    }
+    va_end(args);
 }
 
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bool isAsync, NativeMethod method) {
@@ -241,6 +254,20 @@ TypeInfo* insertTypeTable(VM* vm, TypeCategory category, ObjString* shortName, O
     return typeInfo;
 }
 
+FunctionTypeInfo* insertTypeSignature(VM* vm, int arity, const char* returnTypeName, ...) {
+    TypeInfo* returnType = typeTableGet(vm->typetab, newString(vm, returnTypeName));
+    FunctionTypeInfo* function = newFunctionInfo(returnType);
+    va_list args;
+    va_start(args, returnTypeName);
+    for (int i = 0; i < arity; i++) {
+        char* paramTypeName = va_arg(args, char*);
+        TypeInfo* paramType = typeTableGet(vm->typetab, newString(vm, paramTypeName));
+        TypeInfoArrayAdd(function->paramTypes, paramType);
+    }
+    va_end(args);
+    return function;
+}
+
 void loadSourceFile(VM* vm, const char* filePath) {
     char* source = readFile(filePath);
     interpret(vm, source);
@@ -248,11 +275,11 @@ void loadSourceFile(VM* vm, const char* filePath) {
 }
 
 void registerNativeFunctions(VM* vm){
-    DEF_FUNCTION(assert, 2);
-    DEF_FUNCTION(clock, 0);
-    DEF_FUNCTION(error, 1);
-    DEF_FUNCTION(gc, 0);
-    DEF_FUNCTION(print, 1);
-    DEF_FUNCTION(println, 1);
-    DEF_FUNCTION(read, 0);
+    DEF_FUNCTION(assert, 2, "clox.std.lang.Nil", "clox.std.lang.Object", "clox.std.lang.String");
+    DEF_FUNCTION(clock, 0, "clox.std.lang.Float");
+    DEF_FUNCTION(error, 1, "clox.std.lang.Nil", "clox.std.lang.String");
+    DEF_FUNCTION(gc, 0, "clox.std.lang.Nil");
+    DEF_FUNCTION(print, 1, "clox.std.lang.Nil", "clox.std.lang.Object");
+    DEF_FUNCTION(println, 1, "clox.std.lang.Nil", "clox.std.lang.Object");
+    DEF_FUNCTION(read, 0, "clox.std.lang.String");
 }
