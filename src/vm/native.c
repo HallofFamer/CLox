@@ -100,13 +100,13 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
 
     va_list args;
     va_start(args, function);
-    char* returnTypeName = va_arg(args, char*);
-    TypeInfo* returnType = returnTypeName == NULL ? NULL : typeTableGet(vm->typetab, newString(vm, returnTypeName));
+    ObjClass* returnTypeClass = va_arg(args, ObjClass*);
+    TypeInfo* returnType = returnTypeClass == NULL ? NULL : typeTableGet(vm->typetab, returnTypeClass->fullName);
     type->function = newFunctionInfo(returnType);
 
     for (int i = 0; i < arity; i++) {
-        char* paramTypeName = va_arg(args, char*);
-        TypeInfo* paramType = typeTableGet(vm->typetab, newString(vm, paramTypeName));
+        ObjClass* paramTypeClass = va_arg(args, ObjClass*);
+        TypeInfo* paramType = typeTableGet(vm->typetab, paramTypeClass->fullName);
         TypeInfoArrayAdd(type->function->paramTypes, paramType);
     }
     va_end(args);
@@ -210,6 +210,57 @@ ObjClass* getNativeClass(VM* vm, const char* fullName) {
     return AS_CLASS(klass);
 }
 
+static ObjClass* getNativeClassFromCurrentNamespace(VM* vm, const char* shortName) {
+    size_t shortLength = strlen(shortName);
+    size_t totalLength = vm->currentNamespace->fullName->length + shortLength + 1;
+    char* fullName = bufferNewCString(totalLength);
+    memcpy(fullName, vm->currentNamespace->fullName->chars, (size_t)vm->currentNamespace->fullName->length);
+    fullName[vm->currentNamespace->fullName->length] = '.';
+    memcpy(fullName + vm->currentNamespace->fullName->length + 1, shortName, shortLength);
+    fullName[totalLength] = '\0';
+
+    ObjString* klassName = takeString(vm, fullName, (int)totalLength);
+    Value klass;
+    if (!tableGet(&vm->classes, klassName, &klass)) {
+        return NULL;
+    }
+    return AS_CLASS(klass);
+}
+
+static ObjClass* getNativeClassFromDefaultNamespace(VM* vm, const char* shortName) {
+    size_t shortLength = strlen(shortName);
+    size_t totalLength = vm->langNamespace->fullName->length + shortLength + 1;
+    char* fullName = bufferNewCString(totalLength);
+    memcpy(fullName, vm->langNamespace->fullName->chars, (size_t)vm->langNamespace->fullName->length);
+    fullName[vm->langNamespace->fullName->length] = '.';
+    memcpy(fullName + vm->langNamespace->fullName->length + 1, shortName, shortLength);
+    fullName[totalLength] = '\0';
+
+    ObjString* klassName = takeString(vm, fullName, (int)totalLength);
+    Value klass;
+    if (!tableGet(&vm->classes, klassName, &klass)) {
+        return NULL;
+    }
+    return AS_CLASS(klass);
+}
+
+ObjClass* getNativeClassByName(VM* vm, const char* name) {
+    Value value;
+    if (!tableGet(&vm->classes, newString(vm, name), &value)) {
+        ObjClass* klass = getNativeClassFromCurrentNamespace(vm, name);
+        if (klass == NULL) {
+            klass = getNativeClassFromDefaultNamespace(vm, name);
+        }
+
+        if (klass == NULL) {
+            runtimeError(vm, "Class %s is undefined.", name);
+            exit(70);
+        }
+        return klass;
+    }
+    return AS_CLASS(value);
+}
+
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name) {
     Value function;
     tableGet(&vm->rootNamespace->values, newString(vm, name), &function);
@@ -275,11 +326,11 @@ void loadSourceFile(VM* vm, const char* filePath) {
 }
 
 void registerNativeFunctions(VM* vm){
-    DEF_FUNCTION(assert, 2, "clox.std.lang.Nil", "clox.std.lang.Object", "clox.std.lang.String");
-    DEF_FUNCTION(clock, 0, "clox.std.lang.Float");
-    DEF_FUNCTION(error, 1, "clox.std.lang.Nil", "clox.std.lang.String");
-    DEF_FUNCTION(gc, 0, "clox.std.lang.Nil");
-    DEF_FUNCTION(print, 1, "clox.std.lang.Nil", "clox.std.lang.Object");
-    DEF_FUNCTION(println, 1, "clox.std.lang.Nil", "clox.std.lang.Object");
-    DEF_FUNCTION(read, 0, "clox.std.lang.String");
+    DEF_FUNCTION(assert, 2, RETURN_TYPE(Nil), PARAM_TYPE(Object), PARAM_TYPE(String));
+    DEF_FUNCTION(clock, 0, RETURN_TYPE(Float));
+    DEF_FUNCTION(error, 1, RETURN_TYPE(Nil), PARAM_TYPE(String));
+    DEF_FUNCTION(gc, 0, RETURN_TYPE(Nil));
+    DEF_FUNCTION(print, 1, RETURN_TYPE(Nil), PARAM_TYPE(Object));
+    DEF_FUNCTION(println, 1, RETURN_TYPE(Nil), PARAM_TYPE(Object));
+    DEF_FUNCTION(read, 0, RETURN_TYPE(String));
 }
