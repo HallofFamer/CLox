@@ -149,6 +149,18 @@ static ObjString* createSymbol(Resolver* resolver, Token token) {
     return copyString(resolver->vm, token.start, token.length);
 }
 
+static ObjString* createQualifiedSymbol(Resolver* resolver, Ast* ast) {
+    Ast* identifiers = astGetChild(ast, 0);
+    Ast* identifier = astGetChild(identifiers, 0);
+    const char* start = identifier->token.start;
+    int length = identifier->token.length;
+    for (int i = 1; i < identifiers->children->count; i++) {
+        identifier = astGetChild(identifiers, i);
+        length += identifier->token.length + 1;
+    }
+    return copyString(resolver->vm, start, length);
+}
+
 static ObjString* getSymbolFullName(Resolver* resolver, Token token) {
     int length = resolver->currentNamespace->length + token.length + 1;
     char* fullName = bufferNewCString(length);
@@ -1084,18 +1096,11 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
     Ast* identifiers = astGetChild(ast, 0);
-    TypeInfo* type = typeTableGet(resolver->vm->typetab, newString(resolver->vm, "clox.std.lang.Namespace"));
+    ObjString* typeName = newString(resolver->vm, "clox.std.lang.Namespace");
+    TypeInfo* type = typeTableGet(resolver->vm->typetab, typeName);
     Ast* identifier = astGetChild(identifiers, 0);
     insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
-
-    const char* start = identifier->token.start;
-    int length = identifier->token.length;
-    for (int i = 1; i < identifiers->children->count; i++) {
-        identifier = astGetChild(identifiers, i);
-        length += identifier->token.length + 1;
-    }
-
-    resolver->currentNamespace = copyString(resolver->vm, start, length);
+    resolver->currentNamespace = createQualifiedSymbol(resolver, ast);
 }
 
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
@@ -1186,4 +1191,5 @@ void resolve(Resolver* resolver, Ast* ast) {
     if (resolver->debugSymtab) {
         symbolTableOutput(resolver->rootSymtab);
     }
+    typeTableOutput(resolver->vm->typetab);
 }

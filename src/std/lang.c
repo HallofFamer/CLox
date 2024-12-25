@@ -1771,6 +1771,7 @@ static ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behav
     nativeClass->isNative = true;
     push(vm, OBJ_VAL(nativeClass));
 
+    tableSet(vm, &vm->classes, nativeClass->fullName, OBJ_VAL(nativeClass));
     tableSet(vm, &vm->rootNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
