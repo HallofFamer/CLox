@@ -100,13 +100,11 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
 
     va_list args;
     va_start(args, function);
-    ObjClass* returnTypeClass = va_arg(args, ObjClass*);
-    TypeInfo* returnType = returnTypeClass == NULL ? NULL : typeTableGet(vm->typetab, returnTypeClass->fullName);
+    TypeInfo* returnType = va_arg(args, TypeInfo*);
     type->function = newFunctionInfo(returnType);
 
     for (int i = 0; i < arity; i++) {
-        ObjClass* paramTypeClass = va_arg(args, ObjClass*);
-        TypeInfo* paramType = typeTableGet(vm->typetab, paramTypeClass->fullName);
+        TypeInfo* paramType = va_arg(args, TypeInfo*);
         TypeInfoArrayAdd(type->function->paramTypes, paramType);
     }
     va_end(args);
@@ -210,55 +208,38 @@ ObjClass* getNativeClass(VM* vm, const char* fullName) {
     return AS_CLASS(klass);
 }
 
-static ObjClass* getNativeClassFromCurrentNamespace(VM* vm, const char* shortName) {
-    size_t shortLength = strlen(shortName);
-    size_t totalLength = vm->currentNamespace->fullName->length + shortLength + 1;
-    char* fullName = bufferNewCString(totalLength);
-    memcpy(fullName, vm->currentNamespace->fullName->chars, (size_t)vm->currentNamespace->fullName->length);
-    fullName[vm->currentNamespace->fullName->length] = '.';
-    memcpy(fullName + vm->currentNamespace->fullName->length + 1, shortName, shortLength);
-    fullName[totalLength] = '\0';
-
-    ObjString* klassName = takeString(vm, fullName, (int)totalLength);
-    Value klass;
-    if (!tableGet(&vm->classes, klassName, &klass)) {
-        return NULL;
-    }
-    return AS_CLASS(klass);
+static ObjString* getNativeFullName(VM* vm, ObjString* namespaceName, ObjString* shortName) {
+    size_t totalLength = (size_t)namespaceName->length + (size_t)shortName->length + 1;
+    char* chars = bufferNewCString(totalLength);
+    memcpy(chars, namespaceName->chars, namespaceName->length);
+    chars[vm->langNamespace->fullName->length] = '.';
+    memcpy(chars + namespaceName->length + 1, shortName->chars, shortName->length);
+    chars[totalLength] = '\0';
+    return takeString(vm, chars, (int)totalLength);
 }
 
-static ObjClass* getNativeClassFromDefaultNamespace(VM* vm, const char* shortName) {
-    size_t shortLength = strlen(shortName);
-    size_t totalLength = vm->langNamespace->fullName->length + shortLength + 1;
-    char* fullName = bufferNewCString(totalLength);
-    memcpy(fullName, vm->langNamespace->fullName->chars, (size_t)vm->langNamespace->fullName->length);
-    fullName[vm->langNamespace->fullName->length] = '.';
-    memcpy(fullName + vm->langNamespace->fullName->length + 1, shortName, shortLength);
-    fullName[totalLength] = '\0';
+TypeInfo* getNativeType(VM* vm, const char* name) {
+    if (name == NULL) return NULL;
+    ObjString* shortName = newString(vm, name);
+    ObjString* fullName = NULL;
+    TypeInfo* type = typeTableGet(vm->typetab, shortName);
 
-    ObjString* klassName = takeString(vm, fullName, (int)totalLength);
-    Value klass;
-    if (!tableGet(&vm->classes, klassName, &klass)) {
-        return NULL;
-    }
-    return AS_CLASS(klass);
-}
+    if (type == NULL) {
+        fullName = getNativeFullName(vm, vm->currentNamespace->fullName, shortName);
+        type = typeTableGet(vm->typetab, fullName);
 
-ObjClass* getNativeClassByName(VM* vm, const char* name) {
-    Value value;
-    if (!tableGet(&vm->classes, newString(vm, name), &value)) {
-        ObjClass* klass = getNativeClassFromCurrentNamespace(vm, name);
-        if (klass == NULL) {
-            klass = getNativeClassFromDefaultNamespace(vm, name);
+        if (type == NULL) {
+            fullName = getNativeFullName(vm, vm->langNamespace->fullName, shortName);
+            type = typeTableGet(vm->typetab, fullName);
+            
+
+            if (type == NULL) {
+                runtimeError(vm, "Type %s is undefined.", name);
+                exit(70);
+            }
         }
-
-        if (klass == NULL) {
-            runtimeError(vm, "Class %s is undefined.", name);
-            exit(70);
-        }
-        return klass;
     }
-    return AS_CLASS(value);
+    return type;
 }
 
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name) {
