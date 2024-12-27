@@ -239,7 +239,7 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
     }
 
     if (behavior->traitTypes != NULL && behavior->traitTypes->count > 0) {
-        printf("    traits: %s, ", behavior->traitTypes->elements[0]->fullName->chars);
+        printf("    traits: %s", behavior->traitTypes->elements[0]->fullName->chars);
         for (int i = 1; i < behavior->traitTypes->count; i++) {
             printf(", %s", behavior->traitTypes->elements[i]->fullName->chars);
         }
@@ -252,10 +252,21 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
     }
 }
 
+static void typeTableOutputFunction(FunctionTypeInfo* function) {
+    printf("    return: %s\n", (function->returnType != NULL) ? function->returnType->fullName->chars : "dynamic");
+    if (function->paramTypes != NULL && function->paramTypes->count > 0) {
+        printf("    params:\n      %i: %s\n", 1, function->paramTypes->elements[0]->fullName->chars);
+        for (int i = 1; i < function->paramTypes->count; i++) {
+            printf("      %i: %s\n", i + 1, function->paramTypes->elements[i]->fullName->chars);
+        }
+    } 
+}
+
 static void typeTableOutputEntry(TypeEntry* entry) {
     printf("  %s(%s)\n    id: %d\n    category: ", entry->value->shortName->chars, entry->value->fullName->chars, entry->value->id);
     typeTableOutputCategory(entry->value->category);
     if (entry->value->behavior != NULL) typeTableOutputBehavior(entry->value->behavior);
+    if (entry->value->function != NULL) typeTableOutputFunction(entry->value->function);
     printf("\n");
 }
 

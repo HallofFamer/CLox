@@ -142,7 +142,7 @@ static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
 }
 
 static int nextSymbolTableIndex(Resolver* resolver) {
-    return ++resolver->numSymtabs;
+    return resolver->vm->numSymtabs++;
 }
 
 static ObjString* createSymbol(Resolver* resolver, Token token) {
@@ -1083,7 +1083,11 @@ static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
-    insertType(resolver, item, TYPE_CATEGORY_FUNCTION);
+    ObjString* name = copyString(resolver->vm, item->token.start, item->token.length);
+    defineAstType(resolver, ast, "clox.std.lang.Function");
+    item->type = ast->type;
+    TypeInfo* type = insertTypeTable(resolver->vm, TYPE_CATEGORY_FUNCTION, name, name);
+    type->function = newFunctionInfo(NULL);
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
 }
@@ -1190,6 +1194,6 @@ void resolve(Resolver* resolver, Ast* ast) {
     endFunctionResolver(resolver);
     if (resolver->debugSymtab) {
         symbolTableOutput(resolver->rootSymtab);
+        symbolTableOutput(resolver->vm->symtab);
     }
-    typeTableOutput(resolver->vm->typetab);
 }
