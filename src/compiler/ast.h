@@ -110,6 +110,7 @@ static inline AstModifier astInitModifier() {
     AstModifier modifier = {
         .isAsync = false,
         .isClass = false,
+        .isInitializer = false,
         .isLambda = false,
         .isMutable = false,
         .isOptional = false,

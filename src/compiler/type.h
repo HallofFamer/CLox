@@ -44,13 +44,14 @@ typedef struct {
 } TypeEntry;
 
 struct TypeTable {
+    int id;
     int count;
     int capacity;
     TypeEntry* entries;
 };
 
-BehaviorTypeInfo* newBehaviorInfo(TypeInfo* superclass);
-BehaviorTypeInfo* newBehaviorInfoWithTraits(TypeInfo* superclass, int numTraits, ...);
+BehaviorTypeInfo* newBehaviorInfo(int id, TypeInfo* superclass);
+BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeInfo* superclass, int numTraits, ...);
 BehaviorTypeInfo* newBehaviorInfoWithMethods(TypeInfo* superclass, TypeTable* methods);
 void freeBehaviorTypeInfo(BehaviorTypeInfo* behavior);
 FunctionTypeInfo* newFunctionInfo(TypeInfo* returnType);
@@ -58,7 +59,7 @@ FunctionTypeInfo* newFunctionInfoWithParams(TypeInfo* returnType, int numParams,
 void freeFunctionTypeInfo(FunctionTypeInfo* function);
 TypeInfo* newTypeInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, void* additionalInfo);
 void freeTypeInfo(TypeInfo* type);
-TypeTable* newTypeTable();
+TypeTable* newTypeTable(int id);
 void freeTypeTable(TypeTable* typeTable);
 TypeInfo* typeTableGet(TypeTable* typetab, ObjString* key);
 bool typeTableSet(TypeTable* typetab, ObjString* key, TypeInfo* value);

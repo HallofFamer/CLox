@@ -8,23 +8,23 @@
 #define TYPE_TABLE_MAX_LOAD 0.75
 DEFINE_BUFFER(TypeInfoArray, TypeInfo*)
 
-BehaviorTypeInfo* newBehaviorInfo(TypeInfo* superclassType) {
+BehaviorTypeInfo* newBehaviorInfo(int id, TypeInfo* superclassType) {
     BehaviorTypeInfo* behavior = (BehaviorTypeInfo*)malloc(sizeof(BehaviorTypeInfo));
     if (behavior != NULL) {
         behavior->superclassType = superclassType;
         behavior->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
         if(behavior->traitTypes != NULL) TypeInfoArrayInit(behavior->traitTypes);
-        behavior->methods = newTypeTable();
+        behavior->methods = newTypeTable(id);
     }
     return behavior;
 }
 
-BehaviorTypeInfo* newBehaviorInfoWithTraits(TypeInfo* superclassType, int numTraits, ...) {
+BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeInfo* superclassType, int numTraits, ...) {
     BehaviorTypeInfo* behavior = (BehaviorTypeInfo*)malloc(sizeof(BehaviorTypeInfo));
     if (behavior != NULL) {
         behavior->superclassType = superclassType;
         behavior->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
-        behavior->methods = newTypeTable();
+        behavior->methods = newTypeTable(id);
 
         if (behavior->traitTypes != NULL) {
             TypeInfoArrayInit(behavior->traitTypes);
@@ -133,9 +133,10 @@ void freeTypeInfo(TypeInfo* type) {
     }
 }
 
-TypeTable* newTypeTable() {
+TypeTable* newTypeTable(int id) {
     TypeTable* typetab = (TypeTable*)malloc(sizeof(TypeTable));
     if (typetab != NULL) {
+        typetab->id = id;
         typetab->count = 0;
         typetab->capacity = 0;
         typetab->entries = NULL;
@@ -248,7 +249,17 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
 
     if (behavior->methods != NULL && behavior->methods->count > 0) {
         printf("    methods:\n");
-        typeTableOutput(behavior->methods);
+        for (int i = 0; i < behavior->methods->capacity; i++) {
+            TypeEntry* entry = &behavior->methods->entries[i];
+            if (entry != NULL && entry->key != NULL) {
+                FunctionTypeInfo* method = entry->value->function;
+                printf("      method: %s\n", entry->key->chars);
+                printf("      return: %s\n", (method->returnType != NULL) ? method->returnType->fullName->chars : "dynamic");
+                for (int i = 1; i < method->paramTypes->count; i++) {
+                    printf("        %i: %s\n", i + 1, method->paramTypes->elements[i]->fullName->chars);
+                }
+            }
+        }
     }
 }
 

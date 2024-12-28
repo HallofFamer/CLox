@@ -268,7 +268,11 @@ static void astOutputExprParam(Ast* ast, int indentLevel) {
     char* mutable = ast->modifier.isMutable ? "var " : "";
     char* variadic = ast->modifier.isVariadic ? ".." : "";
     char* name = tokenToCString(ast->token);
+
     printf("param %s%s%s\n", mutable, variadic, name);
+    if (astNumChild(ast) > 0) {
+        astOutputChild(ast, indentLevel + 1, 0);
+    }
     free(name);
 }
 

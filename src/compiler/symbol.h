@@ -73,4 +73,8 @@ static inline bool SymbolCategoryIsUpvalue(SymbolCategory category) {
     return (category == SYMBOL_CATEGORY_UPVALUE_DIRECT || category == SYMBOL_CATEGORY_UPVALUE_INDIRECT);
 }
 
+static inline bool isFunctionScope(SymbolScope scope) {
+    return (scope == SYMBOL_SCOPE_FUNCTION || scope == SYMBOL_SCOPE_METHOD);
+}
+
 #endif // !clox_symbol_h
