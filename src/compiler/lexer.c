@@ -255,7 +255,9 @@ static TokenSymbol identifierType(Lexer* lexer) {
 }
 
 static Token identifier(Lexer* lexer) {
-    while (isAlphaNumeric(peek(lexer))) advance(lexer);
+    while (isAlphaNumeric(peek(lexer))) {
+        advance(lexer);
+    }
     return makeToken(lexer, identifierType(lexer));
 }
 
@@ -291,8 +293,8 @@ static Token string(Lexer* lexer) {
                 return errorToken(lexer, "Interpolation may only nest 15 levels deep.");
             }
             lexer->interpolationDepth++;
-            advance(lexer);
 
+            advance(lexer);
             Token token = makeToken(lexer, TOKEN_INTERPOLATION);
             advance(lexer);
             return token;

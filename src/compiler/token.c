@@ -99,9 +99,7 @@ bool tokensEqual(Token* token, Token* token2) {
 char* tokenToCString(Token token) {
     char* buffer = bufferNewCString((size_t)token.length);
     if (buffer != NULL) {
-        if (token.length > 0) {
-            memcpy(buffer, token.start, token.length);
-        }
+        if (token.length > 0) memcpy(buffer, token.start, token.length);
         buffer[token.length] = '\0';
         return buffer;
     }

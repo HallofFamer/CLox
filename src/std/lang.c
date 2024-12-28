@@ -1764,6 +1764,15 @@ static void bindNamespaceClass(VM* vm) {
     }
 }
 
+static void bindGlobalSymbolTable(VM* vm) {
+    TypeInfo* type = typeTableGet(vm->typetab, newString(vm, "clox.std.lang.Class"));
+    for (int i = 0; i < vm->symtab->capacity; i++) {
+        SymbolEntry* entry = &vm->symtab->entries[i];
+        if (entry->key == NULL) continue;
+        entry->value->type = type;
+    }
+}
+
 static ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behavior) {
     ObjString* className = newString(vm, name);
     push(vm, OBJ_VAL(className));
@@ -2182,6 +2191,7 @@ void registerLangPackage(VM* vm) {
     insertGlobalSymbolTable(vm, "OutOfMemoryException");
     insertGlobalSymbolTable(vm, "StackOverflowException");
     insertGlobalSymbolTable(vm, "UnsupportedOperationException");
+    bindGlobalSymbolTable(vm);
 
     vm->currentNamespace = vm->rootNamespace;
 }

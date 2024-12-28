@@ -529,8 +529,14 @@ static Ast* variable(Parser* parser, Token token, bool canAssign) {
 
 static Ast* parameter(Parser* parser, const char* message) {
     bool isMutable = match(parser, TOKEN_VAR);
+    Ast* type = NULL;
+    if (check(parser, TOKEN_IDENTIFIER) && (checkNext(parser, TOKEN_IDENTIFIER) || checkNext(parser, TOKEN_DOT))) {
+        type = name_(parser, "Expect type declaration.");
+    }
     consume(parser, TOKEN_IDENTIFIER, message);
+
     Ast* param = emptyAst(AST_EXPR_PARAM, parser->previous);
+    if (type != NULL) astAppendChild(param, type);
     param->modifier.isMutable = isMutable;
     return param;
 }
