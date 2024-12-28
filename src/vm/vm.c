@@ -162,7 +162,8 @@ void initVM(VM* vm) {
     vm->currentClass = NULL;
     vm->numSymtabs = 0;
     vm->symtab = newSymbolTable(vm->numSymtabs++, NULL, SYMBOL_SCOPE_GLOBAL, -1);
-    vm->typetab = newTypeTable();
+    vm->numTypetabs = 0;
+    vm->typetab = newTypeTable(vm->numTypetabs++);
     vm->objects = NULL;
     vm->objectIndex = 0;
     vm->bytesAllocated = 0;
@@ -205,7 +206,6 @@ void freeVM(VM* vm) {
     freeGenericIDMap(vm, &vm->genericIDMap);
     vm->initString = NULL;
     freeSymbolTable(vm->symtab);
-    if (vm->config.debugTypetab) typeTableOutput(vm->typetab);
     freeTypeTable(vm->typetab);
     freeObjects(vm);
     freeLoop(vm);

@@ -113,16 +113,37 @@ bool isClassImplementingTrait(ObjClass* klass, ObjClass* trait) {
     return false;
 }
 
+static void inheritTraits(VM* vm, ObjClass* subclass, ObjClass* superclass) {
+    TypeInfo* subclassType = typeTableGet(vm->typetab, subclass->fullName);
+    for (int i = 0; i < superclass->traits.count; i++) {        
+        valueArrayWrite(vm, &subclass->traits, superclass->traits.values[i]);
+        if (subclass->isNative) {
+            ObjClass* trait = AS_CLASS(superclass->traits.values[i]);
+            TypeInfo* traitType = typeTableGet(vm->typetab, trait->fullName);
+            TypeInfoArrayAdd(subclassType->behavior->traitTypes, traitType);
+        }
+    }
+}
+
+static void inheritMethods(VM* vm, ObjClass* subclass, ObjClass* superclass) {
+    tableAddAll(vm, &superclass->methods, &subclass->methods);
+}
+
 void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     subclass->superclass = superclass;
     subclass->classType = superclass->classType;
     subclass->interceptors = superclass->interceptors;
-    if (superclass->behaviorType == BEHAVIOR_CLASS) {
-        for (int i = 0; i < superclass->traits.count; i++) {
-            valueArrayWrite(vm, &subclass->traits, superclass->traits.values[i]);
-        }
+
+    if (subclass->isNative && subclass->behaviorType == BEHAVIOR_CLASS) {
+        TypeInfo* subclassType = typeTableGet(vm->typetab, subclass->fullName);
+        TypeInfo* superclassType = typeTableGet(vm->typetab, superclass->fullName);
+        subclassType->behavior = newBehaviorInfo(vm->numTypetabs++, superclassType);
     }
-    tableAddAll(vm, &superclass->methods, &subclass->methods);
+
+    if (superclass->behaviorType == BEHAVIOR_CLASS) {
+        inheritTraits(vm, subclass, superclass);
+    }
+    inheritMethods(vm, subclass, superclass);
 }
 
 void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
@@ -131,6 +152,7 @@ void bindSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
         exit(70);
     }
     inheritSuperclass(vm, subclass, superclass);
+
     if (subclass->name->length == 0) {
         subclass->name = createBehaviorName(vm, BEHAVIOR_CLASS, superclass);
         subclass->obj.klass = superclass->obj.klass;

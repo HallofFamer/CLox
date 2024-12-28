@@ -127,6 +127,21 @@ ObjString* capitalizeString(VM* vm, ObjString* string) {
     return takeString(vm, heapChars, (int)string->length);
 }
 
+ObjString* concatenateString(VM* vm, ObjString* string, ObjString* string2, const char* separator) {
+    size_t separatorLength = strlen(separator);
+    if (separatorLength > 1) {
+        runtimeError(vm, "Separator must be empty or single character.");
+    }
+
+    size_t totalLength = (size_t)string->length + (size_t)string2->length + separatorLength;
+    char* chars = bufferNewCString(totalLength);
+    memcpy(chars, string->chars, string->length);
+    if (separatorLength > 0) chars[vm->langNamespace->fullName->length] = separator[0];
+    memcpy(chars + string->length + separatorLength, string2->chars, string2->length);
+    chars[totalLength] = '\0';
+    return takeString(vm, chars, (int)totalLength);
+}
+
 static void decapitalizeFirstIndex(VM* vm, char* source, char* target, int length) {
     if (length == 1) target[0] = (char)tolower(source[0]);
     else {

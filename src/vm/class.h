@@ -1,6 +1,6 @@
 #pragma once
-#ifndef clox_klass_h
-#define clox_klass_h
+#ifndef clox_class_h
+#define clox_class_h
 
 #include "value.h"
 
@@ -26,4 +26,4 @@ void bindTraits(VM* vm, int numTraits, ObjClass* klass, ...);
 Value getClassProperty(VM* vm, ObjClass* klass, char* name);
 void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value);
 
-#endif // !clox_klass_h
+#endif // !clox_class_h

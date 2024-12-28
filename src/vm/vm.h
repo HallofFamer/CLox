@@ -104,6 +104,7 @@ struct VM {
     ClassCompilerV1* currentClass;
     int numSymtabs;
     SymbolTable* symtab;
+    int numTypetabs;
     TypeTable* typetab;
     Compiler* compiler;
 
