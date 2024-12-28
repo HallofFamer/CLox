@@ -208,16 +208,6 @@ ObjClass* getNativeClass(VM* vm, const char* fullName) {
     return AS_CLASS(klass);
 }
 
-static ObjString* getNativeFullName(VM* vm, ObjString* namespaceName, ObjString* shortName) {
-    size_t totalLength = (size_t)namespaceName->length + (size_t)shortName->length + 1;
-    char* chars = bufferNewCString(totalLength);
-    memcpy(chars, namespaceName->chars, namespaceName->length);
-    chars[vm->langNamespace->fullName->length] = '.';
-    memcpy(chars + namespaceName->length + 1, shortName->chars, shortName->length);
-    chars[totalLength] = '\0';
-    return takeString(vm, chars, (int)totalLength);
-}
-
 TypeInfo* getNativeType(VM* vm, const char* name) {
     if (name == NULL) return NULL;
     ObjString* shortName = newString(vm, name);
@@ -225,14 +215,13 @@ TypeInfo* getNativeType(VM* vm, const char* name) {
     TypeInfo* type = typeTableGet(vm->typetab, shortName);
 
     if (type == NULL) {
-        fullName = getNativeFullName(vm, vm->currentNamespace->fullName, shortName);
+        fullName = concatenateString(vm, vm->currentNamespace->fullName, shortName, ".");
         type = typeTableGet(vm->typetab, fullName);
 
         if (type == NULL) {
-            fullName = getNativeFullName(vm, vm->langNamespace->fullName, shortName);
+            fullName = concatenateString(vm, vm->langNamespace->fullName, shortName, ".");
             type = typeTableGet(vm->typetab, fullName);
             
-
             if (type == NULL) {
                 runtimeError(vm, "Type %s is undefined.", name);
                 exit(70);

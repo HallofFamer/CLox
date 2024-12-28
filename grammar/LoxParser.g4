@@ -40,8 +40,8 @@ call: primary (LPAREN arguments? RPAREN | LSQUARE expression QUESTION? RSQUARE |
 primary: 'nil' | 'true' | 'false' | INT | FLOAT | STRING | IDENTIFIER | (LPAREN expression RPAREN) | (LSQUARE arguments? RSQUARE) | (expression DOTDOT expression) | (CLASS classBody) | (FUN functionBody) | (SUPER DOT IDENTIFIER) | (TRAIT traitBody);
 
 classBody: (LT IDENTIFIER)? (WITH parameters)? LBRACE function* RBRACE;
-function: ASYNC? CLASS? IDENTIFIER functionBody;
+function: ASYNC? CLASS? IDENTIFIER? IDENTIFIER functionBody;
 functionBody: LPAREN parameters? RPAREN block;
 traitBody: (WITH parameters)? LBRACE CLASS? function* RBRACE;
-parameters: (VAR? IDENTIFIER (VAR? COMMA IDENTIFIER)*) | (DOTDOT IDENTIFIER);
+parameters: (VAR? IDENTIFIER? IDENTIFIER (VAR? COMMA IDENTIFIER IDENTIFIER)*) | (DOTDOT IDENTIFIER IDENTIFIER);
 arguments: expression (COMMA expression)*;

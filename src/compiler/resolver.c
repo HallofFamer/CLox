@@ -171,6 +171,23 @@ static ObjString* getSymbolFullName(Resolver* resolver, Token token) {
     return takeString(resolver->vm, fullName, length);
 }
 
+static TypeInfo* getTypeForSymbol(Resolver* resolver, Token token) {
+    ObjString* shortName = copyString(resolver->vm, token.start, token.length);
+    TypeInfo* type = typeTableGet(resolver->vm->typetab, shortName);
+    ObjString* fullName = NULL;
+
+    if (type == NULL) {
+        fullName = concatenateString(resolver->vm, resolver->currentNamespace, shortName, ".");
+        type = typeTableGet(resolver->vm->typetab, fullName);
+
+        if (type == NULL) {
+            fullName = concatenateString(resolver->vm, resolver->vm->langNamespace->fullName, shortName, ".");
+            type = typeTableGet(resolver->vm->typetab, fullName);
+        }
+    }
+    return type;
+}
+
 static bool findSymbol(Resolver* resolver, Token token) {
     ObjString* symbol = createSymbol(resolver, token);
     SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
@@ -244,10 +261,6 @@ static void checkUnmodifiedVariables(Resolver* resolver, int flag) {
 
 static bool isTopLevel(Resolver* resolver) {
     return (resolver->currentFunction->enclosing == NULL);
-}
-
-static bool isFunctionScope(SymbolScope scope) {
-    return (scope == SYMBOL_SCOPE_FUNCTION || scope == SYMBOL_SCOPE_METHOD);
 }
 
 static SymbolScope getFunctionScope(Ast* ast) {
@@ -469,6 +482,16 @@ static void deriveAstTypeFromBinary(Resolver* resolver, Ast* ast, SymbolItem* it
         default: 
             break;
     }
+}
+
+static void deriveAstTypeForParam(Resolver* resolver, Ast* ast) {
+    Ast* child = astGetChild(ast, 0);
+    resolveChild(resolver, ast, 0);
+    if (child->modifier.isQualified) {
+        ObjString* typeName = createQualifiedSymbol(resolver, child);
+        ast->type = typeTableGet(resolver->vm->typetab, typeName);
+    }
+    else ast->type = getTypeForSymbol(resolver, child->token);
 }
 
 static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
@@ -702,6 +725,10 @@ static void resolveOr(Resolver* resolver, Ast* ast) {
 static void resolveParam(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, ast->modifier.isMutable);
     item->state = SYMBOL_STATE_DEFINED;
+    if (astNumChild(ast) > 0) {
+        deriveAstTypeForParam(resolver, ast);
+        item->type = ast->type;
+    }
 }
 
 static void resolvePropertyGet(Resolver* resolver, Ast* ast) {

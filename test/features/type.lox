@@ -1,0 +1,7 @@
+namespace test.features;
+
+Number sum(Number a, Int b) { 
+    return a + b;
+}
+
+println(3.5 + 5);

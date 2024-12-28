@@ -1094,11 +1094,19 @@ static Ast* classDeclaration(Parser* parser) {
     return newAst(AST_DECL_CLASS, name, 1, _class);
 }
 
-static Ast* funDeclaration(Parser* parser, bool isAsync) {
+static Ast* funDeclaration(Parser* parser, bool isAsync, bool hasReturnType) {
+    Ast* returnType = NULL;
+    if (hasReturnType) {
+        advance(parser);
+        returnType = variable(parser, parser->previous, false);
+    }
     consume(parser, TOKEN_IDENTIFIER, "Expect function name.");
     Token name = parser->previous;
     Ast* body = function(parser, isAsync, false);
-    return newAst(AST_DECL_FUN, name, 1, body);
+
+    Ast* ast = newAst(AST_DECL_FUN, name, 1, body);
+    if (returnType != NULL) astAppendChild(ast, returnType);
+    return ast;
 }
 
 static Ast* namespaceDeclaration(Parser* parser) {
@@ -1146,15 +1154,22 @@ static Ast* declaration(Parser* parser) {
     if (check(parser, TOKEN_ASYNC) && checkNext(parser, TOKEN_FUN)) {
         advance(parser);
         advance(parser);
-        return funDeclaration(parser, true);
+        return funDeclaration(parser, true, false);
+    }
+    if (check(parser, TOKEN_ASYNC) && checkNext(parser, TOKEN_IDENTIFIER)) {
+        advance(parser);
+        return funDeclaration(parser, true, true);
     }
     else if (check(parser, TOKEN_CLASS) && checkNext(parser, TOKEN_IDENTIFIER)) {
         advance(parser);
         return classDeclaration(parser);
     }
-    else if (check(parser, TOKEN_FUN) && checkNext(parser, TOKEN_IDENTIFIER)) {
+    else if ((check(parser, TOKEN_FUN) && checkNext(parser, TOKEN_IDENTIFIER))) {
         advance(parser);
-        return funDeclaration(parser, false);
+        return funDeclaration(parser, false, false);
+    }
+    else if ((check(parser, TOKEN_IDENTIFIER) && checkNext(parser, TOKEN_IDENTIFIER))) {
+        return funDeclaration(parser, false, true);
     }
     else if (match(parser, TOKEN_NAMESPACE)) {
         return namespaceDeclaration(parser);
