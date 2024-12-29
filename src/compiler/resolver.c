@@ -487,6 +487,7 @@ static void deriveAstTypeFromBinary(Resolver* resolver, Ast* ast, SymbolItem* it
 static void deriveAstTypeForParam(Resolver* resolver, Ast* ast) {
     Ast* child = astGetChild(ast, 0);
     resolveChild(resolver, ast, 0);
+
     if (child->modifier.isQualified) {
         ObjString* typeName = createQualifiedSymbol(resolver, child);
         ast->type = typeTableGet(resolver->vm->typetab, typeName);

@@ -531,7 +531,14 @@ static void astOutputDeclFun(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     char* async = ast->modifier.isAsync ? "async " : "";
     char* funName = tokenToCString(ast->token);
-    printf("funDecl %s%s\n", async, funName);
+    printf("funDecl %s%s", async, funName);
+    if (astNumChild(ast) > 1) {
+        Ast* returnType = astGetChild(ast, 1);
+        char* returnTypeName = tokenToCString(returnType->token);
+        printf("(%s)", returnTypeName);
+        free(returnTypeName);
+    }
+    printf("\n");
     astOutputChild(ast, indentLevel + 1, 0);
     free(funName);
 }
