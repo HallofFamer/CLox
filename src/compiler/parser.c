@@ -527,6 +527,11 @@ static Ast* variable(Parser* parser, Token token, bool canAssign) {
     return emptyAst(AST_EXPR_VARIABLE, token);
 }
 
+static Ast* type_(Parser* parser, const char* message) {
+    consume(parser, TOKEN_IDENTIFIER, message);
+    return variable(parser, parser->previous, false);
+}
+
 static Ast* parameter(Parser* parser, const char* message) {
     bool isMutable = match(parser, TOKEN_VAR);
     Ast* type = NULL;
@@ -595,9 +600,15 @@ static Ast* methods(Parser* parser, Token* name) {
     Ast* methodList = emptyAst(AST_LIST_METHOD, *name);
 
     while (!check(parser, TOKEN_RIGHT_BRACE) && !check(parser, TOKEN_EOF)) {
-        bool isAsync = false, isClass = false, isInitializer = false;
+        bool isAsync = false, isClass = false, isInitializer = false, hasReturnType = false;
+        Ast* returnType = NULL;
         if (match(parser, TOKEN_ASYNC)) isAsync = true;
         if (match(parser, TOKEN_CLASS)) isClass = true;
+        if (check(parser, TOKEN_IDENTIFIER) && checkNext(parser, TOKEN_IDENTIFIER)) {
+            hasReturnType = true;
+            returnType = type_(parser, "Expect method return type.");
+        }
+
         Token methodName = identifierToken(parser, "Expect method name.");
         if (parser->previous.length == 8 && memcmp(parser->previous.start, "__init__", 8) == 0) {
             isInitializer = true;
@@ -609,6 +620,7 @@ static Ast* methods(Parser* parser, Token* name) {
         method->modifier.isAsync = isAsync;
         method->modifier.isClass = isClass;
         method->modifier.isInitializer = isInitializer;
+        if (hasReturnType) astAppendChild(method, returnType);
         astAppendChild(methodList, method);
     }
 
@@ -1095,11 +1107,7 @@ static Ast* classDeclaration(Parser* parser) {
 }
 
 static Ast* funDeclaration(Parser* parser, bool isAsync, bool hasReturnType) {
-    Ast* returnType = NULL;
-    if (hasReturnType) {
-        advance(parser);
-        returnType = variable(parser, parser->previous, false);
-    }
+    Ast* returnType = hasReturnType ? type_(parser, "Expect function return type.") : NULL;
     consume(parser, TOKEN_IDENTIFIER, "Expect function name.");
     Token name = parser->previous;
     Ast* body = function(parser, isAsync, false);
