@@ -548,7 +548,14 @@ static void astOutputDeclMethod(Ast* ast, int indentLevel) {
     char* async = ast->modifier.isAsync ? "async " : "";
     char* _class = ast->modifier.isClass ? "class " : "";
     char* methodName = tokenToCString(ast->token);
-    printf("methodDecl %s%s%s\n", async, _class, methodName);
+    printf("methodDecl %s%s%s", async, _class, methodName);
+    if (astNumChild(ast) > 2) {
+        Ast* returnType = astGetChild(ast, 2);
+        char* returnTypeName = tokenToCString(returnType->token);
+        printf("(%s)", returnTypeName);
+        free(returnTypeName);
+    }
+    printf("\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
     free(methodName);

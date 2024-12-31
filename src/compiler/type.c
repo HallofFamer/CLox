@@ -53,9 +53,7 @@ BehaviorTypeInfo* newBehaviorInfoWithMethods(TypeInfo* superclassType, TypeTable
 }
 
 void freeBehaviorTypeInfo(BehaviorTypeInfo* behavior) {
-    if (behavior->traitTypes != NULL) {
-        TypeInfoArrayFree(behavior->traitTypes);
-    }
+    if (behavior->traitTypes != NULL) TypeInfoArrayFree(behavior->traitTypes);
     freeTypeTable(behavior->methods);
     free(behavior);
 }
