@@ -78,6 +78,10 @@ static bool checkNext(Parser* parser, TokenSymbol type) {
     return parser->next.type == type;
 }
 
+static bool check2(Parser* parser, TokenSymbol type) {
+    return check(parser, type) && checkNext(parser, type);
+}
+
 static bool match(Parser* parser, TokenSymbol type) {
     if (!check(parser, type)) return false;
     advance(parser);
@@ -604,7 +608,7 @@ static Ast* methods(Parser* parser, Token* name) {
         Ast* returnType = NULL;
         if (match(parser, TOKEN_ASYNC)) isAsync = true;
         if (match(parser, TOKEN_CLASS)) isClass = true;
-        if (check(parser, TOKEN_IDENTIFIER) && checkNext(parser, TOKEN_IDENTIFIER)) {
+        if (check2(parser, TOKEN_IDENTIFIER)) {
             hasReturnType = true;
             returnType = type_(parser, "Expect method return type.");
         }
@@ -1176,7 +1180,7 @@ static Ast* declaration(Parser* parser) {
         advance(parser);
         return funDeclaration(parser, false, false);
     }
-    else if ((check(parser, TOKEN_IDENTIFIER) && checkNext(parser, TOKEN_IDENTIFIER))) {
+    else if (check2(parser, TOKEN_IDENTIFIER)) {
         return funDeclaration(parser, false, true);
     }
     else if (match(parser, TOKEN_NAMESPACE)) {

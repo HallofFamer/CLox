@@ -1125,6 +1125,7 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     ObjString* name = copyString(resolver->vm, item->token.start, item->token.length);
     defineAstType(resolver, ast, "clox.std.lang.Method");
     item->type = ast->type;
+    TypeInfo* klass = getTypeForSymbol(resolver, resolver->currentClass->name);
     function(resolver, ast, false, ast->modifier.isAsync);
     item->state = SYMBOL_STATE_ACCESSED;
 }
