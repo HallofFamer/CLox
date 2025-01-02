@@ -753,21 +753,6 @@ static void compileLiteral(Compiler* compiler, Ast* ast) {
     }
 }
 
-static void compileName(Compiler* compiler, Ast* ast) {
-    if (!ast->modifier.isQualified) getVariable(compiler, &ast->token);
-    else {
-        Ast* varList = astGetChild(ast, 0);
-        Ast* var = astGetChild(varList, 0);
-        getVariable(compiler, &var->token);
-
-        for (int i = 1; i < varList->children->count; i++) {
-            var = astGetChild(varList, i);
-            uint8_t index = identifierConstant(compiler, &var->token);
-            emitBytes(compiler, OP_GET_PROPERTY, index);
-        }
-    }
-}
-
 static void compileNil(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
     compileChild(compiler, ast, 1);
@@ -903,9 +888,6 @@ static void compileExpression(Compiler* compiler, Ast* ast) {
             break;
         case AST_EXPR_LITERAL:
             compileLiteral(compiler, ast);
-            break;
-        case AST_EXPR_NAME:
-            compileName(compiler, ast);
             break;
         case AST_EXPR_NIL:
             compileNil(compiler, ast);

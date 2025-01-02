@@ -315,28 +315,6 @@ static Token identifierToken(Parser* parser, const char* message) {
     return parser->previous;
 }
 
-static Ast* name_(Parser* parser, const char* message) {
-    consume(parser, TOKEN_IDENTIFIER, message);
-    Token name = parser->previous;
-    if (!match(parser, TOKEN_DOT)) return emptyAst(AST_EXPR_NAME, name);
-
-    Ast* var = emptyAst(AST_EXPR_VARIABLE, name);
-    Ast* varList = newAst(AST_LIST_VAR, parser->previous, 1, var);
-    int varCount = 1;
-
-    do {
-        consume(parser, TOKEN_IDENTIFIER, "Expect identifier after '.'.");
-        if (varCount == UINT8_MAX) error(parser, "Can't have more than 255 identifiers in a qualified name.");
-        var = emptyAst(AST_EXPR_VARIABLE, parser->previous);
-        astAppendChild(varList, var);
-        varCount++;
-    } while (match(parser, TOKEN_DOT));
-
-    Ast* expr = newAst(AST_EXPR_NAME, name, 1, varList);
-    expr->modifier.isQualified = true;
-    return expr;
-}
-
 static Ast* and_(Parser* parser, Token token, Ast* left, bool canAssign) {
     ParseRule* rule = getRule(parser->previous.type);
     Ast* right = parsePrecedence(parser, PREC_AND);
@@ -539,8 +517,8 @@ static Ast* type_(Parser* parser, const char* message) {
 static Ast* parameter(Parser* parser, const char* message) {
     bool isMutable = match(parser, TOKEN_VAR);
     Ast* type = NULL;
-    if (check(parser, TOKEN_IDENTIFIER) && (checkNext(parser, TOKEN_IDENTIFIER) || checkNext(parser, TOKEN_DOT))) {
-        type = name_(parser, "Expect type declaration.");
+    if (check2(parser, TOKEN_IDENTIFIER)) {
+        type = type_(parser, "Expect type declaration.");
     }
     consume(parser, TOKEN_IDENTIFIER, message);
 
@@ -634,7 +612,7 @@ static Ast* methods(Parser* parser, Token* name) {
 
 static Ast* superclass_(Parser* parser) {
     if (match(parser, TOKEN_EXTENDS)) {
-        return name_(parser, "Expect super class name.");
+        return identifier(parser, "Expect super class name.");
     }
     return emptyAst(AST_EXPR_VARIABLE, parser->rootClass);
 }
@@ -650,7 +628,7 @@ static Ast* traits(Parser* parser, Token* name) {
             errorAtCurrent(parser, "Can't have more than 15 parameters.");
         }
 
-        Ast* trait = name_(parser, "Expect trait name.");
+        Ast* trait = identifier(parser, "Expect trait name.");
         astAppendChild(traitList, trait);
     } while (match(parser, TOKEN_COMMA));
 
