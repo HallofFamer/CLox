@@ -1099,9 +1099,7 @@ static void compileReturnStatement(Compiler* compiler, Ast* ast) {
 
     if (astHasChild(ast)) {
         compileChild(compiler, ast, 0);
-        if (compiler->type == COMPILE_TYPE_LAMBDA) {
-            emitBytes(compiler, OP_RETURN_NONLOCAL, depth);
-        }
+        if (compiler->type == COMPILE_TYPE_LAMBDA) emitBytes(compiler, OP_RETURN_NONLOCAL, depth);
         else emitByte(compiler, OP_RETURN);
     }
     else emitReturn(compiler, depth);
