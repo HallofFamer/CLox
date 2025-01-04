@@ -340,7 +340,7 @@ static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
     return AS_STRING(currentChunk(compiler)->identifiers.values[arg]);
 }
 
-static int resolveLocal(Compiler* compiler, Token* name) {
+static int findLocal(Compiler* compiler, Token* name) {
     for (int i = compiler->localCount - 1; i >= 0; i--) {
         Local* local = &compiler->locals[i];
         if (tokensEqual(name, &local->name)) return i;
@@ -372,7 +372,7 @@ static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal, bool isMu
 static int resolveUpvalue(Compiler* compiler, Token* name) {
     if (compiler->enclosing == NULL) return -1;
 
-    int local = resolveLocal(compiler->enclosing, name);
+    int local = findLocal(compiler->enclosing, name);
     if (local != -1) {
         compiler->enclosing->locals[local].isCaptured = true;
         return addUpvalue(compiler, (uint8_t)local, true, compiler->enclosing->locals[local].isMutable);
@@ -494,7 +494,7 @@ static void string(Compiler* compiler, Token token) {
 }
 
 static void getVariable(Compiler* compiler, Token* token) {
-    int arg = resolveLocal(compiler, token);
+    int arg = findLocal(compiler, token);
     if (arg != -1) emitBytes(compiler, OP_GET_LOCAL, (uint8_t)arg);
     else if ((arg = resolveUpvalue(compiler, token)) != -1) {
         emitBytes(compiler, OP_GET_UPVALUE, (uint8_t)arg);
@@ -629,7 +629,7 @@ static void compileArray(Compiler* compiler, Ast* ast) {
 
 static void compileAssign(Compiler* compiler, Ast* ast) {
     uint8_t setOp;
-    int arg = resolveLocal(compiler, &ast->token);
+    int arg = findLocal(compiler, &ast->token);
     if (arg != -1) {
         setOp = OP_SET_LOCAL;
     }
@@ -975,7 +975,7 @@ static void compileCatchStatement(Compiler* compiler, Ast* ast) {
         Ast* var = astGetChild(ast, 0);
         addLocal(compiler, var->token);
         markInitialized(compiler, false);
-        uint8_t varIndex = resolveLocal(compiler, &var->token);
+        uint8_t varIndex = findLocal(compiler, &var->token);
         emitBytes(compiler, OP_SET_LOCAL, varIndex);
     }
 

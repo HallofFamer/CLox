@@ -1208,6 +1208,7 @@ void resolve(Resolver* resolver, Ast* ast) {
     resolver->currentFunction->symtab = resolver->currentSymtab;
     resolver->globalSymtab = resolver->currentSymtab;
     resolver->rootSymtab = resolver->currentSymtab;
+    ast->symtab = resolver->currentSymtab;
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);
     if (resolver->debugSymtab) {
