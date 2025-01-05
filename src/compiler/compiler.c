@@ -340,6 +340,12 @@ static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
     return AS_STRING(currentChunk(compiler)->identifiers.values[arg]);
 }
 
+static SymbolItem* findSymbolItem(Compiler* compiler, SymbolTable* symtab, Token token) {
+    ObjString* name = copyString(compiler->vm, token.start, token.length);
+    SymbolItem* item = symbolTableGet(symtab, name);
+    return (item != NULL) ? item : symbolTableGet(compiler->vm->symtab, name);
+}
+
 static int findLocal(Compiler* compiler, Token* name) {
     for (int i = compiler->localCount - 1; i >= 0; i--) {
         Local* local = &compiler->locals[i];
@@ -369,7 +375,7 @@ static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal, bool isMu
     return compiler->function->upvalueCount++;
 }
 
-static int resolveUpvalue(Compiler* compiler, Token* name) {
+static int findUpvalue(Compiler* compiler, Token* name) {
     if (compiler->enclosing == NULL) return -1;
 
     int local = findLocal(compiler->enclosing, name);
@@ -378,7 +384,7 @@ static int resolveUpvalue(Compiler* compiler, Token* name) {
         return addUpvalue(compiler, (uint8_t)local, true, compiler->enclosing->locals[local].isMutable);
     }
 
-    int upvalue = resolveUpvalue(compiler->enclosing, name);
+    int upvalue = findUpvalue(compiler->enclosing, name);
     if (upvalue != -1) {
         return addUpvalue(compiler, (uint8_t)upvalue, false, compiler->enclosing->upvalues[upvalue].isMutable);
     }
@@ -493,15 +499,17 @@ static void string(Compiler* compiler, Token token) {
     emitConstant(compiler, OBJ_VAL(takeString(compiler->vm, string, token.length)));
 }
 
-static void getVariable(Compiler* compiler, Token* token) {
-    int arg = findLocal(compiler, token);
-    if (arg != -1) emitBytes(compiler, OP_GET_LOCAL, (uint8_t)arg);
-    else if ((arg = resolveUpvalue(compiler, token)) != -1) {
-        emitBytes(compiler, OP_GET_UPVALUE, (uint8_t)arg);
-    }
-    else {
-        arg = identifierConstant(compiler, token);
-        emitBytes(compiler, OP_GET_GLOBAL, (uint8_t)arg);
+static void getVariable(Compiler* compiler, SymbolItem* item) {
+    switch (item->category) {
+        case SYMBOL_CATEGORY_LOCAL:
+            emitBytes(compiler, OP_GET_LOCAL, (uint8_t)findLocal(compiler, &item->token));
+            break;
+        case SYMBOL_CATEGORY_UPVALUE_DIRECT: 
+        case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
+            emitBytes(compiler, OP_GET_UPVALUE, (uint8_t)findUpvalue(compiler, &item->token));
+            break;
+        default:
+            emitBytes(compiler, OP_GET_GLOBAL, (uint8_t)identifierConstant(compiler, &item->token));
     }
 }
 
@@ -584,8 +592,7 @@ static void behavior(Compiler* compiler, BehaviorType type, Ast* ast) {
 
 static uint8_t super_(Compiler* compiler, Ast* ast) {
     uint8_t index = identifierConstant(compiler, &ast->token);
-    Token _this = syntheticToken("this");
-    getVariable(compiler, &_this);
+    getVariable(compiler, findSymbolItem(compiler, ast->symtab, syntheticToken("this")));
     return index;
 }
 
@@ -633,7 +640,7 @@ static void compileAssign(Compiler* compiler, Ast* ast) {
     if (arg != -1) {
         setOp = OP_SET_LOCAL;
     }
-    else if ((arg = resolveUpvalue(compiler, &ast->token)) != -1) {
+    else if ((arg = findUpvalue(compiler, &ast->token)) != -1) {
         setOp = OP_SET_UPVALUE;
     }
     else {
@@ -809,7 +816,8 @@ static void compileSubscriptSet(Compiler* compiler, Ast* ast) {
 
 static void compileSuperGet(Compiler* compiler, Ast* ast) {
     uint8_t index = super_(compiler, ast);
-    getVariable(compiler, &compiler->currentClass->superclass);
+    SymbolItem* item = findSymbolItem(compiler, ast->symtab, compiler->currentClass->superclass);
+    getVariable(compiler, item);
     emitBytes(compiler, OP_GET_SUPER, index);
 }
 
@@ -817,13 +825,13 @@ static void compileSuperInvoke(Compiler* compiler, Ast* ast) {
     uint8_t index = super_(compiler, ast);
     Ast* args = astGetChild(ast, 0);
     uint8_t argCount = argumentList(compiler, args);
-    getVariable(compiler, &compiler->currentClass->superclass);
+    getVariable(compiler, findSymbolItem(compiler, ast->symtab, compiler->currentClass->superclass));
     emitBytes(compiler, OP_SUPER_INVOKE, index);
     emitByte(compiler, argCount);
 }
 
 static void compileThis(Compiler* compiler, Ast* ast) {
-    getVariable(compiler, &ast->token);
+    getVariable(compiler, findSymbolItem(compiler, ast->symtab, ast->token));
 }
 
 static void compileTrait(Compiler* compiler, Ast* ast) {
@@ -841,7 +849,7 @@ static void compileUnary(Compiler* compiler, Ast* ast) {
 }
 
 static void compileVariable(Compiler* compiler, Ast* ast) {
-    getVariable(compiler, &ast->token);
+    getVariable(compiler, findSymbolItem(compiler, ast->symtab, ast->token));
 }
 
 static void compileYield(Compiler* compiler, Ast* ast) {

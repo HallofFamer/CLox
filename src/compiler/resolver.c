@@ -208,25 +208,43 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
     }
 }
 
-static SymbolItem* insertThis(Resolver* resolver, ObjString* symbol) {
-    SymbolItem* item = NULL;
-    uint8_t index = 0;
-    ObjString* klass = getSymbolFullName(resolver, resolver->currentClass->name);
+static SymbolItem* findThis(Resolver* resolver) {
+    ObjString* symbol = createSymbol(resolver, resolver->thisVar);
+    SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
 
-    if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
-        item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, index, false);
-    }
-    else if (resolver->currentSymtab->parent->scope == SYMBOL_SCOPE_METHOD){
-        index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE_DIRECT);
-        item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_DIRECT, SYMBOL_STATE_ACCESSED, index, false);
-    }
-    else {
-        index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE_INDIRECT);
-        item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_INDIRECT, SYMBOL_STATE_ACCESSED, index, false);
+    if (item == NULL) {
+        uint8_t index = 0;
+        ObjString* klass = getSymbolFullName(resolver, resolver->currentClass->name);
+
+        if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
+            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, index, false);
+        }
+        else if (resolver->currentSymtab->parent->scope == SYMBOL_SCOPE_METHOD) {
+            index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE_DIRECT);
+            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_DIRECT, SYMBOL_STATE_ACCESSED, index, false);
+        }
+        else {
+            index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE_INDIRECT);
+            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_INDIRECT, SYMBOL_STATE_ACCESSED, index, false);
+        }
+
+        item->type = typeTableGet(resolver->vm->typetab, klass);
+        symbolTableSet(resolver->currentSymtab, symbol, item);
     }
 
-    item->type = typeTableGet(resolver->vm->typetab, klass);
-    symbolTableSet(resolver->currentSymtab, symbol, item);
+    return item;
+}
+
+static SymbolItem* findSuper(Resolver* resolver) {
+    ObjString* symbol = createSymbol(resolver, resolver->currentClass->superClass);
+    SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
+
+    if (item == NULL) {
+        uint8_t index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_GLOBAL);
+        item = newSymbolItem(resolver->currentClass->superClass, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, index, false);
+        symbolTableSet(resolver->currentSymtab, symbol, item);
+    }
+
     return item;
 }
 
@@ -354,7 +372,9 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
     do {
         if (functionResolver->enclosing == NULL) break;
         item = symbolTableGet(currentSymtab, symbol);
-        if (item != NULL) addUpvalue(resolver, item, isDirect);
+        if (item != NULL && item->category != SYMBOL_CATEGORY_GLOBAL) {
+            addUpvalue(resolver, item, isDirect);
+        }
 
         if (currentSymtab->id == functionResolver->symtab->id) {
             functionResolver = functionResolver->enclosing;
@@ -370,7 +390,10 @@ static SymbolItem* findGlobal(Resolver* resolver, Ast* ast) {
     SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
     if (item == NULL) {
         item = symbolTableGet(resolver->globalSymtab, symbol);
-        if (item != NULL) return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, item->type, item->isMutable);
+        if (item == NULL) item = symbolTableGet(resolver->vm->symtab, symbol);
+        if (item != NULL) {
+            return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, item->type, item->isMutable);
+        }
     }
     return item;
 }
@@ -512,6 +535,7 @@ static void parameters(Resolver* resolver, Ast* ast) {
 
 static void block(Resolver* resolver, Ast* ast) {
     Ast* stmts = astGetChild(ast, 0);
+    stmts->symtab = ast->symtab;
     for (int i = 0; i < stmts->children->count; i++) {
         resolveChild(resolver, stmts, i);
     }
@@ -525,8 +549,12 @@ static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) 
     SymbolScope scope = getFunctionScope(ast);
 
     beginScope(resolver, ast, scope);
-    parameters(resolver, astGetChild(ast, 0));
-    block(resolver, astGetChild(ast, 1));
+    Ast* params = astGetChild(ast, 0);
+    params->symtab = ast->symtab;
+    parameters(resolver, params);
+    Ast* blk = astGetChild(ast, 1);
+    blk->symtab = ast->symtab;
+    block(resolver, blk);
     endScope(resolver);
     endFunctionResolver(resolver);
 }
@@ -538,15 +566,15 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
     int childIndex = 0;
 
     if (type == BEHAVIOR_CLASS) {
-        Ast* superClass = astGetChild(ast, childIndex);
-        classResolver.superClass = superClass->token;
+        Ast* superclass = astGetChild(ast, childIndex);
+        classResolver.superClass = superclass->token;
         resolveChild(resolver, ast, childIndex);
         childIndex++;
 
         if (tokensEqual(&name, &resolver->rootClass)) {
             semanticError(resolver, "Cannot redeclare root class Object.");
         }
-        else if (tokensEqual(&name, &superClass->token)) {
+        else if (tokensEqual(&name, &superclass->token)) {
             semanticError(resolver, "A class cannot inherit from itself.");
         }
     }
@@ -654,12 +682,14 @@ static void resolveGrouping(Resolver* resolver, Ast* ast) {
 
 static void resolveInterpolation(Resolver* resolver, Ast* ast) {
     Ast* exprs = astGetChild(ast, 0);
+    exprs->symtab = ast->symtab;
     int count = 0;
 
     while (count < exprs->children->count) {
         bool concatenate = false;
         bool isString = false;
         Ast* expr = astGetChild(exprs, count);
+        expr->symtab = exprs->symtab;
 
         if (expr->kind == AST_EXPR_LITERAL && expr->token.type == TOKEN_STRING) {
             resolveChild(resolver, exprs, count);
@@ -745,6 +775,7 @@ static void resolveSuperGet(Resolver* resolver, Ast* ast) {
     if (resolver->currentClass == NULL) {
         semanticError(resolver, "Cannot use 'super' outside of a class.");
     }
+    findThis(resolver);
     resolveChild(resolver, ast, 0);
 }
 
@@ -752,6 +783,8 @@ static void resolveSuperInvoke(Resolver* resolver, Ast* ast) {
     if (resolver->currentClass == NULL) {
         semanticError(resolver, "Cannot use 'super' outside of a class.");
     }
+    findThis(resolver);
+    findSuper(resolver);
     resolveChild(resolver, ast, 0);
 }
 
@@ -759,9 +792,7 @@ static void resolveThis(Resolver* resolver, Ast* ast) {
     if (resolver->currentClass == NULL) {
         semanticError(resolver, "Cannot use 'this' outside of a class.");
     }
-    ObjString* symbol = createSymbol(resolver, resolver->thisVar);
-    SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
-    if (item == NULL) insertThis(resolver, symbol);
+    findThis(resolver);
 }
 
 static void resolveTrait(Resolver* resolver, Ast* ast) {
