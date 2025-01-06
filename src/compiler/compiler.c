@@ -343,7 +343,7 @@ static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
 static SymbolItem* findSymbolItem(Compiler* compiler, SymbolTable* symtab, Token token) {
     ObjString* name = copyString(compiler->vm, token.start, token.length);
     SymbolItem* item = symbolTableGet(symtab, name);
-    return (item != NULL) ? item : symbolTableGet(compiler->vm->symtab, name);
+    return (item != NULL) ? item : findSymbolItem(compiler, symtab->parent, token);
 }
 
 static int findLocal(Compiler* compiler, Token* name) {
@@ -816,8 +816,7 @@ static void compileSubscriptSet(Compiler* compiler, Ast* ast) {
 
 static void compileSuperGet(Compiler* compiler, Ast* ast) {
     uint8_t index = super_(compiler, ast);
-    SymbolItem* item = findSymbolItem(compiler, ast->symtab, compiler->currentClass->superclass);
-    getVariable(compiler, item);
+    getVariable(compiler, findSymbolItem(compiler, ast->symtab, compiler->currentClass->superclass));
     emitBytes(compiler, OP_GET_SUPER, index);
 }
 

@@ -151,11 +151,14 @@ static ObjString* createSymbol(Resolver* resolver, Token token) {
 
 static ObjString* createQualifiedSymbol(Resolver* resolver, Ast* ast) {
     Ast* identifiers = astGetChild(ast, 0);
+    identifiers->symtab = ast->symtab;
     Ast* identifier = astGetChild(identifiers, 0);
+    identifier->symtab = identifiers->symtab;
     const char* start = identifier->token.start;
     int length = identifier->token.length;
     for (int i = 1; i < identifiers->children->count; i++) {
         identifier = astGetChild(identifiers, i);
+        identifier->symtab = identifiers->symtab;
         length += identifier->token.length + 1;
     }
     return copyString(resolver->vm, start, length);
@@ -235,19 +238,6 @@ static SymbolItem* findThis(Resolver* resolver) {
     return item;
 }
 
-static SymbolItem* findSuper(Resolver* resolver) {
-    ObjString* symbol = createSymbol(resolver, resolver->currentClass->superClass);
-    SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
-
-    if (item == NULL) {
-        uint8_t index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_GLOBAL);
-        item = newSymbolItem(resolver->currentClass->superClass, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, index, false);
-        symbolTableSet(resolver->currentSymtab, symbol, item);
-    }
-
-    return item;
-}
-
 static SymbolItem* insertType(Resolver* resolver, SymbolItem* item, TypeCategory category) {
     ObjString* shortName = copyString(resolver->vm, item->token.start, item->token.length);
     ObjString* fullName = (category == TYPE_CATEGORY_FUNCTION) ? shortName : getSymbolFullName(resolver, item->token);
@@ -301,9 +291,10 @@ static void endScope(Resolver* resolver) {
 }
 
 static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable) {
-    SymbolCategory category = (resolver->currentFunction->enclosing == NULL) ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL;
+    SymbolCategory category = (resolver->currentSymtab == resolver->rootSymtab) ? SYMBOL_CATEGORY_GLOBAL : SYMBOL_CATEGORY_LOCAL;
     if (ast->kind == AST_DECL_METHOD) category = SYMBOL_CATEGORY_METHOD;
     SymbolItem* item = insertSymbol(resolver, ast->token, category, SYMBOL_STATE_DECLARED, NULL, isMutable);
+
     if (item == NULL) {
         char* name = tokenToCString(ast->token);
         semanticError(resolver, "Already a variable with name '%s' in this scope.", name);
@@ -566,21 +557,23 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
     int childIndex = 0;
 
     if (type == BEHAVIOR_CLASS) {
-        Ast* superclass = astGetChild(ast, childIndex);
-        classResolver.superClass = superclass->token;
+        Ast* superClass = astGetChild(ast, childIndex);
+        superClass->symtab = ast->symtab;
+        classResolver.superClass = superClass->token;
         resolveChild(resolver, ast, childIndex);
         childIndex++;
 
         if (tokensEqual(&name, &resolver->rootClass)) {
             semanticError(resolver, "Cannot redeclare root class Object.");
         }
-        else if (tokensEqual(&name, &superclass->token)) {
+        else if (tokensEqual(&name, &superClass->token)) {
             semanticError(resolver, "A class cannot inherit from itself.");
         }
     }
 
     beginScope(resolver, ast, (type == BEHAVIOR_TRAIT) ? SYMBOL_SCOPE_TRAIT : SYMBOL_SCOPE_CLASS);
     Ast* traitList = astGetChild(ast, childIndex);
+    traitList->symtab = ast->symtab;
     uint8_t traitCount = astNumChild(traitList);
     if (traitCount > 0) resolveChild(resolver, ast, childIndex);
 
@@ -622,6 +615,7 @@ static void resolveAnd(Resolver* resolver, Ast* ast) {
 static void resolveArray(Resolver* resolver, Ast* ast) {
     if (astHasChild(ast)) {
         Ast* elements = astGetChild(ast, 0);
+        elements->symtab = ast->symtab;
         for (int i = 0; i < elements->children->count; i++) {
             resolveChild(resolver, elements, i);
         }
@@ -663,7 +657,9 @@ static void resolveClass(Resolver* resolver, Ast* ast) {
 static void resolveDictionary(Resolver* resolver, Ast* ast) {
     uint8_t entryCount = 0;
     Ast* keys = astGetChild(ast, 0);
+    keys->symtab = ast->symtab;
     Ast* values = astGetChild(ast, 1);
+    values->symtab = ast->symtab;
     while (entryCount < keys->children->count) {
         resolveChild(resolver, keys, entryCount);
         resolveChild(resolver, values, entryCount);
@@ -784,7 +780,6 @@ static void resolveSuperInvoke(Resolver* resolver, Ast* ast) {
         semanticError(resolver, "Cannot use 'super' outside of a class.");
     }
     findThis(resolver);
-    findSuper(resolver);
     resolveChild(resolver, ast, 0);
 }
 
@@ -964,8 +959,11 @@ static void resolveForStatement(Resolver* resolver, Ast* ast) {
     resolver->loopDepth++;
     beginScope(resolver, ast, SYMBOL_SCOPE_BLOCK);
     Ast* decl = astGetChild(ast, 0);
+    decl->symtab = ast->symtab;
+
     for (int i = 0; i < decl->children->count; i++) {
         Ast* varDecl = astGetChild(decl, i);
+        varDecl->symtab = decl->symtab;
         SymbolItem* item = declareVariable(resolver, varDecl, varDecl->modifier.isMutable);
         item->state = SYMBOL_STATE_DEFINED;
     }
@@ -1005,6 +1003,7 @@ static void resolveSwitchStatement(Resolver* resolver, Ast* ast) {
     resolver->switchDepth++;
     resolveChild(resolver, ast, 0);
     Ast* caseList = astGetChild(ast, 1);
+    caseList->symtab = ast->symtab;
 
     for (int i = 0; i < caseList->children->count; i++) {
         resolveChild(resolver, caseList, i);
@@ -1030,16 +1029,19 @@ static void resolveTryStatement(Resolver* resolver, Ast* ast) {
 
 static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
     Ast* _namespace = astGetChild(ast, 0);
+    _namespace->symtab = ast->symtab;
     int namespaceDepth = astNumChild(_namespace);
     uint8_t index = 0;
 
     for (int i = 0; i < namespaceDepth; i++) {
         Ast* subNamespace = astGetChild(_namespace, i);
+        subNamespace->symtab = _namespace->symtab;
         insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
     }
 
     if (astNumChild(ast) > 1) {
         Ast* alias = astGetChild(ast, 1);
+        alias->symtab = _namespace->symtab;
         insertSymbol(resolver, alias->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
     }
 }
@@ -1149,9 +1151,11 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
     Ast* identifiers = astGetChild(ast, 0);
+    identifiers->symtab = ast->symtab;
     ObjString* typeName = newString(resolver->vm, "clox.std.lang.Namespace");
     TypeInfo* type = typeTableGet(resolver->vm->typetab, typeName);
     Ast* identifier = astGetChild(identifiers, 0);
+    identifier->symtab = identifiers->symtab;
     insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
     resolver->currentNamespace = createQualifiedSymbol(resolver, ast);
 }
@@ -1209,8 +1213,8 @@ void resolveAst(Resolver* resolver, Ast* ast) {
 
 static void resolveChild(Resolver* resolver, Ast* ast, int index) {
     Ast* child = astGetChild(ast, index);
-    resolver->currentToken = child->token;
     child->symtab = ast->symtab;
+    resolver->currentToken = child->token;
 
     switch (child->category) {
         case AST_CATEGORY_SCRIPT:
