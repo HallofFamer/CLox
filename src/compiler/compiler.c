@@ -504,7 +504,7 @@ static void getVariable(Compiler* compiler, SymbolItem* item) {
         case SYMBOL_CATEGORY_LOCAL:
             emitBytes(compiler, OP_GET_LOCAL, (uint8_t)findLocal(compiler, &item->token));
             break;
-        case SYMBOL_CATEGORY_UPVALUE_DIRECT: 
+        case SYMBOL_CATEGORY_UPVALUE_DIRECT:
         case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
             emitBytes(compiler, OP_GET_UPVALUE, (uint8_t)findUpvalue(compiler, &item->token));
             break;
@@ -636,16 +636,22 @@ static void compileArray(Compiler* compiler, Ast* ast) {
 
 static void compileAssign(Compiler* compiler, Ast* ast) {
     uint8_t setOp;
-    int arg = findLocal(compiler, &ast->token);
-    if (arg != -1) {
-        setOp = OP_SET_LOCAL;
-    }
-    else if ((arg = findUpvalue(compiler, &ast->token)) != -1) {
-        setOp = OP_SET_UPVALUE;
-    }
-    else {
-        arg = identifierConstant(compiler, &ast->token);
-        setOp = OP_SET_GLOBAL;
+    int arg;
+    SymbolItem* item = findSymbolItem(compiler, ast->symtab, ast->token);
+
+    switch (item->category) {
+        case SYMBOL_CATEGORY_LOCAL:
+            arg = findLocal(compiler, &ast->token);
+            setOp = OP_SET_LOCAL;
+            break;
+        case SYMBOL_CATEGORY_UPVALUE_DIRECT:
+        case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
+            arg = findUpvalue(compiler, &ast->token);
+            setOp = OP_SET_UPVALUE;
+            break;
+        default:
+            arg = identifierConstant(compiler, &ast->token);
+            setOp = OP_SET_GLOBAL;
     }
 
     compileChild(compiler, ast, 0);
