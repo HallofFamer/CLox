@@ -114,13 +114,14 @@ bool isClassImplementingTrait(ObjClass* klass, ObjClass* trait) {
 }
 
 static void inheritTraits(VM* vm, ObjClass* subclass, ObjClass* superclass) {
-    TypeInfo* subclassType = typeTableGet(vm->typetab, subclass->fullName);
+    BehaviorTypeInfo* subclassType = AS_BEHAVIOR_TYPE(typeTableGet(vm->typetab, subclass->fullName));
     for (int i = 0; i < superclass->traits.count; i++) {        
         valueArrayWrite(vm, &subclass->traits, superclass->traits.values[i]);
         if (subclass->isNative) {
             ObjClass* trait = AS_CLASS(superclass->traits.values[i]);
             TypeInfo* traitType = typeTableGet(vm->typetab, trait->fullName);
-            TypeInfoArrayAdd(subclassType->behavior->traitTypes, traitType);
+            printf("inherit trait %s for class %s\n", traitType->fullName->chars, subclassType->baseType.fullName->chars);
+            TypeInfoArrayAdd(subclassType->traitTypes, traitType);
         }
     }
 }
@@ -135,9 +136,9 @@ void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     subclass->interceptors = superclass->interceptors;
 
     if (subclass->isNative && subclass->behaviorType == BEHAVIOR_CLASS) {
-        TypeInfo* subclassType = typeTableGet(vm->typetab, subclass->fullName);
+        BehaviorTypeInfo* subclassType = AS_BEHAVIOR_TYPE(typeTableGet(vm->typetab, subclass->fullName));
         TypeInfo* superclassType = typeTableGet(vm->typetab, superclass->fullName);
-        subclassType->behavior = newBehaviorInfo(vm->numTypetabs++, superclassType);
+        subclassType->superclassType = superclassType;
     }
 
     if (superclass->behaviorType == BEHAVIOR_CLASS) {

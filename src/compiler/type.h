@@ -10,6 +10,12 @@ typedef struct TypeInfo TypeInfo;
 typedef struct TypeTable TypeTable;
 DECLARE_BUFFER(TypeInfoArray, TypeInfo*)
 
+#define IS_BEHAVIOR_TYPE(type) (type->category == TYPE_CATEGORY_CLASS || type->category == TYPE_CATEGORY_TRAIT)
+#define IS_FUNCTION_TYPE(type) (type->category == TYPE_CATEGORY_FUNCTION || type->category == TYPE_CATEGORY_METHOD)
+
+#define AS_BEHAVIOR_TYPE(type) ((BehaviorTypeInfo*)type)
+#define AS_FUNCTION_TYPE(type) ((FunctionTypeInfo*)type)
+
 typedef enum {
     TYPE_CATEGORY_NONE,
     TYPE_CATEGORY_CLASS,
@@ -18,25 +24,25 @@ typedef enum {
     TYPE_CATEGORY_METHOD
 } TypeCategory;
 
+struct TypeInfo {
+    int id;
+    TypeCategory category;
+    ObjString* shortName;
+    ObjString* fullName;
+};
+
 typedef struct {
+    TypeInfo baseType;
     TypeInfo* superclassType;
     TypeInfoArray* traitTypes;
     TypeTable* methods;
 } BehaviorTypeInfo;
 
 typedef struct {
+    TypeInfo baseType;
     TypeInfo* returnType;
     TypeInfoArray* paramTypes;
 } FunctionTypeInfo;
-
-struct TypeInfo {
-    int id;
-    TypeCategory category;
-    ObjString* shortName;
-    ObjString* fullName;
-    BehaviorTypeInfo* behavior;
-    FunctionTypeInfo* function;
-};
 
 typedef struct {
     ObjString* key;
@@ -50,15 +56,15 @@ struct TypeTable {
     TypeEntry* entries;
 };
 
-BehaviorTypeInfo* newBehaviorInfo(int id, TypeInfo* superclass);
-BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeInfo* superclass, int numTraits, ...);
-BehaviorTypeInfo* newBehaviorInfoWithMethods(TypeInfo* superclass, TypeTable* methods);
-void freeBehaviorTypeInfo(BehaviorTypeInfo* behavior);
-FunctionTypeInfo* newFunctionInfo(TypeInfo* returnType);
-FunctionTypeInfo* newFunctionInfoWithParams(TypeInfo* returnType, int numParams, ...);
-void freeFunctionTypeInfo(FunctionTypeInfo* function);
-TypeInfo* newTypeInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, void* additionalInfo);
+TypeInfo* newTypeInfo(int id, size_t size, TypeCategory category, ObjString* shortName, ObjString* fullName);
 void freeTypeInfo(TypeInfo* type);
+BehaviorTypeInfo* newBehaviorInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType);
+BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, int numTraits, ...);
+BehaviorTypeInfo* newBehaviorInfoWithMethods(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, TypeTable* methods);
+void freeBehaviorTypeInfo(BehaviorTypeInfo* behaviorType);
+FunctionTypeInfo* newFunctionInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType);
+FunctionTypeInfo* newFunctionInfoWithParams(int id, TypeCategory category, ObjString* name, TypeInfo* returnType, int numParams, ...);
+void freeFunctionTypeInfo(FunctionTypeInfo* functionType);
 TypeTable* newTypeTable(int id);
 void freeTypeTable(TypeTable* typeTable);
 TypeInfo* typeTableGet(TypeTable* typetab, ObjString* key);

@@ -234,8 +234,9 @@ static SymbolItem* findThis(Resolver* resolver) {
 
 static SymbolItem* insertType(Resolver* resolver, SymbolItem* item, TypeCategory category) {
     ObjString* shortName = copyString(resolver->vm, item->token.start, item->token.length);
-    ObjString* fullName = (category == TYPE_CATEGORY_FUNCTION) ? shortName : getSymbolFullName(resolver, item->token);
-    item->type = insertTypeTable(resolver->vm, category, shortName, fullName);
+    ObjString* fullName = getSymbolFullName(resolver, item->token);
+    BehaviorTypeInfo* behaviorType = insertBehaviorTypeTable(resolver->vm->typetab, category, shortName, fullName, NULL);
+    item->type = (TypeInfo*)behaviorType;
     return item;
 }
 
@@ -1121,8 +1122,7 @@ static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     ObjString* name = copyString(resolver->vm, item->token.start, item->token.length);
     defineAstType(resolver, ast, "clox.std.lang.Function");
     item->type = ast->type;
-    TypeInfo* type = insertTypeTable(resolver->vm, TYPE_CATEGORY_FUNCTION, name, name);
-    type->function = newFunctionInfo(NULL);
+    FunctionTypeInfo* functionType = insertFunctionTypeTable(resolver->vm->typetab, TYPE_CATEGORY_FUNCTION, name, NULL);
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
 }

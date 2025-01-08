@@ -83,7 +83,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     pop(vm);
     pop(vm);
     if (nativeClass->behaviorType != BEHAVIOR_METACLASS) {
-        insertTypeTable(vm, TYPE_CATEGORY_CLASS, className, nativeClass->fullName);
+        insertBehaviorTypeTable(vm->typetab, TYPE_CATEGORY_CLASS, className, nativeClass->fullName, NULL);
     }
     return nativeClass;
 }
@@ -96,17 +96,17 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
     pop(vm);
     pop(vm);
     insertGlobalSymbolTable(vm, name);
-    TypeInfo* type = insertTypeTable(vm, TYPE_CATEGORY_FUNCTION, functionName, functionName);
 
     va_list args;
     va_start(args, function);
     TypeInfo* returnType = va_arg(args, TypeInfo*);
-    type->function = newFunctionInfo(returnType);
+    FunctionTypeInfo* functionType = newFunctionInfo(vm->typetab->count + 1, TYPE_CATEGORY_FUNCTION, functionName, returnType);
 
     for (int i = 0; i < arity; i++) {
         TypeInfo* paramType = va_arg(args, TypeInfo*);
-        TypeInfoArrayAdd(type->function->paramTypes, paramType);
+        TypeInfoArrayAdd(functionType->paramTypes, paramType);
     }
+    typeTableSet(vm->typetab, functionName, (TypeInfo*)functionType);
     va_end(args);
 }
 
@@ -176,7 +176,7 @@ ObjClass* defineNativeTrait(VM* vm, const char* name) {
     tableSet(vm, &vm->currentNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
-    insertTypeTable(vm, TYPE_CATEGORY_TRAIT, traitName, nativeTrait->fullName);
+    insertBehaviorTypeTable(vm->typetab, TYPE_CATEGORY_TRAIT, traitName, nativeTrait->fullName, NULL);
     return nativeTrait;
 }
 
@@ -268,16 +268,23 @@ SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName) {
     return item;
 }
 
-TypeInfo* insertTypeTable(VM* vm, TypeCategory category, ObjString* shortName, ObjString* fullName) {
-    int id = vm->typetab->count + 1;
-    TypeInfo* typeInfo = newTypeInfo(vm->typetab->count + 1, category, shortName, fullName, NULL);
-    typeTableSet(vm->typetab, fullName, typeInfo);
-    return typeInfo;
+BehaviorTypeInfo* insertBehaviorTypeTable(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
+    int id = typetab->count + 1;
+    BehaviorTypeInfo* behaviorType = newBehaviorInfo(id, category, shortName, fullName, superclassType);
+    typeTableSet(typetab, fullName, (TypeInfo*)behaviorType);
+    return behaviorType;
 }
 
-FunctionTypeInfo* insertTypeSignature(VM* vm, int arity, const char* returnTypeName, ...) {
+FunctionTypeInfo* insertFunctionTypeTable(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType) {
+    int id = typetab->count + 1;
+    FunctionTypeInfo* functionType = newFunctionInfo(id, category, name, returnType);
+    typeTableSet(typetab, name, (TypeInfo*)functionType);
+    return functionType;
+}
+
+FunctionTypeInfo* insertTypeSignature(VM* vm, TypeCategory category, ObjString* name, int arity, const char* returnTypeName, ...) {
     TypeInfo* returnType = typeTableGet(vm->typetab, newString(vm, returnTypeName));
-    FunctionTypeInfo* function = newFunctionInfo(returnType);
+    FunctionTypeInfo* function = newFunctionInfo(vm->typetab->count + 1, category, name, returnType);
     va_list args;
     va_start(args, returnTypeName);
     for (int i = 0; i < arity; i++) {

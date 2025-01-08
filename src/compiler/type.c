@@ -8,127 +8,105 @@
 #define TYPE_TABLE_MAX_LOAD 0.75
 DEFINE_BUFFER(TypeInfoArray, TypeInfo*)
 
-BehaviorTypeInfo* newBehaviorInfo(int id, TypeInfo* superclassType) {
-    BehaviorTypeInfo* behavior = (BehaviorTypeInfo*)malloc(sizeof(BehaviorTypeInfo));
-    if (behavior != NULL) {
-        behavior->superclassType = superclassType;
-        behavior->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
-        if(behavior->traitTypes != NULL) TypeInfoArrayInit(behavior->traitTypes);
-        behavior->methods = newTypeTable(id);
-    }
-    return behavior;
-}
-
-BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeInfo* superclassType, int numTraits, ...) {
-    BehaviorTypeInfo* behavior = (BehaviorTypeInfo*)malloc(sizeof(BehaviorTypeInfo));
-    if (behavior != NULL) {
-        behavior->superclassType = superclassType;
-        behavior->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
-        behavior->methods = newTypeTable(id);
-
-        if (behavior->traitTypes != NULL) {
-            TypeInfoArrayInit(behavior->traitTypes);
-            va_list args;
-            va_start(args, numTraits);
-
-            for (int i = 0; i < numTraits; i++) {
-                TypeInfo* type = va_arg(args, TypeInfo*);
-                TypeInfoArrayAdd(behavior->traitTypes, type);
-            }
-            va_end(args);
-        }
-    }
-    return behavior;
-}
-
-BehaviorTypeInfo* newBehaviorInfoWithMethods(TypeInfo* superclassType, TypeTable* methods) {
-    BehaviorTypeInfo* behavior = (BehaviorTypeInfo*)malloc(sizeof(BehaviorTypeInfo));
-    if (behavior != NULL) {
-        behavior->superclassType = superclassType;
-        behavior->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
-        TypeInfoArrayInit(behavior->traitTypes);
-        behavior->methods = methods;
-    }
-    return behavior;
-}
-
-void freeBehaviorTypeInfo(BehaviorTypeInfo* behavior) {
-    if (behavior->traitTypes != NULL) TypeInfoArrayFree(behavior->traitTypes);
-    freeTypeTable(behavior->methods);
-    free(behavior);
-}
-
-FunctionTypeInfo* newFunctionInfo(TypeInfo* returnType) {
-    FunctionTypeInfo* function = (FunctionTypeInfo*)malloc(sizeof(FunctionTypeInfo));
-    if (function != NULL) {
-        function->returnType = returnType;
-        function->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
-        if (function->paramTypes != NULL) TypeInfoArrayInit(function->paramTypes);
-    }
-    return function;
-}
-
-FunctionTypeInfo* newFunctionInfoWithParams(TypeInfo* returnType, int numParams, ...) {
-    FunctionTypeInfo* function = (FunctionTypeInfo*)malloc(sizeof(FunctionTypeInfo));
-    if (function != NULL) {
-        function->returnType = returnType;
-        function->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
-        if (function->paramTypes != NULL) {
-            TypeInfoArrayInit(function->paramTypes);
-            va_list args;
-            va_start(args, numParams);
-            for (int i = 0; i < numParams; i++) {
-                TypeInfo* type = va_arg(args, TypeInfo*);
-                TypeInfoArrayAdd(function->paramTypes, type);
-            }
-            va_end(args);
-        }
-    }
-    return function;
-}
-
-void freeFunctionTypeInfo(FunctionTypeInfo* function) {
-    if (function->paramTypes != NULL) {
-        TypeInfoArrayFree(function->paramTypes);
-    }
-    free(function);
-}
-
-static void initAdditionalInfo(TypeInfo* type, void* additionalInfo) {
-    switch (type->category) {
-        case TYPE_CATEGORY_CLASS:
-        case TYPE_CATEGORY_TRAIT:
-            type->behavior = (BehaviorTypeInfo*)additionalInfo;
-            break;
-        case TYPE_CATEGORY_FUNCTION:
-        case TYPE_CATEGORY_METHOD:
-            type->function = (FunctionTypeInfo*)additionalInfo;
-            break;
-        default:
-            break;
-    }
-}
-
-TypeInfo* newTypeInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, void* additionalInfo) {
-    TypeInfo* type = (TypeInfo*)malloc(sizeof(TypeInfo));
+TypeInfo* newTypeInfo(int id, size_t size, TypeCategory category, ObjString* shortName, ObjString* fullName) {
+    TypeInfo* type = (TypeInfo*)malloc(size);
     if (type != NULL) {
         type->id = id;
         type->category = category;
         type->shortName = shortName;
         type->fullName = fullName;
-        type->behavior = NULL;
-        type->function = NULL;
-        if (additionalInfo != NULL) initAdditionalInfo(type, additionalInfo);
     }
     return type;
 }
 
 void freeTypeInfo(TypeInfo* type) {
-    if (type != NULL) {
-        if (type->behavior != NULL) freeBehaviorTypeInfo(type->behavior);
-        if (type->function != NULL) freeFunctionTypeInfo(type->function);
-        free(type);
+    if (type == NULL) return;
+    if (IS_BEHAVIOR_TYPE(type)) freeBehaviorTypeInfo(AS_BEHAVIOR_TYPE(type));
+    else if (IS_FUNCTION_TYPE(type)) freeFunctionTypeInfo(AS_FUNCTION_TYPE(type));
+}
+
+BehaviorTypeInfo* newBehaviorInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
+    BehaviorTypeInfo* behaviorType = (BehaviorTypeInfo*)newTypeInfo(id, sizeof(BehaviorTypeInfo), category, shortName, fullName);
+    if (behaviorType != NULL) {
+        behaviorType->superclassType = superclassType;
+        behaviorType->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        if(behaviorType->traitTypes != NULL) TypeInfoArrayInit(behaviorType->traitTypes);
+        behaviorType->methods = newTypeTable(id);
     }
+    return behaviorType;
+}
+
+BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, int numTraits, ...) {
+    BehaviorTypeInfo* behaviorType = (BehaviorTypeInfo*)newTypeInfo(id, sizeof(BehaviorTypeInfo), category, shortName, fullName);
+    if (behaviorType != NULL) {
+        behaviorType->superclassType = superclassType;
+        behaviorType->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        behaviorType->methods = newTypeTable(id);
+
+        if (behaviorType->traitTypes != NULL) {
+            TypeInfoArrayInit(behaviorType->traitTypes);
+            va_list args;
+            va_start(args, numTraits);
+
+            for (int i = 0; i < numTraits; i++) {
+                TypeInfo* type = va_arg(args, TypeInfo*);
+                TypeInfoArrayAdd(behaviorType->traitTypes, type);
+            }
+            va_end(args);
+        }
+    }
+    return behaviorType;
+}
+
+BehaviorTypeInfo* newBehaviorInfoWithMethods(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, TypeTable* methods) {
+    BehaviorTypeInfo* behaviorType = (BehaviorTypeInfo*)newTypeInfo(id, sizeof(BehaviorTypeInfo), category, shortName, fullName);
+    if (behaviorType != NULL) {
+        behaviorType->superclassType = superclassType;
+        behaviorType->traitTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        TypeInfoArrayInit(behaviorType->traitTypes);
+        behaviorType->methods = methods;
+    }
+    return behaviorType;
+}
+
+void freeBehaviorTypeInfo(BehaviorTypeInfo* behaviorType) {
+    if (behaviorType->traitTypes != NULL) TypeInfoArrayFree(behaviorType->traitTypes);
+    freeTypeTable(behaviorType->methods);
+    free(behaviorType);
+}
+
+FunctionTypeInfo* newFunctionInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType) {
+    FunctionTypeInfo* functionType = (FunctionTypeInfo*)newTypeInfo(id, sizeof(FunctionTypeInfo), category, name, name);
+    if (functionType != NULL) {
+        functionType->returnType = returnType;
+        functionType->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        if (functionType->paramTypes != NULL) TypeInfoArrayInit(functionType->paramTypes);
+    }
+    return functionType;
+}
+
+FunctionTypeInfo* newFunctionInfoWithParams(int id, TypeCategory category, ObjString* name, TypeInfo* returnType, int numParams, ...) {
+    FunctionTypeInfo* functionType = (FunctionTypeInfo*)newTypeInfo(id, sizeof(FunctionTypeInfo), category, name, name);
+    if (functionType != NULL) {
+        functionType->returnType = returnType;
+        functionType->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        if (functionType->paramTypes != NULL) {
+            TypeInfoArrayInit(functionType->paramTypes);
+            va_list args;
+            va_start(args, numParams);
+            for (int i = 0; i < numParams; i++) {
+                TypeInfo* type = va_arg(args, TypeInfo*);
+                TypeInfoArrayAdd(functionType->paramTypes, type);
+            }
+            va_end(args);
+        }
+    }
+    return functionType;
+}
+
+void freeFunctionTypeInfo(FunctionTypeInfo* functionType) {
+    if (functionType->paramTypes != NULL) TypeInfoArrayFree(functionType->paramTypes);
+    free(functionType);
 }
 
 TypeTable* newTypeTable(int id) {
@@ -250,7 +228,7 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
         for (int i = 0; i < behavior->methods->capacity; i++) {
             TypeEntry* entry = &behavior->methods->entries[i];
             if (entry != NULL && entry->key != NULL) {
-                FunctionTypeInfo* method = entry->value->function;
+                FunctionTypeInfo* method = AS_FUNCTION_TYPE(entry->value);
                 printf("      method: %s\n", entry->key->chars);
                 printf("      return: %s\n", (method->returnType != NULL) ? method->returnType->fullName->chars : "dynamic");
                 for (int i = 1; i < method->paramTypes->count; i++) {
@@ -274,8 +252,8 @@ static void typeTableOutputFunction(FunctionTypeInfo* function) {
 static void typeTableOutputEntry(TypeEntry* entry) {
     printf("  %s(%s)\n    id: %d\n    category: ", entry->value->shortName->chars, entry->value->fullName->chars, entry->value->id);
     typeTableOutputCategory(entry->value->category);
-    if (entry->value->behavior != NULL) typeTableOutputBehavior(entry->value->behavior);
-    if (entry->value->function != NULL) typeTableOutputFunction(entry->value->function);
+    if (IS_BEHAVIOR_TYPE(entry->value)) typeTableOutputBehavior(AS_BEHAVIOR_TYPE(entry->value));
+    else if (IS_FUNCTION_TYPE(entry->value)) typeTableOutputFunction(AS_FUNCTION_TYPE(entry->value));
     printf("\n");
 }
 

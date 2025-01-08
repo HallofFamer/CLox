@@ -47,9 +47,10 @@ TypeInfo* getNativeType(VM* vm, const char* name);
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name);
 ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name);
 ObjNamespace* getNativeNamespace(VM* vm, const char* name);
-SymbolItem* insertGlobalSymbolTable(VM * vm, const char* symbolName);
-TypeInfo* insertTypeTable(VM* vm, TypeCategory category, ObjString* shortName, ObjString* fullName);
-FunctionTypeInfo* insertTypeSignature(VM * vm, int arity, const char* returnTypeName, ...);
+SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName);
+BehaviorTypeInfo* insertBehaviorTypeTable(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType);
+FunctionTypeInfo* insertFunctionTypeTable(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType);
+FunctionTypeInfo* insertTypeSignature(VM* vm, TypeCategory category, ObjString* name, int arity, const char* returnTypeName, ...);
 void loadSourceFile(VM* vm, const char* filePath);
 void registerNativeFunctions(VM* vm);
 
