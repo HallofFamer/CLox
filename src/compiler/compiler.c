@@ -504,8 +504,7 @@ static void getVariable(Compiler* compiler, SymbolItem* item) {
         case SYMBOL_CATEGORY_LOCAL:
             emitBytes(compiler, OP_GET_LOCAL, (uint8_t)findLocal(compiler, &item->token));
             break;
-        case SYMBOL_CATEGORY_UPVALUE_DIRECT:
-        case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
+        case SYMBOL_CATEGORY_UPVALUE:
             emitBytes(compiler, OP_GET_UPVALUE, (uint8_t)findUpvalue(compiler, &item->token));
             break;
         default:
@@ -644,8 +643,7 @@ static void compileAssign(Compiler* compiler, Ast* ast) {
             arg = findLocal(compiler, &ast->token);
             setOp = OP_SET_LOCAL;
             break;
-        case SYMBOL_CATEGORY_UPVALUE_DIRECT:
-        case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
+        case SYMBOL_CATEGORY_UPVALUE:
             arg = findUpvalue(compiler, &ast->token);
             setOp = OP_SET_UPVALUE;
             break;

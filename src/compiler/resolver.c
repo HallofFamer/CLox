@@ -111,7 +111,6 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->currentSymtab = NULL;
     resolver->globalSymtab = NULL;
     resolver->rootSymtab = NULL;
-    resolver->numSymtabs = 0;
     resolver->rootClass = syntheticToken("Object");
     resolver->thisVar = syntheticToken("this");
     resolver->superVar = syntheticToken("super");
@@ -127,8 +126,7 @@ static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
     switch (category) {
         case SYMBOL_CATEGORY_LOCAL:
             return ++resolver->currentFunction->numLocals;
-        case SYMBOL_CATEGORY_UPVALUE_DIRECT:
-        case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
+        case SYMBOL_CATEGORY_UPVALUE:
             return resolver->currentFunction->numUpvalues++;
         case SYMBOL_CATEGORY_GLOBAL:
             return resolver->currentFunction->numGlobals++;
@@ -222,13 +220,9 @@ static SymbolItem* findThis(Resolver* resolver) {
         if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
             item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, index, false);
         }
-        else if (resolver->currentSymtab->parent->scope == SYMBOL_SCOPE_METHOD) {
-            index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE_DIRECT);
-            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_DIRECT, SYMBOL_STATE_ACCESSED, index, false);
-        }
         else {
-            index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE_INDIRECT);
-            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE_INDIRECT, SYMBOL_STATE_ACCESSED, index, false);
+            index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE);
+            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, index, false);
         }
 
         item->type = typeTableGet(resolver->vm->typetab, klass);
@@ -345,11 +339,10 @@ static void assignLocal(Resolver* resolver, SymbolItem* item) {
     }
 }
 
-static SymbolItem* addUpvalue(Resolver* resolver, SymbolItem* item, bool isDirect) {
-    SymbolCategory category = isDirect ? SYMBOL_CATEGORY_UPVALUE_DIRECT : SYMBOL_CATEGORY_UPVALUE_INDIRECT;
+static SymbolItem* addUpvalue(Resolver* resolver, SymbolItem* item) {
     if(item->category == SYMBOL_CATEGORY_LOCAL) item->isCaptured = true;
     if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
-    return insertSymbol(resolver, item->token, category, SYMBOL_STATE_ACCESSED, item->type, item->isMutable);
+    return insertSymbol(resolver, item->token, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, item->type, item->isMutable);
 }
 
 static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
@@ -358,18 +351,14 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
     FunctionResolver* functionResolver = resolver->currentFunction->enclosing;
     SymbolItem* item = NULL;
-    bool isDirect = true;
 
     do {
         if (functionResolver->enclosing == NULL) break;
         item = symbolTableGet(currentSymtab, symbol);
-        if (item != NULL && item->category != SYMBOL_CATEGORY_GLOBAL) {
-            addUpvalue(resolver, item, isDirect);
-        }
+        if (item != NULL && item->category != SYMBOL_CATEGORY_GLOBAL) addUpvalue(resolver, item);
 
         if (currentSymtab->id == functionResolver->symtab->id) {
             functionResolver = functionResolver->enclosing;
-            isDirect = false;
         }
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
@@ -396,8 +385,7 @@ static void checkMutability(Resolver* resolver, SymbolItem* item) {
             case SYMBOL_CATEGORY_LOCAL:
                 semanticError(resolver, "Cannot assign to immutable local variable '%s'.", name);
                 break;
-            case SYMBOL_CATEGORY_UPVALUE_DIRECT:
-            case SYMBOL_CATEGORY_UPVALUE_INDIRECT:
+            case SYMBOL_CATEGORY_UPVALUE:
                 semanticError(resolver, "Cannot assign to immutable captured upvalue '%s'.", name);
                 break;
             case SYMBOL_CATEGORY_GLOBAL:
@@ -628,7 +616,7 @@ static void resolveAssign(Resolver* resolver, Ast* ast) {
     if (item == NULL) return;
     else {
         checkMutability(resolver, item);
-        if (SymbolCategoryIsUpvalue(item->category)) assignLocal(resolver, item);
+        if (item->category == SYMBOL_CATEGORY_UPVALUE) assignLocal(resolver, item);
         else if (item->state == SYMBOL_STATE_DECLARED) item->state = SYMBOL_STATE_DEFINED;
         else item->state = SYMBOL_STATE_MODIFIED;
         resolveChild(resolver, ast, 0);

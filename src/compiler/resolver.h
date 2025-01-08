@@ -19,7 +19,6 @@ typedef struct {
     Token rootClass;
     Token thisVar;
     Token superVar;
-    int numSymtabs;
     int loopDepth;
     int switchDepth;
     int tryDepth;

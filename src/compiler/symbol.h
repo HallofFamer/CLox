@@ -11,8 +11,7 @@ typedef struct SymbolTable SymbolTable;
 typedef enum {
     SYMBOL_CATEGORY_NONE,
     SYMBOL_CATEGORY_LOCAL,
-    SYMBOL_CATEGORY_UPVALUE_DIRECT,
-    SYMBOL_CATEGORY_UPVALUE_INDIRECT,
+    SYMBOL_CATEGORY_UPVALUE,
     SYMBOL_CATEGORY_GLOBAL,
     SYMBOL_CATEGORY_PROPERTY,
     SYMBOL_CATEGORY_METHOD
@@ -68,10 +67,6 @@ SymbolItem* symbolTableGet(SymbolTable* symtab, ObjString* key);
 bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value);
 SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key);
 void symbolTableOutput(SymbolTable* symtab);
-
-static inline bool SymbolCategoryIsUpvalue(SymbolCategory category) {
-    return (category == SYMBOL_CATEGORY_UPVALUE_DIRECT || category == SYMBOL_CATEGORY_UPVALUE_INDIRECT);
-}
 
 static inline bool isFunctionScope(SymbolScope scope) {
     return (scope == SYMBOL_SCOPE_FUNCTION || scope == SYMBOL_SCOPE_METHOD);
