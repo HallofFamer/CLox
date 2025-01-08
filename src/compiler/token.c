@@ -110,5 +110,5 @@ char* tokenToCString(Token token) {
 }
 
 void outputToken(Token token) {
-    printf("Scanning Token type: %s at line: %d\n", tokenRules[token.type].lexeme, token.line);
+    printf("Scanning Token type %s at line %d\n", tokenRules[token.type].lexeme, token.line);
 }

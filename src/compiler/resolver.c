@@ -1122,6 +1122,7 @@ static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     ObjString* name = copyString(resolver->vm, item->token.start, item->token.length);
     defineAstType(resolver, ast, "clox.std.lang.Function");
     item->type = ast->type;
+
     FunctionTypeInfo* functionType = insertFunctionTypeTable(resolver->vm->typetab, TYPE_CATEGORY_FUNCTION, name, NULL);
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
@@ -1132,6 +1133,7 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     ObjString* name = copyString(resolver->vm, item->token.start, item->token.length);
     defineAstType(resolver, ast, "clox.std.lang.Method");
     item->type = ast->type;
+
     TypeInfo* klass = getTypeForSymbol(resolver, resolver->currentClass->name);
     function(resolver, ast, false, ast->modifier.isAsync);
     item->state = SYMBOL_STATE_ACCESSED;
@@ -1142,6 +1144,7 @@ static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
     identifiers->symtab = ast->symtab;
     ObjString* typeName = newString(resolver->vm, "clox.std.lang.Namespace");
     TypeInfo* type = typeTableGet(resolver->vm->typetab, typeName);
+
     Ast* identifier = astGetChild(identifiers, 0);
     identifier->symtab = identifiers->symtab;
     insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);

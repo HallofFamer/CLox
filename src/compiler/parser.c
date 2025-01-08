@@ -1075,7 +1075,9 @@ static Ast* statement(Parser* parser) {
     else if (match(parser, TOKEN_LEFT_BRACE)) {
         return block(parser);
     }
-    else return expressionStatement(parser);
+    else {
+        return expressionStatement(parser);
+    }
 }
 
 static Ast* classDeclaration(Parser* parser) {
@@ -1174,7 +1176,9 @@ static Ast* declaration(Parser* parser) {
     else if (match(parser, TOKEN_VAR)) {
         return varDeclaration(parser, true);
     }
-    else return statement(parser);
+    else {
+        return statement(parser);
+    }
 }
 
 void initParser(Parser* parser, Lexer* lexer, bool debugAst) {

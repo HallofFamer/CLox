@@ -223,30 +223,6 @@ static void astOutputExprLiteral(Ast* ast, int indentLevel) {
     free(token);
 }
 
-static void astOutputExprName(Ast* ast, int indentLevel) {
-    astOutputIndent(indentLevel);
-    if (!ast->modifier.isQualified) {
-        char* name = tokenToCString(ast->token);
-        printf("name %s\n", name);
-        free(name);
-    }
-    else {
-        Ast* varList = astGetChild(ast, 0);
-        Ast* var = astGetChild(varList, 0);
-        char* name = tokenToCString(var->token);
-        printf("name %s", name);
-        free(name);
-
-        for (int i = 1; i < varList->children->count; i++) {
-            var = astGetChild(varList, i);
-            name = tokenToCString(var->token);
-            printf(".%s", name);
-            free(name);
-        }
-        printf("\n");
-    }
-}
-
 static void astOutputExprNil(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     char* op = tokenToCString(ast->token);
@@ -680,9 +656,6 @@ void astOutput(Ast* ast, int indentLevel) {
                     break;
                 case AST_EXPR_LITERAL:
                     astOutputExprLiteral(ast, indentLevel);
-                    break;
-                case AST_EXPR_NAME:
-                    astOutputExprName(ast, indentLevel);
                     break;
                 case AST_EXPR_NIL:
                     astOutputExprNil(ast, indentLevel);
