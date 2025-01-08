@@ -71,35 +71,6 @@ ObjString* formattedString(VM* vm, const char* format, ...) {
     return copyString(vm, chars, length);
 }
 
-int searchString(VM* vm, ObjString* haystack, ObjString* needle, uint32_t start) {
-    if (needle->length == 0) return start;
-    if (start + needle->length > (uint32_t)haystack->length || start >= (uint32_t)haystack->length) return -1;
-    uint32_t shift[UINT8_MAX];
-    uint32_t needleEnd = needle->length - 1;
-
-    for (uint32_t index = 0; index < UINT8_MAX; index++) {
-        shift[index] = needle->length;
-    }
-
-    for (uint32_t index = 0; index < needleEnd; index++) {
-        char c = needle->chars[index];
-        shift[(uint8_t)c] = needleEnd - index;
-    }
-
-    char lastChar = needle->chars[needleEnd];
-    uint32_t range = haystack->length - needle->length;
-
-    for (uint32_t index = start; index <= range; ) {
-        char c = haystack->chars[index + needleEnd];
-        if (lastChar == c && memcmp(haystack->chars + index, needle->chars, needleEnd) == 0) {
-            return index;
-        }
-
-        index += shift[(uint8_t)c];
-    }
-    return -1;
-}
-
 static void capitalizeFirstIndex(VM* vm, char* source, char* target, int length) {
     if (length == 1) target[0] = (char)toupper(source[0]);
     else {
@@ -136,7 +107,7 @@ ObjString* concatenateString(VM* vm, ObjString* string, ObjString* string2, cons
     size_t totalLength = (size_t)string->length + (size_t)string2->length + separatorLength;
     char* chars = bufferNewCString(totalLength);
     memcpy(chars, string->chars, string->length);
-    if (separatorLength > 0) chars[vm->langNamespace->fullName->length] = separator[0];
+    if (separatorLength > 0) chars[string->length] = separator[0];
     memcpy(chars + string->length + separatorLength, string2->chars, string2->length);
     chars[totalLength] = '\0';
     return takeString(vm, chars, (int)totalLength);
@@ -212,6 +183,34 @@ ObjString* reverseString(VM* vm, ObjString* original) {
     return takeString(vm, heapChars, original->length);
 }
 
+int searchString(VM* vm, ObjString* haystack, ObjString* needle, uint32_t start) {
+    if (needle->length == 0) return start;
+    if (start + needle->length > (uint32_t)haystack->length || start >= (uint32_t)haystack->length) return -1;
+    uint32_t shift[UINT8_MAX];
+    uint32_t needleEnd = needle->length - 1;
+
+    for (uint32_t index = 0; index < UINT8_MAX; index++) {
+        shift[index] = needle->length;
+    }
+
+    for (uint32_t index = 0; index < needleEnd; index++) {
+        char c = needle->chars[index];
+        shift[(uint8_t)c] = needleEnd - index;
+    }
+
+    char lastChar = needle->chars[needleEnd];
+    uint32_t range = haystack->length - needle->length;
+
+    for (uint32_t index = start; index <= range; ) {
+        char c = haystack->chars[index + needleEnd];
+        if (lastChar == c && memcmp(haystack->chars + index, needle->chars, needleEnd) == 0) {
+            return index;
+        }
+
+        index += shift[(uint8_t)c];
+    }
+    return -1;
+}
 
 ObjString* subString(VM* vm, ObjString* original, int fromIndex, int toIndex) {
     if (fromIndex >= original->length || toIndex > original->length || fromIndex > toIndex) {
