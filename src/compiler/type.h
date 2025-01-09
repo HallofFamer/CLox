@@ -57,14 +57,12 @@ struct TypeTable {
 };
 
 TypeInfo* newTypeInfo(int id, size_t size, TypeCategory category, ObjString* shortName, ObjString* fullName);
-void freeTypeInfo(TypeInfo* type);
 BehaviorTypeInfo* newBehaviorInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType);
 BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, int numTraits, ...);
 BehaviorTypeInfo* newBehaviorInfoWithMethods(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, TypeTable* methods);
-void freeBehaviorTypeInfo(BehaviorTypeInfo* behaviorType);
 FunctionTypeInfo* newFunctionInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType);
 FunctionTypeInfo* newFunctionInfoWithParams(int id, TypeCategory category, ObjString* name, TypeInfo* returnType, int numParams, ...);
-void freeFunctionTypeInfo(FunctionTypeInfo* functionType);
+void freeTypeInfo(TypeInfo* type);
 TypeTable* newTypeTable(int id);
 void freeTypeTable(TypeTable* typeTable);
 TypeInfo* typeTableGet(TypeTable* typetab, ObjString* key);

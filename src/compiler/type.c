@@ -19,12 +19,6 @@ TypeInfo* newTypeInfo(int id, size_t size, TypeCategory category, ObjString* sho
     return type;
 }
 
-void freeTypeInfo(TypeInfo* type) {
-    if (type == NULL) return;
-    if (IS_BEHAVIOR_TYPE(type)) freeBehaviorTypeInfo(AS_BEHAVIOR_TYPE(type));
-    else if (IS_FUNCTION_TYPE(type)) freeFunctionTypeInfo(AS_FUNCTION_TYPE(type));
-}
-
 BehaviorTypeInfo* newBehaviorInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
     BehaviorTypeInfo* behaviorType = (BehaviorTypeInfo*)newTypeInfo(id, sizeof(BehaviorTypeInfo), category, shortName, fullName);
     if (behaviorType != NULL) {
@@ -69,12 +63,6 @@ BehaviorTypeInfo* newBehaviorInfoWithMethods(int id, TypeCategory category, ObjS
     return behaviorType;
 }
 
-void freeBehaviorTypeInfo(BehaviorTypeInfo* behaviorType) {
-    if (behaviorType->traitTypes != NULL) TypeInfoArrayFree(behaviorType->traitTypes);
-    freeTypeTable(behaviorType->methods);
-    free(behaviorType);
-}
-
 FunctionTypeInfo* newFunctionInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType) {
     FunctionTypeInfo* functionType = (FunctionTypeInfo*)newTypeInfo(id, sizeof(FunctionTypeInfo), category, name, name);
     if (functionType != NULL) {
@@ -104,9 +92,19 @@ FunctionTypeInfo* newFunctionInfoWithParams(int id, TypeCategory category, ObjSt
     return functionType;
 }
 
-void freeFunctionTypeInfo(FunctionTypeInfo* functionType) {
-    if (functionType->paramTypes != NULL) TypeInfoArrayFree(functionType->paramTypes);
-    free(functionType);
+void freeTypeInfo(TypeInfo* type) {
+    if (type == NULL) return;
+    if (IS_BEHAVIOR_TYPE(type)) {
+        BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(type);
+        if (behaviorType->traitTypes != NULL) TypeInfoArrayFree(behaviorType->traitTypes);
+        freeTypeTable(behaviorType->methods);
+        free(behaviorType);
+    }
+    else if (IS_FUNCTION_TYPE(type)) {
+        FunctionTypeInfo* functionType = AS_FUNCTION_TYPE(type);
+        if (functionType->paramTypes != NULL) TypeInfoArrayFree(functionType->paramTypes);
+        free(functionType);
+    }
 }
 
 TypeTable* newTypeTable(int id) {
