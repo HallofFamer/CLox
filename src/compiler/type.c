@@ -188,6 +188,20 @@ bool typeTableSet(TypeTable* typetab, ObjString* key, TypeInfo* value) {
     return true;
 }
 
+BehaviorTypeInfo* insertBehaviorTypeTable(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
+    int id = typetab->count + 1;
+    BehaviorTypeInfo* behaviorType = newBehaviorInfo(id, category, shortName, fullName, superclassType);
+    typeTableSet(typetab, fullName, (TypeInfo*)behaviorType);
+    return behaviorType;
+}
+
+FunctionTypeInfo* insertFunctionTypeTable(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType) {
+    int id = typetab->count + 1;
+    FunctionTypeInfo* functionType = newFunctionInfo(id, category, name, returnType);
+    typeTableSet(typetab, name, (TypeInfo*)functionType);
+    return functionType;
+}
+
 static void typeTableOutputCategory(TypeCategory category) {
     switch (category) {
         case TYPE_CATEGORY_CLASS:
