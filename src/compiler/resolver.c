@@ -1124,6 +1124,10 @@ static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     item->type = ast->type;
 
     FunctionTypeInfo* functionType = insertFunctionTypeTable(resolver->vm->typetab, TYPE_CATEGORY_FUNCTION, name, NULL);
+    if (astNumChild(ast) > 1) {
+        Ast* returnType = astGetChild(ast, 1);
+        functionType->returnType = getTypeForSymbol(resolver, returnType->token);
+    }
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
 }

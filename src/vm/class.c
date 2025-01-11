@@ -120,7 +120,6 @@ static void inheritTraits(VM* vm, ObjClass* subclass, ObjClass* superclass) {
         if (subclass->isNative) {
             ObjClass* trait = AS_CLASS(superclass->traits.values[i]);
             TypeInfo* traitType = typeTableGet(vm->typetab, trait->fullName);
-            printf("inherit trait %s for class %s\n", traitType->fullName->chars, subclassType->baseType.fullName->chars);
             TypeInfoArrayAdd(subclassType->traitTypes, traitType);
         }
     }
