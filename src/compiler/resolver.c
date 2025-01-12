@@ -489,7 +489,6 @@ static void deriveAstTypeFromBinary(Resolver* resolver, Ast* ast, SymbolItem* it
 
 static void deriveAstTypeForParam(Resolver* resolver, Ast* ast) {
     Ast* child = astGetChild(ast, 0);
-    resolveChild(resolver, ast, 0);
     ast->type = getTypeForSymbol(resolver, child->token);
 }
 
@@ -1138,7 +1137,12 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     defineAstType(resolver, ast, "clox.std.lang.Method");
     item->type = ast->type;
 
-    TypeInfo* klass = getTypeForSymbol(resolver, resolver->currentClass->name);
+    BehaviorTypeInfo* klass = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
+    FunctionTypeInfo* methodType = insertFunctionTypeTable(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);
+    if (astNumChild(ast) > 2) {
+        Ast* returnType = astGetChild(ast, 2);
+        methodType->returnType = getTypeForSymbol(resolver, returnType->token);
+    }
     function(resolver, ast, false, ast->modifier.isAsync);
     item->state = SYMBOL_STATE_ACCESSED;
 }

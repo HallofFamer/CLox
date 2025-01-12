@@ -241,11 +241,14 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
             TypeEntry* entry = &behavior->methods->entries[i];
             if (entry != NULL && entry->key != NULL) {
                 FunctionTypeInfo* method = AS_FUNCTION_TYPE(entry->value);
-                printf("      method: %s\n", entry->key->chars);
-                printf("      return: %s\n", (method->returnType != NULL) ? method->returnType->fullName->chars : "dynamic");
-                for (int i = 1; i < method->paramTypes->count; i++) {
-                    printf("        %i: %s\n", i + 1, method->paramTypes->elements[i]->fullName->chars);
+                printf("      %s %s(", (method->returnType != NULL) ? method->returnType->shortName->chars : "dynamic", entry->key->chars);
+                if (method->paramTypes->count > 0) {
+                    printf("%s", method->paramTypes->elements[0]->shortName->chars);
+                    for (int i = 1; i < method->paramTypes->count; i++) {
+                        printf(", %s", method->paramTypes->elements[i]->shortName->chars);
+                    }
                 }
+                printf(")\n");
             }
         }
     }
