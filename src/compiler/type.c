@@ -255,13 +255,14 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
 }
 
 static void typeTableOutputFunction(FunctionTypeInfo* function) {
-    printf("    return: %s\n", (function->returnType != NULL) ? function->returnType->fullName->chars : "dynamic");
+    printf("    signature: %s %s(", (function->returnType != NULL) ? function->returnType->shortName->chars : "dynamic", function->baseType.shortName->chars);
     if (function->paramTypes != NULL && function->paramTypes->count > 0) {
-        printf("    params:\n      %i: %s\n", 1, function->paramTypes->elements[0]->fullName->chars);
+        printf("%s", function->paramTypes->elements[0]->shortName->chars);
         for (int i = 1; i < function->paramTypes->count; i++) {
-            printf("      %i: %s\n", i + 1, function->paramTypes->elements[i]->fullName->chars);
+            printf(", %s", function->paramTypes->elements[i]->shortName->chars);
         }
     } 
+    printf(")\n");
 }
 
 static void typeTableOutputEntry(TypeEntry* entry) {

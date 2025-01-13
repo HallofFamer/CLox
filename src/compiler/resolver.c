@@ -490,6 +490,20 @@ static void deriveAstTypeFromBinary(Resolver* resolver, Ast* ast, SymbolItem* it
 static void deriveAstTypeForParam(Resolver* resolver, Ast* ast) {
     Ast* child = astGetChild(ast, 0);
     ast->type = getTypeForSymbol(resolver, child->token);
+    switch (resolver->currentFunction->symtab->scope) {
+        case SYMBOL_SCOPE_FUNCTION: {
+            ObjString* functionName = createSymbol(resolver, resolver->currentFunction->name);
+            FunctionTypeInfo* functionType = AS_FUNCTION_TYPE(typeTableGet(resolver->vm->typetab, functionName));
+            if (functionType != NULL && functionType->paramTypes != NULL) {
+                TypeInfoArrayAdd(functionType->paramTypes, ast->type);
+            }
+            break;
+        }
+        case SYMBOL_SCOPE_METHOD:
+            break;
+        default: 
+            break;
+    }
 }
 
 static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
