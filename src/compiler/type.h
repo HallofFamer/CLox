@@ -39,9 +39,20 @@ typedef struct {
 } BehaviorTypeInfo;
 
 typedef struct {
+    bool isAsync;
+    bool isClassMethod;
+    bool isGenerator;
+    bool isInitializer;
+    bool isInstanceMethod;
+    bool isLambda;
+    bool isVariadic;
+} FunctionTypeModifier;
+
+typedef struct {
     TypeInfo baseType;
     TypeInfo* returnType;
     TypeInfoArray* paramTypes;
+    FunctionTypeModifier modifier;
 } FunctionTypeInfo;
 
 typedef struct {
@@ -55,6 +66,18 @@ struct TypeTable {
     int capacity;
     TypeEntry* entries;
 };
+
+static inline FunctionTypeModifier functionTypeInitModifier() {
+    FunctionTypeModifier modifier = {
+        .isAsync = false,
+        .isClassMethod = false,
+        .isInitializer = false,
+        .isInstanceMethod = false,
+        .isLambda = false,
+        .isVariadic = false
+    };
+    return modifier;
+}
 
 TypeInfo* newTypeInfo(int id, size_t size, TypeCategory category, ObjString* shortName, ObjString* fullName);
 BehaviorTypeInfo* newBehaviorInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType);

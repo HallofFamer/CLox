@@ -499,8 +499,15 @@ static void deriveAstTypeForParam(Resolver* resolver, Ast* ast) {
             }
             break;
         }
-        case SYMBOL_SCOPE_METHOD:
+        case SYMBOL_SCOPE_METHOD: {
+            BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
+            ObjString* methodName = createSymbol(resolver, resolver->currentFunction->name);
+            FunctionTypeInfo* methodType = AS_FUNCTION_TYPE(typeTableGet(behaviorType->methods, methodName));
+            if (methodType != NULL && methodType->paramTypes != NULL) {
+                TypeInfoArrayAdd(methodType->paramTypes, ast->type);
+            }
             break;
+        }
         default: 
             break;
     }
