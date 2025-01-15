@@ -268,20 +268,6 @@ SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName) {
     return item;
 }
 
-BehaviorTypeInfo* insertBehaviorTypeTable(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
-    int id = typetab->count + 1;
-    BehaviorTypeInfo* behaviorType = newBehaviorInfo(id, category, shortName, fullName, superclassType);
-    typeTableSet(typetab, fullName, (TypeInfo*)behaviorType);
-    return behaviorType;
-}
-
-FunctionTypeInfo* insertFunctionTypeTable(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType) {
-    int id = typetab->count + 1;
-    FunctionTypeInfo* functionType = newFunctionInfo(id, category, name, returnType);
-    typeTableSet(typetab, name, (TypeInfo*)functionType);
-    return functionType;
-}
-
 FunctionTypeInfo* insertTypeSignature(VM* vm, TypeCategory category, ObjString* name, int arity, const char* returnTypeName, ...) {
     TypeInfo* returnType = typeTableGet(vm->typetab, newString(vm, returnTypeName));
     FunctionTypeInfo* function = newFunctionInfo(vm->typetab->count + 1, category, name, returnType);
