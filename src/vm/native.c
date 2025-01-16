@@ -82,9 +82,6 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
     tableSet(vm, &vm->currentNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]); 
     pop(vm);
     pop(vm);
-    if (nativeClass->behaviorType != BEHAVIOR_METACLASS) {
-        insertBehaviorTypeTable(vm->typetab, TYPE_CATEGORY_CLASS, className, nativeClass->fullName, NULL);
-    }
     return nativeClass;
 }
 

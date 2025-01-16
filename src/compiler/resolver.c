@@ -13,6 +13,7 @@ typedef struct {
     bool isInitializer;
     bool isInstanceMethod;
     bool isLambda;
+    bool isVariadic;
 } ResolverModifier;
 
 struct ClassResolver {
@@ -65,7 +66,8 @@ static ResolverModifier resolverInitModifier() {
         .isGenerator = false,
         .isInitializer = false,
         .isInstanceMethod = false,
-        .isLambda = false
+        .isLambda = false,
+        .isVariadic = false
     };
     return modifier;
 }
@@ -189,6 +191,15 @@ static TypeInfo* getTypeForSymbol(Resolver* resolver, Token token) {
     return type;
 }
 
+static void setFunctionTypeModifier(Ast* ast, FunctionTypeInfo* functionType) {
+    functionType->modifier.isAsync = ast->modifier.isAsync;
+    functionType->modifier.isClassMethod = ast->modifier.isClass;
+    functionType->modifier.isInitializer = ast->modifier.isInitializer;
+    functionType->modifier.isInstanceMethod = !ast->modifier.isClass;
+    functionType->modifier.isLambda = ast->modifier.isLambda;
+    functionType->modifier.isVariadic = ast->modifier.isVariadic;
+}
+
 static bool findSymbol(Resolver* resolver, Token token) {
     ObjString* symbol = createSymbol(resolver, token);
     SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
@@ -232,12 +243,34 @@ static SymbolItem* findThis(Resolver* resolver) {
     return item;
 }
 
+static ObjString* getMetaclassSymbol(Resolver* resolver, ObjString* className) {
+    ObjString* metaclassSuffix = newString(resolver->vm, "class");
+    return concatenateString(resolver->vm, className, metaclassSuffix, " ");
+}
+
+static void insertMetaclassType(Resolver* resolver, ObjString* classShortName, ObjString* classFullName) {
+    ObjString* metaclassShortName = getMetaclassSymbol(resolver, classShortName);
+    ObjString* metaclassFullName = getMetaclassSymbol(resolver, classFullName);
+    insertBehaviorTypeTable(resolver->vm->typetab, TYPE_CATEGORY_CLASS, metaclassShortName, metaclassFullName, NULL);
+}
+
 static SymbolItem* insertType(Resolver* resolver, SymbolItem* item, TypeCategory category) {
     ObjString* shortName = copyString(resolver->vm, item->token.start, item->token.length);
     ObjString* fullName = getSymbolFullName(resolver, item->token);
     BehaviorTypeInfo* behaviorType = insertBehaviorTypeTable(resolver->vm->typetab, category, shortName, fullName, NULL);
+    if (category == TYPE_CATEGORY_CLASS) insertMetaclassType(resolver, shortName, fullName);
     item->type = (TypeInfo*)behaviorType;
     return item;
+}
+
+static void bindSuperclassType(Resolver* resolver, Token currentClass, Token superclass) {
+    BehaviorTypeInfo* currentClassType = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, currentClass));
+    TypeInfo* superclassType = getTypeForSymbol(resolver, superclass);
+    currentClassType->superclassType = superclassType;
+
+    BehaviorTypeInfo* currentMetaclassType = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, currentClassType->baseType.fullName)));
+    TypeInfo* superMetaclassType = typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, superclassType->fullName));
+    currentMetaclassType->superclassType = superMetaclassType;
 }
 
 static void checkUnusedVariables(Resolver* resolver, int flag) {
@@ -544,8 +577,11 @@ static void block(Resolver* resolver, Ast* ast) {
 static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, ast->token, resolver->currentFunction->scopeDepth + 1);
-    functionResolver.modifier.isLambda = isLambda;
     functionResolver.modifier.isAsync = isAsync;
+    functionResolver.modifier.isClassMethod = ast->modifier.isClass;
+    functionResolver.modifier.isInitializer = ast->modifier.isInitializer;
+    functionResolver.modifier.isInstanceMethod = !ast->modifier.isClass;
+    functionResolver.modifier.isLambda = isLambda;
     SymbolScope scope = getFunctionScope(ast);
 
     beginScope(resolver, ast, scope);
@@ -566,16 +602,17 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
     int childIndex = 0;
 
     if (type == BEHAVIOR_CLASS) {
-        Ast* superClass = astGetChild(ast, childIndex);
-        superClass->symtab = ast->symtab;
-        classResolver.superClass = superClass->token;
+        Ast* superclass = astGetChild(ast, childIndex);
+        superclass->symtab = ast->symtab;
+        classResolver.superClass = superclass->token;
         resolveChild(resolver, ast, childIndex);
+        bindSuperclassType(resolver, resolver->currentClass->name, resolver->currentClass->superClass);
         childIndex++;
 
         if (tokensEqual(&name, &resolver->rootClass)) {
             semanticError(resolver, "Cannot redeclare root class Object.");
         }
-        else if (tokensEqual(&name, &superClass->token)) {
+        else if (tokensEqual(&name, &superclass->token)) {
             semanticError(resolver, "A class cannot inherit from itself.");
         }
     }
@@ -813,10 +850,13 @@ static void resolveVariable(Resolver* resolver, Ast* ast) {
     if (item != NULL) {
         ast->type = item->type;
         if (item->state == SYMBOL_STATE_DECLARED) {
-            char* name = tokenToCString(ast->token);
-            semanticError(resolver, "Cannot use variable '%s' before it is defined.", name);
-            free(name);
+            ObjString* name = createSymbol(resolver, ast->token);
+            semanticError(resolver, "Cannot use variable '%s' before it is defined.", name->chars);
         }
+    }
+    else {
+        ObjString* name = createSymbol(resolver, ast->token);
+        semanticError(resolver, "undefined variable '%s'.", name->chars);
     }
 }
 
@@ -1159,7 +1199,12 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     item->type = ast->type;
 
     BehaviorTypeInfo* klass = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
+    if (ast->modifier.isClass) {
+        klass = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, klass->baseType.fullName)));
+    }
     FunctionTypeInfo* methodType = insertFunctionTypeTable(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);
+    setFunctionTypeModifier(ast, methodType);
+
     if (astNumChild(ast) > 2) {
         Ast* returnType = astGetChild(ast, 2);
         methodType->returnType = getTypeForSymbol(resolver, returnType->token);
