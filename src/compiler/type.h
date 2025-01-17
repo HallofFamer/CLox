@@ -10,7 +10,7 @@ typedef struct TypeInfo TypeInfo;
 typedef struct TypeTable TypeTable;
 DECLARE_BUFFER(TypeInfoArray, TypeInfo*)
 
-#define IS_BEHAVIOR_TYPE(type) (type->category == TYPE_CATEGORY_CLASS || type->category == TYPE_CATEGORY_TRAIT)
+#define IS_BEHAVIOR_TYPE(type) (type->category == TYPE_CATEGORY_CLASS || type->category == TYPE_CATEGORY_METACLASS || type->category == TYPE_CATEGORY_TRAIT)
 #define IS_FUNCTION_TYPE(type) (type->category == TYPE_CATEGORY_FUNCTION || type->category == TYPE_CATEGORY_METHOD)
 
 #define AS_BEHAVIOR_TYPE(type) ((BehaviorTypeInfo*)type)
@@ -19,6 +19,7 @@ DECLARE_BUFFER(TypeInfoArray, TypeInfo*)
 typedef enum {
     TYPE_CATEGORY_NONE,
     TYPE_CATEGORY_CLASS,
+    TYPE_CATEGORY_METACLASS,
     TYPE_CATEGORY_TRAIT,
     TYPE_CATEGORY_FUNCTION,
     TYPE_CATEGORY_METHOD

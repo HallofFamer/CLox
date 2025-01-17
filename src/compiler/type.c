@@ -68,6 +68,7 @@ FunctionTypeInfo* newFunctionInfo(int id, TypeCategory category, ObjString* name
     if (functionType != NULL) {
         functionType->returnType = returnType;
         functionType->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        functionType->modifier = functionTypeInitModifier();
         if (functionType->paramTypes != NULL) TypeInfoArrayInit(functionType->paramTypes);
     }
     return functionType;
@@ -78,6 +79,8 @@ FunctionTypeInfo* newFunctionInfoWithParams(int id, TypeCategory category, ObjSt
     if (functionType != NULL) {
         functionType->returnType = returnType;
         functionType->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        functionType->modifier = functionTypeInitModifier();
+
         if (functionType->paramTypes != NULL) {
             TypeInfoArrayInit(functionType->paramTypes);
             va_list args;
@@ -207,6 +210,9 @@ static void typeTableOutputCategory(TypeCategory category) {
         case TYPE_CATEGORY_CLASS:
             printf("class");
             break;
+        case TYPE_CATEGORY_METACLASS:
+            printf("metaclass");
+            break;
         case TYPE_CATEGORY_TRAIT:
             printf("trait");
             break;
@@ -241,7 +247,13 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
             TypeEntry* entry = &behavior->methods->entries[i];
             if (entry != NULL && entry->key != NULL) {
                 FunctionTypeInfo* method = AS_FUNCTION_TYPE(entry->value);
-                printf("      %s %s(", (method->returnType != NULL) ? method->returnType->shortName->chars : "dynamic", entry->key->chars);
+                printf("      %s", method->modifier.isAsync ? "async " : "");
+
+                if (method->returnType == NULL) printf("dynamic ");
+                else if (memcmp(method->returnType->shortName->chars, "Nil", 3) == 0) printf("void ");
+                else printf("%s ", method->returnType->shortName->chars);
+                printf("%s(", entry->key->chars);
+
                 if (method->paramTypes->count > 0) {
                     printf("%s", method->paramTypes->elements[0]->shortName->chars);
                     for (int i = 1; i < method->paramTypes->count; i++) {
