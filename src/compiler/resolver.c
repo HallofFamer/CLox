@@ -124,23 +124,6 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->hadError = false;
 }
 
-static uint8_t nextSymbolIndex(Resolver* resolver, SymbolCategory category) {
-    switch (category) {
-        case SYMBOL_CATEGORY_LOCAL:
-            return ++resolver->currentFunction->numLocals;
-        case SYMBOL_CATEGORY_UPVALUE:
-            return resolver->currentFunction->numUpvalues++;
-        case SYMBOL_CATEGORY_GLOBAL:
-            return resolver->currentFunction->numGlobals++;
-        case SYMBOL_CATEGORY_PROPERTY:
-        case SYMBOL_CATEGORY_METHOD:
-            return 0;
-        default:
-            semanticError(resolver, "Invalid symbol category specified.");
-            return -1;
-    }
-}
-
 static int nextSymbolTableIndex(Resolver* resolver) {
     return resolver->vm->numSymtabs++;
 }
@@ -208,8 +191,7 @@ static bool findSymbol(Resolver* resolver, Token token) {
 
 static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state, TypeInfo* type, bool isMutable) {
     ObjString* symbol = createSymbol(resolver, token);
-    uint8_t index = nextSymbolIndex(resolver, category);
-    SymbolItem* item = newSymbolItem(token, category, state, index, isMutable);
+    SymbolItem* item = newSymbolItem(token, category, state, isMutable);
     item->type = type;
     bool inserted = symbolTableSet(resolver->currentSymtab, symbol, item);
 
@@ -225,15 +207,13 @@ static SymbolItem* findThis(Resolver* resolver) {
     SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
 
     if (item == NULL) {
-        uint8_t index = 0;
         ObjString* klass = getSymbolFullName(resolver, resolver->currentClass->name);
 
         if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
-            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, index, false);
+            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
         }
         else {
-            index = nextSymbolIndex(resolver, SYMBOL_CATEGORY_UPVALUE);
-            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, index, false);
+            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, false);
         }
 
         item->type = typeTableGet(resolver->vm->typetab, klass);
@@ -251,13 +231,13 @@ static ObjString* getMetaclassSymbol(Resolver* resolver, ObjString* className) {
 static void insertMetaclassType(Resolver* resolver, ObjString* classShortName, ObjString* classFullName) {
     ObjString* metaclassShortName = getMetaclassSymbol(resolver, classShortName);
     ObjString* metaclassFullName = getMetaclassSymbol(resolver, classFullName);
-    insertBehaviorTypeTable(resolver->vm->typetab, TYPE_CATEGORY_CLASS, metaclassShortName, metaclassFullName, NULL);
+    typeTableInsertBehavior(resolver->vm->typetab, TYPE_CATEGORY_CLASS, metaclassShortName, metaclassFullName, NULL);
 }
 
 static SymbolItem* insertType(Resolver* resolver, SymbolItem* item, TypeCategory category) {
     ObjString* shortName = copyString(resolver->vm, item->token.start, item->token.length);
     ObjString* fullName = getSymbolFullName(resolver, item->token);
-    BehaviorTypeInfo* behaviorType = insertBehaviorTypeTable(resolver->vm->typetab, category, shortName, fullName, NULL);
+    BehaviorTypeInfo* behaviorType = typeTableInsertBehavior(resolver->vm->typetab, category, shortName, fullName, NULL);
     if (category == TYPE_CATEGORY_CLASS) insertMetaclassType(resolver, shortName, fullName);
     item->type = (TypeInfo*)behaviorType;
     return item;
@@ -374,7 +354,6 @@ static void assignLocal(Resolver* resolver, SymbolItem* item) {
 }
 
 static SymbolItem* addUpvalue(Resolver* resolver, SymbolItem* item) {
-    if(item->category == SYMBOL_CATEGORY_LOCAL) item->isCaptured = true;
     if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
     return insertSymbol(resolver, item->token, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, item->type, item->isMutable);
 }
@@ -1183,7 +1162,7 @@ static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     defineAstType(resolver, ast, "clox.std.lang.Function");
     item->type = ast->type;
 
-    FunctionTypeInfo* functionType = insertFunctionTypeTable(resolver->vm->typetab, TYPE_CATEGORY_FUNCTION, name, NULL);
+    FunctionTypeInfo* functionType = typeTableInsertFunction(resolver->vm->typetab, TYPE_CATEGORY_FUNCTION, name, NULL);
     if (astNumChild(ast) > 1) {
         Ast* returnType = astGetChild(ast, 1);
         functionType->returnType = getTypeForSymbol(resolver, returnType->token);
@@ -1202,7 +1181,7 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     if (ast->modifier.isClass) {
         klass = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, klass->baseType.fullName)));
     }
-    FunctionTypeInfo* methodType = insertFunctionTypeTable(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);
+    FunctionTypeInfo* methodType = typeTableInsertFunction(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);
     setFunctionTypeModifier(ast, methodType);
 
     if (astNumChild(ast) > 2) {

@@ -4,4 +4,27 @@ Number sum(Number a, Int b) {
     return a + b;
 }
 
-println(3.5 + 5);
+Number sum2(.. Number nums) { 
+    var result = 0;
+    for (var num : nums) { 
+        result = result + num;
+    }
+    return result;
+}
+
+class Calculator {
+    
+    Int sumInt(Int a, Int b) {
+        return a + b;
+    }
+
+    class Number sumNumber(Number a, Number b) { 
+        return a + b;
+    }
+}
+
+println(sum(3.5, 5));
+println(sum2(1, 2, 3, 4, 5));
+println(Calculator.sumNumber(2.1, 3.5));
+val calc = Calculator();
+println(calc.sumInt(1, 2));

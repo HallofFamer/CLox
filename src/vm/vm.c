@@ -162,8 +162,7 @@ void initVM(VM* vm) {
     vm->currentClass = NULL;
     vm->numSymtabs = 0;
     vm->symtab = newSymbolTable(vm->numSymtabs++, NULL, SYMBOL_SCOPE_GLOBAL, -1);
-    vm->numTypetabs = 0;
-    vm->typetab = newTypeTable(vm->numTypetabs++);
+    vm->typetab = newTypeTable(0);
     vm->objects = NULL;
     vm->objectIndex = 0;
     vm->bytesAllocated = 0;
@@ -191,9 +190,9 @@ void initVM(VM* vm) {
 
     registerLangPackage(vm);
     registerCollectionPackage(vm);
+    registerUtilPackage(vm);
     registerIOPackage(vm);
     registerNetPackage(vm);
-    registerUtilPackage(vm);
     registerNativeFunctions(vm);
 }
 

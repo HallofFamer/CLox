@@ -12,10 +12,14 @@
 #define LOX_METHOD(className, name) static Value name##NativeMethodFor##className(VM* vm, Value receiver, int argCount, Value* args)
 #define DEF_FUNCTION(name, arity, ...) defineNativeFunction(vm, #name, arity, false, name##NativeFunction, __VA_ARGS__)
 #define DEF_FUNCTION_ASYNC(name, arity, ...) defineNativeFunction(vm, #name, arity, true, name##NativeFunction, __VA_ARGS__)
-#define DEF_METHOD(klass, className, name, arity) defineNativeMethod(vm, klass, #name, arity, false, name##NativeMethodFor##className)
-#define DEF_METHOD_ASYNC(klass, className, name, arity) defineNativeMethod(vm, klass, #name, arity, true, name##NativeMethodFor##className)
-#define DEF_OPERATOR(klass, className, symbol, name, arity) defineNativeMethod(vm, klass, #symbol, arity, false, name##NativeMethodFor##className)
-#define DEF_INTERCEPTOR(klass, className, type, name, arity) defineNativeInterceptor(vm, klass, type, arity, name##NativeMethodFor##className)
+#define DEF_METHOD(klass, className, name, arity, ...) defineNativeMethod(vm, klass, #name, arity, false, name##NativeMethodFor##className, __VA_ARGS__)
+#define DEF_METHOD_ASYNC(klass, className, name, arity, ...) defineNativeMethod(vm, klass, #name, arity, true, name##NativeMethodFor##className, __VA_ARGS__)
+#define DEF_OPERATOR(klass, className, symbol, name, arity, ...) defineNativeMethod(vm, klass, #symbol, arity, false, name##NativeMethodFor##className, __VA_ARGS__)
+#define DEF_INTERCEPTOR(klass, className, type, name, arity, ...) \
+  do { \
+       defineNativeMethod(vm, klass, #name, arity, false, name##NativeMethodFor##className, __VA_ARGS__); \
+       SET_CLASS_INTERCEPTOR(klass, type); \
+  } while(false) 
 
 #define RETURN_VAL(value) return (value)
 #define RETURN_NIL return NIL_VAL
@@ -37,8 +41,8 @@
 
 ObjClass* defineNativeClass(VM* vm, const char* name);
 void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, NativeFunction function, ...);
-void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bool isAsync, NativeMethod method);
-void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int arity, NativeMethod method);
+void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bool isAsync, NativeMethod method, ...);
+void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int arity, NativeMethod method, ...);
 ObjClass* defineNativeTrait(VM* vm, const char* name);
 ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* enclosing);
 ObjClass* defineNativeException(VM* vm, const char* name, ObjClass* superClass);
