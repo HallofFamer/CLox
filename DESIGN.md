@@ -10,11 +10,20 @@ CLox's lambda expressions use non-local returns, this allows return from the lam
 ## Why choose class methods over static methods?
 Although they seem identical at first glance, there is a subtle difference between class/static methods. Class methods are actually methods defined on the metaclass, while static methods are just namespaced functions. Class methods use dynamic dispatch and can be polymorphic, they are much more powerful than static methods, and fit better with Lox's object model.
 
+## Why Java/C# like namespaces instead of Javascript/Python like module system? 
+I will agree that the module system will work very well for CLox, but the idea is that namespace system does not tie the source code with file/directory structure. In future, there is a chance that AOT compilation will be possible with CLox, and the flexibility provided by the namespace system will come in handy.
+
 ## How are the implementation of Shape and Inline Cache improve performance?
 CLox's object fields are implemented as hashtables, and looking up an instance variable has performance hit. With the shape and inline cache, it is possible to access instance variable via index/offset, which is faster than hash table lookup. Unfortunately without JIT, CLox cannot make best use of the inline cache, but the performance improvement is still noticeable.
 
 ## Why async/await instead of fiber or green thread?
 I am well aware of the controversy surrounding async/await as well as its shortcomings. However, implementing async/await is a valuable learning experience(you need knowledge of generator and promise to pull it off), especially considering how poorly this topic is covered in most compiler/interpreter books. 
 
+## What are the reasons to bring back `extends` keyword?
+The original CLox implementation uses `<` sign, but trait are implemented using `with` keyword, which feels a little odd and inconsistent(Robert Nystrom did mention he would not want to introduce another keyword near the end of the book). More importantly, this decision simplifies future work on parsing Generics which will use angle bracket syntax.
+
 ## Why type annotations only work for function/method parameter/return types?
 As the way it stands now, CLox does not have field/property declaration so it is not possible to assign types to instance variables. For local variables, I am firmly against explicit type declarations, and prefer type inference all the time. This leaves function/method declaration to be the only viable spot where type annotations may be specified.
+
+## Why Java/C#/Dart style type annotations before variable name? 
+I've noticed a trend that in newer languages type annotations tend to use the `var: Type` syntax instead of the traditional `type var` syntax. The choice of sticking with the traditional type annotation style is purely personal, as my future language Mysidia will have to use this style as it uses colon as labeled/keyword arguments. It does complicate the parser, but it is perfectable doable. 
