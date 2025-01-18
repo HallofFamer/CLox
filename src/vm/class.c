@@ -42,6 +42,7 @@ void initClass(VM* vm, ObjClass* klass, ObjString* name, ObjClass* metaclass, Be
 ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType behaviorType) {
     ObjClass* klass = ALLOCATE_CLASS(metaclass);
     initClass(vm, klass, name, metaclass, behaviorType);
+    typeTableInsertBehavior(vm->typetab, TYPE_CATEGORY_CLASS, klass->name, klass->fullName, NULL);
     return klass;
 }
 
@@ -134,7 +135,7 @@ void inheritSuperclass(VM* vm, ObjClass* subclass, ObjClass* superclass) {
     subclass->classType = superclass->classType;
     subclass->interceptors = superclass->interceptors;
 
-    if (subclass->isNative && subclass->behaviorType == BEHAVIOR_CLASS) {
+    if (subclass->isNative) {
         BehaviorTypeInfo* subclassType = AS_BEHAVIOR_TYPE(typeTableGet(vm->typetab, subclass->fullName));
         TypeInfo* superclassType = typeTableGet(vm->typetab, superclass->fullName);
         subclassType->superclassType = superclassType;

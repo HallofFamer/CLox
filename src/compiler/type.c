@@ -191,14 +191,14 @@ bool typeTableSet(TypeTable* typetab, ObjString* key, TypeInfo* value) {
     return true;
 }
 
-BehaviorTypeInfo* insertBehaviorTypeTable(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
+BehaviorTypeInfo* typeTableInsertBehavior(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
     int id = typetab->count + 1;
     BehaviorTypeInfo* behaviorType = newBehaviorInfo(id, category, shortName, fullName, superclassType);
     typeTableSet(typetab, fullName, (TypeInfo*)behaviorType);
     return behaviorType;
 }
 
-FunctionTypeInfo* insertFunctionTypeTable(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType) {
+FunctionTypeInfo* typeTableInsertFunction(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType) {
     int id = typetab->count + 1;
     FunctionTypeInfo* functionType = newFunctionInfo(id, category, name, returnType);
     typeTableSet(typetab, name, (TypeInfo*)functionType);
