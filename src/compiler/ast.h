@@ -102,8 +102,6 @@ struct Ast {
     TypeInfo* type;
 };
 
-#define AST_IS_ROOT(ast) (ast->category == AST_CATEGORY_SCRIPT)
-
 static inline AstModifier astInitModifier() {
     AstModifier modifier = {
         .isAsync = false,

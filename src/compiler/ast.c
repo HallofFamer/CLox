@@ -33,7 +33,6 @@ Ast* newAst(AstNodeKind kind, Token token, int numChildren, ...) {
     for (int i = 0; i < numChildren; i++) {
         astAppendChild(ast, va_arg(children, Ast*));
     }
-
     va_end(children);
     return ast;
 }

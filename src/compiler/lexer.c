@@ -270,7 +270,9 @@ static Token keywordIdentifier(Lexer* lexer) {
         advance(lexer);
         return makeToken(lexer, TOKEN_IDENTIFIER);
     }
-    else return errorToken(lexer, "Keyword identifiers must end with a closing backtick.");
+    else {
+        return errorToken(lexer, "Keyword identifiers must end with a closing backtick.");
+    }
 }
 
 static Token number(Lexer* lexer) {

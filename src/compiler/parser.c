@@ -517,9 +517,7 @@ static Ast* type_(Parser* parser, const char* message) {
 static Ast* parameter(Parser* parser, const char* message) {
     bool isMutable = match(parser, TOKEN_VAR);
     Ast* type = NULL;
-    if (check2(parser, TOKEN_IDENTIFIER)) {
-        type = type_(parser, "Expect type declaration.");
-    }
+    if (check2(parser, TOKEN_IDENTIFIER)) type = type_(parser, "Expect type declaration.");
     consume(parser, TOKEN_IDENTIFIER, message);
 
     Ast* param = emptyAst(AST_EXPR_PARAM, parser->previous);

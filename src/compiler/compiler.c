@@ -119,7 +119,6 @@ static int emitJump(Compiler* compiler, uint8_t instruction) {
 
 static void emitLoop(Compiler* compiler) {
     emitByte(compiler, OP_LOOP);
-
     int offset = currentChunk(compiler)->count - compiler->currentLoop->start + 2;
     if (offset > UINT16_MAX) compileError(compiler, "Loop body too large.");
 
