@@ -11,10 +11,10 @@ typedef struct TypeTable TypeTable;
 DECLARE_BUFFER(TypeInfoArray, TypeInfo*)
 
 #define IS_BEHAVIOR_TYPE(type) (type->category == TYPE_CATEGORY_CLASS || type->category == TYPE_CATEGORY_METACLASS || type->category == TYPE_CATEGORY_TRAIT)
-#define IS_FUNCTION_TYPE(type) (type->category == TYPE_CATEGORY_FUNCTION || type->category == TYPE_CATEGORY_METHOD)
+#define IS_CALLABLE_TYPE(type) (type->category == TYPE_CATEGORY_FUNCTION || type->category == TYPE_CATEGORY_METHOD)
 
 #define AS_BEHAVIOR_TYPE(type) ((BehaviorTypeInfo*)type)
-#define AS_FUNCTION_TYPE(type) ((FunctionTypeInfo*)type)
+#define AS_CALLABLE_TYPE(type) ((CallableTypeInfo*)type)
 
 typedef enum {
     TYPE_CATEGORY_NONE,
@@ -47,14 +47,14 @@ typedef struct {
     bool isInstanceMethod;
     bool isLambda;
     bool isVariadic;
-} FunctionTypeModifier;
+} CallableTypeModifier;
 
 typedef struct {
     TypeInfo baseType;
     TypeInfo* returnType;
     TypeInfoArray* paramTypes;
-    FunctionTypeModifier modifier;
-} FunctionTypeInfo;
+    CallableTypeModifier modifier;
+} CallableTypeInfo;
 
 typedef struct {
     ObjString* key;
@@ -68,8 +68,8 @@ struct TypeTable {
     TypeEntry* entries;
 };
 
-static inline FunctionTypeModifier functionTypeInitModifier() {
-    FunctionTypeModifier modifier = {
+static inline CallableTypeModifier callableTypeInitModifier() {
+    CallableTypeModifier modifier = {
         .isAsync = false,
         .isClassMethod = false,
         .isInitializer = false,
@@ -84,15 +84,15 @@ TypeInfo* newTypeInfo(int id, size_t size, TypeCategory category, ObjString* sho
 BehaviorTypeInfo* newBehaviorInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType);
 BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, int numTraits, ...);
 BehaviorTypeInfo* newBehaviorInfoWithMethods(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, TypeTable* methods);
-FunctionTypeInfo* newFunctionInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType);
-FunctionTypeInfo* newFunctionInfoWithParams(int id, TypeCategory category, ObjString* name, TypeInfo* returnType, int numParams, ...);
+CallableTypeInfo* newCallableInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType);
+CallableTypeInfo* newCallableInfoWithParams(int id, TypeCategory category, ObjString* name, TypeInfo* returnType, int numParams, ...);
 void freeTypeInfo(TypeInfo* type);
 TypeTable* newTypeTable(int id);
 void freeTypeTable(TypeTable* typeTable);
 TypeInfo* typeTableGet(TypeTable* typetab, ObjString* key);
 bool typeTableSet(TypeTable* typetab, ObjString* key, TypeInfo* value);
 BehaviorTypeInfo* typeTableInsertBehavior(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType);
-FunctionTypeInfo* typeTableInsertFunction(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType);
+CallableTypeInfo* typeTableInsertFunction(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType);
 void typeTableOutput(TypeTable* typetab);
 
 #endif // !clox_type_h

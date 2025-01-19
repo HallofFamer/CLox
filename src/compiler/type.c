@@ -63,36 +63,36 @@ BehaviorTypeInfo* newBehaviorInfoWithMethods(int id, TypeCategory category, ObjS
     return behaviorType;
 }
 
-FunctionTypeInfo* newFunctionInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType) {
-    FunctionTypeInfo* functionType = (FunctionTypeInfo*)newTypeInfo(id, sizeof(FunctionTypeInfo), category, name, name);
-    if (functionType != NULL) {
-        functionType->returnType = returnType;
-        functionType->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
-        functionType->modifier = functionTypeInitModifier();
-        if (functionType->paramTypes != NULL) TypeInfoArrayInit(functionType->paramTypes);
+CallableTypeInfo* newCallableInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType) {
+    CallableTypeInfo* callableType = (CallableTypeInfo*)newTypeInfo(id, sizeof(CallableTypeInfo), category, name, name);
+    if (callableType != NULL) {
+        callableType->returnType = returnType;
+        callableType->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        callableType->modifier = callableTypeInitModifier();
+        if (callableType->paramTypes != NULL) TypeInfoArrayInit(callableType->paramTypes);
     }
-    return functionType;
+    return callableType;
 }
 
-FunctionTypeInfo* newFunctionInfoWithParams(int id, TypeCategory category, ObjString* name, TypeInfo* returnType, int numParams, ...) {
-    FunctionTypeInfo* functionType = (FunctionTypeInfo*)newTypeInfo(id, sizeof(FunctionTypeInfo), category, name, name);
-    if (functionType != NULL) {
-        functionType->returnType = returnType;
-        functionType->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
-        functionType->modifier = functionTypeInitModifier();
+CallableTypeInfo* newCallableInfoWithParams(int id, TypeCategory category, ObjString* name, TypeInfo* returnType, int numParams, ...) {
+    CallableTypeInfo* callableType = (CallableTypeInfo*)newTypeInfo(id, sizeof(CallableTypeInfo), category, name, name);
+    if (callableType != NULL) {
+        callableType->returnType = returnType;
+        callableType->paramTypes = (TypeInfoArray*)malloc(sizeof(TypeInfoArray));
+        callableType->modifier = callableTypeInitModifier();
 
-        if (functionType->paramTypes != NULL) {
-            TypeInfoArrayInit(functionType->paramTypes);
+        if (callableType->paramTypes != NULL) {
+            TypeInfoArrayInit(callableType->paramTypes);
             va_list args;
             va_start(args, numParams);
             for (int i = 0; i < numParams; i++) {
                 TypeInfo* type = va_arg(args, TypeInfo*);
-                TypeInfoArrayAdd(functionType->paramTypes, type);
+                TypeInfoArrayAdd(callableType->paramTypes, type);
             }
             va_end(args);
         }
     }
-    return functionType;
+    return callableType;
 }
 
 void freeTypeInfo(TypeInfo* type) {
@@ -103,10 +103,10 @@ void freeTypeInfo(TypeInfo* type) {
         freeTypeTable(behaviorType->methods);
         free(behaviorType);
     }
-    else if (IS_FUNCTION_TYPE(type)) {
-        FunctionTypeInfo* functionType = AS_FUNCTION_TYPE(type);
-        if (functionType->paramTypes != NULL) TypeInfoArrayFree(functionType->paramTypes);
-        free(functionType);
+    else if (IS_CALLABLE_TYPE(type)) {
+        CallableTypeInfo* callableType = AS_CALLABLE_TYPE(type);
+        if (callableType->paramTypes != NULL) TypeInfoArrayFree(callableType->paramTypes);
+        free(callableType);
     }
 }
 
@@ -198,9 +198,9 @@ BehaviorTypeInfo* typeTableInsertBehavior(TypeTable* typetab, TypeCategory categ
     return behaviorType;
 }
 
-FunctionTypeInfo* typeTableInsertFunction(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType) {
+CallableTypeInfo* typeTableInsertFunction(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType) {
     int id = typetab->count + 1;
-    FunctionTypeInfo* functionType = newFunctionInfo(id, category, name, returnType);
+    CallableTypeInfo* functionType = newCallableInfo(id, category, name, returnType);
     typeTableSet(typetab, name, (TypeInfo*)functionType);
     return functionType;
 }
@@ -246,7 +246,7 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
         for (int i = 0; i < behavior->methods->capacity; i++) {
             TypeEntry* entry = &behavior->methods->entries[i];
             if (entry != NULL && entry->key != NULL) {
-                FunctionTypeInfo* method = AS_FUNCTION_TYPE(entry->value);
+                CallableTypeInfo* method = AS_CALLABLE_TYPE(entry->value);
                 printf("      %s", method->modifier.isAsync ? "async " : "");
 
                 if (method->returnType == NULL) printf("dynamic ");
@@ -266,7 +266,7 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
     }
 }
 
-static void typeTableOutputFunction(FunctionTypeInfo* function) {
+static void typeTableOutputFunction(CallableTypeInfo* function) {
     printf("    signature: %s %s(", (function->returnType != NULL) ? function->returnType->shortName->chars : "dynamic", function->baseType.shortName->chars);
     if (function->paramTypes != NULL && function->paramTypes->count > 0) {
         printf("%s", function->paramTypes->elements[0]->shortName->chars);
@@ -281,7 +281,7 @@ static void typeTableOutputEntry(TypeEntry* entry) {
     printf("  %s(%s)\n    id: %d\n    category: ", entry->value->shortName->chars, entry->value->fullName->chars, entry->value->id);
     typeTableOutputCategory(entry->value->category);
     if (IS_BEHAVIOR_TYPE(entry->value)) typeTableOutputBehavior(AS_BEHAVIOR_TYPE(entry->value));
-    else if (IS_FUNCTION_TYPE(entry->value)) typeTableOutputFunction(AS_FUNCTION_TYPE(entry->value));
+    else if (IS_CALLABLE_TYPE(entry->value)) typeTableOutputFunction(AS_CALLABLE_TYPE(entry->value));
     printf("\n");
 }
 
