@@ -92,7 +92,7 @@ void freeTypeTable(TypeTable* typeTable);
 TypeInfo* typeTableGet(TypeTable* typetab, ObjString* key);
 bool typeTableSet(TypeTable* typetab, ObjString* key, TypeInfo* value);
 BehaviorTypeInfo* typeTableInsertBehavior(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType);
-CallableTypeInfo* typeTableInsertFunction(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType);
+CallableTypeInfo* typeTableInsertCallable(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType);
 void typeTableOutput(TypeTable* typetab);
 
 #endif // !clox_type_h
