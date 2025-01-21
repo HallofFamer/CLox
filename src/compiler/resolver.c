@@ -174,7 +174,7 @@ static TypeInfo* getTypeForSymbol(Resolver* resolver, Token token) {
     return type;
 }
 
-static void setFunctionTypeModifier(Ast* ast, FunctionTypeInfo* functionType) {
+static void setFunctionTypeModifier(Ast* ast, CallableTypeInfo* functionType) {
     functionType->modifier.isAsync = ast->modifier.isAsync;
     functionType->modifier.isClassMethod = ast->modifier.isClass;
     functionType->modifier.isInitializer = ast->modifier.isInitializer;
@@ -505,7 +505,7 @@ static void deriveAstTypeForParam(Resolver* resolver, Ast* ast) {
     switch (resolver->currentFunction->symtab->scope) {
         case SYMBOL_SCOPE_FUNCTION: {
             ObjString* functionName = createSymbol(resolver, resolver->currentFunction->name);
-            FunctionTypeInfo* functionType = AS_FUNCTION_TYPE(typeTableGet(resolver->vm->typetab, functionName));
+            CallableTypeInfo* functionType = AS_CALLABLE_TYPE(typeTableGet(resolver->vm->typetab, functionName));
             if (functionType != NULL && functionType->paramTypes != NULL) {
                 TypeInfoArrayAdd(functionType->paramTypes, ast->type);
             }
@@ -514,7 +514,7 @@ static void deriveAstTypeForParam(Resolver* resolver, Ast* ast) {
         case SYMBOL_SCOPE_METHOD: {
             BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
             ObjString* methodName = createSymbol(resolver, resolver->currentFunction->name);
-            FunctionTypeInfo* methodType = AS_FUNCTION_TYPE(typeTableGet(behaviorType->methods, methodName));
+            CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(behaviorType->methods, methodName));
             if (methodType != NULL && methodType->paramTypes != NULL) {
                 TypeInfoArrayAdd(methodType->paramTypes, ast->type);
             }
@@ -1162,7 +1162,7 @@ static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     defineAstType(resolver, ast, "clox.std.lang.Function");
     item->type = ast->type;
 
-    FunctionTypeInfo* functionType = typeTableInsertFunction(resolver->vm->typetab, TYPE_CATEGORY_FUNCTION, name, NULL);
+    CallableTypeInfo* functionType = typeTableInsertCallable(resolver->vm->typetab, TYPE_CATEGORY_FUNCTION, name, NULL);
     if (astNumChild(ast) > 1) {
         Ast* returnType = astGetChild(ast, 1);
         functionType->returnType = getTypeForSymbol(resolver, returnType->token);
@@ -1181,7 +1181,7 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     if (ast->modifier.isClass) {
         klass = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, klass->baseType.fullName)));
     }
-    FunctionTypeInfo* methodType = typeTableInsertFunction(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);
+    CallableTypeInfo* methodType = typeTableInsertCallable(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);
     setFunctionTypeModifier(ast, methodType);
 
     if (astNumChild(ast) > 2) {

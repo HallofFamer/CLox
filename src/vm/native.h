@@ -52,7 +52,7 @@ ObjNativeFunction* getNativeFunction(VM* vm, const char* name);
 ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name);
 ObjNamespace* getNativeNamespace(VM* vm, const char* name);
 SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName);
-FunctionTypeInfo* insertTypeSignature(VM* vm, TypeCategory category, ObjString* name, int arity, const char* returnTypeName, ...);
+CallableTypeInfo* insertTypeSignature(VM* vm, TypeCategory category, ObjString* name, int arity, const char* returnTypeName, ...);
 void loadSourceFile(VM* vm, const char* filePath);
 void registerNativeFunctions(VM* vm);
 
