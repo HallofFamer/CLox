@@ -97,7 +97,7 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
     va_list args;
     va_start(args, function);
     TypeInfo* returnType = va_arg(args, TypeInfo*);
-    FunctionTypeInfo* functionType = newFunctionInfo(vm->typetab->count + 1, TYPE_CATEGORY_FUNCTION, functionName, returnType);
+    CallableTypeInfo* functionType = newCallableInfo(vm->typetab->count + 1, TYPE_CATEGORY_FUNCTION, functionName, returnType);
 
     for (int i = 0; i < arity; i++) {
         TypeInfo* paramType = va_arg(args, TypeInfo*);
@@ -120,7 +120,7 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bo
     va_start(args, method);
     BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(typeTableGet(vm->typetab, klass->fullName));
     TypeInfo* returnType = va_arg(args, TypeInfo*);
-    FunctionTypeInfo* methodType = newFunctionInfo(behaviorType->methods->count + 1, TYPE_CATEGORY_METHOD, methodName, returnType);
+    CallableTypeInfo* methodType = newCallableInfo(behaviorType->methods->count + 1, TYPE_CATEGORY_METHOD, methodName, returnType);
     methodType->modifier.isAsync = isAsync;
 
     for (int i = 0; i < arity; i++) {
@@ -279,9 +279,9 @@ SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName) {
     return item;
 }
 
-FunctionTypeInfo* insertTypeSignature(VM* vm, TypeCategory category, ObjString* name, int arity, const char* returnTypeName, ...) {
+CallableTypeInfo* insertTypeSignature(VM* vm, TypeCategory category, ObjString* name, int arity, const char* returnTypeName, ...) {
     TypeInfo* returnType = typeTableGet(vm->typetab, newString(vm, returnTypeName));
-    FunctionTypeInfo* function = newFunctionInfo(vm->typetab->count + 1, category, name, returnType);
+    CallableTypeInfo* function = newCallableInfo(vm->typetab->count + 1, category, name, returnType);
     va_list args;
     va_start(args, returnTypeName);
     for (int i = 0; i < arity; i++) {

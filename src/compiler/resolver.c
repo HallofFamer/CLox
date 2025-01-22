@@ -22,6 +22,7 @@ struct ClassResolver {
     Token superClass;
     SymbolTable* symtab;
     int scopeDepth;
+    bool isAnonymous;
     BehaviorType type;
 };
 
@@ -77,6 +78,7 @@ static void initClassResolver(Resolver* resolver, ClassResolver* klass, Token na
     klass->name = name;
     klass->symtab = NULL;
     klass->scopeDepth = scopeDepth;
+    klass->isAnonymous = (name.length == 1 && name.start[0] == '@');
     klass->type = type;
     resolver->currentClass = klass;
 }
@@ -234,7 +236,7 @@ static void insertMetaclassType(Resolver* resolver, ObjString* classShortName, O
     typeTableInsertBehavior(resolver->vm->typetab, TYPE_CATEGORY_CLASS, metaclassShortName, metaclassFullName, NULL);
 }
 
-static SymbolItem* insertType(Resolver* resolver, SymbolItem* item, TypeCategory category) {
+static SymbolItem* insertBehaviorType(Resolver* resolver, SymbolItem* item, TypeCategory category) {
     ObjString* shortName = copyString(resolver->vm, item->token.start, item->token.length);
     ObjString* fullName = getSymbolFullName(resolver, item->token);
     BehaviorTypeInfo* behaviorType = typeTableInsertBehavior(resolver->vm->typetab, category, shortName, fullName, NULL);
@@ -512,11 +514,13 @@ static void deriveAstTypeForParam(Resolver* resolver, Ast* ast) {
             break;
         }
         case SYMBOL_SCOPE_METHOD: {
-            BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
-            ObjString* methodName = createSymbol(resolver, resolver->currentFunction->name);
-            CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(behaviorType->methods, methodName));
-            if (methodType != NULL && methodType->paramTypes != NULL) {
-                TypeInfoArrayAdd(methodType->paramTypes, ast->type);
+            if (!resolver->currentClass->isAnonymous) {
+                BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
+                ObjString* methodName = createSymbol(resolver, resolver->currentFunction->name);
+                CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(behaviorType->methods, methodName));
+                if (methodType != NULL && methodType->paramTypes != NULL) {
+                    TypeInfoArrayAdd(methodType->paramTypes, ast->type);
+                }
             }
             break;
         }
@@ -585,7 +589,7 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
         superclass->symtab = ast->symtab;
         classResolver.superClass = superclass->token;
         resolveChild(resolver, ast, childIndex);
-        bindSuperclassType(resolver, resolver->currentClass->name, resolver->currentClass->superClass);
+        if(!classResolver.isAnonymous) bindSuperclassType(resolver, resolver->currentClass->name, resolver->currentClass->superClass);
         childIndex++;
 
         if (tokensEqual(&name, &resolver->rootClass)) {
@@ -957,8 +961,15 @@ static void resolveCaseStatement(Resolver* resolver, Ast* ast) {
 
 static void resolveCatchStatement(Resolver* resolver, Ast* ast) {
     beginScope(resolver, ast, SYMBOL_SCOPE_BLOCK);
-    resolveChild(resolver, ast, 0);
-    if (astNumChild(ast) > 1) resolveChild(resolver, ast, 1);
+    Ast* exceptionVar = astGetChild(ast, 0);
+    exceptionVar->symtab = ast->symtab;
+    exceptionVar->type = getTypeForSymbol(resolver, ast->token);
+    SymbolItem* exceptionItem = declareVariable(resolver, exceptionVar, false);
+    exceptionItem->state = SYMBOL_STATE_DEFINED;
+    exceptionItem->type = exceptionVar->type;
+    Ast* blk = astGetChild(ast, 1);
+    blk->symtab = ast->symtab;
+    block(resolver, blk);
     endScope(resolver);
 }
 
@@ -1151,7 +1162,7 @@ static void resolveStatement(Resolver* resolver, Ast* ast) {
 
 static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
-    insertType(resolver, item, TYPE_CATEGORY_CLASS);
+    insertBehaviorType(resolver, item, TYPE_CATEGORY_CLASS);
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
 }
@@ -1177,17 +1188,20 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     defineAstType(resolver, ast, "clox.std.lang.Method");
     item->type = ast->type;
 
-    BehaviorTypeInfo* klass = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
-    if (ast->modifier.isClass) {
-        klass = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, klass->baseType.fullName)));
-    }
-    CallableTypeInfo* methodType = typeTableInsertCallable(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);
-    setFunctionTypeModifier(ast, methodType);
+    if (!resolver->currentClass->isAnonymous) {
+        BehaviorTypeInfo* klass = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
+        if (ast->modifier.isClass) {
+            klass = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, klass->baseType.fullName)));
+        }
 
-    if (astNumChild(ast) > 2) {
-        Ast* returnType = astGetChild(ast, 2);
-        methodType->returnType = getTypeForSymbol(resolver, returnType->token);
+        CallableTypeInfo* methodType = typeTableInsertCallable(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);
+        setFunctionTypeModifier(ast, methodType);
+        if (astNumChild(ast) > 2) {
+            Ast* returnType = astGetChild(ast, 2);
+            methodType->returnType = getTypeForSymbol(resolver, returnType->token);
+        }
     }
+
     function(resolver, ast, false, ast->modifier.isAsync);
     item->state = SYMBOL_STATE_ACCESSED;
 }
@@ -1206,7 +1220,7 @@ static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
-    insertType(resolver, item, TYPE_CATEGORY_TRAIT);
+    insertBehaviorType(resolver, item, TYPE_CATEGORY_TRAIT);
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
 }
