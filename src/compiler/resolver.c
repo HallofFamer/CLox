@@ -225,6 +225,23 @@ static SymbolItem* findThis(Resolver* resolver) {
     return item;
 }
 
+static ObjString* getSymbolTypeName(Resolver* resolver, TypeCategory category) {
+    switch (category) {
+        case TYPE_CATEGORY_CLASS:
+            return newString(resolver->vm, "clox.std.lang.Class");
+        case TYPE_CATEGORY_METACLASS:
+            return newString(resolver->vm, "clox.std.lang.Metaclass");
+        case TYPE_CATEGORY_TRAIT:
+            return newString(resolver->vm, "clox.std.lang.Trait");
+        case TYPE_CATEGORY_FUNCTION:
+            return newString(resolver->vm, "clox.std.lang.Function");
+        case TYPE_CATEGORY_METHOD:
+            return newString(resolver->vm, "clox.std.lang.Method");
+        default:
+            return NULL;
+    }
+}
+
 static ObjString* getMetaclassSymbol(Resolver* resolver, ObjString* className) {
     ObjString* metaclassSuffix = newString(resolver->vm, "class");
     return concatenateString(resolver->vm, className, metaclassSuffix, " ");
@@ -241,7 +258,8 @@ static SymbolItem* insertBehaviorType(Resolver* resolver, SymbolItem* item, Type
     ObjString* fullName = getSymbolFullName(resolver, item->token);
     BehaviorTypeInfo* behaviorType = typeTableInsertBehavior(resolver->vm->typetab, category, shortName, fullName, NULL);
     if (category == TYPE_CATEGORY_CLASS) insertMetaclassType(resolver, shortName, fullName);
-    item->type = (TypeInfo*)behaviorType;
+    ObjString* typeName = getSymbolTypeName(resolver, category);
+    item->type = typeTableGet(resolver->vm->typetab, typeName);
     return item;
 }
 
@@ -382,9 +400,9 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
 
 static SymbolItem* findGlobal(Resolver* resolver, Ast* ast) {
     ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
-    SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
+    SymbolItem* item = symbolTableGet(resolver->globalSymtab, symbol);
     if (item == NULL) {
-        item = symbolTableGet(resolver->globalSymtab, symbol);
+        item = symbolTableGet(resolver->rootSymtab, symbol);
         if (item == NULL) item = symbolTableGet(resolver->vm->symtab, symbol);
         if (item != NULL) {
             return insertSymbol(resolver, ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, item->type, item->isMutable);

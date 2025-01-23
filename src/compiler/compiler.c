@@ -1370,7 +1370,6 @@ ObjFunction* compile(VM* vm, const char* source) {
     initResolver(vm, &resolver, vm->config.debugSymtab);
     resolve(&resolver, ast);
     if (resolver.hadError) return NULL;
-    typeTableOutput(vm->typetab);
 
     Compiler compiler;
     initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, NULL, false, vm->config.debugCode);
