@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "resolver.h"
+#include "../vm/namespace.h"
 #include "../vm/native.h"
 #include "../vm/vm.h"
 
@@ -223,6 +224,28 @@ static SymbolItem* findThis(Resolver* resolver) {
     }
 
     return item;
+}
+
+static bool isUsingNativeNamespace(ObjString* sourceNamespace) {
+    return sourceNamespace->length < 4 ? false : memcmp("clox", sourceNamespace->chars, 4) == 0;
+}
+
+static ObjString* locateSourceFileFromFullName(VM* vm, ObjString* fullName) {
+    int length = fullName->length + 4;
+    char* heapChars = bufferNewCString(length + 1);
+    int offset = 0;
+    while (offset < fullName->length) {
+        char currentChar = fullName->chars[offset];
+        heapChars[offset] = (currentChar == '.') ? '/' : currentChar;
+        offset++;
+    }
+
+    heapChars[offset++] = '.';
+    heapChars[length - 3] = 'l';
+    heapChars[length - 2] = 'o';
+    heapChars[length - 1] = 'x';
+    heapChars[length] = '\n';
+    return takeString(vm, heapChars, length);
 }
 
 static ObjString* getSymbolTypeName(Resolver* resolver, TypeCategory category) {
@@ -1094,6 +1117,14 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
         Ast* subNamespace = astGetChild(_namespace, i);
         subNamespace->symtab = _namespace->symtab;
         insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
+    }
+
+    ObjString* fullName = createQualifiedSymbol(resolver, ast);
+    if (!isUsingNativeNamespace(fullName)) {
+        ObjString* filePath = locateSourceFileFromFullName(resolver->vm, fullName);
+        if (sourceFileExists(filePath)) {
+            loadModule(resolver->vm, filePath);
+        }
     }
 
     if (astNumChild(ast) > 1) {

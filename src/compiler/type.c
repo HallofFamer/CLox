@@ -200,9 +200,9 @@ BehaviorTypeInfo* typeTableInsertBehavior(TypeTable* typetab, TypeCategory categ
 
 CallableTypeInfo* typeTableInsertCallable(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType) {
     int id = typetab->count + 1;
-    CallableTypeInfo* functionType = newCallableInfo(id, category, name, returnType);
-    typeTableSet(typetab, name, (TypeInfo*)functionType);
-    return functionType;
+    CallableTypeInfo* callableType = newCallableInfo(id, category, name, returnType);
+    typeTableSet(typetab, name, (TypeInfo*)callableType);
+    return callableType;
 }
 
 static void typeTableOutputCategory(TypeCategory category) {
