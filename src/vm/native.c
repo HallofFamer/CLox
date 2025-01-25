@@ -97,13 +97,13 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
     va_list args;
     va_start(args, function);
     TypeInfo* returnType = va_arg(args, TypeInfo*);
-    CallableTypeInfo* functionType = newCallableInfo(vm->typetab->count + 1, TYPE_CATEGORY_FUNCTION, functionName, returnType);
+    CallableTypeInfo* callableType = newCallableInfo(vm->typetab->count + 1, TYPE_CATEGORY_FUNCTION, functionName, returnType);
 
     for (int i = 0; i < arity; i++) {
         TypeInfo* paramType = va_arg(args, TypeInfo*);
-        TypeInfoArrayAdd(functionType->paramTypes, paramType);
+        TypeInfoArrayAdd(callableType->paramTypes, paramType);
     }
-    typeTableSet(vm->typetab, functionName, (TypeInfo*)functionType);
+    typeTableSet(vm->typetab, functionName, (TypeInfo*)callableType);
     va_end(args);
 }
 

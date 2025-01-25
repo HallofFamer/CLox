@@ -1113,9 +1113,10 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
     int namespaceDepth = astNumChild(_namespace);
     uint8_t index = 0;
 
-    for (int i = 0; i < namespaceDepth; i++) {
+    for (int i = 0; i < namespaceDepth - 1; i++) {
         Ast* subNamespace = astGetChild(_namespace, i);
         subNamespace->symtab = _namespace->symtab;
+        if (i > 0) continue;
         insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
     }
 
@@ -1127,10 +1128,18 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
         }
     }
 
+    TypeInfo* type = typeTableGet(resolver->vm->typetab, fullName);
     if (astNumChild(ast) > 1) {
         Ast* alias = astGetChild(ast, 1);
         alias->symtab = _namespace->symtab;
-        insertSymbol(resolver, alias->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
+        alias->type = type;
+        insertSymbol(resolver, alias->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
+    }
+    else {
+        Ast* shortName = astGetChild(_namespace, namespaceDepth - 1);
+        shortName->symtab = _namespace->symtab;
+        shortName->type = type;
+        insertSymbol(resolver, shortName->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
     }
 }
 
