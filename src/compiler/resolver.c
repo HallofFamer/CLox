@@ -232,7 +232,7 @@ static bool isUsingNativeNamespace(ObjString* sourceNamespace) {
 
 static ObjString* locateSourceFileFromFullName(VM* vm, ObjString* fullName) {
     int length = fullName->length + 4;
-    char* heapChars = bufferNewCString(length + 1);
+    char* heapChars = bufferNewCString((size_t)length + 1);
     int offset = 0;
     while (offset < fullName->length) {
         char currentChar = fullName->chars[offset];
@@ -246,6 +246,18 @@ static ObjString* locateSourceFileFromFullName(VM* vm, ObjString* fullName) {
     heapChars[length - 1] = 'x';
     heapChars[length] = '\n';
     return takeString(vm, heapChars, length);
+}
+
+static ObjString* locateSourceDirectoryFromFullName(VM* vm, ObjString* fullName) {
+    char* heapChars = bufferNewCString((size_t)fullName->length + 1);;
+    int offset = 0;
+    while (offset < fullName->length) {
+        char currentChar = fullName->chars[offset];
+        heapChars[offset] = (currentChar == '.') ? '/' : currentChar;
+        offset++;
+    }
+    heapChars[fullName->length] = '\n';
+    return takeString(vm, heapChars, fullName->length);
 }
 
 static ObjString* getSymbolTypeName(Resolver* resolver, TypeCategory category) {
@@ -1125,6 +1137,12 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
         ObjString* filePath = locateSourceFileFromFullName(resolver->vm, fullName);
         if (sourceFileExists(filePath)) {
             loadModule(resolver->vm, filePath);
+        }
+        else {
+            ObjString* directoryPath = locateSourceDirectoryFromFullName(resolver->vm, fullName);
+            if (sourceDirectoryExists(directoryPath)) {
+                fullName = newString(resolver->vm, "clox.std.lang.Namespace");
+            }
         }
     }
 

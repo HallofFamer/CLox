@@ -228,6 +228,30 @@ static void typeTableOutputCategory(TypeCategory category) {
     printf("\n");
 }
 
+static void typeTableOutputMethod(TypeTable* methods) {
+    printf("    methods:\n");
+    for (int i = 0; i < methods->capacity; i++) {
+        TypeEntry* entry = &methods->entries[i];
+        if (entry != NULL && entry->key != NULL) {
+            CallableTypeInfo* method = AS_CALLABLE_TYPE(entry->value);
+            printf("      %s", method->modifier.isAsync ? "async " : "");
+
+            if (method->returnType == NULL) printf("dynamic ");
+            else if (memcmp(method->returnType->shortName->chars, "Nil", 3) == 0) printf("void ");
+            else printf("%s ", method->returnType->shortName->chars);
+            printf("%s(", entry->key->chars);
+
+            if (method->paramTypes->count > 0) {
+                printf("%s", method->paramTypes->elements[0]->shortName->chars);
+                for (int i = 1; i < method->paramTypes->count; i++) {
+                    printf(", %s", method->paramTypes->elements[i]->shortName->chars);
+                }
+            }
+            printf(")\n");
+        }
+    }
+}
+
 static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
     if (behavior->superclassType != NULL) {
         printf("    superclass: %s\n", behavior->superclassType->fullName->chars);
@@ -242,27 +266,7 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
     }
 
     if (behavior->methods != NULL && behavior->methods->count > 0) {
-        printf("    methods:\n");
-        for (int i = 0; i < behavior->methods->capacity; i++) {
-            TypeEntry* entry = &behavior->methods->entries[i];
-            if (entry != NULL && entry->key != NULL) {
-                CallableTypeInfo* method = AS_CALLABLE_TYPE(entry->value);
-                printf("      %s", method->modifier.isAsync ? "async " : "");
-
-                if (method->returnType == NULL) printf("dynamic ");
-                else if (memcmp(method->returnType->shortName->chars, "Nil", 3) == 0) printf("void ");
-                else printf("%s ", method->returnType->shortName->chars);
-                printf("%s(", entry->key->chars);
-
-                if (method->paramTypes->count > 0) {
-                    printf("%s", method->paramTypes->elements[0]->shortName->chars);
-                    for (int i = 1; i < method->paramTypes->count; i++) {
-                        printf(", %s", method->paramTypes->elements[i]->shortName->chars);
-                    }
-                }
-                printf(")\n");
-            }
-        }
+        typeTableOutputMethod(behavior->methods);
     }
 }
 
