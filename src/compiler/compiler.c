@@ -87,14 +87,10 @@ static Chunk* currentChunk(Compiler* compiler) {
     return &compiler->function->chunk;
 }
 
-static int currentLine(Compiler* compiler) {
-    return compiler->currentToken.line;
-}
-
 static void compileError(Compiler* compiler, const char* format, ...) {
     va_list args;
     va_start(args, format);
-    fprintf(stderr, "[line %d] Compile Error: ", currentLine(compiler));
+    fprintf(stderr, "[line %d] Compile Error: ", compiler->currentToken.line);
     vfprintf(stderr, format, args);
     va_end(args);
     fputs("\n", stderr);
@@ -102,7 +98,7 @@ static void compileError(Compiler* compiler, const char* format, ...) {
 }
 
 static void emitByte(Compiler* compiler, uint8_t byte) {
-    writeChunk(compiler->vm, currentChunk(compiler), byte, currentLine(compiler));
+    writeChunk(compiler->vm, currentChunk(compiler), byte, compiler->currentToken.line);
 }
 
 static void emitBytes(Compiler* compiler, uint8_t byte1, uint8_t byte2) {

@@ -177,13 +177,13 @@ static TypeInfo* getTypeForSymbol(Resolver* resolver, Token token) {
     return type;
 }
 
-static void setFunctionTypeModifier(Ast* ast, CallableTypeInfo* functionType) {
-    functionType->modifier.isAsync = ast->modifier.isAsync;
-    functionType->modifier.isClassMethod = ast->modifier.isClass;
-    functionType->modifier.isInitializer = ast->modifier.isInitializer;
-    functionType->modifier.isInstanceMethod = !ast->modifier.isClass;
-    functionType->modifier.isLambda = ast->modifier.isLambda;
-    functionType->modifier.isVariadic = ast->modifier.isVariadic;
+static void setFunctionTypeModifier(Ast* ast, CallableTypeInfo* callableType) {
+    callableType->modifier.isAsync = ast->modifier.isAsync;
+    callableType->modifier.isClassMethod = ast->modifier.isClass;
+    callableType->modifier.isInitializer = ast->modifier.isInitializer;
+    callableType->modifier.isInstanceMethod = !ast->modifier.isClass;
+    callableType->modifier.isLambda = ast->modifier.isLambda;
+    callableType->modifier.isVariadic = ast->modifier.isVariadic;
 }
 
 static bool findSymbol(Resolver* resolver, Token token) {
