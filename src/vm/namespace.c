@@ -54,7 +54,7 @@ bool sourceFileExists(ObjString* filePath) {
     return stat(filePath->chars, &fileStat) == 0;
 }
 
-ObjString* resolveSourceFile(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
+ObjString* locateSourceFile(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
     int length = enclosingNamespace->fullName->length + shortName->length + 5;
     char* heapChars = ALLOCATE(char, length + 1);
     int offset = 0;
@@ -85,7 +85,7 @@ bool sourceDirectoryExists(ObjString* directoryPath) {
     return false;
 }
 
-ObjString* resolveSourceDirectory(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
+ObjString* locateSourceDirectory(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
     int length = enclosingNamespace->fullName->length + shortName->length + 1;
     char* heapChars = ALLOCATE(char, length + 1);
     int offset = 0;

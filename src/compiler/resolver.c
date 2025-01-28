@@ -95,10 +95,13 @@ static void initFunctionResolver(Resolver* resolver, FunctionResolver* function,
     function->numLocals = 0;
     function->numUpvalues = 0;
     function->numGlobals = 0;
+
     function->scopeDepth = scopeDepth;
     function->modifier = resolverInitModifier();
     resolver->currentFunction = function;
-    if (resolver->currentFunction->enclosing != NULL) resolver->isTopLevel = false;
+    if (resolver->currentFunction->enclosing != NULL) {
+        resolver->isTopLevel = false;
+    }
 }
 
 static void endFunctionResolver(Resolver* resolver) {

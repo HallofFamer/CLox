@@ -446,7 +446,7 @@ bool getInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte) {
             return true;
         }
         else {
-            ObjString* filePath = resolveSourceFile(vm, name, enclosing);
+            ObjString* filePath = locateSourceFile(vm, name, enclosing);
             if (!sourceFileExists(filePath)) {
                 runtimeError(vm, "Undefined class '%s.%s'.", enclosing->fullName->chars, name->chars);
                 exit(70);

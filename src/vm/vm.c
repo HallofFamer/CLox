@@ -1213,7 +1213,7 @@ InterpretResult run(VM* vm) {
 
                 if (!IS_NIL(value)) push(vm, value);
                 else {
-                    ObjString* filePath = resolveSourceFile(vm, shortName, enclosingNamespace);
+                    ObjString* filePath = locateSourceFile(vm, shortName, enclosingNamespace);
                     if (sourceFileExists(filePath)) {
                         loadModule(vm, filePath);
                         if (tableGet(&enclosingNamespace->values, shortName, &value)) {
@@ -1223,7 +1223,7 @@ InterpretResult run(VM* vm) {
                         else RUNTIME_ERROR("Undefined class/trait/namespace %s specified", shortName->chars);
                     }
                     else {
-                        ObjString* directoryPath = resolveSourceDirectory(vm, shortName, enclosingNamespace);
+                        ObjString* directoryPath = locateSourceDirectory(vm, shortName, enclosingNamespace);
                         if (!sourceDirectoryExists(directoryPath)) {
                             throwNativeException(vm, "clox.std.io.FileNotFoundException", "Failed to load source file for %s", filePath->chars);
                         }
