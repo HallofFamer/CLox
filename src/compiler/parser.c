@@ -343,7 +343,9 @@ static Ast* dot(Parser* parser, Token token, Ast* left, bool canAssign) {
         Ast* right = argumentList(parser);
         return newAst(AST_EXPR_INVOKE, property, 2, left, right);
     }
-    else return newAst(AST_EXPR_PROPERTY_GET, property, 1, left);
+    else {
+        return newAst(AST_EXPR_PROPERTY_GET, property, 1, left);
+    }
 }
 
 static Ast* nil(Parser* parser, Token token, Ast* left, bool canAssign) {

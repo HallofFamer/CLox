@@ -49,6 +49,10 @@ Value usingNamespace(VM* vm, uint8_t namespaceDepth) {
     return valueExists ? value : NIL_VAL;
 }
 
+bool isNativeNamespace(ObjString* fullName) {
+    return fullName->length < 4 ? false : memcmp("clox", fullName->chars, 4) == 0;
+}
+
 bool sourceFileExists(ObjString* filePath) {
     struct stat fileStat;
     return stat(filePath->chars, &fileStat) == 0;
@@ -68,6 +72,24 @@ ObjString* locateSourceFile(VM* vm, ObjString* shortName, ObjNamespace* enclosin
     int startIndex = offset;
     while (offset < startIndex + shortName->length) {
         heapChars[offset] = shortName->chars[offset - startIndex];
+        offset++;
+    }
+
+    heapChars[offset++] = '.';
+    heapChars[length - 3] = 'l';
+    heapChars[length - 2] = 'o';
+    heapChars[length - 1] = 'x';
+    heapChars[length] = '\n';
+    return takeString(vm, heapChars, length);
+}
+
+ObjString* locateSourceFileFromFullName(VM* vm, ObjString* fullName) {
+    int length = fullName->length + 4;
+    char* heapChars = bufferNewCString((size_t)length + 1);
+    int offset = 0;
+    while (offset < fullName->length) {
+        char currentChar = fullName->chars[offset];
+        heapChars[offset] = (currentChar == '.') ? '/' : currentChar;
         offset++;
     }
 
@@ -104,6 +126,18 @@ ObjString* locateSourceDirectory(VM* vm, ObjString* shortName, ObjNamespace* enc
 
     heapChars[length] = '\n';
     return takeString(vm, heapChars, length);
+}
+
+ObjString* locateSourceDirectoryFromFullName(VM* vm, ObjString* fullName) {
+    char* heapChars = bufferNewCString((size_t)fullName->length + 1);;
+    int offset = 0;
+    while (offset < fullName->length) {
+        char currentChar = fullName->chars[offset];
+        heapChars[offset] = (currentChar == '.') ? '/' : currentChar;
+        offset++;
+    }
+    heapChars[fullName->length] = '\n';
+    return takeString(vm, heapChars, fullName->length);
 }
 
 InterpretResult runModule(VM* vm, ObjModule* module, bool isRootModule) {

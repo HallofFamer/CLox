@@ -229,40 +229,6 @@ static SymbolItem* findThis(Resolver* resolver) {
     return item;
 }
 
-static bool isUsingNativeNamespace(ObjString* sourceNamespace) {
-    return sourceNamespace->length < 4 ? false : memcmp("clox", sourceNamespace->chars, 4) == 0;
-}
-
-static ObjString* locateSourceFileFromFullName(VM* vm, ObjString* fullName) {
-    int length = fullName->length + 4;
-    char* heapChars = bufferNewCString((size_t)length + 1);
-    int offset = 0;
-    while (offset < fullName->length) {
-        char currentChar = fullName->chars[offset];
-        heapChars[offset] = (currentChar == '.') ? '/' : currentChar;
-        offset++;
-    }
-
-    heapChars[offset++] = '.';
-    heapChars[length - 3] = 'l';
-    heapChars[length - 2] = 'o';
-    heapChars[length - 1] = 'x';
-    heapChars[length] = '\n';
-    return takeString(vm, heapChars, length);
-}
-
-static ObjString* locateSourceDirectoryFromFullName(VM* vm, ObjString* fullName) {
-    char* heapChars = bufferNewCString((size_t)fullName->length + 1);;
-    int offset = 0;
-    while (offset < fullName->length) {
-        char currentChar = fullName->chars[offset];
-        heapChars[offset] = (currentChar == '.') ? '/' : currentChar;
-        offset++;
-    }
-    heapChars[fullName->length] = '\n';
-    return takeString(vm, heapChars, fullName->length);
-}
-
 static ObjString* getSymbolTypeName(Resolver* resolver, TypeCategory category) {
     switch (category) {
         case TYPE_CATEGORY_CLASS:
@@ -1136,7 +1102,7 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
     }
 
     ObjString* fullName = createQualifiedSymbol(resolver, ast);
-    if (!isUsingNativeNamespace(fullName)) {
+    if (!isNativeNamespace(fullName)) {
         ObjString* filePath = locateSourceFileFromFullName(resolver->vm, fullName);
         if (sourceFileExists(filePath)) {
             loadModule(resolver->vm, filePath);

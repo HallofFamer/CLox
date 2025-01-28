@@ -203,7 +203,7 @@ static void symbolTableOutputEntry(SymbolEntry* entry) {
 void symbolTableOutput(SymbolTable* symtab) {
     printf("Symbol table -> id: %d, scope: ", symtab->id);
     symbolTableOutputScope(symtab->scope);
-    printf(", depth: %d, count: %d\n", (int8_t)symtab->depth, symtab->count);
+    printf(", depth: %d, count: %d\n", (int)symtab->depth, symtab->count);
 
     for (int i = 0; i < symtab->capacity; i++) {
         SymbolEntry* entry = &symtab->entries[i];
