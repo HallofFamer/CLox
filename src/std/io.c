@@ -716,6 +716,15 @@ void registerIOPackage(VM* vm) {
     vm->currentNamespace = ioNamespace;
 
     vm->fileClass = defineNativeClass(vm, "File");
+    ObjClass* closableTrait = defineNativeTrait(vm, "TClosable");
+    ObjClass* ioStreamClass = defineNativeClass(vm, "IOStream");
+    ObjClass* readStreamClass = defineNativeClass(vm, "ReadStream");
+    ObjClass* writeStreamClass = defineNativeClass(vm, "WriteStream");
+    ObjClass* binaryReadStreamClass = defineNativeClass(vm, "BinaryReadStream");
+    ObjClass* binaryWriteStreamClass = defineNativeClass(vm, "BinaryWriteStream");
+    ObjClass* fileReadStreamClass = defineNativeClass(vm, "FileReadStream");
+    ObjClass* fileWriteStreamClass = defineNativeClass(vm, "FileWriteStream");
+
     bindSuperclass(vm, vm->fileClass, vm->objectClass);
     vm->fileClass->classType = OBJ_FILE;
     DEF_INTERCEPTOR(vm->fileClass, File, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.File), PARAM_TYPE(String));
@@ -749,10 +758,8 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(fileMetaclass, FileClass, open, 2, RETURN_TYPE(Object), PARAM_TYPE(String), PARAM_TYPE(String));
     DEF_METHOD(fileMetaclass, FileClass, openAsync, 2, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(String), PARAM_TYPE(String));
 
-    ObjClass* closableTrait = defineNativeTrait(vm, "TClosable");
     DEF_METHOD(closableTrait, TClosable, close, 0, RETURN_TYPE(Bool));
 
-    ObjClass* ioStreamClass = defineNativeClass(vm, "IOStream");
     bindSuperclass(vm, ioStreamClass, vm->objectClass);
     bindTrait(vm, ioStreamClass, closableTrait);
     DEF_INTERCEPTOR(ioStreamClass, IOStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.IOStream), PARAM_TYPE(Object));
@@ -762,21 +769,18 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(ioStreamClass, IOStream, getPosition, 0, RETURN_TYPE(Int));
     DEF_METHOD(ioStreamClass, IOStream, reset, 0, RETURN_TYPE(Nil));
 
-    ObjClass* readStreamClass = defineNativeClass(vm, "ReadStream");
     bindSuperclass(vm, readStreamClass, ioStreamClass);
     DEF_INTERCEPTOR(readStreamClass, ReadStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.ReadStream), PARAM_TYPE(Object));
     DEF_METHOD(readStreamClass, ReadStream, isAtEnd, 0, RETURN_TYPE(Bool));
     DEF_METHOD(readStreamClass, ReadStream, read, 0, RETURN_TYPE(Object));
     DEF_METHOD(readStreamClass, ReadStream, skip, 1, RETURN_TYPE(Bool), PARAM_TYPE(Int));
 
-    ObjClass* writeStreamClass = defineNativeClass(vm, "WriteStream");
     bindSuperclass(vm, writeStreamClass, ioStreamClass);
     DEF_INTERCEPTOR(writeStreamClass, WriteStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.WriteStream), PARAM_TYPE(Object));
     DEF_METHOD(writeStreamClass, WriteStream, flush, 0, RETURN_TYPE(Nil));
     DEF_METHOD_ASYNC(writeStreamClass, WriteStream, flushAsync, 0, RETURN_TYPE(clox.std.util.Promise));
     DEF_METHOD(writeStreamClass, WriteStream, write, 1, RETURN_TYPE(Nil), PARAM_TYPE(Object));
 
-    ObjClass* binaryReadStreamClass = defineNativeClass(vm, "BinaryReadStream");
     bindSuperclass(vm, binaryReadStreamClass, readStreamClass);
     DEF_INTERCEPTOR(binaryReadStreamClass, BinaryReadStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.BinaryReadStream), PARAM_TYPE(Object));
     DEF_METHOD(binaryReadStreamClass, BinaryReadStream, read, 0, RETURN_TYPE(Int));
@@ -784,7 +788,6 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(binaryReadStreamClass, BinaryReadStream, readBytes, 1, RETURN_TYPE(clox.std.collection.Array), PARAM_TYPE(Int));
     DEF_METHOD_ASYNC(binaryReadStreamClass, BinaryReadStream, readBytesAsync, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(Int));
 
-    ObjClass* binaryWriteStreamClass = defineNativeClass(vm, "BinaryWriteStream");
     bindSuperclass(vm, binaryWriteStreamClass, writeStreamClass);
     DEF_INTERCEPTOR(binaryWriteStreamClass, BinaryWriteStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.BinaryWriteStream), PARAM_TYPE(Object));
     DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, write, 1, RETURN_TYPE(Nil), PARAM_TYPE(Int));
@@ -792,7 +795,6 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeBytes, 1, RETURN_TYPE(Nil), PARAM_TYPE(clox.std.collection.Array));
     DEF_METHOD_ASYNC(binaryWriteStreamClass, BinaryWriteStream, writeBytesAsync, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(clox.std.collection.Array));
 
-    ObjClass* fileReadStreamClass = defineNativeClass(vm, "FileReadStream");
     bindSuperclass(vm, fileReadStreamClass, readStreamClass);
     DEF_INTERCEPTOR(fileReadStreamClass, FileReadStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.FileReadStream), PARAM_TYPE(Object));
     DEF_METHOD(fileReadStreamClass, FileReadStream, peek, 0, RETURN_TYPE(String));
@@ -805,7 +807,6 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD(fileReadStreamClass, FileReadStream, readToEnd, 0, RETURN_TYPE(String));
     DEF_METHOD_ASYNC(fileReadStreamClass, FileReadStream, readToEndAsync, 0, RETURN_TYPE(clox.std.util.Promise));
 
-    ObjClass* fileWriteStreamClass = defineNativeClass(vm, "FileWriteStream");
     bindSuperclass(vm, fileWriteStreamClass, writeStreamClass);
     DEF_INTERCEPTOR(fileWriteStreamClass, FileWriteStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.FileWriteStream), PARAM_TYPE(Object));
     DEF_METHOD(fileWriteStreamClass, FileWriteStream, write, 1, RETURN_TYPE(Nil), PARAM_TYPE(String));

@@ -109,6 +109,7 @@ static void astOutputChild(Ast* ast, int indentLevel, int index) {
         fprintf(stderr, "Ast has no children or invalid child index specified.");
         exit(1);
     }
+
     Ast* expr = ast->children->elements[index];
     astOutput(expr, indentLevel);
 }

@@ -810,6 +810,16 @@ void registerNetPackage(VM* vm) {
     vm->currentNamespace = netNamespace;
 
     ObjClass* urlClass = defineNativeClass(vm, "URL");
+    ObjClass* domainClass = defineNativeClass(vm, "Domain");
+    ObjClass* ipAddressClass = defineNativeClass(vm, "IPAddress");
+    ObjClass* socketAddressClass = defineNativeClass(vm, "SocketAddress");
+    ObjClass* socketClass = defineNativeClass(vm, "Socket");
+    ObjClass* socketClientClass = defineNativeClass(vm, "SocketClient");
+    ObjClass* socketServerClass = defineNativeClass(vm, "SocketServer");
+    ObjClass* httpRequestClass = defineNativeClass(vm, "HTTPRequest");
+    ObjClass* httpResponseClass = defineNativeClass(vm, "HTTPResponse");
+    ObjClass* httpClientClass = defineNativeClass(vm, "HTTPClient");
+
     bindSuperclass(vm, urlClass, vm->objectClass);
     DEF_INTERCEPTOR(urlClass, URL, INTERCEPTOR_INIT, __init__, 6, RETURN_TYPE(clox.std.net.URL), PARAM_TYPE(String), PARAM_TYPE(String), PARAM_TYPE(Int), PARAM_TYPE(String), PARAM_TYPE(String), PARAM_TYPE(String));
     DEF_METHOD(urlClass, URL, isAbsolute, 0, RETURN_TYPE(Bool));
@@ -822,14 +832,12 @@ void registerNetPackage(VM* vm) {
     ObjClass* urlMetaclass = urlClass->obj.klass;
     DEF_METHOD(urlMetaclass, URLClass, parse, 1, RETURN_TYPE(clox.std.net.URL), PARAM_TYPE(String));
 
-    ObjClass* domainClass = defineNativeClass(vm, "Domain");
     bindSuperclass(vm, domainClass, vm->objectClass);
     DEF_INTERCEPTOR(domainClass, Domain, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.net.Domain), PARAM_TYPE(String));
     DEF_METHOD(domainClass, Domain, getIPAddresses, 0, RETURN_TYPE(clox.std.collection.Array));
     DEF_METHOD_ASYNC(domainClass, Domain, getIPAddressesAsync, 0, RETURN_TYPE(clox.std.util.Promise));
     DEF_METHOD(domainClass, Domain, toString, 0, RETURN_TYPE(String));
 
-    ObjClass* ipAddressClass = defineNativeClass(vm, "IPAddress");
     bindSuperclass(vm, ipAddressClass, vm->objectClass);
     DEF_INTERCEPTOR(ipAddressClass, IPAddress, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.net.IPAddress), PARAM_TYPE(String));
     DEF_METHOD(ipAddressClass, IPAddress, getDomain, 0, RETURN_TYPE(clox.std.net.Domain));
@@ -839,14 +847,12 @@ void registerNetPackage(VM* vm) {
     DEF_METHOD(ipAddressClass, IPAddress, toArray, 0, RETURN_TYPE(clox.std.collection.Array));
     DEF_METHOD(ipAddressClass, IPAddress, toString, 0, RETURN_TYPE(String));
 
-    ObjClass* socketAddressClass = defineNativeClass(vm, "SocketAddress");
     bindSuperclass(vm, socketAddressClass, vm->objectClass);
     DEF_INTERCEPTOR(socketAddressClass, SocketAddress, INTERCEPTOR_INIT, __init__, 3, RETURN_TYPE(clox.std.net.URL), PARAM_TYPE(String), PARAM_TYPE(Int), PARAM_TYPE(Int));
     DEF_METHOD(socketAddressClass, SocketAddress, ipAddress, 0, RETURN_TYPE(clox.std.net.IPAddress));
     DEF_METHOD(socketAddressClass, SocketAddress, toString, 0, RETURN_TYPE(String));
 
     ObjClass* closableTrait = getNativeClass(vm, "clox.std.io.TClosable");
-    ObjClass* socketClass = defineNativeClass(vm, "Socket");
     bindSuperclass(vm, socketClass, vm->objectClass);
     bindTrait(vm, socketClass, closableTrait);
     DEF_INTERCEPTOR(socketClass, Socket, INTERCEPTOR_INIT, __init__, 3, RETURN_TYPE(clox.std.net.Socket), PARAM_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Int));
@@ -874,17 +880,14 @@ void registerNetPackage(VM* vm) {
     setClassProperty(vm, socketClass, "protoICMPV6", INT_VAL(IPPROTO_ICMPV6));
     setClassProperty(vm, socketClass, "protoRAW", INT_VAL(IPPROTO_RAW));
 
-    ObjClass* socketClientClass = defineNativeClass(vm, "SocketClient");
     bindSuperclass(vm, socketClientClass, socketClass);
     DEF_METHOD(socketClientClass, SocketClient, connect, 1, RETURN_TYPE(Nil), PARAM_TYPE(clox.std.net.SocketAddress));
 
-    ObjClass* socketServerClass = defineNativeClass(vm, "SocketServer");
     bindSuperclass(vm, socketServerClass, socketClass);
     DEF_METHOD(socketServerClass, SocketServer, accept, 0, RETURN_TYPE(Nil));
     DEF_METHOD(socketServerClass, SocketServer, bind, 1, RETURN_TYPE(Nil), PARAM_TYPE(clox.std.net.SocketAddress));
     DEF_METHOD(socketServerClass, SocketServer, listen, 0, RETURN_TYPE(Nil));
 
-    ObjClass* httpRequestClass = defineNativeClass(vm, "HTTPRequest");
     bindSuperclass(vm, httpRequestClass, vm->objectClass);
     DEF_INTERCEPTOR(httpRequestClass, HTTPRequest, INTERCEPTOR_INIT, __init__, 4, RETURN_TYPE(clox.std.net.HTTPRequest), PARAM_TYPE(Object), PARAM_TYPE(Int), PARAM_TYPE(clox.std.collection.Dictionary), PARAM_TYPE(clox.std.collection.Dictionary));
     DEF_METHOD(httpRequestClass, HTTPRequest, toString, 0, RETURN_TYPE(String));
@@ -900,7 +903,6 @@ void registerNetPackage(VM* vm) {
     setClassProperty(vm, httpRequestClass, "httpCONNECT", INT_VAL(HTTP_CONNECT));
     setClassProperty(vm, httpRequestClass, "httpQUERY", INT_VAL(HTTP_QUERY));
 
-    ObjClass* httpResponseClass = defineNativeClass(vm, "HTTPResponse");
     bindSuperclass(vm, httpResponseClass, vm->objectClass);
     DEF_INTERCEPTOR(httpResponseClass, HTTPResponse, INTERCEPTOR_INIT, __init__, 4, RETURN_TYPE(clox.std.net.HTTPResponse), PARAM_TYPE(String), PARAM_TYPE(Int), PARAM_TYPE(clox.std.collection.Dictionary), PARAM_TYPE(String));
     DEF_METHOD(httpResponseClass, HTTPResponse, toString, 0, RETURN_TYPE(String));
@@ -916,7 +918,6 @@ void registerNetPackage(VM* vm) {
     setClassProperty(vm, httpResponseClass, "statusBadGateway", INT_VAL(502));
     setClassProperty(vm, httpResponseClass, "statusServiceUnavailable", INT_VAL(503));
 
-    ObjClass* httpClientClass = defineNativeClass(vm, "HTTPClient");
     bindSuperclass(vm, httpClientClass, vm->objectClass);
     bindTrait(vm, httpClientClass, closableTrait);
     DEF_INTERCEPTOR(httpClientClass, HTTPClient, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.net.HTTPClient));

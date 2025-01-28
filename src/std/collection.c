@@ -2064,10 +2064,21 @@ void registerCollectionPackage(VM* vm) {
     vm->currentNamespace = collectionNamespace;
 
     ObjClass* enumerableTrait = defineNativeTrait(vm, "TEnumerable");
+    ObjClass* collectionClass = defineNativeClass(vm, "Collection");
+    ObjClass* listClass = defineNativeClass(vm, "List");
+    vm->arrayClass = defineNativeClass(vm, "Array");
+    ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
+    vm->nodeClass = defineNativeClass(vm, "Node");
+    vm->dictionaryClass = defineNativeClass(vm, "Dictionary");
+    vm->entryClass = defineNativeClass(vm, "Entry");
+    ObjClass* setClass = defineNativeClass(vm, "Set");
+    vm->rangeClass = defineNativeClass(vm, "Range");
+    ObjClass* stackClass = defineNativeClass(vm, "Stack");
+    ObjClass* queueClass = defineNativeClass(vm, "Queue");
+
     DEF_METHOD(enumerableTrait, TEnumerable, next, 1, RETURN_TYPE(Int), PARAM_TYPE(Int));
     DEF_METHOD(enumerableTrait, TEnumerable, nextValue, 1, RETURN_TYPE(Object), PARAM_TYPE(Int));
 
-    ObjClass* collectionClass = defineNativeClass(vm, "Collection");
     bindSuperclass(vm, collectionClass, vm->objectClass);
     bindTrait(vm, collectionClass, enumerableTrait);
     DEF_INTERCEPTOR(collectionClass, Collection, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.collection.Collection));
@@ -2080,15 +2091,13 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(collectionClass, Collection, length, 0, RETURN_TYPE(Int));
     DEF_METHOD(collectionClass, Collection, reject, 1, RETURN_TYPE(clox.std.collection.Collection), PARAM_TYPE(TCallable));
     DEF_METHOD(collectionClass, Collection, select, 1, RETURN_TYPE(clox.std.collection.Collection), PARAM_TYPE(TCallable));
-    DEF_METHOD(collectionClass, Collection, toArray, 0, RETURN_TYPE(clox.std.collection.Collection));
+    DEF_METHOD(collectionClass, Collection, toArray, 0, RETURN_TYPE(clox.std.collection.Array));
 
-    ObjClass* listClass = defineNativeClass(vm, "List");
     bindSuperclass(vm, listClass, collectionClass);
     DEF_METHOD(listClass, List, eachIndex, 1, RETURN_TYPE(Nil), PARAM_TYPE(TCallable));
     DEF_METHOD(listClass, List, getAt, 1, RETURN_TYPE(Object), PARAM_TYPE(Int));
     DEF_METHOD(listClass, List, putAt, 2, RETURN_TYPE(Nil), PARAM_TYPE(Int), PARAM_TYPE(Object));
 
-    vm->arrayClass = defineNativeClass(vm, "Array");
     bindSuperclass(vm, vm->arrayClass, listClass);
     vm->arrayClass->classType = OBJ_ARRAY;
     DEF_INTERCEPTOR(vm->arrayClass, Array, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.collection.Array));
@@ -2124,7 +2133,6 @@ void registerCollectionPackage(VM* vm) {
     ObjClass* arrayMetaclass = vm->arrayClass->obj.klass;
     DEF_METHOD(arrayMetaclass, ArrayClass, fromElements, -1, RETURN_TYPE(clox.std.collection.Array));
 
-    ObjClass* linkedListClass = defineNativeClass(vm, "LinkedList");
     bindSuperclass(vm, linkedListClass, listClass);
     DEF_INTERCEPTOR(linkedListClass, LinkedList, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.collection.LinkedList));
     DEF_METHOD(linkedListClass, LinkedList, add, 1, RETURN_TYPE(Bool), PARAM_TYPE(Object));
@@ -2151,7 +2159,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(linkedListClass, LinkedList, toArray, 0, RETURN_TYPE(clox.std.collection.Array));
     DEF_METHOD(linkedListClass, LinkedList, toString, 0, RETURN_TYPE(String));
 
-    vm->nodeClass = defineNativeClass(vm, "Node");
     bindSuperclass(vm, vm->nodeClass, vm->objectClass);
     vm->nodeClass->classType = OBJ_NODE;
     DEF_INTERCEPTOR(vm->nodeClass, Node, INTERCEPTOR_INIT, __init__, 3, RETURN_TYPE(clox.std.collection.Node), PARAM_TYPE(Object), PARAM_TYPE(clox.std.collection.Node), PARAM_TYPE(clox.std.collection.Node));
@@ -2161,7 +2168,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->nodeClass, Node, prev, 0, RETURN_TYPE(clox.std.collection.Node));
     DEF_METHOD(vm->nodeClass, Node, toString, 0, RETURN_TYPE(String));
 
-    vm->dictionaryClass = defineNativeClass(vm, "Dictionary");
     bindSuperclass(vm, vm->dictionaryClass, collectionClass);
     vm->dictionaryClass->classType = OBJ_DICTIONARY;
     DEF_INTERCEPTOR(vm->dictionaryClass, Dictionary, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.collection.Dictionary));
@@ -2192,7 +2198,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_OPERATOR(vm->dictionaryClass, Dictionary, [], __getSubscript__, 1, RETURN_TYPE(Object), PARAM_TYPE(Object));
     DEF_OPERATOR(vm->dictionaryClass, Dictionary, []=, __setSubscript__, 2, RETURN_TYPE(Nil), PARAM_TYPE(Object), PARAM_TYPE(Object));
 
-    vm->entryClass = defineNativeClass(vm, "Entry");
     bindSuperclass(vm, vm->entryClass, vm->objectClass);
     vm->entryClass->classType = OBJ_ENTRY;
     DEF_INTERCEPTOR(vm->entryClass, Entry, INTERCEPTOR_INIT, __init__, 2, RETURN_TYPE(clox.std.collection.Entry), PARAM_TYPE(Object), PARAM_TYPE(Object));
@@ -2202,7 +2207,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->entryClass, Entry, setValue, 1, RETURN_TYPE(Nil), PARAM_TYPE(Object));
     DEF_METHOD(vm->entryClass, Entry, toString, 0, RETURN_TYPE(String));
 
-    ObjClass* setClass = defineNativeClass(vm, "Set");
     bindSuperclass(vm, setClass, collectionClass);
     DEF_INTERCEPTOR(setClass, Set, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.collection.Set));
     DEF_METHOD(setClass, Set, add, 1, RETURN_TYPE(Bool), PARAM_TYPE(Object));
@@ -2218,7 +2222,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(setClass, Set, toArray, 0, RETURN_TYPE(clox.std.collection.Array));
     DEF_METHOD(setClass, Set, toString, 0, RETURN_TYPE(String));
 
-    vm->rangeClass = defineNativeClass(vm, "Range");
     bindSuperclass(vm, vm->rangeClass, listClass);
     vm->rangeClass->classType = OBJ_RANGE;
     DEF_INTERCEPTOR(vm->rangeClass, Range, INTERCEPTOR_INIT, __init__, 2);
@@ -2238,7 +2241,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->rangeClass, Range, toArray, 0, RETURN_TYPE(clox.std.collection.Array));
     DEF_METHOD(vm->rangeClass, Range, toString, 0, RETURN_TYPE(String));
 
-    ObjClass* stackClass = defineNativeClass(vm, "Stack");
     bindSuperclass(vm, stackClass, collectionClass);
     DEF_INTERCEPTOR(stackClass, Stack, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.collection.Stack));
     DEF_METHOD(stackClass, Stack, clear, 0, RETURN_TYPE(Nil));
@@ -2255,7 +2257,6 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(stackClass, Stack, toArray, 0, RETURN_TYPE(clox.std.collection.Array));
     DEF_METHOD(stackClass, Stack, toString, 0, RETURN_TYPE(String));
 
-    ObjClass* queueClass = defineNativeClass(vm, "Queue");
     bindSuperclass(vm, queueClass, collectionClass);
     DEF_INTERCEPTOR(queueClass, Queue, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.collection.Queue));
     DEF_METHOD(queueClass, Queue, clear, 0, RETURN_TYPE(Nil));

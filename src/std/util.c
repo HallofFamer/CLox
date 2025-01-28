@@ -871,6 +871,14 @@ void registerUtilPackage(VM* vm) {
 
     ObjClass* comparableTrait = getNativeClass(vm, "clox.std.lang.TComparable");
     ObjClass* dateClass = defineNativeClass(vm, "Date");
+    ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
+    ObjClass* durationClass = defineNativeClass(vm, "Duration");
+    vm->promiseClass = defineNativeClass(vm, "Promise");
+    ObjClass* randomClass = defineNativeClass(vm, "Random");
+    ObjClass* regexClass = defineNativeClass(vm, "Regex");
+    vm->timerClass = defineNativeClass(vm, "Timer");
+    ObjClass* uuidClass = defineNativeClass(vm, "UUID");
+
     bindSuperclass(vm, dateClass, vm->objectClass);
     bindTrait(vm, dateClass, comparableTrait);
     DEF_INTERCEPTOR(dateClass, Date, INTERCEPTOR_INIT, __init__, 3, RETURN_TYPE(clox.std.util.Date), PARAM_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Int));
@@ -890,7 +898,6 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateMetaclass, DateClass, fromTimestamp, 1, RETURN_TYPE(clox.std.util.Date), PARAM_TYPE(Number));
     DEF_METHOD(dateMetaclass, DateClass, parse, 1, RETURN_TYPE(clox.std.util.Date), PARAM_TYPE(String));
 
-    ObjClass* dateTimeClass = defineNativeClass(vm, "DateTime");
     bindSuperclass(vm, dateTimeClass, dateClass);
     bindTrait(vm, dateTimeClass, comparableTrait);
     DEF_INTERCEPTOR(dateTimeClass, DateTime, INTERCEPTOR_INIT, __init__, 6, RETURN_TYPE(clox.std.util.DateTime), PARAM_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Int));
@@ -910,7 +917,6 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateTimeMetaClass, DateTimeClass, fromTimestamp, 1, RETURN_TYPE(clox.std.util.DateTime), PARAM_TYPE(Number));
     DEF_METHOD(dateTimeMetaClass, DateTimeClass, parse, 1, RETURN_TYPE(clox.std.util.DateTime), PARAM_TYPE(String));
 
-    ObjClass* durationClass = defineNativeClass(vm, "Duration");
     bindSuperclass(vm, durationClass, vm->objectClass);
     bindTrait(vm, durationClass, comparableTrait);
     DEF_INTERCEPTOR(durationClass, Duration, INTERCEPTOR_INIT, __init__, 4, RETURN_TYPE(clox.std.util.Duration), PARAM_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Int));
@@ -929,7 +935,6 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(durationMetaclass, DurationClass, ofMinutes, 1, RETURN_TYPE(clox.std.util.Duration), PARAM_TYPE(Int));
     DEF_METHOD(durationMetaclass, DurationClass, ofSeconds, 1, RETURN_TYPE(clox.std.util.Duration), PARAM_TYPE(Int));
 
-    vm->promiseClass = defineNativeClass(vm, "Promise");
     bindSuperclass(vm, vm->promiseClass, vm->objectClass);
     vm->promiseClass->classType = OBJ_PROMISE;
     DEF_INTERCEPTOR(vm->promiseClass, Promise, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(TCallable));
@@ -954,7 +959,6 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(promiseMetaclass, PromiseClass, race, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(clox.std.collection.Array));
     DEF_METHOD(promiseMetaclass, PromiseClass, reject, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(Exception));
 
-    ObjClass* randomClass = defineNativeClass(vm, "Random");
     bindSuperclass(vm, randomClass, vm->objectClass);
     DEF_INTERCEPTOR(randomClass, Random, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.util.Random));
     DEF_METHOD(randomClass, Random, getSeed, 0, RETURN_TYPE(Int));
@@ -964,14 +968,12 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(randomClass, Random, nextIntBounded, 1, RETURN_TYPE(Int));
     DEF_METHOD(randomClass, Random, setSeed, 1, RETURN_TYPE(Nil), PARAM_TYPE(Int));
 
-    ObjClass* regexClass = defineNativeClass(vm, "Regex");
     bindSuperclass(vm, regexClass, vm->objectClass);
     DEF_INTERCEPTOR(regexClass, Regex, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.util.Regex), PARAM_TYPE(Object));
     DEF_METHOD(regexClass, Regex, match, 1, RETURN_TYPE(Bool), PARAM_TYPE(String));
     DEF_METHOD(regexClass, Regex, replace, 2, RETURN_TYPE(String), PARAM_TYPE(String), PARAM_TYPE(String));
     DEF_METHOD(regexClass, Regex, toString, 0, RETURN_TYPE(String));
 
-    vm->timerClass = defineNativeClass(vm, "Timer");
     bindSuperclass(vm, vm->timerClass, vm->objectClass);
     vm->timerClass->classType = OBJ_TIMER;
     DEF_INTERCEPTOR(vm->timerClass, Timer, INTERCEPTOR_INIT, __init__, 3, RETURN_TYPE(clox.std.util.Timer), PARAM_TYPE(TCallable), PARAM_TYPE(Int), PARAM_TYPE(Int));
@@ -984,7 +986,6 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(timerMetaclass, TimerClass, interval, 2, RETURN_TYPE(clox.std.util.Timer), PARAM_TYPE(TCallable), PARAM_TYPE(Int));
     DEF_METHOD(timerMetaclass, TimerClass, timeout, 2, RETURN_TYPE(clox.std.util.Timer), PARAM_TYPE(TCallable), PARAM_TYPE(Int));
 
-    ObjClass* uuidClass = defineNativeClass(vm, "UUID");
     bindSuperclass(vm, uuidClass, vm->objectClass);
     DEF_INTERCEPTOR(uuidClass, UUID, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.util.UUID));
     DEF_METHOD(uuidClass, UUID, toString, 0, RETURN_TYPE(String));
