@@ -153,12 +153,11 @@ static void typeTableAdjustCapacity(TypeTable* typetab, int capacity) {
         entries[i].key = NULL;
         entries[i].value = NULL;
     }
-
     typetab->count = 0;
+
     for (int i = 0; i < typetab->capacity; i++) {
         TypeEntry* entry = &typetab->entries[i];
         if (entry->key == NULL) continue;
-
         TypeEntry* dest = findTypeEntry(entries, capacity, entry->key);
         dest->key = entry->key;
         dest->value = entry->value;

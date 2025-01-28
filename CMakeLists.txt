@@ -123,6 +123,8 @@ set(Source_Files__compiler
     "src/compiler/token.h"
     "src/compiler/type.c"
     "src/compiler/type.h"
+    "src/compiler/typechecker.c"
+    "src/compiler/typechecker.h"
 )
 source_group("Source Files\\compiler" FILES ${Source_Files__compiler})
 

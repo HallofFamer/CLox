@@ -6,6 +6,7 @@
 #include "compiler.h"
 #include "parser.h"
 #include "resolver.h"
+#include "typechecker.h"
 #include "../vm/debug.h"
 
 typedef enum {
@@ -1366,6 +1367,11 @@ ObjFunction* compile(VM* vm, const char* source) {
     initResolver(vm, &resolver, vm->config.debugSymtab);
     resolve(&resolver, ast);
     if (resolver.hadError) return NULL;
+
+    TypeChecker typeChecker;
+    initTypeChecker(vm, &typeChecker, vm->config.debugTypetab);
+    typeCheck(&typeChecker, ast);
+    if (typeChecker.hadError) return NULL;
 
     Compiler compiler;
     initCompiler(vm, &compiler, NULL, COMPILE_TYPE_SCRIPT, NULL, false, vm->config.debugCode);

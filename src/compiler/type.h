@@ -72,6 +72,7 @@ static inline CallableTypeModifier callableTypeInitModifier() {
     CallableTypeModifier modifier = {
         .isAsync = false,
         .isClassMethod = false,
+        .isGenerator = false,
         .isInitializer = false,
         .isInstanceMethod = false,
         .isLambda = false,
