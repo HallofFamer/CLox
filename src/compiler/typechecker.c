@@ -72,8 +72,53 @@ static void typeCheckStatement(TypeChecker* typeChecker, Ast* ast) {
     // To be implemented.
 }
 
-static void typeCheckDeclaration(TypeChecker* typeChecker, Ast* ast) {
+static void typeCheckClassDeclaration(TypeChecker* typeChecker, Ast* ast) {
     // To be implemented.
+}
+
+static void typeCheckFunDeclaration(TypeChecker* typeChecker, Ast* ast) {
+    // To be implemented.
+}
+
+static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
+    // To be implemented.
+}
+
+static void typeCheckNamespaceDeclaration(TypeChecker* typeChecker, Ast* ast) {
+    // To be implemented.
+}
+
+static void typeCheckTraitDeclaration(TypeChecker* typeChecker, Ast* ast) {
+    // To be implemented.
+}
+
+static void typeCheckVarDeclaration(TypeChecker* typeChecker, Ast* ast) {
+    // To be implemented.
+}
+
+static void typeCheckDeclaration(TypeChecker* typeChecker, Ast* ast) {
+    switch (ast->kind) {
+        case AST_DECL_CLASS:
+            typeCheckClassDeclaration(typeChecker, ast);
+            break;
+        case AST_DECL_FUN:
+            typeCheckFunDeclaration(typeChecker, ast);
+            break;
+        case AST_DECL_METHOD:
+            typeCheckMethodDeclaration(typeChecker, ast);
+            break;
+        case AST_DECL_NAMESPACE:
+            typeCheckNamespaceDeclaration(typeChecker, ast);
+            break;
+        case AST_DECL_TRAIT:
+            typeCheckTraitDeclaration(typeChecker, ast);
+            break;
+        case AST_DECL_VAR:
+            typeCheckVarDeclaration(typeChecker, ast);
+            break;
+        default:
+            typeError(typeChecker, "Invalid AST declaration type.");
+        }
 }
 
 void typeCheckAst(TypeChecker* typeChecker, Ast* ast) {
