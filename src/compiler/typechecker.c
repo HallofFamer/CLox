@@ -64,12 +64,315 @@ void initTypeChecker(VM* vm, TypeChecker* typeChecker, bool debugTypetab) {
     typeChecker->hadError = false;
 }
 
+static ObjString* createSymbol(TypeChecker* typeChecker, Token token) {
+    return copyString(typeChecker->vm, token.start, token.length);
+}
+
+static void inferAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
+    Ast* child = astGetChild(ast, childIndex);
+    ast->type = child->type;
+    if (item != NULL) item->type = ast->type;
+}
+
+static void typeCheckAnd(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckArray(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckAssign(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckAwait(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckBinary(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckCall(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckClass(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckDictionary(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckFunction(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckGrouping(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckInterpolation(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckInvoke(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckNil(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckOr(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckPropertyGet(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckPropertySet(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckSubscriptSet(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckSuperGet(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckTrait(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckUnary(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckVariable(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckYield(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
 static void typeCheckExpression(TypeChecker* typeChecker, Ast* ast) {
-    // To be implemented.
+    switch (ast->kind) {
+        case AST_EXPR_AND:
+            typeCheckAnd(typeChecker, ast);
+            break;
+        case AST_EXPR_ARRAY:
+            typeCheckArray(typeChecker, ast);
+            break;
+        case AST_EXPR_ASSIGN:
+            typeCheckAssign(typeChecker, ast);
+            break;
+        case AST_EXPR_AWAIT:
+            typeCheckAwait(typeChecker, ast);
+            break;
+        case AST_EXPR_BINARY:
+            typeCheckBinary(typeChecker, ast);
+            break;
+        case AST_EXPR_CALL:
+            typeCheckCall(typeChecker, ast);
+            break;
+        case AST_EXPR_CLASS:
+            typeCheckClass(typeChecker, ast);
+            break;
+        case AST_EXPR_DICTIONARY:
+            typeCheckDictionary(typeChecker, ast);
+            break;
+        case AST_EXPR_FUNCTION:
+            typeCheckFunction(typeChecker, ast);
+            break;
+        case AST_EXPR_GROUPING:
+            typeCheckGrouping(typeChecker, ast);
+            break;
+        case AST_EXPR_INTERPOLATION:
+            typeCheckInterpolation(typeChecker, ast);
+            break;
+        case AST_EXPR_INVOKE:
+            typeCheckInvoke(typeChecker, ast);
+            break;
+        case AST_EXPR_NIL:
+            typeCheckNil(typeChecker, ast);
+            break;
+        case AST_EXPR_OR:
+            typeCheckOr(typeChecker, ast);
+            break;
+        case AST_EXPR_PROPERTY_GET:
+            typeCheckPropertyGet(typeChecker, ast);
+            break;
+        case AST_EXPR_PROPERTY_SET:
+            typeCheckPropertySet(typeChecker, ast);
+            break;
+        case AST_EXPR_SUBSCRIPT_GET:
+            typeCheckSubscriptGet(typeChecker, ast);
+            break;
+        case AST_EXPR_SUBSCRIPT_SET:
+            typeCheckSubscriptSet(typeChecker, ast);
+            break;
+        case AST_EXPR_SUPER_GET:
+            typeCheckSuperGet(typeChecker, ast);
+            break;
+        case AST_EXPR_SUPER_INVOKE:
+            typeCheckSuperInvoke(typeChecker, ast);
+            break;
+        case AST_EXPR_TRAIT:
+            typeCheckTrait(typeChecker, ast);
+            break;
+        case AST_EXPR_UNARY:
+            typeCheckUnary(typeChecker, ast);
+            break;
+        case AST_EXPR_VARIABLE:
+            typeCheckVariable(typeChecker, ast);
+            break;
+        case AST_EXPR_YIELD:
+            typeCheckYield(typeChecker, ast);
+            break;
+        default:
+            break;
+    }
+}
+
+static void typeCheckAwaitStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckBlockStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckCaseStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckCatchStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckDefaultStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckExpressionStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckFinallyStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckForStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckIfStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckRequireStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckReturnStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckSwitchStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckThrowStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckTryStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckUsingStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckWhileStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented.
+}
+
+static void typeCheckYieldStatement(TypeChecker* typeChecker, Ast* ast) {
+    // to be implemented. 
 }
 
 static void typeCheckStatement(TypeChecker* typeChecker, Ast* ast) {
-    // To be implemented.
+    switch (ast->kind) {
+        case AST_STMT_AWAIT:
+            typeCheckAwaitStatement(typeChecker, ast);
+            break;
+        case AST_STMT_BLOCK:
+            typeCheckBlockStatement(typeChecker, ast);
+            break;
+        case AST_STMT_CASE:
+            typeCheckCaseStatement(typeChecker, ast);
+            break;
+        case AST_STMT_CATCH:
+            typeCheckCatchStatement(typeChecker, ast);
+            break;
+        case AST_STMT_DEFAULT:
+            typeCheckDefaultStatement(typeChecker, ast);
+            break;
+        case AST_STMT_EXPRESSION:
+            typeCheckExpressionStatement(typeChecker, ast);
+            break;
+        case AST_STMT_FINALLY:
+            typeCheckFinallyStatement(typeChecker, ast);
+            break;
+        case AST_STMT_FOR:
+            typeCheckForStatement(typeChecker, ast);
+            break;
+        case AST_STMT_IF:
+            typeCheckIfStatement(typeChecker, ast);
+            break;
+        case AST_STMT_REQUIRE:
+            typeCheckRequireStatement(typeChecker, ast);
+            break;
+        case AST_STMT_RETURN:
+            typeCheckReturnStatement(typeChecker, ast);
+            break;
+        case AST_STMT_SWITCH:
+            typeCheckSwitchStatement(typeChecker, ast);
+            break;
+        case AST_STMT_THROW:
+            typeCheckThrowStatement(typeChecker, ast);
+            break;
+        case AST_STMT_TRY:
+            typeCheckTryStatement(typeChecker, ast);
+            break;
+        case AST_STMT_USING:
+            typeCheckUsingStatement(typeChecker, ast);
+            break;
+        case AST_STMT_WHILE:
+            typeCheckWhileStatement(typeChecker, ast);
+            break;
+        case AST_STMT_YIELD:
+            typeCheckYieldStatement(typeChecker, ast);
+            break;
+        default:
+            break;
+    }
 }
 
 static void typeCheckClassDeclaration(TypeChecker* typeChecker, Ast* ast) {
@@ -93,7 +396,11 @@ static void typeCheckTraitDeclaration(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckVarDeclaration(TypeChecker* typeChecker, Ast* ast) {
-    // To be implemented.
+    SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
+    if (astHasChild(ast)) {
+        typeCheckChild(typeChecker, ast, 0);
+        inferAstTypeFromChild(ast, 0, item);
+    }
 }
 
 static void typeCheckDeclaration(TypeChecker* typeChecker, Ast* ast) {
@@ -117,7 +424,7 @@ static void typeCheckDeclaration(TypeChecker* typeChecker, Ast* ast) {
             typeCheckVarDeclaration(typeChecker, ast);
             break;
         default:
-            typeError(typeChecker, "Invalid AST declaration type.");
+            break;
         }
 }
 

@@ -392,7 +392,7 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
     do {
         if (functionResolver->enclosing == NULL) break;
         item = symbolTableGet(currentSymtab, symbol);
-        if (item != NULL && item->category != SYMBOL_CATEGORY_GLOBAL) addUpvalue(resolver, item);
+        if (item != NULL && item->category != SYMBOL_CATEGORY_GLOBAL) return addUpvalue(resolver, item);
 
         if (currentSymtab->id == functionResolver->symtab->id) {
             functionResolver = functionResolver->enclosing;
@@ -1274,11 +1274,9 @@ static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveVarDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, ast->modifier.isMutable);
-    bool hasValue = astHasChild(ast);
-    if (hasValue) {
+    if (astHasChild(ast)) {
         resolveChild(resolver, ast, 0);
         defineVariable(resolver, ast);
-        deriveAstTypeFromChild(ast, 0, item);
     }
     else if (!ast->modifier.isMutable) {
         semanticError(resolver, "Immutable variable must be initialized upon declaration.");
@@ -1349,6 +1347,7 @@ void resolve(Resolver* resolver, Ast* ast) {
     resolver->globalSymtab = resolver->currentSymtab;
     resolver->rootSymtab = resolver->currentSymtab;
     ast->symtab = resolver->currentSymtab;
+
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);
     if (resolver->debugSymtab) {
