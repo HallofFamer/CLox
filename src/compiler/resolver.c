@@ -1217,14 +1217,13 @@ static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
     ObjString* name = copyString(resolver->vm, item->token.start, item->token.length);
-    defineAstType(resolver, ast, "clox.std.lang.Function");
-    item->type = ast->type;
-
     CallableTypeInfo* functionType = typeTableInsertCallable(resolver->vm->typetab, TYPE_CATEGORY_FUNCTION, name, NULL);
+
     if (astNumChild(ast) > 1) {
         Ast* returnType = astGetChild(ast, 1);
         functionType->returnType = getTypeForSymbol(resolver, returnType->token);
     }
+
     resolveChild(resolver, ast, 0);
     item->state = SYMBOL_STATE_ACCESSED;
 }

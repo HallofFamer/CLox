@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "typechecker.h"
+#include "../vm/native.h"
 #include "../vm/vm.h"
 
 struct ClassTypeChecker {
@@ -66,6 +67,12 @@ void initTypeChecker(VM* vm, TypeChecker* typeChecker, bool debugTypetab) {
 
 static ObjString* createSymbol(TypeChecker* typeChecker, Token token) {
     return copyString(typeChecker->vm, token.start, token.length);
+}
+
+static void defineAstType(TypeChecker* typeChecker, Ast* ast, const char* name, SymbolItem* item) {
+    ObjString* typeName = newString(typeChecker->vm, name);
+    ast->type = getNativeType(typeChecker->vm, name);
+    if (item != NULL) item->type = ast->type;
 }
 
 static void inferAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
@@ -380,7 +387,12 @@ static void typeCheckClassDeclaration(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckFunDeclaration(TypeChecker* typeChecker, Ast* ast) {
-    // To be implemented.
+    SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
+    defineAstType(typeChecker, ast, "Function", item);
+
+    Ast* function = astGetChild(ast, 0);
+    function->type = ast->type;
+    typeCheckChild(typeChecker, ast, 0);
 }
 
 static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
