@@ -81,6 +81,14 @@ static void inferAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
     if (item != NULL) item->type = ast->type;
 }
 
+static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* methodType, bool isAsync) {
+    FunctionTypeChecker functionTypeChecker;
+    initFunctionTypeChecker(typeChecker, &functionTypeChecker, ast->token, methodType, isAsync);
+    functionTypeChecker.symtab = ast->symtab;
+    typeCheckChild(typeChecker, ast, 1);
+    endFunctionTypeChecker(typeChecker);
+}
+
 static void typeCheckAnd(TypeChecker* typeChecker, Ast* ast) {
     // to be implemented.
 }
@@ -396,7 +404,14 @@ static void typeCheckFunDeclaration(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
-    // To be implemented.
+    SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
+    ObjString* name = copyString(typeChecker->vm, item->token.start, item->token.length);
+    defineAstType(typeChecker, ast, "Method", item);
+
+    if (!typeChecker->currentClass->isAnonymous) {
+        CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(typeChecker->currentClass->type->methods, name));
+        function(typeChecker, ast, methodType, ast->modifier.isAsync);
+    }
 }
 
 static void typeCheckNamespaceDeclaration(TypeChecker* typeChecker, Ast* ast) {
