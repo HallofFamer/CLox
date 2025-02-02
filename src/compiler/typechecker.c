@@ -391,7 +391,12 @@ static void typeCheckStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckClassDeclaration(TypeChecker* typeChecker, Ast* ast) {
-    // To be implemented.
+    SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
+    defineAstType(typeChecker, ast, "Class", item);
+
+    Ast* _class = astGetChild(ast, 0);
+    _class->type = ast->type;
+    typeCheckChild(typeChecker, ast, 0);
 }
 
 static void typeCheckFunDeclaration(TypeChecker* typeChecker, Ast* ast) {
@@ -419,7 +424,12 @@ static void typeCheckNamespaceDeclaration(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckTraitDeclaration(TypeChecker* typeChecker, Ast* ast) {
-    // To be implemented.
+    SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
+    defineAstType(typeChecker, ast, "Trait", item);
+
+    Ast* trait = astGetChild(ast, 0);
+    trait->type = ast->type;
+    typeCheckChild(typeChecker, ast, 0);
 }
 
 static void typeCheckVarDeclaration(TypeChecker* typeChecker, Ast* ast) {
