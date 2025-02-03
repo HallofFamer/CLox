@@ -89,12 +89,22 @@ static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* metho
     endFunctionTypeChecker(typeChecker);
 }
 
+static void behavior(TypeChecker* typeChecker, BehaviorType behaviorType, Ast* ast) {
+    // to be implemented.
+}
+
 static void typeCheckAnd(TypeChecker* typeChecker, Ast* ast) {
     // to be implemented.
 }
 
 static void typeCheckArray(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    defineAstType(typeChecker, ast, "clox.std.collection.Array", NULL);
+    if (astHasChild(ast)) {
+        Ast* elements = astGetChild(ast, 0);
+        for (int i = 0; i < elements->children->count; i++) {
+            typeCheckChild(typeChecker, elements, i);
+        }
+    }
 }
 
 static void typeCheckAssign(TypeChecker* typeChecker, Ast* ast) {
@@ -114,11 +124,19 @@ static void typeCheckCall(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckClass(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    behavior(typeChecker, BEHAVIOR_CLASS, ast);
 }
 
 static void typeCheckDictionary(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    defineAstType(typeChecker, ast, "clox.std.collection.Dictionary", NULL);
+    uint8_t entryCount = 0;
+    Ast* keys = astGetChild(ast, 0);
+    Ast* values = astGetChild(ast, 1);
+    while (entryCount < keys->children->count) {
+        typeCheckChild(typeChecker, keys, entryCount);
+        typeCheckChild(typeChecker, values, entryCount);
+        entryCount++;
+    }
 }
 
 static void typeCheckFunction(TypeChecker* typeChecker, Ast* ast) {
@@ -170,7 +188,7 @@ static void typeCheckSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckTrait(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    behavior(typeChecker, BEHAVIOR_TRAIT, ast);
 }
 
 static void typeCheckUnary(TypeChecker* typeChecker, Ast* ast) {
@@ -285,7 +303,7 @@ static void typeCheckDefaultStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckExpressionStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
 }
 
 static void typeCheckFinallyStatement(TypeChecker* typeChecker, Ast* ast) {

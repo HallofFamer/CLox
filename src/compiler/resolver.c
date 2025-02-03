@@ -669,7 +669,6 @@ static void resolveArray(Resolver* resolver, Ast* ast) {
             resolveChild(resolver, elements, i);
         }
     }
-    defineAstType(resolver, ast, "clox.std.collection.Array");
 }
 
 static void resolveAssign(Resolver* resolver, Ast* ast) {
@@ -714,7 +713,6 @@ static void resolveDictionary(Resolver* resolver, Ast* ast) {
         resolveChild(resolver, values, entryCount);
         entryCount++;
     }
-    defineAstType(resolver, ast, "clox.std.collection.Dictionary");
 }
 
 static void resolveFunction(Resolver* resolver, Ast* ast) {
