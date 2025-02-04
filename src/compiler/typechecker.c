@@ -75,6 +75,40 @@ static void defineAstType(TypeChecker* typeChecker, Ast* ast, const char* name, 
     if (item != NULL) item->type = ast->type;
 }
 
+static bool isSubtypeOfBehavior(BehaviorTypeInfo* subtype, BehaviorTypeInfo* supertype) {
+    if (subtype == NULL || supertype == NULL || subtype->baseType.id == supertype->baseType.id) return true;
+    if (supertype == NULL) return true;
+    if (subtype->baseType.id == supertype->baseType.id) return true;
+    
+    TypeInfo* superclassType = NULL;
+    while (subtype->superclassType != NULL) {
+        superclassType = subtype->superclassType;
+        if (superclassType->id == supertype->baseType.id) return true;
+    }
+
+    if (subtype->traitTypes != NULL && subtype->traitTypes->count > 0) {
+        for (int i = 0; i < subtype->traitTypes->count; i++) {
+            if (subtype->traitTypes->elements[i]->id == supertype->baseType.id) return true;
+        }
+    }
+
+    return false;
+}
+
+static bool checkAstType(TypeChecker* typeChecker, Ast* ast, const char* name) {
+    ObjString* typeName = newString(typeChecker->vm, name);
+    TypeInfo* type = typeTableGet(typeChecker->vm->typetab, typeName);
+    return isSubtypeOfBehavior(ast->type, type);
+}
+
+static bool checkAstTypes(TypeChecker* typeChecker, Ast* ast, const char* name, const char* name2) {
+    ObjString* typeName = newString(typeChecker->vm, name);
+    TypeInfo* type = typeTableGet(typeChecker->vm->typetab, typeName);
+    ObjString* typeName2 = newString(typeChecker->vm, name2);
+    TypeInfo* type2 = typeTableGet(typeChecker->vm->typetab, typeName2);
+    return isSubtypeOfBehavior(ast->type, type) || isSubtypeOfBehavior(ast->type, type2);
+}
+
 static void inferAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
     Ast* child = astGetChild(ast, childIndex);
     ast->type = child->type;
@@ -283,7 +317,7 @@ static void typeCheckExpression(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckAwaitStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
 }
 
 static void typeCheckBlockStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -347,7 +381,9 @@ static void typeCheckWhileStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckYieldStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented. 
+    if (astHasChild(ast)) {
+        typeCheckChild(typeChecker, ast, 0);
+    }
 }
 
 static void typeCheckStatement(TypeChecker* typeChecker, Ast* ast) {

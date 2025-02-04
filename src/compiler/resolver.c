@@ -354,6 +354,7 @@ static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
         }
         currentSymtab = currentSymtab->parent;
     } while (currentSymtab != NULL);
+
     return item;
 }
 
@@ -591,6 +592,7 @@ static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) 
     Ast* params = astGetChild(ast, 0);
     params->symtab = ast->symtab;
     parameters(resolver, params);
+
     Ast* blk = astGetChild(ast, 1);
     blk->symtab = ast->symtab;
     block(resolver, blk);
@@ -708,6 +710,7 @@ static void resolveDictionary(Resolver* resolver, Ast* ast) {
     keys->symtab = ast->symtab;
     Ast* values = astGetChild(ast, 1);
     values->symtab = ast->symtab;
+
     while (entryCount < keys->children->count) {
         resolveChild(resolver, keys, entryCount);
         resolveChild(resolver, values, entryCount);
