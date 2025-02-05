@@ -1043,7 +1043,7 @@ static void resolveIfStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveRequireStatement(Resolver* resolver, Ast* ast) {
-    if (resolver->isTopLevel) {
+    if (!resolver->isTopLevel) {
         semanticError(resolver, "Can only require source files from top-level code.");
     }
     resolveChild(resolver, ast, 0);

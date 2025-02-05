@@ -75,20 +75,21 @@ static void defineAstType(TypeChecker* typeChecker, Ast* ast, const char* name, 
     if (item != NULL) item->type = ast->type;
 }
 
-static bool isSubtypeOfBehavior(BehaviorTypeInfo* subtype, BehaviorTypeInfo* supertype) {
-    if (subtype == NULL || supertype == NULL || subtype->baseType.id == supertype->baseType.id) return true;
-    if (supertype == NULL) return true;
-    if (subtype->baseType.id == supertype->baseType.id) return true;
-    
-    TypeInfo* superclassType = NULL;
-    while (subtype->superclassType != NULL) {
-        superclassType = subtype->superclassType;
-        if (superclassType->id == supertype->baseType.id) return true;
+static bool isSubtypeOfBehavior(TypeInfo* subtype, TypeInfo* supertype) {
+    if (subtype == NULL || supertype == NULL || subtype->id == supertype->id) return true;
+    if (!IS_BEHAVIOR_TYPE(subtype) || !IS_BEHAVIOR_TYPE(supertype)) return false;   
+    BehaviorTypeInfo* subBehaviorType = AS_BEHAVIOR_TYPE(subtype);
+    BehaviorTypeInfo* superBehaviorType = AS_BEHAVIOR_TYPE(supertype);
+
+    TypeInfo* superclassType = subBehaviorType->superclassType;
+    while (superclassType != NULL) {
+        if (superclassType->id == supertype->id) return true;
+        superclassType = AS_BEHAVIOR_TYPE(superclassType)->superclassType;
     }
 
-    if (subtype->traitTypes != NULL && subtype->traitTypes->count > 0) {
-        for (int i = 0; i < subtype->traitTypes->count; i++) {
-            if (subtype->traitTypes->elements[i]->id == supertype->baseType.id) return true;
+    if (subBehaviorType->traitTypes != NULL && subBehaviorType->traitTypes->count > 0) {
+        for (int i = 0; i < subBehaviorType->traitTypes->count; i++) {
+            if (subBehaviorType->traitTypes->elements[i]->id == supertype->id) return true;
         }
     }
 
@@ -113,6 +114,13 @@ static void inferAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
     Ast* child = astGetChild(ast, childIndex);
     ast->type = child->type;
     if (item != NULL) item->type = ast->type;
+}
+
+static void block(TypeChecker* typeChecker, Ast* ast) {
+    Ast* stmts = astGetChild(ast, 0);
+    for (int i = 0; i < stmts->children->count; i++) {
+        typeCheckChild(typeChecker, stmts, i);
+    }
 }
 
 static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* methodType, bool isAsync) {
@@ -321,7 +329,7 @@ static void typeCheckAwaitStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckBlockStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    block(typeChecker, ast);
 }
 
 static void typeCheckCaseStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -353,7 +361,11 @@ static void typeCheckIfStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckRequireStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    Ast* child = astGetChild(ast, 0);
+    if (!checkAstType(typeChecker, child, "clox.std.lang.String")) {
+        typeError(typeChecker, "'require' statement expects expression to be a String, %s given", child->type->shortName->chars);
+    }
 }
 
 static void typeCheckReturnStatement(TypeChecker* typeChecker, Ast* ast) {
