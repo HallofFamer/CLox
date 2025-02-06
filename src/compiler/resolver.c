@@ -586,8 +586,9 @@ static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) 
     functionResolver.modifier.isInitializer = ast->modifier.isInitializer;
     functionResolver.modifier.isInstanceMethod = !ast->modifier.isClass;
     functionResolver.modifier.isLambda = isLambda;
-    SymbolScope scope = getFunctionScope(ast);
 
+
+    SymbolScope scope = getFunctionScope(ast);
     beginScope(resolver, ast, scope);
     Ast* params = astGetChild(ast, 0);
     params->symtab = ast->symtab;

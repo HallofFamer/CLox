@@ -136,17 +136,19 @@ static void behavior(TypeChecker* typeChecker, BehaviorType behaviorType, Ast* a
 }
 
 static void typeCheckAnd(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    defineAstType(typeChecker, ast, "clox.std.lang.Bool", NULL);
 }
 
 static void typeCheckArray(TypeChecker* typeChecker, Ast* ast) {
-    defineAstType(typeChecker, ast, "clox.std.collection.Array", NULL);
     if (astHasChild(ast)) {
         Ast* elements = astGetChild(ast, 0);
         for (int i = 0; i < elements->children->count; i++) {
             typeCheckChild(typeChecker, elements, i);
         }
     }
+    defineAstType(typeChecker, ast, "clox.std.collection.Array", NULL);
 }
 
 static void typeCheckAssign(TypeChecker* typeChecker, Ast* ast) {
@@ -170,7 +172,6 @@ static void typeCheckClass(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckDictionary(TypeChecker* typeChecker, Ast* ast) {
-    defineAstType(typeChecker, ast, "clox.std.collection.Dictionary", NULL);
     uint8_t entryCount = 0;
     Ast* keys = astGetChild(ast, 0);
     Ast* values = astGetChild(ast, 1);
@@ -179,6 +180,7 @@ static void typeCheckDictionary(TypeChecker* typeChecker, Ast* ast) {
         typeCheckChild(typeChecker, values, entryCount);
         entryCount++;
     }
+    defineAstType(typeChecker, ast, "clox.std.collection.Dictionary", NULL);
 }
 
 static void typeCheckFunction(TypeChecker* typeChecker, Ast* ast) {
@@ -186,7 +188,8 @@ static void typeCheckFunction(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckGrouping(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    inferAstTypeFromChild(ast, 0, NULL);
 }
 
 static void typeCheckInterpolation(TypeChecker* typeChecker, Ast* ast) {
@@ -202,7 +205,9 @@ static void typeCheckNil(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckOr(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    defineAstType(typeChecker, ast, "clox.std.lang.Bool", NULL);
 }
 
 static void typeCheckPropertyGet(TypeChecker* typeChecker, Ast* ast) {
@@ -364,7 +369,7 @@ static void typeCheckRequireStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
     if (!checkAstType(typeChecker, child, "clox.std.lang.String")) {
-        typeError(typeChecker, "'require' statement expects expression to be a String, %s given", child->type->shortName->chars);
+        typeError(typeChecker, "require statement expects expression to be a String but gets %s.", child->type->shortName->chars);
     }
 }
 
@@ -377,7 +382,11 @@ static void typeCheckSwitchStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckThrowStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    Ast* child = astGetChild(ast, 0);
+    if (!checkAstType(typeChecker, child, "clox.std.lang.Exception")) {
+        typeError(typeChecker, "throw statement expects expression to be an Exception but gets %s.", child->type->shortName->chars);
+    }
 }
 
 static void typeCheckTryStatement(TypeChecker* typeChecker, Ast* ast) {
