@@ -453,27 +453,6 @@ static void deriveAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
     if (item != NULL) item->type = ast->type;
 }
 
-static void deriveAstTypeFromUnary(Resolver* resolver, Ast* ast, SymbolItem* item) {
-    Ast* child = astGetChild(ast, 0);
-    if (child->type == NULL) return;
-
-    switch (ast->token.type) {
-        case TOKEN_BANG:
-            defineAstType(resolver, ast, "clox.std.lang.Bool");
-            break;
-        case TOKEN_MINUS:
-            if (strcmp(child->type->fullName->chars, "clox.std.lang.Int") == 0) {
-                defineAstType(resolver, ast, "clox.std.lang.Int");
-            }
-            else if (strcmp(child->type->fullName->chars, "clox.std.lang.Float") == 0) {
-                defineAstType(resolver, ast, "clox.std.lang.Float");
-            }
-            break;
-        default: 
-            break;
-    }
-}
-
 static void deriveAstTypeFromBinary(Resolver* resolver, Ast* ast, SymbolItem* item) {
     Ast* left = astGetChild(ast, 0);
     Ast* right = astGetChild(ast, 1);
@@ -847,7 +826,6 @@ static void resolveTrait(Resolver* resolver, Ast* ast) {
 
 static void resolveUnary(Resolver* resolver, Ast* ast) {
     resolveChild(resolver, ast, 0);
-    deriveAstTypeFromUnary(resolver, ast, NULL);
 }
 
 static void resolveVariable(Resolver* resolver, Ast* ast) {

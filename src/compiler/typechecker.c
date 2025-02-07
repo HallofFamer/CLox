@@ -60,7 +60,6 @@ void initTypeChecker(VM* vm, TypeChecker* typeChecker, bool debugTypetab) {
     typeChecker->currentNamespace = emptyString(vm);
     typeChecker->currentClass = NULL;
     typeChecker->currentFunction = NULL;
-    typeChecker->scopeDepth = 0;
     typeChecker->debugTypetab = debugTypetab;
     typeChecker->hadError = false;
 }
@@ -114,6 +113,27 @@ static void inferAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
     Ast* child = astGetChild(ast, childIndex);
     ast->type = child->type;
     if (item != NULL) item->type = ast->type;
+}
+
+static void inferAstTypeFromUnary(TypeChecker* typeChecker, Ast* ast, SymbolItem* item) {
+    Ast* child = astGetChild(ast, 0);
+    if (child->type == NULL) return;
+
+    switch (ast->token.type) {
+        case TOKEN_BANG:
+            defineAstType(typeChecker, ast, "clox.std.lang.Bool", item);
+            break;
+        case TOKEN_MINUS:
+            if (isSubtypeOfBehavior(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Int"))) {
+                defineAstType(typeChecker, ast, "clox.std.lang.Int", item);
+            }
+            else if (isSubtypeOfBehavior(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Float"))) {
+                defineAstType(typeChecker, ast, "clox.std.lang.Float", item);
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 static void block(TypeChecker* typeChecker, Ast* ast) {
@@ -239,7 +259,8 @@ static void typeCheckTrait(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckUnary(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    inferAstTypeFromUnary(typeChecker, ast, NULL);
 }
 
 static void typeCheckVariable(TypeChecker* typeChecker, Ast* ast) {
@@ -468,7 +489,6 @@ static void typeCheckStatement(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckClassDeclaration(TypeChecker* typeChecker, Ast* ast) {
     SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
     defineAstType(typeChecker, ast, "Class", item);
-
     Ast* _class = astGetChild(ast, 0);
     _class->type = ast->type;
     typeCheckChild(typeChecker, ast, 0);
@@ -477,7 +497,6 @@ static void typeCheckClassDeclaration(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckFunDeclaration(TypeChecker* typeChecker, Ast* ast) {
     SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
     defineAstType(typeChecker, ast, "Function", item);
-
     Ast* function = astGetChild(ast, 0);
     function->type = ast->type;
     typeCheckChild(typeChecker, ast, 0);
@@ -501,7 +520,6 @@ static void typeCheckNamespaceDeclaration(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckTraitDeclaration(TypeChecker* typeChecker, Ast* ast) {
     SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
     defineAstType(typeChecker, ast, "Trait", item);
-
     Ast* trait = astGetChild(ast, 0);
     trait->type = ast->type;
     typeCheckChild(typeChecker, ast, 0);
