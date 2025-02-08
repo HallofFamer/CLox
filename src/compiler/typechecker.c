@@ -88,11 +88,11 @@ static bool checkAstTypes(TypeChecker* typeChecker, Ast* ast, const char* name, 
     return isSubtypeOfType(ast->type, type) || isSubtypeOfType(ast->type, type2);
 }
 
-static void validateArguments(TypeChecker* typeChecker, const char* category, const char* name, Ast* ast, CallableTypeInfo* callableType) {
+static void validateArguments(TypeChecker* typeChecker, const char* calleeDesc, Ast* ast, CallableTypeInfo* callableType) {
     if (!callableType->modifier.isVariadic) {
         if (callableType->paramTypes->count != ast->children->count) {
-            typeError(typeChecker, "%s %s expects a total of %d arguments but gets %d.", 
-                category, name, callableType->paramTypes->count, ast->children->count);
+            typeError(typeChecker, "%s expects a total of %d arguments but gets %d.", 
+                calleeDesc, callableType->paramTypes->count, ast->children->count);
             return;
         }
 
@@ -100,8 +100,8 @@ static void validateArguments(TypeChecker* typeChecker, const char* category, co
             TypeInfo* paramType = callableType->paramTypes->elements[i];
             TypeInfo* argType = ast->children->elements[i]->type;
             if (!isSubtypeOfType(argType, paramType)) {
-                typeError(typeChecker, "%s %s expects argument %d to be an instance of %s but gets %s.", 
-                    category, name, i + 1, paramType->shortName->chars, argType->shortName->chars);
+                typeError(typeChecker, "%s expects argument %d to be an instance of %s but gets %s.", 
+                    calleeDesc, i + 1, paramType->shortName->chars, argType->shortName->chars);
             }
         }
     }
@@ -110,8 +110,8 @@ static void validateArguments(TypeChecker* typeChecker, const char* category, co
         for (int i = 0; i < ast->children->count; i++) {
             TypeInfo* argType = ast->children->elements[i]->type;
             if (!isSubtypeOfType(argType, paramType)) {
-                typeError(typeChecker, "%s %s expects variadic arguments to be an instance of %s but gets %s.",
-                    category, name, paramType->shortName->chars, argType->shortName->chars);
+                typeError(typeChecker, "%s expects variadic arguments to be an instance of %s but gets %s.",
+                    calleeDesc, paramType->shortName->chars, argType->shortName->chars);
             }
         }
     }
@@ -200,11 +200,24 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast, SymbolItem*
     if (callee->type == NULL) return;
     Ast* args = astGetChild(ast, 1);
     ObjString* name = createSymbol(typeChecker, callee->token);
+    char calleeDesc[UINT8_MAX];
 
     if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Function"))) {
         CallableTypeInfo* functionType = AS_CALLABLE_TYPE(typeTableGet(typeChecker->vm->typetab, name));
-        validateArguments(typeChecker, "Function", name->chars, args, functionType);
+        sprintf_s(calleeDesc, UINT8_MAX, "Function %s", name->chars);
+        validateArguments(typeChecker, calleeDesc, args, functionType);
         ast->type = functionType->returnType;
+    }
+    else if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Class"))) {
+        TypeInfo* classType = typeTableGet(typeChecker->vm->typetab, name);
+        if (classType == NULL) return;
+        ObjString* initializerName = newString(typeChecker->vm, "__init__");
+        TypeInfo* initializerType = typeTableMethodLookup(classType, initializerName);
+        if (initializerType != NULL) {
+            sprintf_s(calleeDesc, UINT8_MAX, "Class %s's initializer", name->chars);
+            validateArguments(typeChecker, calleeDesc, args, AS_CALLABLE_TYPE(initializerType));
+        }
+        ast->type = classType;
     }
 }
 

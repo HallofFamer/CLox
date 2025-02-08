@@ -221,10 +221,12 @@ static void initTryCompiler(Compiler* compiler, TryCompiler* try) {
     emitByte(compiler, OP_TRY);
     try->exceptionType = currentChunk(compiler)->count;
     emitByte(compiler, 0xff);
+
     try->catchAddress = currentChunk(compiler)->count;
     emitBytes(compiler, 0xff, 0xff);
     try->finallyAddress = currentChunk(compiler)->count;
     emitBytes(compiler, 0xff, 0xff);
+
     try->catchJump = -1;
     try->finallyJump = -1;
     compiler->currentTry = try;
@@ -304,9 +306,7 @@ static void endScope(Compiler* compiler) {
         if (compiler->locals[compiler->localCount - 1].isCaptured) {
             emitByte(compiler, OP_CLOSE_UPVALUE);
         }
-        else {
-            emitByte(compiler, OP_POP);
-        }
+        else emitByte(compiler, OP_POP);
         compiler->localCount--;
     }
 }
@@ -314,6 +314,7 @@ static void endScope(Compiler* compiler) {
 static uint8_t makeIdentifier(Compiler* compiler, Value value) {
     ObjString* name = AS_STRING(value);
     int identifier;
+
     if (!idMapGet(&compiler->indexes, name, &identifier)) {
         identifier = addIdentifier(compiler->vm, currentChunk(compiler), value);
         if (identifier > UINT8_MAX) {
@@ -1150,6 +1151,7 @@ static void compileUsingStatement(Compiler* compiler, Ast* ast) {
     Ast* _namespace = astGetChild(ast, 0);
     int namespaceDepth = astNumChild(_namespace);
     uint8_t index = 0;
+
     for (int i = 0; i < namespaceDepth; i++) {
         Ast* subNamespace = astGetChild(_namespace, i);
         index = identifierConstant(compiler, &subNamespace->token);

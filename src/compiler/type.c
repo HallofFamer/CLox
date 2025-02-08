@@ -190,6 +190,23 @@ bool typeTableSet(TypeTable* typetab, ObjString* key, TypeInfo* value) {
     return true;
 }
 
+TypeInfo* typeTableMethodLookup(TypeInfo* type, ObjString* key) {
+    if (type == NULL || !IS_BEHAVIOR_TYPE(type)) return NULL;
+    BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(type);
+    TypeInfo* methodType = typeTableGet(behaviorType->methods, key);
+    if (methodType != NULL) return methodType;
+    
+    if (behaviorType->traitTypes != NULL) {
+        for (int i = 0; i < behaviorType->traitTypes->count; i++) {
+            BehaviorTypeInfo* traitType = AS_BEHAVIOR_TYPE(behaviorType->traitTypes->elements[i]);
+            methodType = typeTableGet(traitType->methods, key);
+            if (methodType != NULL) return methodType;
+        }
+    }
+
+    return typeTableMethodLookup(behaviorType->superclassType, key);
+}
+
 BehaviorTypeInfo* typeTableInsertBehavior(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
     int id = typetab->count + 1;
     BehaviorTypeInfo* behaviorType = newBehaviorInfo(id, category, shortName, fullName, superclassType);

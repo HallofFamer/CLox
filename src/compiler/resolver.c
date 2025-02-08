@@ -450,12 +450,14 @@ static void defineAstType(Resolver* resolver, Ast* ast, const char* name) {
 static void defineAstTypeForParam(Resolver* resolver, Ast* ast) {
     Ast* child = astGetChild(ast, 0);
     ast->type = getTypeForSymbol(resolver, child->token);
+
     switch (resolver->currentFunction->symtab->scope) {
         case SYMBOL_SCOPE_FUNCTION: {
             ObjString* functionName = createSymbol(resolver, resolver->currentFunction->name);
-            CallableTypeInfo* functionType = AS_CALLABLE_TYPE(typeTableGet(resolver->vm->typetab, functionName));
+            CallableTypeInfo* functionType = AS_CALLABLE_TYPE(typeTableGet(resolver->vm->typetab, functionName));  
             if (functionType != NULL && functionType->paramTypes != NULL) {
                 TypeInfoArrayAdd(functionType->paramTypes, ast->type);
+                if (ast->modifier.isVariadic) functionType->modifier.isVariadic = true;
             }
             break;
         }
@@ -463,9 +465,10 @@ static void defineAstTypeForParam(Resolver* resolver, Ast* ast) {
             if (!resolver->currentClass->isAnonymous) {
                 BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
                 ObjString* methodName = createSymbol(resolver, resolver->currentFunction->name);
-                CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(behaviorType->methods, methodName));
+                CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(behaviorType->methods, methodName));             
                 if (methodType != NULL && methodType->paramTypes != NULL) {
                     TypeInfoArrayAdd(methodType->paramTypes, ast->type);
+                    if (ast->modifier.isVariadic) methodType->modifier.isVariadic = true;
                 }
             }
             break;
@@ -511,7 +514,6 @@ static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) 
     functionResolver.modifier.isInitializer = ast->modifier.isInitializer;
     functionResolver.modifier.isInstanceMethod = !ast->modifier.isClass;
     functionResolver.modifier.isLambda = isLambda;
-
 
     SymbolScope scope = getFunctionScope(ast);
     beginScope(resolver, ast, scope);
@@ -775,15 +777,17 @@ static void resolveUnary(Resolver* resolver, Ast* ast) {
 
 static void resolveVariable(Resolver* resolver, Ast* ast) {
     SymbolItem* item = getVariable(resolver, ast);
+    ObjString* name = NULL;
+
     if (item != NULL) {
         ast->type = item->type;
         if (item->state == SYMBOL_STATE_DECLARED) {
-            ObjString* name = createSymbol(resolver, ast->token);
+            name = createSymbol(resolver, ast->token);
             semanticError(resolver, "Cannot use variable '%s' before it is defined.", name->chars);
         }
     }
     else {
-        ObjString* name = createSymbol(resolver, ast->token);
+        name = createSymbol(resolver, ast->token);
         semanticError(resolver, "undefined variable '%s'.", name->chars);
     }
 }
