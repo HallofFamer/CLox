@@ -968,7 +968,7 @@ InterpretResult run(VM* vm) {
                     throwNativeException(vm, "clox.std.lang.ArithmeticException", "It is illegal to divide an integer by 0.");
                 }
                 else if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(NUMBER_VAL, / );
-                else OVERLOAD_OP(/ , 1);
+                else OVERLOAD_OP(/, 1);
                 break;
             case OP_MODULO: {
                 if (IS_INT(peek(vm, 0)) && IS_INT(peek(vm, 1))) BINARY_INT_OP(INT_VAL, %);
@@ -997,7 +997,7 @@ InterpretResult run(VM* vm) {
                 break;
             case OP_NEGATE:
                 if (!IS_NUMBER(peek(vm, 0))) {
-                    throwNativeException(vm, "clox.std.lang.IllegalArgumentException", "Operands must be numbers for negate operator.");
+                    throwNativeException(vm, "clox.std.lang.IllegalArgumentException", "Operand must be a number for negate operator.");
                 }
                 else if (IS_INT(peek(vm, 0))) push(vm, INT_VAL(-AS_INT(pop(vm))));
                 else push(vm, NUMBER_VAL(-AS_NUMBER(pop(vm))));

@@ -447,61 +447,7 @@ static void defineAstType(Resolver* resolver, Ast* ast, const char* name) {
     ast->type = typeTableGet(resolver->vm->typetab, typeName);
 }
 
-static void deriveAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
-    Ast* child = astGetChild(ast, childIndex);
-    ast->type = child->type;
-    if (item != NULL) item->type = ast->type;
-}
-
-static void deriveAstTypeFromBinary(Resolver* resolver, Ast* ast, SymbolItem* item) {
-    Ast* left = astGetChild(ast, 0);
-    Ast* right = astGetChild(ast, 1);
-    if (left->type == NULL || right->type == NULL) return;
-
-    switch (ast->token.type) {
-        case TOKEN_BANG_EQUAL:
-        case TOKEN_EQUAL_EQUAL:
-        case TOKEN_GREATER:
-        case TOKEN_GREATER_EQUAL:
-        case TOKEN_LESS:
-        case TOKEN_LESS_EQUAL:
-            defineAstType(resolver, ast, "Clox.std.lang.Bool");
-            break;
-        case TOKEN_PLUS:
-            if (checkAstType(left, "clox.std.lang.String") && checkAstType(right, "clox.std.lang.String")) {
-                defineAstType(resolver, ast, "clox.std.lang.String");
-            }
-            else if (checkAstType(left, "clox.std.lang.Int") && checkAstType(right, "clox.std.lang.Int")) {
-                defineAstType(resolver, ast, "clox.std.lang.Int");
-            }
-            else if (checkAstTypes(left, "clox.std.lang.Int", "clox.std.lang.Float") || checkAstTypes(right, "clox.std.lang.Int", "clox.std.lang.Float")) {
-                defineAstType(resolver, ast, "clox.std.lang.Float");
-            }
-            break;
-        case TOKEN_MINUS:
-        case TOKEN_STAR:
-        case TOKEN_MODULO:
-            if (checkAstType(left, "clox.std.lang.Int") && checkAstType(right, "clox.std.lang.Int")) {
-                defineAstType(resolver, ast, "clox.std.lang.Int");
-            }
-            else if (checkAstTypes(left, "clox.std.lang.Int", "clox.std.lang.Float") || checkAstTypes(right, "clox.std.lang.Int", "clox.std.lang.Float")) {
-                defineAstType(resolver, ast, "clox.std.lang.Float");
-            }
-            break;
-        case TOKEN_SLASH:
-            if (checkAstTypes(left, "clox.std.lang.Int", "clox.std.lang.Float") || checkAstTypes(right, "clox.std.lang.Int", "clox.std.lang.Float")) {
-                defineAstType(resolver, ast, "clox.std.lang.Float");
-            }
-            break;
-        case TOKEN_DOT_DOT:
-            defineAstType(resolver, ast, "Clox.std.collection.Range");
-            break;
-        default: 
-            break;
-    }
-}
-
-static void deriveAstTypeForParam(Resolver* resolver, Ast* ast) {
+static void defineAstTypeForParam(Resolver* resolver, Ast* ast) {
     Ast* child = astGetChild(ast, 0);
     ast->type = getTypeForSymbol(resolver, child->token);
     switch (resolver->currentFunction->symtab->scope) {
@@ -672,7 +618,6 @@ static void resolveAwait(Resolver* resolver, Ast* ast) {
 static void resolveBinary(Resolver* resolver, Ast* ast) {
     resolveChild(resolver, ast, 0);
     resolveChild(resolver, ast, 1);
-    deriveAstTypeFromBinary(resolver, ast, NULL);
 }
 
 static void resolveCall(Resolver* resolver, Ast* ast) {
@@ -772,7 +717,7 @@ static void resolveParam(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, ast->modifier.isMutable);
     item->state = SYMBOL_STATE_DEFINED;
     if (astNumChild(ast) > 0) {
-        deriveAstTypeForParam(resolver, ast);
+        defineAstTypeForParam(resolver, ast);
         item->type = ast->type;
     }
 }

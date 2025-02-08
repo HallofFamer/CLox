@@ -279,20 +279,6 @@ SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName) {
     return item;
 }
 
-CallableTypeInfo* insertTypeSignature(VM* vm, TypeCategory category, ObjString* name, int arity, const char* returnTypeName, ...) {
-    TypeInfo* returnType = typeTableGet(vm->typetab, newString(vm, returnTypeName));
-    CallableTypeInfo* function = newCallableInfo(vm->typetab->count + 1, category, name, returnType);
-    va_list args;
-    va_start(args, returnTypeName);
-    for (int i = 0; i < arity; i++) {
-        char* paramTypeName = va_arg(args, char*);
-        TypeInfo* paramType = typeTableGet(vm->typetab, newString(vm, paramTypeName));
-        TypeInfoArrayAdd(function->paramTypes, paramType);
-    }
-    va_end(args);
-    return function;
-}
-
 void loadSourceFile(VM* vm, const char* filePath) {
     char* source = readFile(filePath);
     interpret(vm, source);

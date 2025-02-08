@@ -121,15 +121,66 @@ static void inferAstTypeFromUnary(TypeChecker* typeChecker, Ast* ast, SymbolItem
 
     switch (ast->token.type) {
         case TOKEN_BANG:
-            defineAstType(typeChecker, ast, "clox.std.lang.Bool", item);
+            defineAstType(typeChecker, ast, "Bool", item);
             break;
         case TOKEN_MINUS:
-            if (isSubtypeOfBehavior(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Int"))) {
-                defineAstType(typeChecker, ast, "clox.std.lang.Int", item);
+            if (!isSubtypeOfBehavior(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Number"))) {
+                typeError(typeChecker, "Unary negate expects operand to be a Number, %s given.", child->type->shortName->chars);
             }
-            else if (isSubtypeOfBehavior(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Float"))) {
-                defineAstType(typeChecker, ast, "clox.std.lang.Float", item);
+            else if (isSubtypeOfBehavior(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Int"))) {
+                defineAstType(typeChecker, ast, "Int", item);
             }
+            else {
+                defineAstType(typeChecker, ast, "Number", item);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolItem* item) {
+    Ast* left = astGetChild(ast, 0);
+    Ast* right = astGetChild(ast, 1);
+    if (left->type == NULL || right->type == NULL) return;
+
+    switch (ast->token.type) {
+        case TOKEN_BANG_EQUAL:
+        case TOKEN_EQUAL_EQUAL:
+        case TOKEN_GREATER:
+        case TOKEN_GREATER_EQUAL:
+        case TOKEN_LESS:
+        case TOKEN_LESS_EQUAL:
+            defineAstType(typeChecker, ast, "Bool", item);
+        break;
+        case TOKEN_PLUS:
+            if (checkAstType(typeChecker, left, "clox.std.lang.String") && checkAstType(typeChecker, right, "clox.std.lang.String")) {
+                defineAstType(typeChecker, ast, "String", item);
+            }
+            else if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
+                defineAstType(typeChecker, ast, "Int", item);
+            }
+            else if (checkAstType(typeChecker, left, "clox.std.lang.Number") || checkAstType(typeChecker, right, "clox.std.lang.Number")) {
+                defineAstType(typeChecker, ast, "Number", item);
+            }
+            break;
+        case TOKEN_MINUS:
+        case TOKEN_STAR:
+        case TOKEN_MODULO:
+            if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
+                defineAstType(typeChecker, ast, "Int", item);
+            }
+            else if (checkAstType(typeChecker, left, "clox.std.lang.Number") || checkAstType(typeChecker, right, "clox.std.lang.Number")) {
+                defineAstType(typeChecker, ast, "Number", item);
+            }
+            break;
+        case TOKEN_SLASH:
+            if (checkAstType(typeChecker, left, "clox.std.lang.Number") && checkAstType(typeChecker, right, "clox.std.lang.Number")) {
+                defineAstType(typeChecker, ast, "Number", item);
+            }
+            break;
+        case TOKEN_DOT_DOT:
+            defineAstType(typeChecker, ast, "clox.std.collection.Range", item);
             break;
         default:
             break;
@@ -158,7 +209,7 @@ static void behavior(TypeChecker* typeChecker, BehaviorType behaviorType, Ast* a
 static void typeCheckAnd(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     typeCheckChild(typeChecker, ast, 1);
-    defineAstType(typeChecker, ast, "clox.std.lang.Bool", NULL);
+    defineAstType(typeChecker, ast, "Bool", NULL);
 }
 
 static void typeCheckArray(TypeChecker* typeChecker, Ast* ast) {
@@ -180,7 +231,9 @@ static void typeCheckAwait(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckBinary(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    inferAstTypeFromBinary(typeChecker, ast, NULL);
 }
 
 static void typeCheckCall(TypeChecker* typeChecker, Ast* ast) {
@@ -227,7 +280,7 @@ static void typeCheckNil(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckOr(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     typeCheckChild(typeChecker, ast, 1);
-    defineAstType(typeChecker, ast, "clox.std.lang.Bool", NULL);
+    defineAstType(typeChecker, ast, "Bool", NULL);
 }
 
 static void typeCheckPropertyGet(TypeChecker* typeChecker, Ast* ast) {
