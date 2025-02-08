@@ -13,7 +13,6 @@ typedef struct {
     ObjString* currentNamespace;
     ClassTypeChecker* currentClass;
     FunctionTypeChecker* currentFunction;
-    int scopeDepth;
     bool debugTypetab;
     bool hadError;
 } TypeChecker;

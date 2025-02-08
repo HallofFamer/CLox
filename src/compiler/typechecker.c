@@ -74,31 +74,10 @@ static void defineAstType(TypeChecker* typeChecker, Ast* ast, const char* name, 
     if (item != NULL) item->type = ast->type;
 }
 
-static bool isSubtypeOfBehavior(TypeInfo* subtype, TypeInfo* supertype) {
-    if (subtype == NULL || supertype == NULL || subtype->id == supertype->id) return true;
-    if (!IS_BEHAVIOR_TYPE(subtype) || !IS_BEHAVIOR_TYPE(supertype)) return false;   
-    BehaviorTypeInfo* subBehaviorType = AS_BEHAVIOR_TYPE(subtype);
-    BehaviorTypeInfo* superBehaviorType = AS_BEHAVIOR_TYPE(supertype);
-
-    TypeInfo* superclassType = subBehaviorType->superclassType;
-    while (superclassType != NULL) {
-        if (superclassType->id == supertype->id) return true;
-        superclassType = AS_BEHAVIOR_TYPE(superclassType)->superclassType;
-    }
-
-    if (subBehaviorType->traitTypes != NULL && subBehaviorType->traitTypes->count > 0) {
-        for (int i = 0; i < subBehaviorType->traitTypes->count; i++) {
-            if (subBehaviorType->traitTypes->elements[i]->id == supertype->id) return true;
-        }
-    }
-
-    return false;
-}
-
 static bool checkAstType(TypeChecker* typeChecker, Ast* ast, const char* name) {
     ObjString* typeName = newString(typeChecker->vm, name);
     TypeInfo* type = typeTableGet(typeChecker->vm->typetab, typeName);
-    return isSubtypeOfBehavior(ast->type, type);
+    return isSubtypeOfType(ast->type, type);
 }
 
 static bool checkAstTypes(TypeChecker* typeChecker, Ast* ast, const char* name, const char* name2) {
@@ -106,7 +85,11 @@ static bool checkAstTypes(TypeChecker* typeChecker, Ast* ast, const char* name, 
     TypeInfo* type = typeTableGet(typeChecker->vm->typetab, typeName);
     ObjString* typeName2 = newString(typeChecker->vm, name2);
     TypeInfo* type2 = typeTableGet(typeChecker->vm->typetab, typeName2);
-    return isSubtypeOfBehavior(ast->type, type) || isSubtypeOfBehavior(ast->type, type2);
+    return isSubtypeOfType(ast->type, type) || isSubtypeOfType(ast->type, type2);
+}
+
+static void validateArguments(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* callableType) {
+    // to be implemented
 }
 
 static void inferAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
@@ -124,10 +107,10 @@ static void inferAstTypeFromUnary(TypeChecker* typeChecker, Ast* ast, SymbolItem
             defineAstType(typeChecker, ast, "Bool", item);
             break;
         case TOKEN_MINUS:
-            if (!isSubtypeOfBehavior(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Number"))) {
+            if (!isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Number"))) {
                 typeError(typeChecker, "Unary negate expects operand to be a Number, %s given.", child->type->shortName->chars);
             }
-            else if (isSubtypeOfBehavior(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Int"))) {
+            else if (isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Int"))) {
                 defineAstType(typeChecker, ast, "Int", item);
             }
             else {
@@ -317,7 +300,8 @@ static void typeCheckUnary(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckVariable(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    SymbolItem* item = symbolTableLookup(ast->symtab, createSymbol(typeChecker, ast->token));
+    ast->type = item->type;
 }
 
 static void typeCheckYield(TypeChecker* typeChecker, Ast* ast) {

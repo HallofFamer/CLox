@@ -66,10 +66,6 @@ bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value);
 SymbolItem* symbolTableLookup(SymbolTable* symtab, ObjString* key);
 void symbolTableOutput(SymbolTable* symtab);
 
-static inline bool isGlobalScope(SymbolScope scope) {
-    return (scope == SYMBOL_SCOPE_GLOBAL || scope == SYMBOL_SCOPE_MODULE);
-}
-
 static inline bool isFunctionScope(SymbolScope scope) {
     return (scope == SYMBOL_SCOPE_FUNCTION || scope == SYMBOL_SCOPE_METHOD);
 }

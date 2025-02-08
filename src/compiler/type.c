@@ -270,7 +270,12 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
 }
 
 static void typeTableOutputFunction(CallableTypeInfo* function) {
-    printf("    signature: %s %s(", (function->returnType != NULL) ? function->returnType->shortName->chars : "dynamic", function->baseType.shortName->chars);
+    printf("    signature: ");
+    if (function->returnType == NULL) printf("dynamic ");
+    else if (memcmp(function->returnType->shortName->chars, "Nil", 3) == 0) printf("void ");
+    else printf("%s ", function->returnType->shortName->chars);
+    printf("%s(", function->baseType.shortName->chars);
+
     if (function->paramTypes != NULL && function->paramTypes->count > 0) {
         printf("%s", function->paramTypes->elements[0]->shortName->chars);
         for (int i = 1; i < function->paramTypes->count; i++) {
@@ -299,4 +304,24 @@ void typeTableOutput(TypeTable* typetab) {
     }
 
     printf("\n");
+}
+
+bool isSubtypeOfType(TypeInfo* type, TypeInfo* type2) {
+    if (type == NULL || type2 == NULL || type->id == type2->id) return true;
+    if (!IS_BEHAVIOR_TYPE(type) || !IS_BEHAVIOR_TYPE(type2)) return false;
+    BehaviorTypeInfo* subtype = AS_BEHAVIOR_TYPE(type);
+    BehaviorTypeInfo* supertype = AS_BEHAVIOR_TYPE(type2);
+
+    TypeInfo* superclassType = subtype->superclassType;
+    while (superclassType != NULL) {
+        if (superclassType->id == type2->id) return true;
+        superclassType = AS_BEHAVIOR_TYPE(superclassType)->superclassType;
+    }
+
+    if (subtype->traitTypes != NULL && subtype->traitTypes->count > 0) {
+        for (int i = 0; i < subtype->traitTypes->count; i++) {
+            if (subtype->traitTypes->elements[i]->id == type2->id) return true;
+        }
+    }
+    return false;
 }
