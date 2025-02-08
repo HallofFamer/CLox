@@ -103,7 +103,7 @@ struct Ast {
 };
 
 static inline AstModifier astInitModifier() {
-    AstModifier modifier = {
+    return (AstModifier) {
         .isAsync = false,
         .isClass = false,
         .isInitializer = false,
@@ -113,7 +113,6 @@ static inline AstModifier astInitModifier() {
         .isVariadic = false,
         .isWith = false
     };
-    return modifier;
 }
 
 Ast* emptyAst(AstNodeKind kind, Token token);

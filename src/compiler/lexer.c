@@ -65,13 +65,12 @@ static Token makeToken(Lexer* lexer, TokenSymbol type) {
 }
 
 static Token errorToken(Lexer* lexer, const char* message) {
-    Token token = {
+    return (Token) {
         .type = TOKEN_ERROR,
         .start = message,
         .length = (int)strlen(message),
         .line = lexer->line
     };
-    return token;
 }
 
 static void skipLineComment(Lexer* lexer) {

@@ -306,7 +306,9 @@ static Token identifierToken(Parser* parser, const char* message) {
             }
         case TOKEN_LEFT_PAREN:
             advance(parser);
-            if (match(parser, TOKEN_RIGHT_PAREN)) return syntheticToken("()");
+            if (match(parser, TOKEN_RIGHT_PAREN)) {
+                return syntheticToken("()");
+            }
         default:
             break;
     }

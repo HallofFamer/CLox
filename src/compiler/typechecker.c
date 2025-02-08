@@ -88,8 +88,33 @@ static bool checkAstTypes(TypeChecker* typeChecker, Ast* ast, const char* name, 
     return isSubtypeOfType(ast->type, type) || isSubtypeOfType(ast->type, type2);
 }
 
-static void validateArguments(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* callableType) {
-    // to be implemented
+static void validateArguments(TypeChecker* typeChecker, const char* category, const char* name, Ast* ast, CallableTypeInfo* callableType) {
+    if (!callableType->modifier.isVariadic) {
+        if (callableType->paramTypes->count != ast->children->count) {
+            typeError(typeChecker, "%s %s expects a total of %d arguments but gets %d.", 
+                category, name, callableType->paramTypes->count, ast->children->count);
+            return;
+        }
+
+        for (int i = 0; i < callableType->paramTypes->count; i++) {
+            TypeInfo* paramType = callableType->paramTypes->elements[i];
+            TypeInfo* argType = ast->children->elements[i]->type;
+            if (!isSubtypeOfType(argType, paramType)) {
+                typeError(typeChecker, "%s %s expects argument %d to be an instance of %s but gets %s.", 
+                    category, name, i + 1, paramType->shortName->chars, argType->shortName->chars);
+            }
+        }
+    }
+    else {
+        TypeInfo* paramType = callableType->paramTypes->elements[0];
+        for (int i = 0; i < ast->children->count; i++) {
+            TypeInfo* argType = ast->children->elements[i]->type;
+            if (!isSubtypeOfType(argType, paramType)) {
+                typeError(typeChecker, "%s %s expects variadic arguments to be an instance of %s but gets %s.",
+                    category, name, paramType->shortName->chars, argType->shortName->chars);
+            }
+        }
+    }
 }
 
 static void inferAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
@@ -143,7 +168,7 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
             else if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
                 defineAstType(typeChecker, ast, "Int", item);
             }
-            else if (checkAstType(typeChecker, left, "clox.std.lang.Number") || checkAstType(typeChecker, right, "clox.std.lang.Number")) {
+            else if (checkAstType(typeChecker, left, "clox.std.lang.Number") && checkAstType(typeChecker, right, "clox.std.lang.Number")) {
                 defineAstType(typeChecker, ast, "Number", item);
             }
             break;
@@ -153,7 +178,7 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
             if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
                 defineAstType(typeChecker, ast, "Int", item);
             }
-            else if (checkAstType(typeChecker, left, "clox.std.lang.Number") || checkAstType(typeChecker, right, "clox.std.lang.Number")) {
+            else if (checkAstType(typeChecker, left, "clox.std.lang.Number") && checkAstType(typeChecker, right, "clox.std.lang.Number")) {
                 defineAstType(typeChecker, ast, "Number", item);
             }
             break;
@@ -167,6 +192,19 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
             break;
         default:
             break;
+    }
+}
+
+static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast, SymbolItem* item) {
+    Ast* callee = astGetChild(ast, 0);
+    if (callee->type == NULL) return;
+    Ast* args = astGetChild(ast, 1);
+    ObjString* name = createSymbol(typeChecker, callee->token);
+
+    if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Function"))) {
+        CallableTypeInfo* functionType = AS_CALLABLE_TYPE(typeTableGet(typeChecker->vm->typetab, name));
+        validateArguments(typeChecker, "Function", name->chars, args, functionType);
+        ast->type = functionType->returnType;
     }
 }
 
@@ -220,7 +258,9 @@ static void typeCheckBinary(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckCall(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    inferAstTypeFromCall(typeChecker, ast, NULL);
 }
 
 static void typeCheckClass(TypeChecker* typeChecker, Ast* ast) {

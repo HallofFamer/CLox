@@ -92,8 +92,9 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
     tableSet(vm, &vm->rootNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
     pop(vm);
     pop(vm);
-    insertGlobalSymbolTable(vm, name);
 
+    SymbolItem* item = insertGlobalSymbolTable(vm, name);
+    item->type = getNativeType(vm, "Function");
     va_list args;
     va_start(args, function);
     TypeInfo* returnType = va_arg(args, TypeInfo*);

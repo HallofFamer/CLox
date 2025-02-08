@@ -33,6 +33,7 @@ Ast* newAst(AstNodeKind kind, Token token, int numChildren, ...) {
     for (int i = 0; i < numChildren; i++) {
         astAppendChild(ast, va_arg(children, Ast*));
     }
+
     va_end(children);
     return ast;
 }
@@ -218,7 +219,8 @@ static void astOutputExprLiteral(Ast* ast, int indentLevel) {
             printf("\"%s\"\n", token);
             break;
         }
-        default: break;
+        default: 
+            break;
     }
     free(token);
 }
@@ -508,12 +510,14 @@ static void astOutputDeclFun(Ast* ast, int indentLevel) {
     char* async = ast->modifier.isAsync ? "async " : "";
     char* funName = tokenToCString(ast->token);
     printf("funDecl %s%s", async, funName);
+
     if (astNumChild(ast) > 1) {
         Ast* returnType = astGetChild(ast, 1);
         char* returnTypeName = tokenToCString(returnType->token);
         printf("(%s)", returnTypeName);
         free(returnTypeName);
     }
+
     printf("\n");
     astOutputChild(ast, indentLevel + 1, 0);
     free(funName);
@@ -525,12 +529,14 @@ static void astOutputDeclMethod(Ast* ast, int indentLevel) {
     char* _class = ast->modifier.isClass ? "class " : "";
     char* methodName = tokenToCString(ast->token);
     printf("methodDecl %s%s%s", async, _class, methodName);
+
     if (astNumChild(ast) > 2) {
         Ast* returnType = astGetChild(ast, 2);
         char* returnTypeName = tokenToCString(returnType->token);
         printf("(%s)", returnTypeName);
         free(returnTypeName);
     }
+    
     printf("\n");
     astOutputChild(ast, indentLevel + 1, 0);
     astOutputChild(ast, indentLevel + 1, 1);
