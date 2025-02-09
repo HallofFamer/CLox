@@ -68,6 +68,26 @@ static ObjString* createSymbol(TypeChecker* typeChecker, Token token) {
     return copyString(typeChecker->vm, token.start, token.length);
 }
 
+static ObjString* createQualifiedSymbol(TypeChecker* typeChecker, Ast* ast) {
+    Ast* identifiers = astGetChild(ast, 0);
+    identifiers->symtab = ast->symtab;
+    Ast* identifier = astGetChild(identifiers, 0);
+    identifier->symtab = identifiers->symtab;
+    const char* start = identifier->token.start;
+    int length = identifier->token.length;
+    for (int i = 1; i < identifiers->children->count; i++) {
+        identifier = astGetChild(identifiers, i);
+        identifier->symtab = identifiers->symtab;
+        length += identifier->token.length + 1;
+    }
+    return copyString(typeChecker->vm, start, length);
+}
+
+static ObjString* getClassFullName(TypeChecker* typeChecker, ObjString* name) {
+    if (typeChecker->currentNamespace == NULL) return name;
+    return concatenateString(typeChecker->vm, typeChecker->currentNamespace, name, ".");
+}
+
 static void defineAstType(TypeChecker* typeChecker, Ast* ast, const char* name, SymbolItem* item) {
     ObjString* typeName = newString(typeChecker->vm, name);
     ast->type = getNativeType(typeChecker->vm, name);
@@ -91,7 +111,7 @@ static bool checkAstTypes(TypeChecker* typeChecker, Ast* ast, const char* name, 
 static void validateArguments(TypeChecker* typeChecker, const char* calleeDesc, Ast* ast, CallableTypeInfo* callableType) {
     if (!callableType->modifier.isVariadic) {
         if (callableType->paramTypes->count != ast->children->count) {
-            typeError(typeChecker, "%s expects a total of %d arguments but gets %d.", 
+            typeError(typeChecker, "%s expects to receive a total of %d arguments but gets %d.", 
                 calleeDesc, callableType->paramTypes->count, ast->children->count);
             return;
         }
@@ -209,13 +229,18 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast, SymbolItem*
         ast->type = functionType->returnType;
     }
     else if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Class"))) {
-        TypeInfo* classType = typeTableGet(typeChecker->vm->typetab, name);
+        ObjString* className = getClassFullName(typeChecker, name);
+        TypeInfo* classType = typeTableGet(typeChecker->vm->typetab, className);
         if (classType == NULL) return;
         ObjString* initializerName = newString(typeChecker->vm, "__init__");
         TypeInfo* initializerType = typeTableMethodLookup(classType, initializerName);
+        
         if (initializerType != NULL) {
             sprintf_s(calleeDesc, UINT8_MAX, "Class %s's initializer", name->chars);
             validateArguments(typeChecker, calleeDesc, args, AS_CALLABLE_TYPE(initializerType));
+        }
+        else if (astHasChild(args)) {
+            typeError(typeChecker, "Class %s's initializer expects to receive a total of 0 arguments but gets %d.", name->chars, astNumChild(args));
         }
         ast->type = classType;
     }
@@ -604,7 +629,7 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckNamespaceDeclaration(TypeChecker* typeChecker, Ast* ast) {
-    // To be implemented.
+    typeChecker->currentNamespace = createQualifiedSymbol(typeChecker, ast);
 }
 
 static void typeCheckTraitDeclaration(TypeChecker* typeChecker, Ast* ast) {

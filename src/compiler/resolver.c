@@ -487,8 +487,7 @@ static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
     }
 
     item = findUpvalue(resolver, ast);
-    if (item != NULL) return item;
-    return findGlobal(resolver, ast);
+    return (item != NULL) ? item : findGlobal(resolver, ast);
 }
 
 static void parameters(Resolver* resolver, Ast* ast) {
