@@ -1179,12 +1179,9 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
     Ast* identifiers = astGetChild(ast, 0);
     identifiers->symtab = ast->symtab;
-    ObjString* typeName = newString(resolver->vm, "clox.std.lang.Namespace");
-    TypeInfo* type = typeTableGet(resolver->vm->typetab, typeName);
-
     Ast* identifier = astGetChild(identifiers, 0);
     identifier->symtab = identifiers->symtab;
-    insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
+    insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
     resolver->currentNamespace = createQualifiedSymbol(resolver, ast);
 }
 

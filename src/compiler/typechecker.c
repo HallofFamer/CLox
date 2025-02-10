@@ -629,6 +629,10 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckNamespaceDeclaration(TypeChecker* typeChecker, Ast* ast) {
+    Ast* identifiers = astGetChild(ast, 0);
+    Ast* identifier = astGetChild(identifiers, 0);
+    SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, identifier->token));
+    defineAstType(typeChecker, ast, "Namespace", item);
     typeChecker->currentNamespace = createQualifiedSymbol(typeChecker, ast);
 }
 
