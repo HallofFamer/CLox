@@ -265,6 +265,14 @@ static void behavior(TypeChecker* typeChecker, BehaviorType behaviorType, Ast* a
     // to be implemented.
 }
 
+static void await(TypeChecker* typeChecker, Ast* ast) {
+    typeCheckChild(typeChecker, ast, 0);
+    Ast* child = astGetChild(ast, 0);
+    if (!isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "clox.std.util.Promise"))) {
+        typeError(typeChecker, "'await' expects expression to be a Promise but gets %s.", child->type->shortName->chars);
+    }
+}
+
 static void typeCheckAnd(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     typeCheckChild(typeChecker, ast, 1);
@@ -286,7 +294,8 @@ static void typeCheckAssign(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckAwait(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    await(typeChecker, ast);
+    defineAstType(typeChecker, ast, "clox.std.util.Promise", NULL);
 }
 
 static void typeCheckBinary(TypeChecker* typeChecker, Ast* ast) {
@@ -467,6 +476,7 @@ static void typeCheckExpression(TypeChecker* typeChecker, Ast* ast) {
 
 static void typeCheckAwaitStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
+    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckBlockStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -505,7 +515,7 @@ static void typeCheckRequireStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
     if (!checkAstType(typeChecker, child, "clox.std.lang.String")) {
-        typeError(typeChecker, "require statement expects expression to be a String but gets %s.", child->type->shortName->chars);
+        typeError(typeChecker, "'require' expects expression to be a String but gets %s.", child->type->shortName->chars);
     }
 }
 
@@ -521,7 +531,7 @@ static void typeCheckThrowStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
     if (!checkAstType(typeChecker, child, "clox.std.lang.Exception")) {
-        typeError(typeChecker, "throw statement expects expression to be an Exception but gets %s.", child->type->shortName->chars);
+        typeError(typeChecker, "'throw' expects expression to be an Exception but gets %s.", child->type->shortName->chars);
     }
 }
 

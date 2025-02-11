@@ -447,7 +447,7 @@ static void defineAstType(Resolver* resolver, Ast* ast, const char* name) {
     ast->type = typeTableGet(resolver->vm->typetab, typeName);
 }
 
-static void defineAstTypeForParam(Resolver* resolver, Ast* ast) {
+static void insertParamType(Resolver* resolver, Ast* ast) {
     Ast* child = astGetChild(ast, 0);
     ast->type = getTypeForSymbol(resolver, child->token);
 
@@ -537,6 +537,7 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
         Ast* superclass = astGetChild(ast, childIndex);
         superclass->symtab = ast->symtab;
         classResolver.superClass = superclass->token;
+
         resolveChild(resolver, ast, childIndex);
         if(!classResolver.isAnonymous) bindSuperclassType(resolver, resolver->currentClass->name, resolver->currentClass->superClass);
         childIndex++;
@@ -718,7 +719,7 @@ static void resolveParam(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, ast->modifier.isMutable);
     item->state = SYMBOL_STATE_DEFINED;
     if (astNumChild(ast) > 0) {
-        defineAstTypeForParam(resolver, ast);
+        insertParamType(resolver, ast);
         item->type = ast->type;
     }
 }
