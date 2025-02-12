@@ -442,7 +442,7 @@ static bool checkAstTypes(Ast* ast, const char* name, const char* name2) {
     return (strcmp(ast->type->fullName->chars, name) == 0 || strcmp(ast->type->fullName->chars, name2) == 0);
 }
 
-static void defineAstType(Resolver* resolver, Ast* ast, const char* name) {
+static void insertLiteralType(Resolver* resolver, Ast* ast, const char* name) {
     ObjString* typeName = newString(resolver->vm, name);
     ast->type = typeTableGet(resolver->vm->typetab, typeName);
 }
@@ -685,20 +685,20 @@ static void resolveInvoke(Resolver* resolver, Ast* ast) {
 static void resolveLiteral(Resolver* resolver, Ast* ast) {
     switch (ast->token.type) {
         case TOKEN_NIL: 
-            defineAstType(resolver, ast, "clox.std.lang.Nil");
+            insertLiteralType(resolver, ast, "clox.std.lang.Nil");
             break;
         case TOKEN_TRUE:
         case TOKEN_FALSE:
-            defineAstType(resolver, ast, "clox.std.lang.Bool");
+            insertLiteralType(resolver, ast, "clox.std.lang.Bool");
             break;
         case TOKEN_INT:
-            defineAstType(resolver, ast, "clox.std.lang.Int");
+            insertLiteralType(resolver, ast, "clox.std.lang.Int");
             break;
         case TOKEN_NUMBER:
-            defineAstType(resolver, ast, "clox.std.lang.Float");
+            insertLiteralType(resolver, ast, "clox.std.lang.Float");
             break;
         case TOKEN_STRING:
-            defineAstType(resolver, ast, "clox.std.lang.String");
+            insertLiteralType(resolver, ast, "clox.std.lang.String");
             break;
         default:
             semanticError(resolver, "Invalid AST literal type.");

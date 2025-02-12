@@ -253,16 +253,23 @@ static void block(TypeChecker* typeChecker, Ast* ast) {
     }
 }
 
-static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* methodType, bool isAsync) {
+static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* calleeType, bool isAsync) {
     FunctionTypeChecker functionTypeChecker;
-    initFunctionTypeChecker(typeChecker, &functionTypeChecker, ast->token, methodType, isAsync);
+    initFunctionTypeChecker(typeChecker, &functionTypeChecker, ast->token, calleeType, isAsync);
     functionTypeChecker.symtab = ast->symtab;
+    typeCheckChild(typeChecker, ast, 0);
     typeCheckChild(typeChecker, ast, 1);
     endFunctionTypeChecker(typeChecker);
 }
 
 static void behavior(TypeChecker* typeChecker, BehaviorType behaviorType, Ast* ast) {
     // to be implemented.
+}
+
+static void yield(TypeChecker* typeChecker, Ast* ast) {
+    if (astNumChild(ast)) {
+        typeCheckChild(typeChecker, ast, 0);
+    }
 }
 
 static void await(TypeChecker* typeChecker, Ast* ast) {
@@ -392,7 +399,8 @@ static void typeCheckVariable(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckYield(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    yield(typeChecker, ast);
+    defineAstType(typeChecker, ast, "clox.std.lang.Generator", NULL);
 }
 
 static void typeCheckExpression(TypeChecker* typeChecker, Ast* ast) {
@@ -475,7 +483,7 @@ static void typeCheckExpression(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckAwaitStatement(TypeChecker* typeChecker, Ast* ast) {
-    typeCheckChild(typeChecker, ast, 0);
+    await(typeChecker, ast);
     defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
@@ -548,9 +556,8 @@ static void typeCheckWhileStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckYieldStatement(TypeChecker* typeChecker, Ast* ast) {
-    if (astHasChild(ast)) {
-        typeCheckChild(typeChecker, ast, 0);
-    }
+    yield(typeChecker, ast);
+    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckStatement(TypeChecker* typeChecker, Ast* ast) {
