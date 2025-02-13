@@ -443,8 +443,7 @@ static bool checkAstTypes(Ast* ast, const char* name, const char* name2) {
 }
 
 static void insertLiteralType(Resolver* resolver, Ast* ast, const char* name) {
-    ObjString* typeName = newString(resolver->vm, name);
-    ast->type = typeTableGet(resolver->vm->typetab, typeName);
+    ast->type = getNativeType(resolver->vm, name);
 }
 
 static void insertParamType(Resolver* resolver, Ast* ast) {
@@ -1263,6 +1262,7 @@ void resolve(Resolver* resolver, Ast* ast) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, syntheticToken("script"), 0);
     int symtabIndex = nextSymbolTableIndex(resolver);
+
     resolver->currentSymtab = newSymbolTable(symtabIndex, resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
     resolver->currentFunction->symtab = resolver->currentSymtab;
     resolver->globalSymtab = resolver->currentSymtab;

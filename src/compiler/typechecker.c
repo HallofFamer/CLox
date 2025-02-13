@@ -262,7 +262,7 @@ static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* calle
     endFunctionTypeChecker(typeChecker);
 }
 
-static void behavior(TypeChecker* typeChecker, BehaviorType behaviorType, Ast* ast) {
+static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
     // to be implemented.
 }
 
@@ -334,7 +334,9 @@ static void typeCheckDictionary(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckFunction(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    ObjString* name = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    TypeInfo* calleeType = typeTableGet(typeChecker->vm->typetab, name);
+    function(typeChecker, ast, calleeType == NULL ? NULL : AS_CALLABLE_TYPE(calleeType), ast->modifier.isAsync);
 }
 
 static void typeCheckGrouping(TypeChecker* typeChecker, Ast* ast) {
@@ -635,7 +637,7 @@ static void typeCheckFunDeclaration(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
-    SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
+    SymbolItem* item = symbolTableLookup(ast->symtab, createSymbol(typeChecker, ast->token));
     ObjString* name = copyString(typeChecker->vm, item->token.start, item->token.length);
     defineAstType(typeChecker, ast, "Method", item);
 
@@ -702,7 +704,6 @@ void typeCheckAst(TypeChecker* typeChecker, Ast* ast) {
 
 void typeCheckChild(TypeChecker* typeChecker, Ast* ast, int index) {
     Ast* child = astGetChild(ast, index);
-    child->symtab = ast->symtab;
     typeChecker->currentToken = child->token;
 
     switch (child->category) {
