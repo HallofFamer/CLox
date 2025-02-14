@@ -263,7 +263,32 @@ static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* calle
 }
 
 static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
-    // to be implemented.
+    ClassTypeChecker classTypeChecker;
+    ObjString* shortName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    ObjString* fullName = getClassFullName(typeChecker, shortName);
+    TypeInfo* behaviorType = typeTableGet(typeChecker->vm->typetab, fullName);
+    bool isAnonymous = (shortName->length == 0);
+    initClassTypeChecker(typeChecker, &classTypeChecker, ast->token, behaviorType == NULL ? NULL : AS_BEHAVIOR_TYPE(behaviorType), isAnonymous);
+    int childIndex = 0;
+
+    if (type == BEHAVIOR_CLASS) {
+        Ast* superclass = astGetChild(ast, childIndex);
+        typeCheckChild(typeChecker, ast, childIndex);
+        SymbolItem* superclassItem = symbolTableLookup(ast->symtab, copyString(typeChecker->vm, superclass->token.start, superclass->token.length));
+        childIndex++;
+        if (!isSubtypeOfType(superclassItem->type, getNativeType(typeChecker->vm, "Class"))) {
+            typeError(typeChecker, "superclass must be an instance of Class, but gets %s.", superclassItem->type->shortName->chars);
+        }
+    }
+
+    Ast* traitList = astGetChild(ast, childIndex);
+    if (astNumChild(traitList) > 0) {
+        typeCheckChild(typeChecker, ast, childIndex);
+    }
+
+    childIndex++;
+    typeCheckChild(typeChecker, ast, childIndex);
+    endClassTypeChecker(typeChecker);
 }
 
 static void yield(TypeChecker* typeChecker, Ast* ast) {

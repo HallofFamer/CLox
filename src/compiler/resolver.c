@@ -268,6 +268,7 @@ static SymbolItem* insertBehaviorType(Resolver* resolver, SymbolItem* item, Type
 static void bindSuperclassType(Resolver* resolver, Token currentClass, Token superclass) {
     BehaviorTypeInfo* currentClassType = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, currentClass));
     TypeInfo* superclassType = getTypeForSymbol(resolver, superclass);
+    if (superclassType == NULL) return;
     currentClassType->superclassType = superclassType;
 
     BehaviorTypeInfo* currentMetaclassType = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, currentClassType->baseType.fullName)));
@@ -684,20 +685,20 @@ static void resolveInvoke(Resolver* resolver, Ast* ast) {
 static void resolveLiteral(Resolver* resolver, Ast* ast) {
     switch (ast->token.type) {
         case TOKEN_NIL: 
-            insertLiteralType(resolver, ast, "clox.std.lang.Nil");
+            insertLiteralType(resolver, ast, "Nil");
             break;
         case TOKEN_TRUE:
         case TOKEN_FALSE:
-            insertLiteralType(resolver, ast, "clox.std.lang.Bool");
+            insertLiteralType(resolver, ast, "Bool");
             break;
         case TOKEN_INT:
-            insertLiteralType(resolver, ast, "clox.std.lang.Int");
+            insertLiteralType(resolver, ast, "Int");
             break;
         case TOKEN_NUMBER:
-            insertLiteralType(resolver, ast, "clox.std.lang.Float");
+            insertLiteralType(resolver, ast, "Float");
             break;
         case TOKEN_STRING:
-            insertLiteralType(resolver, ast, "clox.std.lang.String");
+            insertLiteralType(resolver, ast, "String");
             break;
         default:
             semanticError(resolver, "Invalid AST literal type.");
