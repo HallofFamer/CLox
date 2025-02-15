@@ -370,7 +370,25 @@ static void typeCheckGrouping(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckInterpolation(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    Ast* exprs = astGetChild(ast, 0);
+    int count = 0;
+
+    while (count < exprs->children->count) {
+        bool concatenate = false;
+        bool isString = false;
+        Ast* expr = astGetChild(exprs, count);
+
+        if (expr->kind == AST_EXPR_LITERAL && expr->token.type == TOKEN_STRING) {
+            concatenate = true;
+            isString = true;
+            count++;
+            if (count >= exprs->children->count) break;
+        }
+
+        typeCheckChild(typeChecker, exprs, count);
+        count++;
+    }
+    defineAstType(typeChecker, ast, "String", NULL);
 }
 
 static void typeCheckInvoke(TypeChecker* typeChecker, Ast* ast) {
@@ -378,7 +396,9 @@ static void typeCheckInvoke(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckNil(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    inferAstTypeFromChild(ast, 0, NULL);
 }
 
 static void typeCheckOr(TypeChecker* typeChecker, Ast* ast) {
@@ -519,7 +539,9 @@ static void typeCheckBlockStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckCaseStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckCatchStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -527,7 +549,8 @@ static void typeCheckCatchStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckDefaultStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckExpressionStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -559,7 +582,16 @@ static void typeCheckReturnStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckSwitchStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    Ast* caseList = astGetChild(ast, 1);
+
+    for (int i = 0; i < caseList->children->count; i++) {
+        typeCheckChild(typeChecker, caseList, i);
+    }
+
+    if (astNumChild(caseList) > 2) {
+        typeCheckChild(typeChecker, ast, 2);
+    }
 }
 
 static void typeCheckThrowStatement(TypeChecker* typeChecker, Ast* ast) {

@@ -229,23 +229,6 @@ static SymbolItem* findThis(Resolver* resolver) {
     return item;
 }
 
-static ObjString* getSymbolTypeName(Resolver* resolver, TypeCategory category) {
-    switch (category) {
-        case TYPE_CATEGORY_CLASS:
-            return newString(resolver->vm, "clox.std.lang.Class");
-        case TYPE_CATEGORY_METACLASS:
-            return newString(resolver->vm, "clox.std.lang.Metaclass");
-        case TYPE_CATEGORY_TRAIT:
-            return newString(resolver->vm, "clox.std.lang.Trait");
-        case TYPE_CATEGORY_FUNCTION:
-            return newString(resolver->vm, "clox.std.lang.Function");
-        case TYPE_CATEGORY_METHOD:
-            return newString(resolver->vm, "clox.std.lang.Method");
-        default:
-            return NULL;
-    }
-}
-
 static ObjString* getMetaclassSymbol(Resolver* resolver, ObjString* className) {
     ObjString* metaclassSuffix = newString(resolver->vm, "class");
     return concatenateString(resolver->vm, className, metaclassSuffix, " ");
@@ -553,8 +536,9 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
     beginScope(resolver, ast, (type == BEHAVIOR_TRAIT) ? SYMBOL_SCOPE_TRAIT : SYMBOL_SCOPE_CLASS);
     Ast* traitList = astGetChild(ast, childIndex);
     traitList->symtab = ast->symtab;
-    uint8_t traitCount = astNumChild(traitList);
-    if (traitCount > 0) resolveChild(resolver, ast, childIndex);
+    if (astNumChild(traitList) > 0) {
+        resolveChild(resolver, ast, childIndex);
+    }
 
     childIndex++;
     resolveChild(resolver, ast, childIndex);
