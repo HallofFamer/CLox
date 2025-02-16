@@ -573,12 +573,25 @@ static void typeCheckRequireStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
     if (!checkAstType(typeChecker, child, "clox.std.lang.String")) {
-        typeError(typeChecker, "'require' expects expression to be a String but gets %s.", child->type->shortName->chars);
+        typeError(typeChecker, "require statement expects expression to be a String but gets %s.", child->type->shortName->chars);
     }
 }
 
 static void typeCheckReturnStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    TypeInfo* actualType = NULL;
+    TypeInfo* expectedType = (typeChecker->currentFunction->type != NULL) ? typeChecker->currentFunction->type->returnType : NULL;
+    if (expectedType == NULL) return;
+
+    if (astHasChild(ast)) {
+        typeCheckChild(typeChecker, ast, 0);
+        actualType = astGetChild(ast, 0)->type;
+    }
+    else actualType = getNativeType(typeChecker->vm, "Nil");
+
+    if (!isSubtypeOfType(actualType, expectedType)) {
+        typeError(typeChecker, "Function expects return value of type %s but gets %s.", 
+            expectedType->shortName->chars, actualType->shortName->chars);
+    }
 }
 
 static void typeCheckSwitchStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -598,7 +611,7 @@ static void typeCheckThrowStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
     if (!checkAstType(typeChecker, child, "clox.std.lang.Exception")) {
-        typeError(typeChecker, "'throw' expects expression to be an Exception but gets %s.", child->type->shortName->chars);
+        typeError(typeChecker, "throw statement expects expression to be an Exception but gets %s.", child->type->shortName->chars);
     }
 }
 

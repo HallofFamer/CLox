@@ -145,6 +145,7 @@ static ObjString* createQualifiedSymbol(Resolver* resolver, Ast* ast) {
     identifier->symtab = identifiers->symtab;
     const char* start = identifier->token.start;
     int length = identifier->token.length;
+
     for (int i = 1; i < identifiers->children->count; i++) {
         identifier = astGetChild(identifiers, i);
         identifier->symtab = identifiers->symtab;
@@ -997,7 +998,10 @@ static void resolveTryStatement(Resolver* resolver, Ast* ast) {
     resolver->tryDepth++;
     resolveChild(resolver, ast, 0);
     resolveChild(resolver, ast, 1);
-    if (astNumChild(ast) > 2) resolveChild(resolver, ast, 2);
+
+    if (astNumChild(ast) > 2) {
+        resolveChild(resolver, ast, 2);
+    }
     resolver->tryDepth--;
 }
 
