@@ -322,7 +322,9 @@ static void typeCheckArray(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckAssign(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    ObjString* name = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    SymbolItem* item = symbolTableLookup(ast->symtab, name);
+    if (item != NULL) typeCheckChild(typeChecker, ast, 0);
 }
 
 static void typeCheckAwait(TypeChecker* typeChecker, Ast* ast) {
@@ -566,7 +568,11 @@ static void typeCheckForStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckIfStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    if (astNumChild(ast) > 2) {
+        typeCheckChild(typeChecker, ast, 2);
+    }
 }
 
 static void typeCheckRequireStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -624,7 +630,8 @@ static void typeCheckUsingStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckWhileStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
 }
 
 static void typeCheckYieldStatement(TypeChecker* typeChecker, Ast* ast) {

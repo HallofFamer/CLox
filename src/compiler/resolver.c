@@ -952,7 +952,9 @@ static void resolveForStatement(Resolver* resolver, Ast* ast) {
 static void resolveIfStatement(Resolver* resolver, Ast* ast) {
     resolveChild(resolver, ast, 0);
     resolveChild(resolver, ast, 1);
-    if (astNumChild(ast) > 2) resolveChild(resolver, ast, 2);
+    if (astNumChild(ast) > 2) {
+        resolveChild(resolver, ast, 2);
+    }
 }
 
 static void resolveRequireStatement(Resolver* resolver, Ast* ast) {
