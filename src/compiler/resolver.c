@@ -763,7 +763,6 @@ static void resolveVariable(Resolver* resolver, Ast* ast) {
     ObjString* name = NULL;
 
     if (item != NULL) {
-        ast->type = item->type;
         if (item->state == SYMBOL_STATE_DECLARED) {
             name = createSymbol(resolver, ast->token);
             semanticError(resolver, "Cannot use variable '%s' before it is defined.", name->chars);
@@ -957,14 +956,14 @@ static void resolveIfStatement(Resolver* resolver, Ast* ast) {
 
 static void resolveRequireStatement(Resolver* resolver, Ast* ast) {
     if (!resolver->isTopLevel) {
-        semanticError(resolver, "Can only require source files from top-level code.");
+        semanticError(resolver, "Can only use 'require' from top-level code.");
     }
     resolveChild(resolver, ast, 0);
 }
 
 static void resolveReturnStatement(Resolver* resolver, Ast* ast) {
     if (resolver->isTopLevel) {
-        semanticError(resolver, "Can't return from top-level code.");
+        semanticError(resolver, "Cannot return from top-level code.");
     }
     else if (resolver->currentFunction->modifier.isInitializer) {
         semanticError(resolver, "Cannot return value from an initializer.");

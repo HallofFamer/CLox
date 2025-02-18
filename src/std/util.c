@@ -887,9 +887,9 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateClass, Date, getTimestamp, 0, RETURN_TYPE(Number));
     DEF_METHOD(dateClass, Date, toDateTime, 0, RETURN_TYPE(Object));
     DEF_METHOD(dateClass, Date, toString, 0, RETURN_TYPE(String));
-    DEF_OPERATOR(dateClass, Date, == , __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(dateClass, Date, > , __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(dateClass, Date, < , __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(dateClass, Date, ==, __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(dateClass, Date, >, __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(dateClass, Date, <, __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
     DEF_OPERATOR(dateClass, Date, +, __add__, 1, RETURN_TYPE(clox.std.util.Date), PARAM_TYPE(Object));
     DEF_OPERATOR(dateClass, Date, -, __subtract__, 1, RETURN_TYPE(clox.std.util.Date), PARAM_TYPE(Object));
 
@@ -906,9 +906,9 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateTimeClass, DateTime, getTimestamp, 0, RETURN_TYPE(Number));
     DEF_METHOD(dateTimeClass, DateTime, toDate, 0, RETURN_TYPE(Int), PARAM_TYPE(clox.std.util.Date));
     DEF_METHOD(dateTimeClass, DateTime, toString, 0, RETURN_TYPE(String));
-    DEF_OPERATOR(dateTimeClass, DateTime, == , __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(dateTimeClass, DateTime, > , __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(dateTimeClass, DateTime, < , __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(dateTimeClass, DateTime, ==, __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(dateTimeClass, DateTime, >, __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(dateTimeClass, DateTime, <, __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
     DEF_OPERATOR(dateTimeClass, DateTime, +, __add__, 1, RETURN_TYPE(clox.std.util.DateTime), PARAM_TYPE(Object));
     DEF_OPERATOR(dateTimeClass, DateTime, -, __subtract__, 1, RETURN_TYPE(clox.std.util.DateTime), PARAM_TYPE(Object));
 
@@ -923,9 +923,9 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(durationClass, Duration, compareTo, 1, RETURN_TYPE(Int), PARAM_TYPE(TComparable));
     DEF_METHOD(durationClass, Duration, getTotalSeconds, 0, RETURN_TYPE(Int));
     DEF_METHOD(durationClass, Duration, toString, 0, RETURN_TYPE(String));
-    DEF_OPERATOR(durationClass, Duration, == , __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(durationClass, Duration, > , __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(durationClass, Duration, < , __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(durationClass, Duration, ==, __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(durationClass, Duration, >, __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(durationClass, Duration, <, __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
     DEF_OPERATOR(durationClass, Duration, +, __add__, 1, RETURN_TYPE(clox.std.util.Duration), PARAM_TYPE(clox.std.util.Duration));
     DEF_OPERATOR(durationClass, Duration, -, __subtract__, 1, RETURN_TYPE(clox.std.util.Duration), PARAM_TYPE(clox.std.util.Duration));
 

@@ -93,12 +93,11 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
     pop(vm);
     pop(vm);
 
-    SymbolItem* item = insertGlobalSymbolTable(vm, name);
-    item->type = getNativeType(vm, "Function");
+    SymbolItem* item = insertGlobalSymbolTable(vm, name, getNativeType(vm, "Function"));
     va_list args;
     va_start(args, function);
     TypeInfo* returnType = va_arg(args, TypeInfo*);
-    CallableTypeInfo* callableType = newCallableInfo(vm->typetab->count + 1, TYPE_CATEGORY_FUNCTION, functionName, returnType);
+    CallableTypeInfo* callableType = newCallableTypeInfo(vm->typetab->count + 1, TYPE_CATEGORY_FUNCTION, functionName, returnType);
 
     for (int i = 0; i < arity; i++) {
         TypeInfo* paramType = va_arg(args, TypeInfo*);
@@ -121,7 +120,7 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bo
     va_start(args, method);
     BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(typeTableGet(vm->typetab, klass->fullName));
     TypeInfo* returnType = va_arg(args, TypeInfo*);
-    CallableTypeInfo* methodType = newCallableInfo(behaviorType->methods->count + 1, TYPE_CATEGORY_METHOD, methodName, returnType);
+    CallableTypeInfo* methodType = newCallableTypeInfo(behaviorType->methods->count + 1, TYPE_CATEGORY_METHOD, methodName, returnType);
     methodType->modifier.isAsync = isAsync;
 
     for (int i = 0; i < arity; i++) {
@@ -273,9 +272,10 @@ ObjNamespace* getNativeNamespace(VM* vm, const char* name) {
     return AS_NAMESPACE(namespace);
 }
 
-SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName) {
+SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName, TypeInfo* type) {
     ObjString* symbol = newString(vm, symbolName);
     SymbolItem* item = newSymbolItem(syntheticToken(symbolName), SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
+    item->type = type;
     symbolTableSet(vm->symtab, symbol, item);
     return item;
 }

@@ -51,7 +51,7 @@ TypeInfo* getNativeType(VM* vm, const char* name);
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name);
 ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name);
 ObjNamespace* getNativeNamespace(VM* vm, const char* name);
-SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName);
+SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName, TypeInfo* type);
 void loadSourceFile(VM* vm, const char* filePath);
 void registerNativeFunctions(VM* vm);
 

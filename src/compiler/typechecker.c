@@ -180,7 +180,7 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
         case TOKEN_LESS:
         case TOKEN_LESS_EQUAL:
             defineAstType(typeChecker, ast, "Bool", item);
-        break;
+            break;
         case TOKEN_PLUS:
             if (checkAstType(typeChecker, left, "clox.std.lang.String") && checkAstType(typeChecker, right, "clox.std.lang.String")) {
                 defineAstType(typeChecker, ast, "String", item);
@@ -410,11 +410,17 @@ static void typeCheckOr(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckPropertyGet(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    Ast* receiver = astGetChild(ast, 0);
+    ObjString* property = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    TypeInfo* methodType = typeTableMethodLookup(receiver->type, property);  
+    if (methodType != NULL) defineAstType(typeChecker, ast, "BoundMethod", NULL);
 }
 
 static void typeCheckPropertySet(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
@@ -449,7 +455,7 @@ static void typeCheckVariable(TypeChecker* typeChecker, Ast* ast) {
 
 static void typeCheckYield(TypeChecker* typeChecker, Ast* ast) {
     yield(typeChecker, ast);
-    defineAstType(typeChecker, ast, "clox.std.lang.Generator", NULL);
+    defineAstType(typeChecker, ast, "Generator", NULL);
 }
 
 static void typeCheckExpression(TypeChecker* typeChecker, Ast* ast) {
@@ -642,7 +648,6 @@ static void typeCheckUsingStatement(TypeChecker* typeChecker, Ast* ast) {
         Ast* subNamespace = astGetChild(_namespace, i);
         subNamespace->type = namespaceType;
     }
-
 
     TypeInfo* type = typeTableGet(typeChecker->vm->typetab, fullName);
     if (type == NULL) return;
