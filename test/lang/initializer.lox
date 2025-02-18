@@ -17,6 +17,5 @@ class CoffeeMaker {
     }
 }
 
-
 val maker = CoffeeMaker("coffee and chicory");
 maker.brew();

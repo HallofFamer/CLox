@@ -1,10 +1,13 @@
 namespace test.lang;
 
+val z = 0;
 fun outer() {
-  var x = "value";
+  val x = "value";
+  val y = "value2";
   fun middle() {
+    println(x);
     fun inner() {
-      println(x);
+      println(y);
     }
 
     println("create inner closure");

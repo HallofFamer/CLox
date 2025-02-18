@@ -5,7 +5,6 @@ class Oops {
         fun f(){ 
             print("not a method");
         }
-
         this.field = f;
     }
 }

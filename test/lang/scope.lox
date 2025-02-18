@@ -21,7 +21,13 @@ val x = 0;
 
 fun sum(a, b) { 
     val c = 1;
+    if (true) { 
+        val d = 0;
+    }
+
     println(x);
+    println(a.toString());
+    println(b.toString());
     return x + a + b + c;
 }
 

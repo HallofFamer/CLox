@@ -128,25 +128,25 @@ https://github.com/munificent/craftinginterpreters
 ### CLox 2.1.0
 - Enhanced type system with basic support for generics/parametric polymorphism.
 - Extend parser with infinite lookahead, allowing qualified names to be used for function/method signature, class/trait declaration and catch statement.
-- Capability of saving bytecode into disk as .loxo file, which can be loaded later for faster compilation.
+- Allow declaration of object properties outside of class initializer, which also enables optional static typing.
 - Refactor classes in the existing standard library to use generics(in `clox.std` parent package), such as `Array<T>` and `Promise<T>`.
 
 ### CLox 2.2.0
 - Additional type system enhancement for union types, with `|` operator on types such as `String | Number`.
 - `type` keyword used as declaration of type alias, useful for complex generic types and union types.
-- Trailing closure similar to Kotlin and Swift which allows last lambda argument to be placed outside of parenthesis.
+- Capability of saving bytecode into disk as .loxo file, which can be loaded later for faster compilation.
 - Redesign of Iterator/Enumerator API for ease of use and implementation of iterable types.
 
 ### CLox 2.3.0
 - Support for structural pattern matching using `match` keyword, remove `switch` statement as it has been superceded.
 - Improved type system with non-nullable by default for type declaration, as well as variance for method parameter/return types.
-- Object literal syntax similar to Javascript which can be good for configuration objects. 
+- Trailing closure similar to Kotlin and Swift which allows last lambda argument to be placed outside of parenthesis.
 - Foreign function interface(FFI) as a way to write CLox libraries in C and load in lox script.
 
 ### CLox 2.4.0
 - Refine `if` and `match` as expressions, with the value produced being the last expression/statement of the expression body. 
+- Object literal syntax similar to Javascript which can be good for configuration objects. 
 - Add new package `clox.std.text` which handles text processing for MIME types such as json and xml.
-- Allow declaration of object properties outside of class initializer, which also enables optional static typing.
 - Implement a profiler which can identify the "Hotspots" of the program and how long they execute. 
 
 ### CLox 2.5.0
