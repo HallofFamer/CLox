@@ -604,7 +604,10 @@ static Ast* methods(Parser* parser, Token* name) {
         method->modifier.isAsync = isAsync;
         method->modifier.isClass = isClass;
         method->modifier.isInitializer = isInitializer;
-        if (hasReturnType) astAppendChild(method, returnType);
+
+        if (hasReturnType) {
+            astAppendChild(method, returnType);
+        }
         astAppendChild(methodList, method);
     }
 
@@ -1194,7 +1197,7 @@ void initParser(Parser* parser, Lexer* lexer, bool debugAst) {
 }
 
 Ast* parse(Parser* parser) {
-    Ast* ast = emptyAst(AST_TYPE_NONE, emptyToken());
+    Ast* ast = emptyAst(AST_KIND_NONE, emptyToken());
     while (!match(parser, TOKEN_EOF)) {
         if (setjmp(parser->jumpBuffer) == 0) {
             Ast* decl = declaration(parser);

@@ -60,7 +60,9 @@ static Token makeToken(Lexer* lexer, TokenSymbol type) {
         .line = lexer->line
     };
 
-    if (lexer->debugToken) outputToken(token);
+    if (lexer->debugToken) {
+        outputToken(token);
+    }
     return token;
 }
 

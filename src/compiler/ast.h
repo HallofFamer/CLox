@@ -19,7 +19,7 @@ typedef enum {
 } AstNodeCategory;
 
 typedef enum {
-    AST_TYPE_NONE,
+    AST_KIND_NONE,
     AST_EXPR_AND,
     AST_EXPR_ARRAY,
     AST_EXPR_ASSIGN,
@@ -76,7 +76,7 @@ typedef enum {
     AST_LIST_METHOD,
     AST_LIST_STMT,
     AST_LIST_VAR,
-    AST_TYPE_ERROR
+    AST_KIND_ERROR
 } AstNodeKind;
 
 typedef struct {
@@ -127,7 +127,7 @@ int astNumChild(Ast* ast);
 void astOutput(Ast* ast, int indentLevel);
 
 static inline AstNodeCategory astNodeCategory(AstNodeKind kind) {
-    if (kind == AST_TYPE_NONE) return AST_CATEGORY_SCRIPT;
+    if (kind == AST_KIND_NONE) return AST_CATEGORY_SCRIPT;
     else if (kind >= AST_EXPR_AND && kind <= AST_EXPR_YIELD) return AST_CATEGORY_EXPR;
     else if (kind >= AST_STMT_AWAIT && kind <= AST_STMT_YIELD) return AST_CATEGORY_STMT;
     else if (kind >= AST_DECL_CLASS && kind <= AST_DECL_VAR) return AST_CATEGORY_DECL;

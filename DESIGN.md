@@ -20,9 +20,9 @@ CLox's object fields are implemented as hash tables, and looking up an instance 
 The generic object map stores a list of special objects(not represented by ObjInstance) and their fields, to allow accessing fields such as `length` on String/Array objects, and `superclass` on Class objects. This allows these special objects to continue to use a more efficient internal representation than ObjInstance, while allowing access to its fields as standard objects.
 
 ## Why async/await instead of fiber or green thread?
-I am well aware of the controversy surrounding async/await as well as its shortcomings. However, implementing async/await is a valuable learning experience(you need knowledge of generator and promise to pull it off), especially considering how poorly this topic is covered in most compiler/interpreter books. 
+I am well aware of the controversy surrounding async/await as well as its shortcomings. However, implementing async/await is a valuable learning experience(you need knowledge of generator and promise to pull it off), especially considering how poorly this topic is covered in most compiler/interpreter books. It also integrates very well with the popular libuv library. 
 
-## What are the reasons to bring back `extends` keyword?
+## What are the reasons to switch to the `extends` keyword?
 The original CLox implementation uses `<` sign, but trait are implemented using `with` keyword, which feels a little odd and inconsistent(Robert Nystrom did mention he would not want to introduce another keyword near the end of the book). More importantly, this decision simplifies future work on parsing Generics which will use angle bracket syntax.
 
 ## Why type annotations only work for function/method parameter/return types?

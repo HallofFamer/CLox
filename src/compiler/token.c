@@ -105,7 +105,7 @@ char* tokenToCString(Token token) {
     }
     else {
         fprintf(stderr, "Not enough memory to convert token to string.");
-        exit(1);
+        return NULL;
     }
 }
 
