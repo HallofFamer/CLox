@@ -547,7 +547,8 @@ static void typeCheckCaseStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckCatchStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
 }
 
 static void typeCheckDefaultStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -560,11 +561,13 @@ static void typeCheckExpressionStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckFinallyStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
 }
 
 static void typeCheckForStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    typeCheckChild(typeChecker, ast, 2);
 }
 
 static void typeCheckIfStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -622,11 +625,33 @@ static void typeCheckThrowStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckTryStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    if (astNumChild(ast) > 2) {
+        typeCheckChild(typeChecker, ast, 2);
+    }
 }
 
 static void typeCheckUsingStatement(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    Ast* _namespace = astGetChild(ast, 0);
+    int namespaceDepth = astNumChild(_namespace);
+    ObjString* fullName = createQualifiedSymbol(typeChecker, ast);
+    TypeInfo* namespaceType = getNativeType(typeChecker->vm, "Namespace");
+
+    for (int i = 0; i < namespaceDepth - 1; i++) {
+        Ast* subNamespace = astGetChild(_namespace, i);
+        subNamespace->type = namespaceType;
+    }
+
+
+    TypeInfo* type = typeTableGet(typeChecker->vm->typetab, fullName);
+    if (type == NULL) return;
+    Ast* child = (astNumChild(ast) > 1) ? astGetChild(ast, 1) : astLastChild(_namespace);
+
+    const char* behaviorTypeName = (type->category == TYPE_CATEGORY_TRAIT) ? "Trait" : "Class";
+    child->type = getNativeType(typeChecker->vm, behaviorTypeName);
+    SymbolItem* item = symbolTableLookup(child->symtab, copyString(typeChecker->vm, child->token.start, child->token.length));
+    if (item->type == NULL) item->type = child->type;
 }
 
 static void typeCheckWhileStatement(TypeChecker* typeChecker, Ast* ast) {

@@ -72,6 +72,7 @@ struct Compiler {
     Upvalue upvalues[UINT8_COUNT];
     IDMap indexes;
     Token currentToken;
+
     ClassCompiler* currentClass;
     LoopCompiler* currentLoop;
     SwitchCompiler* currentSwitch;

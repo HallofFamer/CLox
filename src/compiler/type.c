@@ -19,7 +19,7 @@ TypeInfo* newTypeInfo(int id, size_t size, TypeCategory category, ObjString* sho
     return type;
 }
 
-BehaviorTypeInfo* newBehaviorInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
+BehaviorTypeInfo* newBehaviorTypeInfo(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
     BehaviorTypeInfo* behaviorType = (BehaviorTypeInfo*)newTypeInfo(id, sizeof(BehaviorTypeInfo), category, shortName, fullName);
     if (behaviorType != NULL) {
         behaviorType->superclassType = superclassType;
@@ -30,7 +30,7 @@ BehaviorTypeInfo* newBehaviorInfo(int id, TypeCategory category, ObjString* shor
     return behaviorType;
 }
 
-BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, int numTraits, ...) {
+BehaviorTypeInfo* newBehaviorTypeInfoWithTraits(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, int numTraits, ...) {
     BehaviorTypeInfo* behaviorType = (BehaviorTypeInfo*)newTypeInfo(id, sizeof(BehaviorTypeInfo), category, shortName, fullName);
     if (behaviorType != NULL) {
         behaviorType->superclassType = superclassType;
@@ -52,7 +52,7 @@ BehaviorTypeInfo* newBehaviorInfoWithTraits(int id, TypeCategory category, ObjSt
     return behaviorType;
 }
 
-BehaviorTypeInfo* newBehaviorInfoWithMethods(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, TypeTable* methods) {
+BehaviorTypeInfo* newBehaviorTypeInfoWithMethods(int id, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType, TypeTable* methods) {
     BehaviorTypeInfo* behaviorType = (BehaviorTypeInfo*)newTypeInfo(id, sizeof(BehaviorTypeInfo), category, shortName, fullName);
     if (behaviorType != NULL) {
         behaviorType->superclassType = superclassType;
@@ -63,7 +63,7 @@ BehaviorTypeInfo* newBehaviorInfoWithMethods(int id, TypeCategory category, ObjS
     return behaviorType;
 }
 
-CallableTypeInfo* newCallableInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType) {
+CallableTypeInfo* newCallableTypeInfo(int id, TypeCategory category, ObjString* name, TypeInfo* returnType) {
     CallableTypeInfo* callableType = (CallableTypeInfo*)newTypeInfo(id, sizeof(CallableTypeInfo), category, name, name);
     if (callableType != NULL) {
         callableType->returnType = returnType;
@@ -74,7 +74,7 @@ CallableTypeInfo* newCallableInfo(int id, TypeCategory category, ObjString* name
     return callableType;
 }
 
-CallableTypeInfo* newCallableInfoWithParams(int id, TypeCategory category, ObjString* name, TypeInfo* returnType, int numParams, ...) {
+CallableTypeInfo* newCallableTypeInfoWithParams(int id, TypeCategory category, ObjString* name, TypeInfo* returnType, int numParams, ...) {
     CallableTypeInfo* callableType = (CallableTypeInfo*)newTypeInfo(id, sizeof(CallableTypeInfo), category, name, name);
     if (callableType != NULL) {
         callableType->returnType = returnType;
@@ -209,14 +209,14 @@ TypeInfo* typeTableMethodLookup(TypeInfo* type, ObjString* key) {
 
 BehaviorTypeInfo* typeTableInsertBehavior(TypeTable* typetab, TypeCategory category, ObjString* shortName, ObjString* fullName, TypeInfo* superclassType) {
     int id = typetab->count + 1;
-    BehaviorTypeInfo* behaviorType = newBehaviorInfo(id, category, shortName, fullName, superclassType);
+    BehaviorTypeInfo* behaviorType = newBehaviorTypeInfo(id, category, shortName, fullName, superclassType);
     typeTableSet(typetab, fullName, (TypeInfo*)behaviorType);
     return behaviorType;
 }
 
 CallableTypeInfo* typeTableInsertCallable(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType) {
     int id = typetab->count + 1;
-    CallableTypeInfo* callableType = newCallableInfo(id, category, name, returnType);
+    CallableTypeInfo* callableType = newCallableTypeInfo(id, category, name, returnType);
     typeTableSet(typetab, name, (TypeInfo*)callableType);
     return callableType;
 }

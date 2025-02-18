@@ -219,9 +219,7 @@ static SymbolItem* findThis(Resolver* resolver) {
         if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
             item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
         }
-        else {
-            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, false);
-        }
+        else item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, false);
 
         item->type = typeTableGet(resolver->vm->typetab, klass);
         symbolTableSet(resolver->currentSymtab, symbol, item);
@@ -566,7 +564,7 @@ static void await(Resolver* resolver, Ast* ast) {
         resolver->currentFunction->modifier.isAsync = true;
     }
     else if (!resolver->currentFunction->modifier.isAsync) {
-        semanticError(resolver, "Cannot use await unless in top level code or inside async functions/methods.");
+        semanticError(resolver, "Cannot use 'await' unless in top level code or inside async functions/methods.");
     }
     resolveChild(resolver, ast, 0);
 }
@@ -1021,6 +1019,7 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
     }
 
     ObjString* fullName = createQualifiedSymbol(resolver, ast);
+    TypeInfo* type = NULL;
     if (!isNativeNamespace(fullName)) {
         ObjString* filePath = locateSourceFileFromFullName(resolver->vm, fullName);
         if (sourceFileExists(filePath)) {
@@ -1029,22 +1028,19 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
         else {
             ObjString* directoryPath = locateSourceDirectoryFromFullName(resolver->vm, fullName);
             if (sourceDirectoryExists(directoryPath)) {
-                fullName = newString(resolver->vm, "clox.std.lang.Namespace");
+                type = getNativeType(resolver->vm, "Namespace");
             }
         }
     }
 
-    TypeInfo* type = typeTableGet(resolver->vm->typetab, fullName);
     if (astNumChild(ast) > 1) {
         Ast* alias = astGetChild(ast, 1);
         alias->symtab = _namespace->symtab;
-        alias->type = type;
         insertSymbol(resolver, alias->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
     }
     else {
-        Ast* shortName = astGetChild(_namespace, namespaceDepth - 1);
+        Ast* shortName = astLastChild(_namespace);
         shortName->symtab = _namespace->symtab;
-        shortName->type = type;
         insertSymbol(resolver, shortName->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, type, false);
     }
 }
