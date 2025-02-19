@@ -432,7 +432,14 @@ static void typeCheckSubscriptSet(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckSuperGet(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    Ast* receiver = astGetChild(ast, 0);
+    ObjString* property = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    if (receiver->type == NULL) return;
+
+    TypeInfo* superType = AS_BEHAVIOR_TYPE(receiver->type)->superclassType;
+    TypeInfo* methodType = typeTableMethodLookup(superType, property);
+    if (methodType != NULL) defineAstType(typeChecker, ast, "BoundMethod", NULL);
 }
 
 static void typeCheckSuperInvoke(TypeChecker* typeChecker, Ast* ast) {

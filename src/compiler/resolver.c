@@ -215,7 +215,6 @@ static SymbolItem* findThis(Resolver* resolver) {
 
     if (item == NULL) {
         ObjString* klass = getSymbolFullName(resolver, resolver->currentClass->name);
-
         if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
             item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
         }
