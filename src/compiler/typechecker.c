@@ -246,6 +246,22 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast, SymbolItem*
     }
 }
 
+static void inferAstTypeFromInvoke(TypeChecker* typeChecker, Ast* ast, SymbolItem* item) {
+    Ast* receiver = astGetChild(ast, 0);
+    if (receiver->type == NULL) return;
+    Ast* args = astGetChild(ast, 1);
+
+    ObjString* methodName = createSymbol(typeChecker, ast->token);
+    TypeInfo* baseType = typeTableMethodLookup(receiver->type, methodName);
+    if (baseType == NULL) return;
+    CallableTypeInfo* methodType = AS_CALLABLE_TYPE(baseType);
+
+    char methodDesc[UINT8_MAX];
+    sprintf_s(methodDesc, UINT8_MAX, "Method %s::%s", receiver->type->shortName->chars, methodName->chars);
+    validateArguments(typeChecker, methodDesc, args, methodType);
+    ast->type = methodType->returnType;
+}
+
 static void block(TypeChecker* typeChecker, Ast* ast) {
     Ast* stmts = astGetChild(ast, 0);
     for (int i = 0; i < stmts->children->count; i++) {
@@ -394,7 +410,9 @@ static void typeCheckInterpolation(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckInvoke(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    inferAstTypeFromInvoke(typeChecker, ast, NULL);
 }
 
 static void typeCheckNil(TypeChecker* typeChecker, Ast* ast) {

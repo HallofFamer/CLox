@@ -279,10 +279,6 @@ static void checkUnmodifiedVariables(Resolver* resolver, int flag) {
     }
 }
 
-static bool isTopLevel(Resolver* resolver) {
-    return (resolver->currentFunction->enclosing == NULL);
-}
-
 static SymbolScope getFunctionScope(Ast* ast) {
     return (ast->kind == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
 }
@@ -291,7 +287,7 @@ static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
     resolver->currentSymtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->currentSymtab, scope, resolver->currentSymtab->depth + 1);
     ast->symtab = resolver->currentSymtab;
     if (isFunctionScope(scope)) resolver->currentFunction->symtab = resolver->currentSymtab;
-    if (isTopLevel(resolver)) resolver->globalSymtab = resolver->currentSymtab;
+    if (resolver->isTopLevel) resolver->globalSymtab = resolver->currentSymtab;
 }
 
 static void endScope(Resolver* resolver) {
@@ -299,7 +295,7 @@ static void endScope(Resolver* resolver) {
     checkUnusedVariables(resolver, resolver->vm->config.flagUnusedVariable);
     checkUnmodifiedVariables(resolver, resolver->vm->config.flagMutableVariable);
     resolver->currentSymtab = resolver->currentSymtab->parent;
-    if (isTopLevel(resolver)) resolver->globalSymtab = resolver->currentSymtab;
+    if (resolver->isTopLevel) resolver->globalSymtab = resolver->currentSymtab;
 }
 
 static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable) {
