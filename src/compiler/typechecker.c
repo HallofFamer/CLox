@@ -215,7 +215,7 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
     }
 }
 
-static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast, SymbolItem* item) {
+static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
     Ast* callee = astGetChild(ast, 0);
     if (callee->type == NULL) return;
     Ast* args = astGetChild(ast, 1);
@@ -246,7 +246,7 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast, SymbolItem*
     }
 }
 
-static void inferAstTypeFromInvoke(TypeChecker* typeChecker, Ast* ast, SymbolItem* item) {
+static void inferAstTypeFromInvoke(TypeChecker* typeChecker, Ast* ast) {
     Ast* receiver = astGetChild(ast, 0);
     if (receiver->type == NULL) return;
     Ast* args = astGetChild(ast, 1);
@@ -258,6 +258,22 @@ static void inferAstTypeFromInvoke(TypeChecker* typeChecker, Ast* ast, SymbolIte
 
     char methodDesc[UINT8_MAX];
     sprintf_s(methodDesc, UINT8_MAX, "Method %s::%s", receiver->type->shortName->chars, methodName->chars);
+    validateArguments(typeChecker, methodDesc, args, methodType);
+    ast->type = methodType->returnType;
+}
+
+static void inferAstTypeFromSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
+    TypeInfo* superType = (typeChecker->currentClass->type != NULL) ? typeChecker->currentClass->type->superclassType : NULL;
+    if (superType == NULL) return;
+    Ast* args = astGetChild(ast, 0);
+
+    ObjString* methodName = createSymbol(typeChecker, ast->token);
+    TypeInfo* baseType = typeTableMethodLookup(superType, methodName);
+    if (baseType == NULL) return;
+    CallableTypeInfo* methodType = AS_CALLABLE_TYPE(baseType);
+
+    char methodDesc[UINT8_MAX];
+    sprintf_s(methodDesc, UINT8_MAX, "Method %s::%s", superType->shortName->chars, methodName->chars);
     validateArguments(typeChecker, methodDesc, args, methodType);
     ast->type = methodType->returnType;
 }
@@ -357,7 +373,7 @@ static void typeCheckBinary(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckCall(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     typeCheckChild(typeChecker, ast, 1);
-    inferAstTypeFromCall(typeChecker, ast, NULL);
+    inferAstTypeFromCall(typeChecker, ast);
 }
 
 static void typeCheckClass(TypeChecker* typeChecker, Ast* ast) {
@@ -412,7 +428,7 @@ static void typeCheckInterpolation(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckInvoke(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     typeCheckChild(typeChecker, ast, 1);
-    inferAstTypeFromInvoke(typeChecker, ast, NULL);
+    inferAstTypeFromInvoke(typeChecker, ast);
 }
 
 static void typeCheckNil(TypeChecker* typeChecker, Ast* ast) {
@@ -461,7 +477,8 @@ static void typeCheckSuperGet(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    inferAstTypeFromSuperInvoke(typeChecker, ast);
 }
 
 static void typeCheckTrait(TypeChecker* typeChecker, Ast* ast) {

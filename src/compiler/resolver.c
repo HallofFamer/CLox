@@ -273,8 +273,8 @@ static void checkUnmodifiedVariables(Resolver* resolver, int flag) {
         SymbolEntry* entry = &resolver->currentSymtab->entries[i];
         if (entry->key == NULL) continue;
         else if (entry->value->isMutable && entry->value->state != SYMBOL_STATE_MODIFIED) {
-            if (flag == 1) semanticWarning(resolver, "Mutable variable '%s' is not modified.", entry->key->chars);
-            else if (flag == 2) semanticError(resolver, "Mutable variable '%s' is not modified.", entry->key->chars);
+            if (flag == 1) semanticWarning(resolver, "Mutable variable '%s' is never modified.", entry->key->chars);
+            else if (flag == 2) semanticError(resolver, "Mutable variable '%s' is never modified.", entry->key->chars);
         }
     }
 }
@@ -542,7 +542,7 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
 
 static void yield(Resolver* resolver, Ast* ast) {
     if (resolver->isTopLevel) {
-        semanticError(resolver, "Can't yield from top-level code.");
+        semanticError(resolver, "Cannot yield from top-level code.");
     }
     else if (resolver->currentFunction->modifier.isInitializer) {
         semanticError(resolver, "Cannot yield from an initializer.");
@@ -903,7 +903,7 @@ static void resolveCatchStatement(Resolver* resolver, Ast* ast) {
 
 static void resolveContinueStatement(Resolver* resolver, Ast* ast) {
     if (resolver->loopDepth == 0) {
-        semanticError(resolver, "Cannot use 'break' outside of a loop.");
+        semanticError(resolver, "Cannot use 'continue' outside of a loop.");
     }
 }
 
