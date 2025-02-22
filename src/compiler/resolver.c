@@ -1243,13 +1243,12 @@ void resolve(Resolver* resolver, Ast* ast) {
     FunctionResolver functionResolver;
     initFunctionResolver(resolver, &functionResolver, syntheticToken("script"), 0);
     int symtabIndex = nextSymbolTableIndex(resolver);
-
     resolver->currentSymtab = newSymbolTable(symtabIndex, resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
     resolver->currentFunction->symtab = resolver->currentSymtab;
     resolver->globalSymtab = resolver->currentSymtab;
     resolver->rootSymtab = resolver->currentSymtab;
+    
     ast->symtab = resolver->currentSymtab;
-
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);
     if (resolver->debugSymtab) {

@@ -278,6 +278,85 @@ static void inferAstTypeFromSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
     ast->type = methodType->returnType;
 }
 
+static void inferAstTypeFromSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
+    Ast* receiver = astGetChild(ast, 0);
+    Ast* index = astGetChild(ast, 1);
+    if (receiver->type == NULL || index->type == NULL) return;
+
+    TypeInfo* objectType = getNativeType(typeChecker->vm, "Object");
+    TypeInfo* intType = getNativeType(typeChecker->vm, "Int");
+    TypeInfo* stringType = getNativeType(typeChecker->vm, "String");
+
+    if (isSubtypeOfType(receiver->type, stringType)) {
+        if (!isSubtypeOfType(index->type, intType)) {
+            typeError(typeChecker, "String index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+        }
+        ast->type = stringType;
+    }
+    else if (isSubtypeOfType(receiver->type, getNativeType(typeChecker->vm, "clox.std.collection.Array"))) {
+        if (!isSubtypeOfType(index->type, intType)) {
+            typeError(typeChecker, "Array index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+        }
+        ast->type = objectType;
+    }
+    else {
+        TypeInfo* baseType = typeTableMethodLookup(receiver->type, newString(typeChecker->vm, "[]"));
+        if (baseType == NULL) return;
+        CallableTypeInfo* methodType = AS_CALLABLE_TYPE(baseType);
+        if (methodType->paramTypes->count == 0) return;
+        TypeInfo* paramType = methodType->paramTypes->elements[0];
+
+        if (!isSubtypeOfType(index->type, paramType)) {
+            typeError(typeChecker, "Method %s::[] expects argument 0 to be an instance of %s but gets %s.",
+                receiver->type->shortName->chars, paramType->shortName->chars, index->type->shortName->chars);
+        }
+        ast->type = methodType->returnType;
+    }
+}
+
+static void inferAstTypeFromSubscriptSet(TypeChecker* typeChecker, Ast* ast) {
+    Ast* receiver = astGetChild(ast, 0);
+    Ast* index = astGetChild(ast, 1);
+    Ast* value = astGetChild(ast, 2);
+    if (receiver->type == NULL || index->type == NULL) return;
+
+    TypeInfo* nilType = getNativeType(typeChecker->vm, "Nil");
+    TypeInfo* intType = getNativeType(typeChecker->vm, "Int");
+    TypeInfo* stringType = getNativeType(typeChecker->vm, "String");
+
+    if (isSubtypeOfType(receiver->type, stringType)) {
+        if (!isSubtypeOfType(index->type, intType)) {
+            typeError(typeChecker, "String index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+        }
+        ast->type = nilType;
+    }
+    else if (isSubtypeOfType(receiver->type, getNativeType(typeChecker->vm, "clox.std.collection.Array"))) {
+        if (!isSubtypeOfType(index->type, intType)) {
+            typeError(typeChecker, "Array index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+        }
+        ast->type = nilType;
+    }
+    else {
+        TypeInfo* baseType = typeTableMethodLookup(receiver->type, newString(typeChecker->vm, "[]="));
+        if (baseType == NULL) return;
+        CallableTypeInfo* methodType = AS_CALLABLE_TYPE(baseType);
+        if (methodType->paramTypes->count == 0) return;
+        TypeInfo* paramType = methodType->paramTypes->elements[0];
+        TypeInfo* paramType2 = methodType->paramTypes->elements[1];
+
+        if (!isSubtypeOfType(index->type, paramType)) {
+            typeError(typeChecker, "Method %s::[]= expects argument 0 to be an instance of %s but gets %s.",
+                receiver->type->shortName->chars, paramType->shortName->chars, index->type->shortName->chars);
+        }
+        if (!isSubtypeOfType(value->type, paramType2)) {
+            typeError(typeChecker, "Method %s::[]= expects argument 1 to be an instance of %s but gets %s.",
+                receiver->type->shortName->chars, paramType2->shortName->chars, value->type->shortName->chars);
+        }
+
+        ast->type = methodType->returnType;
+    }
+}
+
 static void block(TypeChecker* typeChecker, Ast* ast) {
     Ast* stmts = astGetChild(ast, 0);
     for (int i = 0; i < stmts->children->count; i++) {
@@ -458,11 +537,16 @@ static void typeCheckPropertySet(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    inferAstTypeFromSubscriptGet(typeChecker, ast);
 }
 
 static void typeCheckSubscriptSet(TypeChecker* typeChecker, Ast* ast) {
-    // to be implemented.
+    typeCheckChild(typeChecker, ast, 0);
+    typeCheckChild(typeChecker, ast, 1);
+    typeCheckChild(typeChecker, ast, 2);
+    inferAstTypeFromSubscriptSet(typeChecker, ast);
 }
 
 static void typeCheckSuperGet(TypeChecker* typeChecker, Ast* ast) {
