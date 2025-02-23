@@ -218,7 +218,9 @@ static SymbolItem* findThis(Resolver* resolver) {
         if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
             item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
         }
-        else item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, false);
+        else {
+            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, false);
+        }
 
         item->type = typeTableGet(resolver->vm->typetab, klass);
         symbolTableSet(resolver->currentSymtab, symbol, item);

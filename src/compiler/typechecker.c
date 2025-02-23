@@ -167,29 +167,44 @@ static void inferAstTypeFromUnary(TypeChecker* typeChecker, Ast* ast, SymbolItem
     }
 }
 
+static void inferAstTypeFromBinaryOperator(TypeChecker* typeChecker, Ast* ast, SymbolItem* item) {
+    Ast* receiver = astGetChild(ast, 0);
+    Ast* arg = astGetChild(ast, 1);
+    if (receiver->type == NULL || arg->type == NULL) return;
+
+    ObjString* methodName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    TypeInfo* baseType = typeTableMethodLookup(receiver->type, methodName);
+    if (baseType == NULL) return;
+
+    CallableTypeInfo* methodType = AS_CALLABLE_TYPE(baseType);
+    if (methodType->paramTypes->count == 0) return;
+    TypeInfo* paramType = methodType->paramTypes->elements[0];
+
+    if (!isSubtypeOfType(arg->type, paramType)) {
+        typeError(typeChecker, "Method %s::%s expects argument 0 to be an instance of %s but gets %s.",
+            receiver->type->shortName->chars, paramType->shortName->chars, arg->type->shortName->chars);
+    }
+    ast->type = methodType->returnType;
+}
+
 static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolItem* item) {
     Ast* left = astGetChild(ast, 0);
     Ast* right = astGetChild(ast, 1);
     if (left->type == NULL || right->type == NULL) return;
 
     switch (ast->token.type) {
-        case TOKEN_BANG_EQUAL:
-        case TOKEN_EQUAL_EQUAL:
-        case TOKEN_GREATER:
-        case TOKEN_GREATER_EQUAL:
-        case TOKEN_LESS:
-        case TOKEN_LESS_EQUAL:
-            defineAstType(typeChecker, ast, "Bool", item);
-            break;
         case TOKEN_PLUS:
             if (checkAstType(typeChecker, left, "clox.std.lang.String") && checkAstType(typeChecker, right, "clox.std.lang.String")) {
                 defineAstType(typeChecker, ast, "String", item);
+                return;
             }
             else if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
                 defineAstType(typeChecker, ast, "Int", item);
+                return;
             }
             else if (checkAstType(typeChecker, left, "clox.std.lang.Number") && checkAstType(typeChecker, right, "clox.std.lang.Number")) {
                 defineAstType(typeChecker, ast, "Number", item);
+                return;
             }
             break;
         case TOKEN_MINUS:
@@ -197,22 +212,30 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
         case TOKEN_MODULO:
             if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
                 defineAstType(typeChecker, ast, "Int", item);
+                return;
             }
             else if (checkAstType(typeChecker, left, "clox.std.lang.Number") && checkAstType(typeChecker, right, "clox.std.lang.Number")) {
                 defineAstType(typeChecker, ast, "Number", item);
+                return;
             }
             break;
         case TOKEN_SLASH:
             if (checkAstType(typeChecker, left, "clox.std.lang.Number") && checkAstType(typeChecker, right, "clox.std.lang.Number")) {
                 defineAstType(typeChecker, ast, "Number", item);
+                return;
             }
             break;
         case TOKEN_DOT_DOT:
-            defineAstType(typeChecker, ast, "clox.std.collection.Range", item);
+            if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
+                defineAstType(typeChecker, ast, "clox.std.collection.Range", item);
+                return;
+            }
             break;
         default:
             break;
     }
+
+    inferAstTypeFromBinaryOperator(typeChecker, ast, item);
 }
 
 static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
@@ -231,10 +254,9 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
     else if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Class"))) {
         ObjString* className = getClassFullName(typeChecker, name);
         TypeInfo* classType = typeTableGet(typeChecker->vm->typetab, className);
-        if (classType == NULL) return;
         ObjString* initializerName = newString(typeChecker->vm, "__init__");
         TypeInfo* initializerType = typeTableMethodLookup(classType, initializerName);
-        
+
         if (initializerType != NULL) {
             sprintf_s(calleeDesc, UINT8_MAX, "Class %s's initializer", name->chars);
             validateArguments(typeChecker, calleeDesc, args, AS_CALLABLE_TYPE(initializerType));
