@@ -88,6 +88,38 @@ static ObjString* getClassFullName(TypeChecker* typeChecker, ObjString* name) {
     return concatenateString(typeChecker->vm, typeChecker->currentNamespace, name, ".");
 }
 
+static ObjString* getClassNameByMetaclass(TypeChecker* typeChecker, ObjString* metaclassName) {
+    return subString(typeChecker->vm, metaclassName, 0, metaclassName->length - 7);
+}
+
+static TypeInfo* getClassType(TypeChecker* typeChecker, ObjString* shortName, SymbolTable* symtab) {
+    if (shortName == NULL) return NULL;
+    TypeInfo* type = typeTableGet(typeChecker->vm->typetab, shortName);
+
+    if (type == NULL) {
+        ObjString* fullName = concatenateString(typeChecker->vm, typeChecker->currentNamespace, shortName, ".");
+        type = typeTableGet(typeChecker->vm->typetab, fullName);
+
+        if (type == NULL) {
+            fullName = concatenateString(typeChecker->vm, typeChecker->vm->langNamespace->fullName, shortName, ".");
+            type = typeTableGet(typeChecker->vm->typetab, fullName);
+
+            if (type == NULL) {
+                SymbolItem* item = symbolTableLookup(symtab, shortName);
+                if (item != NULL && item->type != NULL) {
+                    type = typeTableGet(typeChecker->vm->typetab, getClassNameByMetaclass(typeChecker, item->type->fullName));
+                }
+            }
+        }
+    }
+    return type;
+}
+
+static ObjString* getMetaclassName(TypeChecker* typeChecker, ObjString* className) {
+    ObjString* metaclassSuffix = newString(typeChecker->vm, "class");
+    return concatenateString(typeChecker->vm, className, metaclassSuffix, " ");
+}
+
 static void defineAstType(TypeChecker* typeChecker, Ast* ast, const char* name, SymbolItem* item) {
     ObjString* typeName = newString(typeChecker->vm, name);
     ast->type = getNativeType(typeChecker->vm, name);
@@ -152,10 +184,10 @@ static void inferAstTypeFromUnary(TypeChecker* typeChecker, Ast* ast, SymbolItem
             defineAstType(typeChecker, ast, "Bool", item);
             break;
         case TOKEN_MINUS:
-            if (!isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Number"))) {
+            if (!isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "Number"))) {
                 typeError(typeChecker, "Unary negate expects operand to be a Number, %s given.", child->type->shortName->chars);
             }
-            else if (isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "clox.std.lang.Int"))) {
+            else if (isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "Int"))) {
                 defineAstType(typeChecker, ast, "Int", item);
             }
             else {
@@ -182,7 +214,7 @@ static void inferAstTypeFromBinaryOperator(TypeChecker* typeChecker, Ast* ast, S
 
     if (!isSubtypeOfType(arg->type, paramType)) {
         typeError(typeChecker, "Method %s::%s expects argument 0 to be an instance of %s but gets %s.",
-            receiver->type->shortName->chars, paramType->shortName->chars, arg->type->shortName->chars);
+            receiver->type->shortName->chars, methodName->chars, paramType->shortName->chars, arg->type->shortName->chars);
     }
     ast->type = methodType->returnType;
 }
@@ -252,8 +284,8 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
         ast->type = functionType->returnType;
     }
     else if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Class"))) {
-        ObjString* className = getClassFullName(typeChecker, name);
-        TypeInfo* classType = typeTableGet(typeChecker->vm->typetab, className);
+        TypeInfo* classType = getClassType(typeChecker, name, ast->symtab);
+        if (classType == NULL) return;
         ObjString* initializerName = newString(typeChecker->vm, "__init__");
         TypeInfo* initializerType = typeTableMethodLookup(classType, initializerName);
 
@@ -797,13 +829,14 @@ static void typeCheckUsingStatement(TypeChecker* typeChecker, Ast* ast) {
         subNamespace->type = namespaceType;
     }
 
-    TypeInfo* type = typeTableGet(typeChecker->vm->typetab, fullName);
-    if (type == NULL) return;
+    TypeInfo* classType = typeTableGet(typeChecker->vm->typetab, fullName);
+    if (classType == NULL) return;
     Ast* child = (astNumChild(ast) > 1) ? astGetChild(ast, 1) : astLastChild(_namespace);
+    ObjString* shortName = copyString(typeChecker->vm, child->token.start, child->token.length);
 
-    const char* behaviorTypeName = (type->category == TYPE_CATEGORY_TRAIT) ? "Trait" : "Class";
-    child->type = getNativeType(typeChecker->vm, behaviorTypeName);
-    SymbolItem* item = symbolTableLookup(child->symtab, copyString(typeChecker->vm, child->token.start, child->token.length));
+    if (classType->category == TYPE_CATEGORY_TRAIT) child->type = getNativeType(typeChecker->vm, "Trait");
+    else child->type = typeTableGet(typeChecker->vm->typetab, getMetaclassName(typeChecker, fullName));
+    SymbolItem* item = symbolTableLookup(child->symtab, shortName);
     if (item->type == NULL) item->type = child->type;
 }
 

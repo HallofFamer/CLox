@@ -544,10 +544,10 @@ static void behavior(Resolver* resolver, BehaviorType type, Ast* ast) {
 
 static void yield(Resolver* resolver, Ast* ast) {
     if (resolver->isTopLevel) {
-        semanticError(resolver, "Cannot yield from top-level code.");
+        semanticError(resolver, "Cannot use 'yield' from top-level code.");
     }
     else if (resolver->currentFunction->modifier.isInitializer) {
-        semanticError(resolver, "Cannot yield from an initializer.");
+        semanticError(resolver, "Cannot use 'yield' from an initializer.");
     }
 
     resolver->currentFunction->modifier.isGenerator = true;
@@ -960,10 +960,10 @@ static void resolveRequireStatement(Resolver* resolver, Ast* ast) {
 
 static void resolveReturnStatement(Resolver* resolver, Ast* ast) {
     if (resolver->isTopLevel) {
-        semanticError(resolver, "Cannot return from top-level code.");
+        semanticError(resolver, "Cannot use 'return' from top-level code.");
     }
     else if (resolver->currentFunction->modifier.isInitializer) {
-        semanticError(resolver, "Cannot return value from an initializer.");
+        semanticError(resolver, "Cannot use 'return' from an initializer.");
     }
     else if (astHasChild(ast)) {
         resolveChild(resolver, ast, 0);
