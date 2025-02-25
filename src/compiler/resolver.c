@@ -891,11 +891,8 @@ static void resolveCatchStatement(Resolver* resolver, Ast* ast) {
     beginScope(resolver, ast, SYMBOL_SCOPE_BLOCK);
     Ast* exceptionVar = astGetChild(ast, 0);
     exceptionVar->symtab = ast->symtab;
-    exceptionVar->type = getTypeForSymbol(resolver, ast->token);
-
     SymbolItem* exceptionItem = declareVariable(resolver, exceptionVar, false);
     exceptionItem->state = SYMBOL_STATE_DEFINED;
-    exceptionItem->type = exceptionVar->type;
 
     Ast* blk = astGetChild(ast, 1);
     blk->symtab = ast->symtab;

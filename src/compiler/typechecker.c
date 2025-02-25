@@ -75,6 +75,7 @@ static ObjString* createQualifiedSymbol(TypeChecker* typeChecker, Ast* ast) {
     identifier->symtab = identifiers->symtab;
     const char* start = identifier->token.start;
     int length = identifier->token.length;
+
     for (int i = 1; i < identifiers->children->count; i++) {
         identifier = astGetChild(identifiers, i);
         identifier->symtab = identifiers->symtab;
@@ -734,12 +735,20 @@ static void typeCheckCaseStatement(TypeChecker* typeChecker, Ast* ast) {
 
 static void typeCheckCatchStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
+    Ast* exceptionVar = astGetChild(ast, 0);
+    ObjString* exceptionClassName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    exceptionVar->type = getClassType(typeChecker, exceptionClassName, NULL);
+
+    Ast* blk = astGetChild(ast, 1);
+    ObjString* exceptionVarName = copyString(typeChecker->vm, exceptionVar->token.start, exceptionVar->token.length);
+    SymbolItem* exceptionItem = symbolTableLookup(blk->symtab, exceptionVarName);
+    exceptionItem->type = exceptionVar->type;
+    printf("exception type: %s\n", exceptionItem->type->shortName->chars);
     typeCheckChild(typeChecker, ast, 1);
 }
 
 static void typeCheckDefaultStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
-    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckExpressionStatement(TypeChecker* typeChecker, Ast* ast) {
@@ -847,7 +856,6 @@ static void typeCheckWhileStatement(TypeChecker* typeChecker, Ast* ast) {
 
 static void typeCheckYieldStatement(TypeChecker* typeChecker, Ast* ast) {
     yield(typeChecker, ast);
-    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckStatement(TypeChecker* typeChecker, Ast* ast) {
