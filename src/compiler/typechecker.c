@@ -577,6 +577,12 @@ static void typeCheckOr(TypeChecker* typeChecker, Ast* ast) {
     defineAstType(typeChecker, ast, "Bool", NULL);
 }
 
+static void typeCheckParam(TypeChecker* typeChecker, Ast* ast) {
+    ObjString* name = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    SymbolItem* item = symbolTableLookup(ast->symtab, name);
+    item->type = ast->type;
+}
+
 static void typeCheckPropertyGet(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* receiver = astGetChild(ast, 0);
@@ -682,6 +688,9 @@ static void typeCheckExpression(TypeChecker* typeChecker, Ast* ast) {
             break;
         case AST_EXPR_OR:
             typeCheckOr(typeChecker, ast);
+            break;
+        case AST_EXPR_PARAM:
+            typeCheckParam(typeChecker, ast);
             break;
         case AST_EXPR_PROPERTY_GET:
             typeCheckPropertyGet(typeChecker, ast);

@@ -700,7 +700,6 @@ static void resolveParam(Resolver* resolver, Ast* ast) {
     item->state = SYMBOL_STATE_DEFINED;
     if (astNumChild(ast) > 0) {
         insertParamType(resolver, ast);
-        item->type = ast->type;
     }
 }
 
