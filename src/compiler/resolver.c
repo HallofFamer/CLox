@@ -215,7 +215,7 @@ static SymbolItem* findThis(Resolver* resolver) {
 
     if (item == NULL) {
         ObjString* klass = getSymbolFullName(resolver, resolver->currentClass->name);
-        if (resolver->currentSymtab->scope == SYMBOL_SCOPE_METHOD) {
+        if (resolver->currentFunction->symtab->scope == SYMBOL_SCOPE_METHOD) {
             item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
         }
         else {
@@ -426,9 +426,11 @@ static void insertLiteralType(Resolver* resolver, Ast* ast, const char* name) {
     ast->type = getNativeType(resolver->vm, name);
 }
 
-static void insertParamType(Resolver* resolver, Ast* ast) {
-    Ast* child = astGetChild(ast, 0);
-    ast->type = getTypeForSymbol(resolver, child->token);
+static void insertParamType(Resolver* resolver, Ast* ast, bool hasType) {
+    Ast* child = hasType ? astGetChild(ast, 0) : NULL;
+    if (child != NULL) {
+        ast->type = getTypeForSymbol(resolver, child->token);
+    }
 
     switch (resolver->currentFunction->symtab->scope) {
         case SYMBOL_SCOPE_FUNCTION: {
@@ -444,7 +446,7 @@ static void insertParamType(Resolver* resolver, Ast* ast) {
             if (!resolver->currentClass->isAnonymous) {
                 BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
                 ObjString* methodName = createSymbol(resolver, resolver->currentFunction->name);
-                CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(behaviorType->methods, methodName));             
+                CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(behaviorType->methods, methodName));        
                 if (methodType != NULL && methodType->paramTypes != NULL) {
                     TypeInfoArrayAdd(methodType->paramTypes, ast->type);
                     if (ast->modifier.isVariadic) methodType->modifier.isVariadic = true;
@@ -698,9 +700,7 @@ static void resolveOr(Resolver* resolver, Ast* ast) {
 static void resolveParam(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, ast->modifier.isMutable);
     item->state = SYMBOL_STATE_DEFINED;
-    if (astNumChild(ast) > 0) {
-        insertParamType(resolver, ast);
-    }
+    insertParamType(resolver, ast, astHasChild(ast));
 }
 
 static void resolvePropertyGet(Resolver* resolver, Ast* ast) {

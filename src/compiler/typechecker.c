@@ -443,7 +443,7 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
         SymbolItem* superclassItem = symbolTableLookup(ast->symtab, copyString(typeChecker->vm, superclass->token.start, superclass->token.length));
         childIndex++;
         if (!isSubtypeOfType(superclassItem->type, getNativeType(typeChecker->vm, "Class"))) {
-            typeError(typeChecker, "superclass must be an instance of Class, but gets %s.", superclassItem->type->shortName->chars);
+            typeError(typeChecker, "Superclass must be an instance of Class, but gets %s.", superclassItem->type->shortName->chars);
         }
     }
 
