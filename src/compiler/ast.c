@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "ast.h"
+#include "../vm/string.h"
 
 DEFINE_BUFFER(AstArray, Ast*)
 
@@ -99,6 +100,22 @@ Ast* astLastChild(Ast* ast) {
 
 int astNumChild(Ast* ast) {
     return (ast->children != NULL) ? ast->children->count : 0;
+}
+
+ObjString* astCreateQualifiedName(VM* vm, Ast* ast) {
+    Ast* identifiers = astGetChild(ast, 0);
+    identifiers->symtab = ast->symtab;
+    Ast* identifier = astGetChild(identifiers, 0);
+    identifier->symtab = identifiers->symtab;
+    const char* start = identifier->token.start;
+    int length = identifier->token.length;
+
+    for (int i = 1; i < identifiers->children->count; i++) {
+        identifier = astGetChild(identifiers, i);
+        identifier->symtab = identifiers->symtab;
+        length += identifier->token.length + 1;
+    }
+    return copyString(vm, start, length);
 }
 
 static void astOutputIndent(int indentLevel) {

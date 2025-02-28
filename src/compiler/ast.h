@@ -124,6 +124,7 @@ Ast* astGetChild(Ast* ast, int index);
 bool astHasChild(Ast* ast);
 Ast* astLastChild(Ast* ast);
 int astNumChild(Ast* ast);
+ObjString* astCreateQualifiedName(VM* vm, Ast* ast);
 void astOutput(Ast* ast, int indentLevel);
 
 static inline AstNodeCategory astNodeCategory(AstNodeKind kind) {

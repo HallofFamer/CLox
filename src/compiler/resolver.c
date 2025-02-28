@@ -138,22 +138,6 @@ static ObjString* createSymbol(Resolver* resolver, Token token) {
     return copyString(resolver->vm, token.start, token.length);
 }
 
-static ObjString* createQualifiedSymbol(Resolver* resolver, Ast* ast) {
-    Ast* identifiers = astGetChild(ast, 0);
-    identifiers->symtab = ast->symtab;
-    Ast* identifier = astGetChild(identifiers, 0);
-    identifier->symtab = identifiers->symtab;
-    const char* start = identifier->token.start;
-    int length = identifier->token.length;
-
-    for (int i = 1; i < identifiers->children->count; i++) {
-        identifier = astGetChild(identifiers, i);
-        identifier->symtab = identifiers->symtab;
-        length += identifier->token.length + 1;
-    }
-    return copyString(resolver->vm, start, length);
-}
-
 static ObjString* getSymbolFullName(Resolver* resolver, Token token) {
     int length = resolver->currentNamespace->length + token.length + 1;
     char* fullName = bufferNewCString(length);
@@ -1010,7 +994,7 @@ static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
         insertSymbol(resolver, subNamespace->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
     }
 
-    ObjString* fullName = createQualifiedSymbol(resolver, ast);
+    ObjString* fullName = astCreateQualifiedName(resolver->vm, ast);
     TypeInfo* type = NULL;
     if (!isNativeNamespace(fullName)) {
         ObjString* filePath = locateSourceFileFromFullName(resolver->vm, fullName);
@@ -1161,7 +1145,7 @@ static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
     Ast* identifier = astGetChild(identifiers, 0);
     identifier->symtab = identifiers->symtab;
     insertSymbol(resolver, identifier->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, NULL, false);
-    resolver->currentNamespace = createQualifiedSymbol(resolver, ast);
+    resolver->currentNamespace = astCreateQualifiedName(resolver->vm, ast);
 }
 
 static void resolveTraitDeclaration(Resolver* resolver, Ast* ast) {

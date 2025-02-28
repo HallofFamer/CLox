@@ -96,6 +96,24 @@ bool tokensEqual(Token* token, Token* token2) {
     return memcmp(token->start, token2->start, token->length) == 0;
 }
 
+bool tokenIsOperator(Token token) {
+    switch (token.type) {
+        case TOKEN_EQUAL_EQUAL:
+        case TOKEN_GREATER:
+        case TOKEN_LESS:
+        case TOKEN_PLUS:
+        case TOKEN_MINUS:
+        case TOKEN_STAR:
+        case TOKEN_SLASH:
+        case TOKEN_MODULO:
+        case TOKEN_DOT_DOT:
+        case TOKEN_LEFT_BRACKET:
+            return true;
+        default:
+            return false;
+    }
+}
+
 char* tokenToCString(Token token) {
     char* buffer = bufferNewCString((size_t)token.length);
     if (buffer != NULL) {

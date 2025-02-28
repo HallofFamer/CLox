@@ -588,7 +588,7 @@ static Ast* methods(Parser* parser, Token* name) {
         Ast* returnType = NULL;
         if (match(parser, TOKEN_ASYNC)) isAsync = true;
         if (match(parser, TOKEN_CLASS)) isClass = true;
-        if (check2(parser, TOKEN_IDENTIFIER)) {
+        if (check2(parser, TOKEN_IDENTIFIER) || (check(parser, TOKEN_IDENTIFIER) && tokenIsOperator(parser->next))) {
             hasReturnType = true;
             returnType = type_(parser, "Expect method return type.");
         }
