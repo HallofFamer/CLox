@@ -68,29 +68,9 @@ static ObjString* createSymbol(TypeChecker* typeChecker, Token token) {
     return copyString(typeChecker->vm, token.start, token.length);
 }
 
-static ObjString* createQualifiedSymbol(TypeChecker* typeChecker, Ast* ast) {
-    Ast* identifiers = astGetChild(ast, 0);
-    identifiers->symtab = ast->symtab;
-    Ast* identifier = astGetChild(identifiers, 0);
-    identifier->symtab = identifiers->symtab;
-    const char* start = identifier->token.start;
-    int length = identifier->token.length;
-
-    for (int i = 1; i < identifiers->children->count; i++) {
-        identifier = astGetChild(identifiers, i);
-        identifier->symtab = identifiers->symtab;
-        length += identifier->token.length + 1;
-    }
-    return copyString(typeChecker->vm, start, length);
-}
-
 static ObjString* getClassFullName(TypeChecker* typeChecker, ObjString* name) {
     if (typeChecker->currentNamespace == NULL) return name;
     return concatenateString(typeChecker->vm, typeChecker->currentNamespace, name, ".");
-}
-
-static ObjString* getClassNameByMetaclass(TypeChecker* typeChecker, ObjString* metaclassName) {
-    return subString(typeChecker->vm, metaclassName, 0, metaclassName->length - 7);
 }
 
 static TypeInfo* getClassType(TypeChecker* typeChecker, ObjString* shortName, SymbolTable* symtab) {
@@ -108,7 +88,7 @@ static TypeInfo* getClassType(TypeChecker* typeChecker, ObjString* shortName, Sy
             if (type == NULL) {
                 SymbolItem* item = symbolTableLookup(symtab, shortName);
                 if (item != NULL && item->type != NULL) {
-                    type = typeTableGet(typeChecker->vm->typetab, getClassNameByMetaclass(typeChecker, item->type->fullName));
+                    type = typeTableGet(typeChecker->vm->typetab, getClassNameFromMetaclass(typeChecker->vm, item->type->fullName));
                 }
             }
         }
@@ -433,7 +413,7 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
     ObjString* shortName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
     ObjString* fullName = getClassFullName(typeChecker, shortName);
     TypeInfo* behaviorType = typeTableGet(typeChecker->vm->typetab, fullName);
-    bool isAnonymous = (shortName->length == 0);
+    bool isAnonymous = (shortName->length == 1 && shortName->chars[0] == '@');
     initClassTypeChecker(typeChecker, &classTypeChecker, ast->token, behaviorType == NULL ? NULL : AS_BEHAVIOR_TYPE(behaviorType), isAnonymous);
     int childIndex = 0;
 
@@ -839,7 +819,7 @@ static void typeCheckTryStatement(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckUsingStatement(TypeChecker* typeChecker, Ast* ast) {
     Ast* _namespace = astGetChild(ast, 0);
     int namespaceDepth = astNumChild(_namespace);
-    ObjString* fullName = createQualifiedSymbol(typeChecker, ast);
+    ObjString* fullName = astCreateQualifiedName(typeChecker->vm, ast);
     TypeInfo* namespaceType = getNativeType(typeChecker->vm, "Namespace");
 
     for (int i = 0; i < namespaceDepth - 1; i++) {
@@ -957,7 +937,7 @@ static void typeCheckNamespaceDeclaration(TypeChecker* typeChecker, Ast* ast) {
     Ast* identifier = astGetChild(identifiers, 0);
     SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, identifier->token));
     defineAstType(typeChecker, ast, "Namespace", item);
-    typeChecker->currentNamespace = createQualifiedSymbol(typeChecker, ast);
+    typeChecker->currentNamespace = astCreateQualifiedName(typeChecker->vm, ast);
 }
 
 static void typeCheckTraitDeclaration(TypeChecker* typeChecker, Ast* ast) {

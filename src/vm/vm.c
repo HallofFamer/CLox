@@ -59,6 +59,7 @@ void runtimeError(VM* vm, const char* format, ...) {
         ObjFunction* function = frame->closure->function;
         size_t instruction = frame->ip - function->chunk.code - 1;
         fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
+
         if (function->name == NULL) {
             fprintf(stderr, "script\n");
         } 
@@ -505,7 +506,9 @@ static bool invokeFromClass(VM* vm, ObjClass* klass, ObjString* name, int argCou
     if (!tableGet(&klass->methods, name, &method)) {
         if (interceptUndefinedInvoke(vm, klass, name, argCount)) return true;
         else { 
-            if (klass != vm->nilClass) runtimeError(vm, "Undefined method '%s' on class %s.", name->chars, klass->fullName->chars);
+            if (klass != vm->nilClass) {
+                runtimeError(vm, "Undefined method '%s' on class %s.", name->chars, klass->fullName->chars);
+            }
             return false;
         }
     }
@@ -1150,7 +1153,7 @@ InterpretResult run(VM* vm) {
                 uint8_t behaviorCount = READ_BYTE();
                 ObjArray* traits = makeTraitArray(vm, behaviorCount);
                 if (traits == NULL) RUNTIME_ERROR("Only traits can be implemented by class or another trait.");
-                ObjClass* klass = AS_CLASS(peek(vm, behaviorCount));
+                ObjClass* klass = AS_CLASS(peek(vm, 1));
                 implementTraits(vm, klass, &traits->elements);
                 pop(vm);
                 break;

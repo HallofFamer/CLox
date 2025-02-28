@@ -15,6 +15,8 @@ ObjClass* createClass(VM* vm, ObjString* name, ObjClass* metaclass, BehaviorType
 void initTrait(VM* vm, ObjClass* trait, ObjString* name);
 ObjClass* createTrait(VM* vm, ObjString* name);
 ObjClass* getObjClass(VM* vm, Value value);
+ObjString* getClassNameFromMetaclass(VM* vm, ObjString* metaclassName);
+ObjString* getMetaclassNameFromClass(VM* vm, ObjString* className);
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass);
 bool isClassExtendingSuperclass(ObjClass* klass, ObjClass* superclass);
 bool isClassImplementingTrait(ObjClass* trait, ObjClass* klass);

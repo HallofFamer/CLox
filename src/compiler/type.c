@@ -170,6 +170,7 @@ static void typeTableAdjustCapacity(TypeTable* typetab, int capacity) {
 }
 
 TypeInfo* typeTableGet(TypeTable* typetab, ObjString* key) {
+    if (typetab->count == 0) return NULL;
     TypeEntry* entry = findTypeEntry(typetab->entries, typetab->capacity, key);
     if (entry->key == NULL) return NULL;
     return entry->value;
@@ -195,7 +196,7 @@ TypeInfo* typeTableMethodLookup(TypeInfo* type, ObjString* key) {
     BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(type);
     TypeInfo* methodType = typeTableGet(behaviorType->methods, key);
     if (methodType != NULL) return methodType;
-    
+
     if (behaviorType->traitTypes != NULL) {
         for (int i = 0; i < behaviorType->traitTypes->count; i++) {
             BehaviorTypeInfo* traitType = AS_BEHAVIOR_TYPE(behaviorType->traitTypes->elements[i]);
@@ -258,9 +259,9 @@ static void typeTableOutputMethod(TypeTable* methods) {
             printf("%s(", entry->key->chars);
 
             if (method->paramTypes->count > 0) {
-                printf("%s", method->paramTypes->elements[0]->shortName->chars);
+                printf("%s", (method->paramTypes->elements[0] == NULL) ? "dynamic" : method->paramTypes->elements[0]->shortName->chars);
                 for (int i = 1; i < method->paramTypes->count; i++) {
-                    printf(", %s", method->paramTypes->elements[i]->shortName->chars);
+                    printf(", %s", (method->paramTypes->elements[i] == NULL) ? "dynamic" : method->paramTypes->elements[i]->shortName->chars);
                 }
             }
             printf(")\n");

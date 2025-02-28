@@ -85,6 +85,15 @@ ObjClass* getObjClass(VM* vm, Value value) {
     else return NULL;
 }
 
+ObjString* getClassNameFromMetaclass(VM* vm, ObjString* metaclassName) {
+    return subString(vm, metaclassName, 0, metaclassName->length - 7);
+}
+
+ObjString* getMetaclassNameFromClass(VM* vm, ObjString* className) {
+    if (strstr(className->chars, " class") != NULL) return copyString(vm, "Metaclass", 9);
+    return concatenateString(vm, className, newString(vm, "class"), " ");
+}
+
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass) {
     ObjClass* currentClass = getObjClass(vm, value);
     if (currentClass == klass) return true;
