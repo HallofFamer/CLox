@@ -42,12 +42,14 @@ https://github.com/munificent/craftinginterpreters
 - Generator functions/methods which can yield control back to the caller and resume at a later point of execution.
 - Promise API with event loop provided by libuv library for non-blocking IO operations.
 - Introduction of `async` and `await` keywords, which allows C#/JS style of concurrency.
+- Optional static typing support for function/method parameters and return values, types only exist at compile time and are erased at runtime. 
 - Customized Runtime configuration for CLox using clox.ini.
 - Allow loading lox source files in lox script and another lox source file with `require` keyword.
 - Cross-platform build with Cmake and package manager with vcpkg.
 
 ### Enhanced or Removed Features
 - VM is no longer a global variable, allowing CLox VM to be embedded in other host applications.
+- Multi-pass compiler with abstract syntax tree, semantic analyzer(resolver), symbol table, type checker, and generation of bytecode by walking AST. 
 - Parser is extended with look-ahead capability, with field next storing the next token. 
 - Print statement removed, use native function `print` and `println` instead.
 - Initializer method is renamed from `init` to `__init__` as an interceptor method.

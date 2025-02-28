@@ -2127,8 +2127,8 @@ void registerCollectionPackage(VM* vm) {
     DEF_METHOD(vm->arrayClass, Array, select, 1, RETURN_TYPE(clox.std.collection.Array), PARAM_TYPE(TCallable));
     DEF_METHOD(vm->arrayClass, Array, slice, 2, RETURN_TYPE(clox.std.collection.Array), PARAM_TYPE(Int), PARAM_TYPE(Int));
     DEF_METHOD(vm->arrayClass, Array, toString, 0, RETURN_TYPE(String));
-    DEF_OPERATOR(vm->arrayClass, Array, [], __getSubscript__, 1, RETURN_TYPE(Object), PARAM_TYPE(Object));
-    DEF_OPERATOR(vm->arrayClass, Array, []=, __setSubscript__, 2, RETURN_TYPE(Object), PARAM_TYPE(Object), PARAM_TYPE(Object));
+    DEF_OPERATOR(vm->arrayClass, Array, [], __getSubscript__, 1, RETURN_TYPE(Object), PARAM_TYPE(Int));
+    DEF_OPERATOR(vm->arrayClass, Array, []=, __setSubscript__, 2, RETURN_TYPE(Object), PARAM_TYPE(Int), PARAM_TYPE(Object));
 
     ObjClass* arrayMetaclass = vm->arrayClass->obj.klass;
     DEF_METHOD(arrayMetaclass, ArrayClass, fromElements, -1, RETURN_TYPE(clox.std.collection.Array));

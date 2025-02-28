@@ -965,7 +965,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(randomClass, Random, nextBool, 0, RETURN_TYPE(Bool));
     DEF_METHOD(randomClass, Random, nextFloat, 0, RETURN_TYPE(Float));
     DEF_METHOD(randomClass, Random, nextInt, 0, RETURN_TYPE(Int));
-    DEF_METHOD(randomClass, Random, nextIntBounded, 1, RETURN_TYPE(Int));
+    DEF_METHOD(randomClass, Random, nextIntBounded, 1, RETURN_TYPE(Int), PARAM_TYPE(Int));
     DEF_METHOD(randomClass, Random, setSeed, 1, RETURN_TYPE(Nil), PARAM_TYPE(Int));
 
     bindSuperclass(vm, regexClass, vm->objectClass);
@@ -994,8 +994,8 @@ void registerUtilPackage(VM* vm) {
     setClassProperty(vm, uuidClass, "length", INT_VAL(UUID4_LEN));
     setClassProperty(vm, uuidClass, "version", INT_VAL(4));
     DEF_METHOD(uuidMetaclass, UUIDClass, generate, 0, RETURN_TYPE(String));
-    DEF_METHOD(uuidMetaclass, UUIDClass, isUUID, 1, RETURN_TYPE(Bool));
-    DEF_METHOD(uuidMetaclass, UUIDClass, parse, 1, RETURN_TYPE(clox.std.util.UUID));
+    DEF_METHOD(uuidMetaclass, UUIDClass, isUUID, 1, RETURN_TYPE(Bool), PARAM_TYPE(String));
+    DEF_METHOD(uuidMetaclass, UUIDClass, parse, 1, RETURN_TYPE(clox.std.util.UUID), PARAM_TYPE(String));
 
     ObjClass* runtimeExceptionClass = getNativeClass(vm, "clox.std.lang.RuntimeException");
     defineNativeException(vm, "DateFormatException", runtimeExceptionClass);
