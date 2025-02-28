@@ -219,8 +219,8 @@ static ObjString* getMetaclassSymbol(Resolver* resolver, ObjString* className) {
 }
 
 static void insertMetaclassType(Resolver* resolver, ObjString* classShortName, ObjString* classFullName) {
-    ObjString* metaclassShortName = getMetaclassSymbol(resolver, classShortName);
-    ObjString* metaclassFullName = getMetaclassSymbol(resolver, classFullName);
+    ObjString* metaclassShortName = getMetaclassNameFromClass(resolver->vm, classShortName);
+    ObjString* metaclassFullName = getMetaclassNameFromClass(resolver->vm, classFullName);
     typeTableInsertBehavior(resolver->vm->typetab, TYPE_CATEGORY_CLASS, metaclassShortName, metaclassFullName, NULL);
 }
 
@@ -238,8 +238,8 @@ static void bindSuperclassType(Resolver* resolver, Token currentClass, Token sup
     if (superclassType == NULL) return;
     currentClassType->superclassType = superclassType;
 
-    BehaviorTypeInfo* currentMetaclassType = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, currentClassType->baseType.fullName)));
-    TypeInfo* superMetaclassType = typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, superclassType->fullName));
+    BehaviorTypeInfo* currentMetaclassType = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassNameFromClass(resolver->vm, currentClassType->baseType.fullName)));
+    TypeInfo* superMetaclassType = typeTableGet(resolver->vm->typetab, getMetaclassNameFromClass(resolver->vm, superclassType->fullName));
     currentMetaclassType->superclassType = superMetaclassType;
 }
 
@@ -1124,7 +1124,7 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     if (!resolver->currentClass->isAnonymous) {
         BehaviorTypeInfo* klass = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
         if (ast->modifier.isClass) {
-            klass = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassSymbol(resolver, klass->baseType.fullName)));
+            klass = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassNameFromClass(resolver->vm, klass->baseType.fullName)));
         }
 
         CallableTypeInfo* methodType = typeTableInsertCallable(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);

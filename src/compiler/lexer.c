@@ -277,11 +277,15 @@ static Token keywordIdentifier(Lexer* lexer) {
 }
 
 static Token number(Lexer* lexer) {
-    while (isDigit(peek(lexer))) advance(lexer);
+    while (isDigit(peek(lexer))) {
+        advance(lexer);
+    }
 
     if (peek(lexer) == '.' && isDigit(peekNext(lexer))) {
         advance(lexer);
-        while (isDigit(peek(lexer))) advance(lexer);
+        while (isDigit(peek(lexer))) {
+            advance(lexer);
+        }
         return makeToken(lexer, TOKEN_NUMBER);
     }
     return makeToken(lexer, TOKEN_INT);

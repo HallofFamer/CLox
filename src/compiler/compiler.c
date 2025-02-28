@@ -941,7 +941,7 @@ static void compileExpression(Compiler* compiler, Ast* ast) {
             compileYield(compiler, ast);
             break;
         default:
-            compileError(compiler, "Invalid AST expression type.");
+            break;
     }
 }
 
@@ -1249,7 +1249,7 @@ static void compileStatement(Compiler* compiler, Ast* ast) {
             compileYieldStatement(compiler, ast);
             break;
         default:
-            compileError(compiler, "Invalid AST statement type.");
+            break;
     }
 }
 
@@ -1324,7 +1324,7 @@ static void compileDeclaration(Compiler* compiler, Ast* ast) {
             compileVarDeclaration(compiler, ast);
             break;
         default: 
-            compileError(compiler, "Invalid AST declaration type.");
+            break;
     }
 }
 
@@ -1338,6 +1338,7 @@ void compileAst(Compiler* compiler, Ast* ast) {
 void compileChild(Compiler* compiler, Ast* ast, int index) {
     Ast* child = astGetChild(ast, index);
     compiler->currentToken = child->token;
+
     switch (child->category) {
         case AST_CATEGORY_SCRIPT:
         case AST_CATEGORY_OTHER:

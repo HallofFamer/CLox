@@ -324,6 +324,11 @@ void typeTableOutput(TypeTable* typetab) {
     printf("\n");
 }
 
+bool isEqualType(TypeInfo* type, TypeInfo* type2) {
+    if (type == NULL || type2 == NULL) return true;
+    return (type->id == type2->id);
+}
+
 bool isSubtypeOfType(TypeInfo* type, TypeInfo* type2) {
     if (type == NULL || type2 == NULL || type->id == type2->id) return true;
     if (!IS_BEHAVIOR_TYPE(type) || !IS_BEHAVIOR_TYPE(type2)) return false;

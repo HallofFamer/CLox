@@ -97,6 +97,7 @@ BehaviorTypeInfo* typeTableInsertBehavior(TypeTable* typetab, TypeCategory categ
 CallableTypeInfo* typeTableInsertCallable(TypeTable* typetab, TypeCategory category, ObjString* name, TypeInfo* returnType);
 void typeTableOutput(TypeTable* typetab);
 
+bool isEqualType(TypeInfo* type, TypeInfo* type2);
 bool isSubtypeOfType(TypeInfo* type, TypeInfo* type2);
 
 #endif // !clox_type_h

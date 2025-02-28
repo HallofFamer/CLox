@@ -150,6 +150,30 @@ static void validateArguments(TypeChecker* typeChecker, const char* calleeDesc, 
     }
 }
 
+static void validateOverridingMethod(TypeChecker* typeChecker, CallableTypeInfo* methodType) {
+    TypeInfo* superclassMethodType = typeTableMethodLookup(typeChecker->currentClass->type->superclassType, methodType->baseType.shortName);
+    if (superclassMethodType == NULL) return;
+    CallableTypeInfo* overridenMethodType = AS_CALLABLE_TYPE(superclassMethodType);
+    ObjString* className = createSymbol(typeChecker, typeChecker->currentClass->name);
+
+    if (!isEqualType(methodType->returnType, overridenMethodType->returnType)) {
+        typeError(typeChecker, "Method %s::%s expects return type to be %s but gets %s.", className->chars,
+            methodType->baseType.shortName->chars, overridenMethodType->returnType->shortName->chars, methodType->returnType->shortName->chars);
+    }
+
+    if (methodType->paramTypes->count != overridenMethodType->paramTypes->count) {
+        typeError(typeChecker, "Method %s::%s expects to receive %d parameters but gets %d.", className->chars,
+            methodType->baseType.shortName->chars, overridenMethodType->paramTypes->count, methodType->paramTypes->count);
+    }
+
+    for (int i = 0; i < methodType->paramTypes->count; i++) {
+        if (!isEqualType(methodType->paramTypes->elements[i], overridenMethodType->paramTypes->elements[i])) {
+            typeError(typeChecker, "Method %s::%s expects argument %d to be %s but gets %s.", className->chars, methodType->baseType.shortName->chars,
+                i + 1, overridenMethodType->paramTypes->elements[i]->shortName->chars, methodType->paramTypes->elements[i]->shortName->chars);
+        }
+    }
+}
+
 static void inferAstTypeFromChild(Ast* ast, int childIndex, SymbolItem* item) {
     Ast* child = astGetChild(ast, childIndex);
     ast->type = child->type;
@@ -928,6 +952,7 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
 
     if (!typeChecker->currentClass->isAnonymous) {
         CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(typeChecker->currentClass->type->methods, name));
+        if(methodType != NULL) validateOverridingMethod(typeChecker, methodType);
         function(typeChecker, ast, methodType, ast->modifier.isAsync);
     }
 }
