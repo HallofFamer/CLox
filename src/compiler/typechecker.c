@@ -630,6 +630,12 @@ static void typeCheckSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
     inferAstTypeFromSuperInvoke(typeChecker, ast);
 }
 
+static void typeCheckThis(TypeChecker* typeChecker, Ast* ast) {
+    if (typeChecker->currentClass->type) {
+        ast->type = &typeChecker->currentClass->type->baseType;
+    }
+}
+
 static void typeCheckTrait(TypeChecker* typeChecker, Ast* ast) {
     behavior(typeChecker, BEHAVIOR_TRAIT, ast);
 }
@@ -713,6 +719,9 @@ static void typeCheckExpression(TypeChecker* typeChecker, Ast* ast) {
             break;
         case AST_EXPR_SUPER_INVOKE:
             typeCheckSuperInvoke(typeChecker, ast);
+            break;
+        case AST_EXPR_THIS:
+            typeCheckThis(typeChecker, ast);
             break;
         case AST_EXPR_TRAIT:
             typeCheckTrait(typeChecker, ast);

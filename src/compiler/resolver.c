@@ -213,11 +213,6 @@ static SymbolItem* findThis(Resolver* resolver) {
     return item;
 }
 
-static ObjString* getMetaclassSymbol(Resolver* resolver, ObjString* className) {
-    ObjString* metaclassSuffix = newString(resolver->vm, "class");
-    return concatenateString(resolver->vm, className, metaclassSuffix, " ");
-}
-
 static void insertMetaclassType(Resolver* resolver, ObjString* classShortName, ObjString* classFullName) {
     ObjString* metaclassShortName = getMetaclassNameFromClass(resolver->vm, classShortName);
     ObjString* metaclassFullName = getMetaclassNameFromClass(resolver->vm, classFullName);
