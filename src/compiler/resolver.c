@@ -977,6 +977,10 @@ static void resolveTryStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveUsingStatement(Resolver* resolver, Ast* ast) {
+    if (!resolver->isTopLevel) {
+        semanticError(resolver, "Can only use 'using' from top-level code.");
+    }
+
     Ast* _namespace = astGetChild(ast, 0);
     _namespace->symtab = ast->symtab;
     int namespaceDepth = astNumChild(_namespace);

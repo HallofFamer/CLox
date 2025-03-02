@@ -960,7 +960,15 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
     defineAstType(typeChecker, ast, "Method", item);
 
     if (!typeChecker->currentClass->isAnonymous) {
-        CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(typeChecker->currentClass->type->methods, name));
+        BehaviorTypeInfo* classType = NULL;
+        if (ast->modifier.isClass) {
+            ObjString* className = getClassFullName(typeChecker, createSymbol(typeChecker, typeChecker->currentClass->name));
+            ObjString* metaclassName = getMetaclassNameFromClass(typeChecker->vm, className);
+            classType = AS_BEHAVIOR_TYPE(typeTableGet(typeChecker->vm->typetab, metaclassName));
+        }
+        else classType = typeChecker->currentClass->type;
+
+        CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(classType->methods, name));
         if(methodType != NULL) validateOverridingMethod(typeChecker, methodType);
         function(typeChecker, ast, methodType, ast->modifier.isAsync);
     }
