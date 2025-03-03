@@ -19,6 +19,7 @@ struct FunctionTypeChecker {
     SymbolTable* symtab;
     CallableTypeInfo* type;
     bool isAsync;
+    bool isClass;
 };
 
 static void typeError(TypeChecker* typeChecker, const char* format, ...) {
@@ -43,11 +44,12 @@ static void endClassTypeChecker(TypeChecker* typeChecker) {
     typeChecker->currentClass = typeChecker->currentClass->enclosing;
 }
 
-static void initFunctionTypeChecker(TypeChecker* typeChecker, FunctionTypeChecker* function, Token name, CallableTypeInfo* type, bool isAsync) {
+static void initFunctionTypeChecker(TypeChecker* typeChecker, FunctionTypeChecker* function, Token name, CallableTypeInfo* type, bool isAsync, bool isClass) {
     function->enclosing = typeChecker->currentFunction;
     function->name = name;
     function->type = type;
     function->isAsync = isAsync;
+    function->isClass = isClass;
     typeChecker->currentFunction = function;
 }
 
@@ -289,7 +291,10 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
         ast->type = functionType->returnType;
     }
     else if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Class"))) {
-        TypeInfo* classType = getClassType(typeChecker, name, ast->symtab);
+        SymbolItem* item = symbolTableGet(ast->symtab, name);
+        if (item == NULL) return;
+        ObjString* className = getClassNameFromMetaclass(typeChecker->vm, item->type->fullName);
+        TypeInfo* classType = getClassType(typeChecker, className, ast->symtab);
         if (classType == NULL) return;
         ObjString* initializerName = newString(typeChecker->vm, "__init__");
         TypeInfo* initializerType = typeTableMethodLookup(classType, initializerName);
@@ -423,9 +428,9 @@ static void block(TypeChecker* typeChecker, Ast* ast) {
     }
 }
 
-static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* calleeType, bool isAsync) {
+static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* calleeType, bool isAsync, bool isClass) {
     FunctionTypeChecker functionTypeChecker;
-    initFunctionTypeChecker(typeChecker, &functionTypeChecker, ast->token, calleeType, isAsync);
+    initFunctionTypeChecker(typeChecker, &functionTypeChecker, ast->token, calleeType, isAsync, isClass);
     functionTypeChecker.symtab = ast->symtab;
     typeCheckChild(typeChecker, ast, 0);
     typeCheckChild(typeChecker, ast, 1);
@@ -533,7 +538,7 @@ static void typeCheckDictionary(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckFunction(TypeChecker* typeChecker, Ast* ast) {
     ObjString* name = copyString(typeChecker->vm, ast->token.start, ast->token.length);
     TypeInfo* calleeType = typeTableGet(typeChecker->vm->typetab, name);
-    function(typeChecker, ast, calleeType == NULL ? NULL : AS_CALLABLE_TYPE(calleeType), ast->modifier.isAsync);
+    function(typeChecker, ast, calleeType == NULL ? NULL : AS_CALLABLE_TYPE(calleeType), ast->modifier.isAsync, ast->modifier.isClass);
 }
 
 static void typeCheckGrouping(TypeChecker* typeChecker, Ast* ast) {
@@ -632,7 +637,14 @@ static void typeCheckSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
 
 static void typeCheckThis(TypeChecker* typeChecker, Ast* ast) {
     if (typeChecker->currentClass->type) {
-        ast->type = &typeChecker->currentClass->type->baseType;
+        if (typeChecker->currentFunction->isClass) {
+            ObjString* className = getClassFullName(typeChecker, createSymbol(typeChecker, typeChecker->currentClass->name));
+            ObjString* metaclassName = getMetaclassNameFromClass(typeChecker->vm, className);
+            ast->type = typeTableGet(typeChecker->vm->typetab, metaclassName);
+        }
+        else {
+            ast->type = &typeChecker->currentClass->type->baseType;
+        }
     }
 }
 
@@ -939,8 +951,14 @@ static void typeCheckStatement(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckClassDeclaration(TypeChecker* typeChecker, Ast* ast) {
-    SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
-    defineAstType(typeChecker, ast, "Class", item);
+    ObjString* className = createSymbol(typeChecker, ast->token);
+    ObjString* metaclassName = getMetaclassNameFromClass(typeChecker->vm, className);
+    TypeInfo* metaclassType = getClassType(typeChecker, metaclassName, ast->symtab);
+
+    ast->type = metaclassType;
+    SymbolItem* item = symbolTableGet(ast->symtab, className);
+    if (item != NULL) item->type = ast->type;
+
     Ast* _class = astGetChild(ast, 0);
     _class->type = ast->type;
     typeCheckChild(typeChecker, ast, 0);
@@ -970,7 +988,7 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
 
         CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(classType->methods, name));
         if(methodType != NULL) validateOverridingMethod(typeChecker, methodType);
-        function(typeChecker, ast, methodType, ast->modifier.isAsync);
+        function(typeChecker, ast, methodType, ast->modifier.isAsync, ast->modifier.isClass);
     }
 }
 
@@ -1054,7 +1072,7 @@ void typeCheckChild(TypeChecker* typeChecker, Ast* ast, int index) {
 
 void typeCheck(TypeChecker* typeChecker, Ast* ast) {
     FunctionTypeChecker functionTypeChecker;
-    initFunctionTypeChecker(typeChecker, &functionTypeChecker, syntheticToken("script"), NULL, ast->modifier.isAsync);
+    initFunctionTypeChecker(typeChecker, &functionTypeChecker, syntheticToken("script"), NULL, ast->modifier.isAsync, false);
     typeCheckAst(typeChecker, ast);
 
     endFunctionTypeChecker(typeChecker);

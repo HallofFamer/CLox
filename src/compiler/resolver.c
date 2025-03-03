@@ -198,7 +198,7 @@ static SymbolItem* findThis(Resolver* resolver) {
     SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
 
     if (item == NULL) {
-        ObjString* klass = getSymbolFullName(resolver, resolver->currentClass->name);
+        ObjString* className = getSymbolFullName(resolver, resolver->currentClass->name);
         if (resolver->currentFunction->symtab->scope == SYMBOL_SCOPE_METHOD) {
             item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
         }
@@ -206,7 +206,13 @@ static SymbolItem* findThis(Resolver* resolver) {
             item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, false);
         }
 
-        item->type = typeTableGet(resolver->vm->typetab, klass);
+        if (resolver->currentFunction->modifier.isClassMethod) {
+            ObjString* metaclassName = getMetaclassNameFromClass(resolver->vm, className);
+            item->type = typeTableGet(resolver->vm->typetab, metaclassName);
+        }
+        else {
+            item->type = typeTableGet(resolver->vm->typetab, className);
+        }
         symbolTableSet(resolver->currentSymtab, symbol, item);
     }
 
@@ -423,7 +429,13 @@ static void insertParamType(Resolver* resolver, Ast* ast, bool hasType) {
         }
         case SYMBOL_SCOPE_METHOD: {
             if (!resolver->currentClass->isAnonymous) {
-                BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
+                TypeInfo* baseType = getTypeForSymbol(resolver, resolver->currentClass->name);
+                if (resolver->currentFunction->modifier.isClassMethod) {
+                    ObjString* metaclassName = getMetaclassNameFromClass(resolver->vm, baseType->fullName);
+                    baseType = typeTableGet(resolver->vm->typetab, metaclassName);
+                }
+                BehaviorTypeInfo* behaviorType = AS_BEHAVIOR_TYPE(baseType);
+
                 ObjString* methodName = createSymbol(resolver, resolver->currentFunction->name);
                 CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(behaviorType->methods, methodName));        
                 if (methodType != NULL && methodType->paramTypes != NULL) {
@@ -1139,6 +1151,11 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveNamespaceDeclaration(Resolver* resolver, Ast* ast) {
+    if (!resolver->isTopLevel) {
+        semanticError(resolver, "Namespace declaration must be at top-level.");
+        return;
+    }
+
     Ast* identifiers = astGetChild(ast, 0);
     identifiers->symtab = ast->symtab;
     Ast* identifier = astGetChild(identifiers, 0);
