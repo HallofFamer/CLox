@@ -35,6 +35,7 @@ struct FunctionResolver {
     int numLocals;
     int numUpvalues;
     int numGlobals;
+    bool hasRequired;
     ResolverModifier modifier;
 };
 
@@ -95,6 +96,7 @@ static void initFunctionResolver(Resolver* resolver, FunctionResolver* function,
     function->numLocals = 0;
     function->numUpvalues = 0;
     function->numGlobals = 0;
+    function->hasRequired = false;
 
     function->scopeDepth = scopeDepth;
     function->modifier = resolverInitModifier();
@@ -747,17 +749,21 @@ static void resolveUnary(Resolver* resolver, Ast* ast) {
 
 static void resolveVariable(Resolver* resolver, Ast* ast) {
     SymbolItem* item = getVariable(resolver, ast);
-    ObjString* name = NULL;
+    ObjString* name = createSymbol(resolver, ast->token);
 
     if (item != NULL) {
         if (item->state == SYMBOL_STATE_DECLARED) {
-            name = createSymbol(resolver, ast->token);
             semanticError(resolver, "Cannot use variable '%s' before it is defined.", name->chars);
         }
     }
     else {
-        name = createSymbol(resolver, ast->token);
-        semanticError(resolver, "undefined variable '%s'.", name->chars);
+        if (resolver->currentFunction->hasRequired) {
+            item = newSymbolItem(ast->token, SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
+            symbolTableSet(resolver->globalSymtab, name, item);
+        }
+        else {
+            semanticError(resolver, "undefined variable '%s'.", name->chars);
+        }
     }
 }
 
@@ -939,9 +945,7 @@ static void resolveIfStatement(Resolver* resolver, Ast* ast) {
 }
 
 static void resolveRequireStatement(Resolver* resolver, Ast* ast) {
-    if (!resolver->isTopLevel) {
-        semanticError(resolver, "Can only use 'require' from top-level code.");
-    }
+    resolver->currentFunction->hasRequired = true;
     resolveChild(resolver, ast, 0);
 }
 

@@ -167,11 +167,12 @@ static void validateOverridingMethod(TypeChecker* typeChecker, CallableTypeInfo*
         typeError(typeChecker, "Method %s::%s expects to receive %d parameters but gets %d.", className->chars,
             methodType->baseType.shortName->chars, overridenMethodType->paramTypes->count, methodType->paramTypes->count);
     }
-
-    for (int i = 0; i < methodType->paramTypes->count; i++) {
-        if (!isEqualType(methodType->paramTypes->elements[i], overridenMethodType->paramTypes->elements[i])) {
-            typeError(typeChecker, "Method %s::%s expects argument %d to be %s but gets %s.", className->chars, methodType->baseType.shortName->chars,
-                i + 1, overridenMethodType->paramTypes->elements[i]->shortName->chars, methodType->paramTypes->elements[i]->shortName->chars);
+    else {
+        for (int i = 0; i < methodType->paramTypes->count; i++) {
+            if (!isEqualType(methodType->paramTypes->elements[i], overridenMethodType->paramTypes->elements[i])) {
+                typeError(typeChecker, "Method %s::%s expects argument %d to be %s but gets %s.", className->chars, methodType->baseType.shortName->chars,
+                    i + 1, overridenMethodType->paramTypes->elements[i]->shortName->chars, methodType->paramTypes->elements[i]->shortName->chars);
+            }
         }
     }
 }
@@ -594,10 +595,6 @@ static void typeCheckParam(TypeChecker* typeChecker, Ast* ast) {
 
 static void typeCheckPropertyGet(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
-    Ast* receiver = astGetChild(ast, 0);
-    ObjString* property = copyString(typeChecker->vm, ast->token.start, ast->token.length);
-    TypeInfo* methodType = typeTableMethodLookup(receiver->type, property);  
-    if (methodType != NULL) defineAstType(typeChecker, ast, "BoundMethod", NULL);
 }
 
 static void typeCheckPropertySet(TypeChecker* typeChecker, Ast* ast) {
@@ -777,7 +774,6 @@ static void typeCheckCatchStatement(TypeChecker* typeChecker, Ast* ast) {
     ObjString* exceptionVarName = copyString(typeChecker->vm, exceptionVar->token.start, exceptionVar->token.length);
     SymbolItem* exceptionItem = symbolTableLookup(blk->symtab, exceptionVarName);
     exceptionItem->type = exceptionVar->type;
-    printf("exception type: %s\n", exceptionItem->type->shortName->chars);
     typeCheckChild(typeChecker, ast, 1);
 }
 
@@ -987,7 +983,9 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
         else classType = typeChecker->currentClass->type;
 
         CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(classType->methods, name));
-        if(methodType != NULL) validateOverridingMethod(typeChecker, methodType);
+        if (methodType != NULL && methodType->baseType.shortName != typeChecker->vm->initString) {
+            validateOverridingMethod(typeChecker, methodType);
+        }
         function(typeChecker, ast, methodType, ast->modifier.isAsync, ast->modifier.isClass);
     }
 }
@@ -1012,7 +1010,7 @@ static void typeCheckVarDeclaration(TypeChecker* typeChecker, Ast* ast) {
     SymbolItem* item = symbolTableGet(ast->symtab, createSymbol(typeChecker, ast->token));
     if (astHasChild(ast)) {
         typeCheckChild(typeChecker, ast, 0);
-        inferAstTypeFromChild(ast, 0, item);
+        if (!ast->modifier.isMutable) inferAstTypeFromChild(ast, 0, item);
     }
 }
 
