@@ -151,7 +151,7 @@ static ObjString* getSymbolFullName(Resolver* resolver, Token token) {
 }
 
 static TypeInfo* getTypeForSymbol(Resolver* resolver, Token token) {
-    ObjString* shortName = copyString(resolver->vm, token.start, token.length);
+    ObjString* shortName = createSymbol(resolver, token);
     TypeInfo* type = typeTableGet(resolver->vm->typetab, shortName);
     ObjString* fullName = NULL;
 
@@ -228,7 +228,7 @@ static void insertMetaclassType(Resolver* resolver, ObjString* classShortName, O
 }
 
 static SymbolItem* insertBehaviorType(Resolver* resolver, SymbolItem* item, TypeCategory category) {
-    ObjString* shortName = copyString(resolver->vm, item->token.start, item->token.length);
+    ObjString* shortName = createSymbol(resolver, item->token);
     ObjString* fullName = getSymbolFullName(resolver, item->token);
     BehaviorTypeInfo* behaviorType = typeTableInsertBehavior(resolver->vm->typetab, category, shortName, fullName, NULL);
     if (category == TYPE_CATEGORY_CLASS) insertMetaclassType(resolver, shortName, fullName);
@@ -301,7 +301,7 @@ static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable)
 }
 
 static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
-    ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
+    ObjString* symbol = createSymbol(resolver, ast->token);
     SymbolItem* item = symbolTableLookup(resolver->currentSymtab, symbol);
     if (item == NULL) semanticError(resolver, "Variable name '%s' does not exist in this scope.");
     else item->state = SYMBOL_STATE_DEFINED;
@@ -311,7 +311,7 @@ static SymbolItem* defineVariable(Resolver* resolver, Ast* ast) {
 static SymbolItem* findLocal(Resolver* resolver, Ast* ast) {
     SymbolTable* currentSymtab = resolver->currentSymtab;
     SymbolTable* functionSymtab = resolver->currentFunction->symtab;
-    ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
+    ObjString* symbol = createSymbol(resolver, ast->token);
     SymbolItem* item = NULL;
 
     do {
@@ -329,7 +329,7 @@ static void assignLocal(Resolver* resolver, SymbolItem* item) {
     item->state = SYMBOL_STATE_MODIFIED;
     if (item->category != SYMBOL_CATEGORY_LOCAL) {
         SymbolTable* currentSymtab = resolver->currentFunction->enclosing->symtab;
-        ObjString* symbol = copyString(resolver->vm, item->token.start, item->token.length);
+        ObjString* symbol = createSymbol(resolver, item->token);
         SymbolItem* local = NULL;
 
         do {
@@ -351,7 +351,7 @@ static SymbolItem* addUpvalue(Resolver* resolver, SymbolItem* item) {
 static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
     if (resolver->currentFunction->enclosing == NULL) return NULL;
     SymbolTable* currentSymtab = resolver->currentFunction->enclosing->symtab;
-    ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
+    ObjString* symbol = createSymbol(resolver, ast->token);
     FunctionResolver* functionResolver = resolver->currentFunction->enclosing;
     SymbolItem* item = NULL;
 
@@ -369,7 +369,7 @@ static SymbolItem* findUpvalue(Resolver* resolver, Ast* ast) {
 }
 
 static SymbolItem* findGlobal(Resolver* resolver, Ast* ast) {
-    ObjString* symbol = copyString(resolver->vm, ast->token.start, ast->token.length);
+    ObjString* symbol = createSymbol(resolver, ast->token);
     SymbolItem* item = symbolTableGet(resolver->globalSymtab, symbol);
     if (item == NULL) {
         item = symbolTableGet(resolver->rootSymtab, symbol);
@@ -1120,7 +1120,7 @@ static void resolveClassDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
-    ObjString* name = copyString(resolver->vm, item->token.start, item->token.length);
+    ObjString* name = createSymbol(resolver, item->token);
     CallableTypeInfo* functionType = typeTableInsertCallable(resolver->vm->typetab, TYPE_CATEGORY_FUNCTION, name, NULL);
 
     if (astNumChild(ast) > 1) {
@@ -1134,7 +1134,7 @@ static void resolveFunDeclaration(Resolver* resolver, Ast* ast) {
 
 static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     SymbolItem* item = declareVariable(resolver, ast, false);
-    ObjString* name = copyString(resolver->vm, item->token.start, item->token.length);
+    ObjString* name = createSymbol(resolver, item->token);
 
     if (!resolver->currentClass->isAnonymous) {
         BehaviorTypeInfo* klass = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));

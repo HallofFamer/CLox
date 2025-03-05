@@ -98,11 +98,6 @@ static TypeInfo* getClassType(TypeChecker* typeChecker, ObjString* shortName, Sy
     return type;
 }
 
-static ObjString* getMetaclassName(TypeChecker* typeChecker, ObjString* className) {
-    ObjString* metaclassSuffix = newString(typeChecker->vm, "class");
-    return concatenateString(typeChecker->vm, className, metaclassSuffix, " ");
-}
-
 static void defineAstType(TypeChecker* typeChecker, Ast* ast, const char* name, SymbolItem* item) {
     ObjString* typeName = newString(typeChecker->vm, name);
     ast->type = getNativeType(typeChecker->vm, name);
@@ -874,7 +869,7 @@ static void typeCheckUsingStatement(TypeChecker* typeChecker, Ast* ast) {
     ObjString* shortName = copyString(typeChecker->vm, child->token.start, child->token.length);
 
     if (classType->category == TYPE_CATEGORY_TRAIT) child->type = getNativeType(typeChecker->vm, "Trait");
-    else child->type = typeTableGet(typeChecker->vm->typetab, getMetaclassName(typeChecker, fullName));
+    else child->type = typeTableGet(typeChecker->vm->typetab, getMetaclassNameFromClass(typeChecker->vm, fullName));
     SymbolItem* item = symbolTableLookup(child->symtab, shortName);
     if (item->type == NULL) item->type = child->type;
 }
