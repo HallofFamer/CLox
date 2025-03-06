@@ -70,7 +70,7 @@ static ObjString* createSymbol(TypeChecker* typeChecker, Token token) {
     return copyString(typeChecker->vm, token.start, token.length);
 }
 
-static ObjString* getClassFullName(TypeChecker* typeChecker, ObjString* name) {
+static ObjString* getClassFullNameFromShortName(TypeChecker* typeChecker, ObjString* name) {
     if (typeChecker->currentNamespace == NULL) return name;
     return concatenateString(typeChecker->vm, typeChecker->currentNamespace, name, ".");
 }
@@ -104,21 +104,13 @@ static void defineAstType(TypeChecker* typeChecker, Ast* ast, const char* name, 
     if (item != NULL) item->type = ast->type;
 }
 
-static bool checkAstType(TypeChecker* typeChecker, Ast* ast, const char* name) {
+static bool hasAstType(TypeChecker* typeChecker, Ast* ast, const char* name) {
     ObjString* typeName = newString(typeChecker->vm, name);
     TypeInfo* type = typeTableGet(typeChecker->vm->typetab, typeName);
     return isSubtypeOfType(ast->type, type);
 }
 
-static bool checkAstTypes(TypeChecker* typeChecker, Ast* ast, const char* name, const char* name2) {
-    ObjString* typeName = newString(typeChecker->vm, name);
-    TypeInfo* type = typeTableGet(typeChecker->vm->typetab, typeName);
-    ObjString* typeName2 = newString(typeChecker->vm, name2);
-    TypeInfo* type2 = typeTableGet(typeChecker->vm->typetab, typeName2);
-    return isSubtypeOfType(ast->type, type) || isSubtypeOfType(ast->type, type2);
-}
-
-static void validateArguments(TypeChecker* typeChecker, const char* calleeDesc, Ast* ast, CallableTypeInfo* callableType) {
+static void checkArguments(TypeChecker* typeChecker, const char* calleeDesc, Ast* ast, CallableTypeInfo* callableType) {
     if (!callableType->modifier.isVariadic) {
         if (callableType->paramTypes->count != ast->children->count) {
             typeError(typeChecker, "%s expects to receive a total of %d arguments but gets %d.", 
@@ -147,7 +139,7 @@ static void validateArguments(TypeChecker* typeChecker, const char* calleeDesc, 
     }
 }
 
-static void validateOverridingMethod(TypeChecker* typeChecker, CallableTypeInfo* methodType) {
+static void checkOverridingMethod(TypeChecker* typeChecker, CallableTypeInfo* methodType) {
     TypeInfo* superclassMethodType = typeTableMethodLookup(typeChecker->currentClass->type->superclassType, methodType->baseType.shortName);
     if (superclassMethodType == NULL) return;
     CallableTypeInfo* overridenMethodType = AS_CALLABLE_TYPE(superclassMethodType);
@@ -229,15 +221,15 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
 
     switch (ast->token.type) {
         case TOKEN_PLUS:
-            if (checkAstType(typeChecker, left, "clox.std.lang.String") && checkAstType(typeChecker, right, "clox.std.lang.String")) {
+            if (hasAstType(typeChecker, left, "clox.std.lang.String") && hasAstType(typeChecker, right, "clox.std.lang.String")) {
                 defineAstType(typeChecker, ast, "String", item);
                 return;
             }
-            else if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
+            else if (hasAstType(typeChecker, left, "clox.std.lang.Int") && hasAstType(typeChecker, right, "clox.std.lang.Int")) {
                 defineAstType(typeChecker, ast, "Int", item);
                 return;
             }
-            else if (checkAstType(typeChecker, left, "clox.std.lang.Number") && checkAstType(typeChecker, right, "clox.std.lang.Number")) {
+            else if (hasAstType(typeChecker, left, "clox.std.lang.Number") && hasAstType(typeChecker, right, "clox.std.lang.Number")) {
                 defineAstType(typeChecker, ast, "Number", item);
                 return;
             }
@@ -245,23 +237,23 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
         case TOKEN_MINUS:
         case TOKEN_STAR:
         case TOKEN_MODULO:
-            if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
+            if (hasAstType(typeChecker, left, "clox.std.lang.Int") && hasAstType(typeChecker, right, "clox.std.lang.Int")) {
                 defineAstType(typeChecker, ast, "Int", item);
                 return;
             }
-            else if (checkAstType(typeChecker, left, "clox.std.lang.Number") && checkAstType(typeChecker, right, "clox.std.lang.Number")) {
+            else if (hasAstType(typeChecker, left, "clox.std.lang.Number") && hasAstType(typeChecker, right, "clox.std.lang.Number")) {
                 defineAstType(typeChecker, ast, "Number", item);
                 return;
             }
             break;
         case TOKEN_SLASH:
-            if (checkAstType(typeChecker, left, "clox.std.lang.Number") && checkAstType(typeChecker, right, "clox.std.lang.Number")) {
+            if (hasAstType(typeChecker, left, "clox.std.lang.Number") && hasAstType(typeChecker, right, "clox.std.lang.Number")) {
                 defineAstType(typeChecker, ast, "Number", item);
                 return;
             }
             break;
         case TOKEN_DOT_DOT:
-            if (checkAstType(typeChecker, left, "clox.std.lang.Int") && checkAstType(typeChecker, right, "clox.std.lang.Int")) {
+            if (hasAstType(typeChecker, left, "clox.std.lang.Int") && hasAstType(typeChecker, right, "clox.std.lang.Int")) {
                 defineAstType(typeChecker, ast, "clox.std.collection.Range", item);
                 return;
             }
@@ -283,7 +275,7 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
     if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Function"))) {
         CallableTypeInfo* functionType = AS_CALLABLE_TYPE(typeTableGet(typeChecker->vm->typetab, name));
         sprintf_s(calleeDesc, UINT8_MAX, "Function %s", name->chars);
-        validateArguments(typeChecker, calleeDesc, args, functionType);
+        checkArguments(typeChecker, calleeDesc, args, functionType);
         ast->type = functionType->returnType;
     }
     else if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Class"))) {
@@ -297,7 +289,7 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
 
         if (initializerType != NULL) {
             sprintf_s(calleeDesc, UINT8_MAX, "Class %s's initializer", name->chars);
-            validateArguments(typeChecker, calleeDesc, args, AS_CALLABLE_TYPE(initializerType));
+            checkArguments(typeChecker, calleeDesc, args, AS_CALLABLE_TYPE(initializerType));
         }
         else if (astHasChild(args)) {
             typeError(typeChecker, "Class %s's initializer expects to receive a total of 0 arguments but gets %d.", name->chars, astNumChild(args));
@@ -318,7 +310,7 @@ static void inferAstTypeFromInvoke(TypeChecker* typeChecker, Ast* ast) {
 
     char methodDesc[UINT8_MAX];
     sprintf_s(methodDesc, UINT8_MAX, "Method %s::%s", receiver->type->shortName->chars, methodName->chars);
-    validateArguments(typeChecker, methodDesc, args, methodType);
+    checkArguments(typeChecker, methodDesc, args, methodType);
     ast->type = methodType->returnType;
 }
 
@@ -334,7 +326,7 @@ static void inferAstTypeFromSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
 
     char methodDesc[UINT8_MAX];
     sprintf_s(methodDesc, UINT8_MAX, "Method %s::%s", superType->shortName->chars, methodName->chars);
-    validateArguments(typeChecker, methodDesc, args, methodType);
+    checkArguments(typeChecker, methodDesc, args, methodType);
     ast->type = methodType->returnType;
 }
 
@@ -436,7 +428,7 @@ static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* calle
 static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
     ClassTypeChecker classTypeChecker;
     ObjString* shortName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
-    ObjString* fullName = getClassFullName(typeChecker, shortName);
+    ObjString* fullName = getClassFullNameFromShortName(typeChecker, shortName);
     TypeInfo* behaviorType = typeTableGet(typeChecker->vm->typetab, fullName);
     bool isAnonymous = (shortName->length == 1 && shortName->chars[0] == '@');
     initClassTypeChecker(typeChecker, &classTypeChecker, ast->token, behaviorType == NULL ? NULL : AS_BEHAVIOR_TYPE(behaviorType), isAnonymous);
@@ -630,7 +622,7 @@ static void typeCheckSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckThis(TypeChecker* typeChecker, Ast* ast) {
     if (typeChecker->currentClass->type) {
         if (typeChecker->currentFunction->isClass) {
-            ObjString* className = getClassFullName(typeChecker, createSymbol(typeChecker, typeChecker->currentClass->name));
+            ObjString* className = getClassFullNameFromShortName(typeChecker, createSymbol(typeChecker, typeChecker->currentClass->name));
             ObjString* metaclassName = getMetaclassNameFromClass(typeChecker->vm, className);
             ast->type = typeTableGet(typeChecker->vm->typetab, metaclassName);
         }
@@ -801,7 +793,7 @@ static void typeCheckIfStatement(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckRequireStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
-    if (!checkAstType(typeChecker, child, "clox.std.lang.String")) {
+    if (!hasAstType(typeChecker, child, "clox.std.lang.String")) {
         typeError(typeChecker, "require statement expects expression to be a String but gets %s.", child->type->shortName->chars);
     }
 }
@@ -839,7 +831,7 @@ static void typeCheckSwitchStatement(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckThrowStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
-    if (!checkAstType(typeChecker, child, "clox.std.lang.Exception")) {
+    if (!hasAstType(typeChecker, child, "clox.std.lang.Exception")) {
         typeError(typeChecker, "throw statement expects expression to be an Exception but gets %s.", child->type->shortName->chars);
     }
 }
@@ -971,7 +963,7 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
     if (!typeChecker->currentClass->isAnonymous) {
         BehaviorTypeInfo* classType = NULL;
         if (ast->modifier.isClass) {
-            ObjString* className = getClassFullName(typeChecker, createSymbol(typeChecker, typeChecker->currentClass->name));
+            ObjString* className = getClassFullNameFromShortName(typeChecker, createSymbol(typeChecker, typeChecker->currentClass->name));
             ObjString* metaclassName = getMetaclassNameFromClass(typeChecker->vm, className);
             classType = AS_BEHAVIOR_TYPE(typeTableGet(typeChecker->vm->typetab, metaclassName));
         }
@@ -979,7 +971,7 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
 
         CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(classType->methods, name));
         if (methodType != NULL && methodType->baseType.shortName != typeChecker->vm->initString) {
-            validateOverridingMethod(typeChecker, methodType);
+            checkOverridingMethod(typeChecker, methodType);
         }
         function(typeChecker, ast, methodType, ast->modifier.isAsync, ast->modifier.isClass);
     }

@@ -401,14 +401,6 @@ static void checkMutability(Resolver* resolver, SymbolItem* item) {
     }
 }
 
-static bool checkAstType(Ast* ast, const char* name) {
-    return (strcmp(ast->type->fullName->chars, name) == 0);
-}
-
-static bool checkAstTypes(Ast* ast, const char* name, const char* name2) {
-    return (strcmp(ast->type->fullName->chars, name) == 0 || strcmp(ast->type->fullName->chars, name2) == 0);
-}
-
 static void insertLiteralType(Resolver* resolver, Ast* ast, const char* name) {
     ast->type = getNativeType(resolver->vm, name);
 }
