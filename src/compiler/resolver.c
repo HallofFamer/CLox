@@ -744,7 +744,7 @@ static void resolveVariable(Resolver* resolver, Ast* ast) {
     ObjString* name = createSymbol(resolver, ast->token);
 
     if (item != NULL) {
-        if (item->state == SYMBOL_STATE_DECLARED) {
+        if (item->state == SYMBOL_STATE_DECLARED && !tokensEqual(&item->token, &resolver->currentFunction->name)) {
             semanticError(resolver, "Cannot use variable '%s' before it is defined.", name->chars);
         }
     }

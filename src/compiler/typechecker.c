@@ -492,7 +492,6 @@ static void typeCheckAssign(TypeChecker* typeChecker, Ast* ast) {
 
 static void typeCheckAwait(TypeChecker* typeChecker, Ast* ast) {
     await(typeChecker, ast);
-    defineAstType(typeChecker, ast, "clox.std.util.Promise", NULL);
 }
 
 static void typeCheckBinary(TypeChecker* typeChecker, Ast* ast) {
