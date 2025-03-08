@@ -139,26 +139,72 @@ static void checkArguments(TypeChecker* typeChecker, const char* calleeDesc, Ast
     }
 }
 
-static void checkOverridingMethod(TypeChecker* typeChecker, CallableTypeInfo* methodType) {
-    TypeInfo* superclassMethodType = typeTableMethodLookup(typeChecker->currentClass->type->superclassType, methodType->baseType.shortName);
-    if (superclassMethodType == NULL) return;
-    CallableTypeInfo* overridenMethodType = AS_CALLABLE_TYPE(superclassMethodType);
+static void checkMethodSignatures(TypeChecker* typeChecker, CallableTypeInfo* subclassMethod, CallableTypeInfo* superclassMethod) {
     ObjString* className = createSymbol(typeChecker, typeChecker->currentClass->name);
 
-    if (!isEqualType(methodType->returnType, overridenMethodType->returnType)) {
+    if (!isEqualType(subclassMethod->returnType, superclassMethod->returnType)) {
         typeError(typeChecker, "Method %s::%s expects return type to be %s but gets %s.", className->chars,
-            methodType->baseType.shortName->chars, overridenMethodType->returnType->shortName->chars, methodType->returnType->shortName->chars);
+            subclassMethod->baseType.shortName->chars, superclassMethod->returnType->shortName->chars, subclassMethod->returnType->shortName->chars);
     }
 
-    if (methodType->paramTypes->count != overridenMethodType->paramTypes->count) {
+    if (subclassMethod->paramTypes->count != superclassMethod->paramTypes->count) {
         typeError(typeChecker, "Method %s::%s expects to receive %d parameters but gets %d.", className->chars,
-            methodType->baseType.shortName->chars, overridenMethodType->paramTypes->count, methodType->paramTypes->count);
+            subclassMethod->baseType.shortName->chars, superclassMethod->paramTypes->count, subclassMethod->paramTypes->count);
     }
     else {
-        for (int i = 0; i < methodType->paramTypes->count; i++) {
-            if (!isEqualType(methodType->paramTypes->elements[i], overridenMethodType->paramTypes->elements[i])) {
-                typeError(typeChecker, "Method %s::%s expects argument %d to be %s but gets %s.", className->chars, methodType->baseType.shortName->chars,
-                    i + 1, overridenMethodType->paramTypes->elements[i]->shortName->chars, methodType->paramTypes->elements[i]->shortName->chars);
+        for (int i = 0; i < subclassMethod->paramTypes->count; i++) {
+            if (!isEqualType(subclassMethod->paramTypes->elements[i], superclassMethod->paramTypes->elements[i])) {
+                typeError(typeChecker, "Method %s::%s expects argument %d to be %s but gets %s.", className->chars, subclassMethod->baseType.shortName->chars,
+                    i + 1, superclassMethod->paramTypes->elements[i]->shortName->chars, subclassMethod->paramTypes->elements[i]->shortName->chars);
+            }
+        }
+    }
+}
+
+static void checkInheritingSuperclass(TypeChecker* typeChecker, TypeInfo* superclassBaseType) {
+    if (typeChecker->currentClass->type == NULL || superclassBaseType == NULL) return;
+    BehaviorTypeInfo* superclassType = AS_BEHAVIOR_TYPE(superclassBaseType);
+
+    for (int i = 0; i < superclassType->methods->count; i++) {
+        TypeEntry* methodEntry = &superclassType->methods->entries[i];
+        if (methodEntry == NULL || methodEntry->key == NULL) continue;
+        CallableTypeInfo* methodType = AS_CALLABLE_TYPE(methodEntry->value);
+
+        TypeInfo* subclassMethodType = typeTableGet(typeChecker->currentClass->type->methods, methodEntry->key);
+        if (subclassMethodType != NULL) {
+            checkMethodSignatures(typeChecker, AS_CALLABLE_TYPE(subclassMethodType), methodType);
+        }
+    }
+
+    checkInheritingSuperclass(typeChecker, superclassType->superclassType);
+}
+
+static void checkImplementingTraits(TypeChecker* typeChecker, Ast* traitList) {
+    if (!astHasChild(traitList) || typeChecker->currentClass->type == NULL) return;
+    BehaviorTypeInfo* superclassType = (typeChecker->currentClass->type->superclassType != NULL) ? AS_BEHAVIOR_TYPE(typeChecker->currentClass->type->superclassType) : NULL;
+    if (superclassType == NULL) return;
+
+    for (int i = 0; i < traitList->children->count; i++) {
+        Ast* trait = astGetChild(traitList, 0);
+        ObjString* name = createSymbol(typeChecker, trait->token);
+        TypeInfo* type = getClassType(typeChecker, name, traitList->symtab);
+        if (type == NULL) continue;
+        else {
+            BehaviorTypeInfo* traitType = AS_BEHAVIOR_TYPE(type);
+            for (int j = 0; j < traitType->methods->count; j++) {
+                TypeEntry* methodEntry = &traitType->methods->entries[i];
+                if (methodEntry == NULL || methodEntry->key == NULL) continue;
+                CallableTypeInfo* methodType = AS_CALLABLE_TYPE(methodEntry->value);
+
+                TypeInfo* subclassMethodType = typeTableGet(typeChecker->currentClass->type->methods, methodEntry->key);
+                if (subclassMethodType != NULL) {
+                    checkMethodSignatures(typeChecker, AS_CALLABLE_TYPE(subclassMethodType), methodType);
+                }
+
+                TypeInfo* superclassMethodType = typeTableGet(superclassType->methods, methodEntry->key);
+                if (superclassMethodType != NULL) {
+                    checkMethodSignatures(typeChecker, methodType, AS_CALLABLE_TYPE(superclassMethodType));
+                }
             }
         }
     }
@@ -439,15 +485,18 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
         typeCheckChild(typeChecker, ast, childIndex);
         SymbolItem* superclassItem = symbolTableLookup(ast->symtab, copyString(typeChecker->vm, superclass->token.start, superclass->token.length));
         childIndex++;
+
         if (!isSubtypeOfType(superclassItem->type, getNativeType(typeChecker->vm, "Class"))) {
             typeError(typeChecker, "Superclass must be an instance of Class, but gets %s.", superclassItem->type->shortName->chars);
         }
+        checkInheritingSuperclass(typeChecker, typeChecker->currentClass->type->superclassType);
     }
 
     Ast* traitList = astGetChild(ast, childIndex);
     if (astNumChild(traitList) > 0) {
         typeCheckChild(typeChecker, ast, childIndex);
     }
+    checkImplementingTraits(typeChecker, traitList);
 
     childIndex++;
     typeCheckChild(typeChecker, ast, childIndex);
@@ -969,9 +1018,6 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
         else classType = typeChecker->currentClass->type;
 
         CallableTypeInfo* methodType = AS_CALLABLE_TYPE(typeTableGet(classType->methods, name));
-        if (methodType != NULL && methodType->baseType.shortName != typeChecker->vm->initString) {
-            checkOverridingMethod(typeChecker, methodType);
-        }
         function(typeChecker, ast, methodType, ast->modifier.isAsync, ast->modifier.isClass);
     }
 }

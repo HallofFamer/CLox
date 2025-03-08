@@ -20,6 +20,12 @@ SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState stat
     return item;
 }
 
+SymbolItem* newSymbolItemWithType(Token token, SymbolCategory category, SymbolState state, bool isMutable, TypeInfo* type) {
+    SymbolItem* item = newSymbolItem(token, category, state, isMutable);
+    if (item != NULL) item->type = type;
+    return item;
+}
+
 void freeSymbolItem(SymbolItem* item) {
     if (item != NULL) {
         free(item);

@@ -248,8 +248,8 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->currentTry = NULL;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
-    compiler->rootClass = syntheticToken("Object");
 
+    compiler->rootClass = syntheticToken("Object");
     compiler->isAsync = isAsync;
     compiler->debugCode = debugCode;
     compiler->hadError = false;

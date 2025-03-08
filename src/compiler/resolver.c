@@ -39,14 +39,10 @@ struct FunctionResolver {
     ResolverModifier modifier;
 };
 
-static int currentLine(Resolver* resolver) {
-    return resolver->currentToken.line;
-}
-
 static void semanticWarning(Resolver* resolver, const char* format, ...) {
     va_list args;
     va_start(args, format);
-    fprintf(stderr, "[line %d] Semantic Warning: ", currentLine(resolver));
+    fprintf(stderr, "[line %d] Semantic Warning: ", resolver->currentToken.line);
     vfprintf(stderr, format, args);
     va_end(args);
     fputs("\n", stderr);
@@ -55,7 +51,7 @@ static void semanticWarning(Resolver* resolver, const char* format, ...) {
 static void semanticError(Resolver* resolver, const char* format, ...) {
     va_list args;
     va_start(args, format);
-    fprintf(stderr, "[line %d] Semantic Error: ", currentLine(resolver));
+    fprintf(stderr, "[line %d] Semantic Error: ", resolver->currentToken.line);
     vfprintf(stderr, format, args);
     va_end(args);
     fputs("\n", stderr);
