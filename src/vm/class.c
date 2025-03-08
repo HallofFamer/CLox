@@ -94,6 +94,11 @@ ObjString* getMetaclassNameFromClass(VM* vm, ObjString* className) {
     return concatenateString(vm, className, newString(vm, "class"), " ");
 }
 
+ObjString* getClassFullName(VM* vm, ObjString* shortName, ObjString* currentNamespace) {
+    if (currentNamespace == NULL) return shortName;
+    return concatenateString(vm, currentNamespace, shortName, ".");
+}
+
 bool isObjInstanceOf(VM* vm, Value value, ObjClass* klass) {
     ObjClass* currentClass = getObjClass(vm, value);
     if (currentClass == klass) return true;

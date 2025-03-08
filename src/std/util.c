@@ -885,13 +885,13 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateClass, Date, compareTo, 1, RETURN_TYPE(Int), PARAM_TYPE(TComparable));
     DEF_METHOD(dateClass, Date, diff, 1, RETURN_TYPE(Number), PARAM_TYPE(clox.std.util.Date));
     DEF_METHOD(dateClass, Date, getTimestamp, 0, RETURN_TYPE(Number));
-    DEF_METHOD(dateClass, Date, toDateTime, 0, RETURN_TYPE(Object));
+    DEF_METHOD(dateClass, Date, toDateTime, 0, RETURN_TYPE(clox.std.util.DateTime));
     DEF_METHOD(dateClass, Date, toString, 0, RETURN_TYPE(String));
     DEF_OPERATOR(dateClass, Date, ==, __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
     DEF_OPERATOR(dateClass, Date, >, __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
     DEF_OPERATOR(dateClass, Date, <, __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(dateClass, Date, +, __add__, 1, RETURN_TYPE(clox.std.util.Date), PARAM_TYPE(Object));
-    DEF_OPERATOR(dateClass, Date, -, __subtract__, 1, RETURN_TYPE(clox.std.util.Date), PARAM_TYPE(Object));
+    DEF_OPERATOR(dateClass, Date, +, __add__, 1, RETURN_TYPE(clox.std.util.Date), PARAM_TYPE(clox.std.util.Duration));
+    DEF_OPERATOR(dateClass, Date, -, __subtract__, 1, RETURN_TYPE(clox.std.util.Date), PARAM_TYPE(clox.std.util.Duration));
 
     ObjClass* dateMetaclass = dateClass->obj.klass;
     setClassProperty(vm, dateClass, "now", OBJ_VAL(dateObjNow(vm, dateClass)));
@@ -904,13 +904,13 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(dateTimeClass, DateTime, compareTo, 1, RETURN_TYPE(Int), PARAM_TYPE(TComparable));
     DEF_METHOD(dateTimeClass, DateTime, diff, 1, RETURN_TYPE(Number), PARAM_TYPE(clox.std.util.Date));
     DEF_METHOD(dateTimeClass, DateTime, getTimestamp, 0, RETURN_TYPE(Number));
-    DEF_METHOD(dateTimeClass, DateTime, toDate, 0, RETURN_TYPE(Int), PARAM_TYPE(clox.std.util.Date));
+    DEF_METHOD(dateTimeClass, DateTime, toDate, 0, RETURN_TYPE(clox.std.util.Date));
     DEF_METHOD(dateTimeClass, DateTime, toString, 0, RETURN_TYPE(String));
     DEF_OPERATOR(dateTimeClass, DateTime, ==, __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
     DEF_OPERATOR(dateTimeClass, DateTime, >, __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
     DEF_OPERATOR(dateTimeClass, DateTime, <, __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(dateTimeClass, DateTime, +, __add__, 1, RETURN_TYPE(clox.std.util.DateTime), PARAM_TYPE(Object));
-    DEF_OPERATOR(dateTimeClass, DateTime, -, __subtract__, 1, RETURN_TYPE(clox.std.util.DateTime), PARAM_TYPE(Object));
+    DEF_OPERATOR(dateTimeClass, DateTime, +, __add__, 1, RETURN_TYPE(clox.std.util.DateTime), PARAM_TYPE(clox.std.util.Duration));
+    DEF_OPERATOR(dateTimeClass, DateTime, -, __subtract__, 1, RETURN_TYPE(clox.std.util.DateTime), PARAM_TYPE(clox.std.util.Duration));
 
     ObjClass* dateTimeMetaClass = dateTimeClass->obj.klass;
     setClassProperty(vm, dateTimeClass, "now", OBJ_VAL(dateTimeObjNow(vm, dateTimeClass)));
@@ -969,7 +969,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(randomClass, Random, setSeed, 1, RETURN_TYPE(Nil), PARAM_TYPE(Int));
 
     bindSuperclass(vm, regexClass, vm->objectClass);
-    DEF_INTERCEPTOR(regexClass, Regex, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.util.Regex), PARAM_TYPE(Object));
+    DEF_INTERCEPTOR(regexClass, Regex, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.util.Regex), PARAM_TYPE(String));
     DEF_METHOD(regexClass, Regex, match, 1, RETURN_TYPE(Bool), PARAM_TYPE(String));
     DEF_METHOD(regexClass, Regex, replace, 2, RETURN_TYPE(String), PARAM_TYPE(String), PARAM_TYPE(String));
     DEF_METHOD(regexClass, Regex, toString, 0, RETURN_TYPE(String));

@@ -947,5 +947,6 @@ void registerNetPackage(VM* vm) {
     defineNativeException(vm, "IPAddressException", networkExceptionClass);
     defineNativeException(vm, "SocketException", networkExceptionClass);
     defineNativeException(vm, "URLException", networkExceptionClass);
+
     vm->currentNamespace = vm->rootNamespace;
 }

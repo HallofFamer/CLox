@@ -1764,15 +1764,6 @@ static void bindNamespaceClass(VM* vm) {
     }
 }
 
-static void bindGlobalSymbolTable(VM* vm) {
-    TypeInfo* type = typeTableGet(vm->typetab, newString(vm, "clox.std.lang.Class"));
-    for (int i = 0; i < vm->symtab->capacity; i++) {
-        SymbolEntry* entry = &vm->symtab->entries[i];
-        if (entry->key == NULL) continue;
-        entry->value->type = type;
-    }
-}
-
 static ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behavior) {
     ObjString* className = newString(vm, name);
     push(vm, OBJ_VAL(className));
@@ -1987,7 +1978,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, clone, 0, RETURN_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, compareTo, 1, RETURN_TYPE(Number), PARAM_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, cos, 0, RETURN_TYPE(Number));
-    DEF_METHOD(vm->numberClass, Number, exp, 1, RETURN_TYPE(Number), PARAM_TYPE(Number));
+    DEF_METHOD(vm->numberClass, Number, exp, 0, RETURN_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, floor, 0, RETURN_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, hypot, 1, RETURN_TYPE(Number), PARAM_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, isInfinity, 0, RETURN_TYPE(Bool));
@@ -2005,13 +1996,13 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, tan, 0, RETURN_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, toInt, 0, RETURN_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, toString, 0, RETURN_TYPE(String));
-    DEF_OPERATOR(vm->numberClass, Number, == , __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(vm->numberClass, Number, > , __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(vm->numberClass, Number, < , __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(vm->numberClass, Number, ==, __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(vm->numberClass, Number, >, __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(vm->numberClass, Number, <, __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
     DEF_OPERATOR(vm->numberClass, Number, +, __add__, 1, RETURN_TYPE(Number), PARAM_TYPE(Number));
     DEF_OPERATOR(vm->numberClass, Number, -, __subtract__, 1, RETURN_TYPE(Number), PARAM_TYPE(Number));
     DEF_OPERATOR(vm->numberClass, Number, *, __multiply__, 1, RETURN_TYPE(Number), PARAM_TYPE(Number));
-    DEF_OPERATOR(vm->numberClass, Number, / , __divide__, 1, RETURN_TYPE(Number), PARAM_TYPE(Number));
+    DEF_OPERATOR(vm->numberClass, Number, /, __divide__, 1, RETURN_TYPE(Number), PARAM_TYPE(Number));
     DEF_OPERATOR(vm->numberClass, Number, %, __modulo__, 1, RETURN_TYPE(Number), PARAM_TYPE(Number));
     insertGlobalSymbolTable(vm, "Number", classType);
 
@@ -2080,7 +2071,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->stringClass, String, reverse, 0, RETURN_TYPE(String));
     DEF_METHOD(vm->stringClass, String, split, 1, RETURN_TYPE(Object), PARAM_TYPE(String));
     DEF_METHOD(vm->stringClass, String, startsWith, 1, RETURN_TYPE(Bool), PARAM_TYPE(String));
-    DEF_METHOD(vm->stringClass, String, subString, 2, RETURN_TYPE(String), PARAM_TYPE(String), PARAM_TYPE(String));
+    DEF_METHOD(vm->stringClass, String, subString, 2, RETURN_TYPE(String), PARAM_TYPE(Int), PARAM_TYPE(Int));
     DEF_METHOD(vm->stringClass, String, toBytes, 0, RETURN_TYPE(Object));
     DEF_METHOD(vm->stringClass, String, toCodePoints, 0, RETURN_TYPE(Object));
     DEF_METHOD(vm->stringClass, String, toLowercase, 0, RETURN_TYPE(String));
@@ -2196,7 +2187,6 @@ void registerLangPackage(VM* vm) {
     insertGlobalSymbolTable(vm, "OutOfMemoryException", classType);
     insertGlobalSymbolTable(vm, "StackOverflowException", classType);
     insertGlobalSymbolTable(vm, "UnsupportedOperationException", classType);
-    //bindGlobalSymbolTable(vm);
 
     vm->currentNamespace = vm->rootNamespace;
 }

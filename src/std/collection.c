@@ -2131,7 +2131,7 @@ void registerCollectionPackage(VM* vm) {
     DEF_OPERATOR(vm->arrayClass, Array, []=, __setSubscript__, 2, RETURN_TYPE(Object), PARAM_TYPE(Int), PARAM_TYPE(Object));
 
     ObjClass* arrayMetaclass = vm->arrayClass->obj.klass;
-    DEF_METHOD(arrayMetaclass, ArrayClass, fromElements, -1, RETURN_TYPE(clox.std.collection.Array));
+    DEF_METHOD(arrayMetaclass, ArrayClass, fromElements, -1, RETURN_TYPE(clox.std.collection.Array), PARAM_TYPE(Object));
 
     bindSuperclass(vm, linkedListClass, listClass);
     DEF_INTERCEPTOR(linkedListClass, LinkedList, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.collection.LinkedList));
