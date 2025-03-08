@@ -123,10 +123,18 @@ void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bo
     CallableTypeInfo* methodType = newCallableTypeInfo(behaviorType->methods->count + 1, TYPE_CATEGORY_METHOD, methodName, returnType);
     methodType->modifier.isAsync = isAsync;
 
-    for (int i = 0; i < arity; i++) {
+    if (arity < 0) {
+        methodType->modifier.isVariadic = true;
         TypeInfo* paramType = va_arg(args, TypeInfo*);
         TypeInfoArrayAdd(methodType->paramTypes, paramType);
     }
+    else {
+        for (int i = 0; i < arity; i++) {
+            TypeInfo* paramType = va_arg(args, TypeInfo*);
+            TypeInfoArrayAdd(methodType->paramTypes, paramType);
+        }
+    }
+
     typeTableSet(behaviorType->methods, methodName, (TypeInfo*)methodType);
     va_end(args);
 }

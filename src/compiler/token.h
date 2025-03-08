@@ -30,7 +30,7 @@ typedef enum {
     TOKEN_THROW, TOKEN_TRAIT, TOKEN_TRUE, TOKEN_TRY, TOKEN_USING,
     TOKEN_VAL, TOKEN_VAR, TOKEN_WHILE, TOKEN_WITH, TOKEN_YIELD,
 
-    TOKEN_ERROR, TOKEN_EMPTY, TOKEN_EOF
+    TOKEN_ERROR, TOKEN_EMPTY, TOKEN_NEW_LINE, TOKEN_EOF
 } TokenSymbol;
 
 typedef struct {
@@ -42,6 +42,7 @@ typedef struct {
 
 Token syntheticToken(const char* text);
 bool tokensEqual(Token* token, Token* token2);
+bool tokenIsLiteral(Token token);
 bool tokenIsOperator(Token token);
 char* tokenToCString(Token token);
 void outputToken(Token token);

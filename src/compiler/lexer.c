@@ -114,10 +114,6 @@ static void skipWhitespace(Lexer* lexer) {
             case '\t':
                 advance(lexer);
                 break;
-            case '\n':
-                lexer->line++;
-                advance(lexer);
-                break;
             case '/':
                 if (peekNext(lexer) == '/') {
                     skipLineComment(lexer);
@@ -313,6 +309,11 @@ static Token string(Lexer* lexer) {
     return makeToken(lexer, TOKEN_STRING);
 }
 
+static Token newLine(Lexer* lexer) {
+    lexer->line++;
+    return makeToken(lexer, TOKEN_NEW_LINE);
+}
+
 Token scanToken(Lexer* lexer) {
     skipWhitespace(lexer);
     lexer->start = lexer->current;
@@ -358,6 +359,8 @@ Token scanToken(Lexer* lexer) {
             return keywordIdentifier(lexer);
         case '"':
             return string(lexer);
+        case '\n':
+            return newLine(lexer);
     }
 
     return errorToken(lexer, "Unexpected character.");

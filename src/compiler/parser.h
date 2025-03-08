@@ -14,6 +14,8 @@ typedef struct {
     Token next;
     Token rootClass;
     bool debugAst;
+    bool previousNewLine;
+    bool currentNewLine;
     bool hadError;
     bool panicMode;
     jmp_buf jumpBuffer;

@@ -27,6 +27,8 @@ typedef struct {
     ParsePrefixFn prefix;
     ParseInfixFn infix;
     Precedence precedence;
+    bool canStart;
+    bool canEnd;
 } ParseRule;
 
 static void parseError(Parser* parser, Token* token, const char* message) {
@@ -53,11 +55,17 @@ static void errorAtCurrent(Parser* parser, const char* message) {
 
 static void advance(Parser* parser) {
     parser->previous = parser->current;
+    parser->previousNewLine = parser->currentNewLine;
     parser->current = parser->next;
+    parser->currentNewLine = false;
 
     for (;;) {
         parser->next = scanToken(parser->lexer);
-        if (parser->next.type != TOKEN_ERROR) break;
+        if (parser->next.type == TOKEN_NEW_LINE) {
+            parser->currentNewLine = true;
+            continue;
+        }
+        else if (parser->next.type != TOKEN_ERROR) break;
         errorAtCurrent(parser, parser->next.start);
     }
 }
@@ -67,6 +75,15 @@ static void consume(Parser* parser, TokenSymbol type, const char* message) {
         advance(parser);
         return;
     }
+    errorAtCurrent(parser, message);
+}
+
+static void consumerTerminator(Parser* parser, const char* message) {
+    if (parser->current.type == TOKEN_SEMICOLON) {
+        advance(parser);
+        return;
+    }
+    else if (parser->currentNewLine) return;
     errorAtCurrent(parser, message);
 }
 
@@ -709,75 +726,76 @@ static Ast* await(Parser* parser, Token token, bool canAssign) {
 }
 
 ParseRule parseRules[] = {
-    [TOKEN_LEFT_PAREN]     = {grouping,      call,        PREC_CALL},
-    [TOKEN_RIGHT_PAREN]    = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_LEFT_BRACKET]   = {collection,    subscript,   PREC_CALL},
-    [TOKEN_RIGHT_BRACKET]  = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_LEFT_BRACE]     = {lambda,        NULL,        PREC_NONE},
-    [TOKEN_RIGHT_BRACE]    = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_COLON]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_COMMA]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_MINUS]          = {unary,         binary,      PREC_TERM},
-    [TOKEN_MODULO]         = {NULL,          binary,      PREC_FACTOR},
-    [TOKEN_PIPE]           = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_PLUS]           = {NULL,          binary,      PREC_TERM},
-    [TOKEN_QUESTION]       = {NULL,          question,    PREC_CALL},
-    [TOKEN_SEMICOLON]      = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_SLASH]          = {NULL,          binary,      PREC_FACTOR},
-    [TOKEN_STAR]           = {NULL,          binary,      PREC_FACTOR},
-    [TOKEN_BANG]           = {unary,         NULL,        PREC_NONE},
-    [TOKEN_BANG_EQUAL]     = {NULL,          binary,      PREC_EQUALITY},
-    [TOKEN_EQUAL]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_EQUAL_EQUAL]    = {NULL,          binary,      PREC_EQUALITY},
-    [TOKEN_GREATER]        = {NULL,          binary,      PREC_COMPARISON},
-    [TOKEN_GREATER_EQUAL]  = {NULL,          binary,      PREC_COMPARISON},
-    [TOKEN_LESS]           = {NULL,          binary,      PREC_COMPARISON},
-    [TOKEN_LESS_EQUAL]     = {NULL,          binary,      PREC_COMPARISON},
-    [TOKEN_DOT]            = {NULL,          dot,         PREC_CALL},
-    [TOKEN_DOT_DOT]        = {NULL,          binary,      PREC_CALL},
-    [TOKEN_IDENTIFIER]     = {variable,      NULL,        PREC_NONE},
-    [TOKEN_STRING]         = {string,        NULL,        PREC_NONE},
-    [TOKEN_INTERPOLATION]  = {interpolation, NULL,        PREC_NONE},
-    [TOKEN_NUMBER]         = {literal,       NULL,        PREC_NONE},
-    [TOKEN_INT]            = {literal,       NULL,        PREC_NONE},
-    [TOKEN_AND]            = {NULL,          and_,        PREC_AND},
-    [TOKEN_AS]             = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_ASYNC]          = {async,         NULL,        PREC_NONE},
-    [TOKEN_AWAIT]          = {await,         NULL,        PREC_NONE},
-    [TOKEN_BREAK]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_CASE]           = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_CATCH]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_CLASS]          = {class_,        NULL,        PREC_NONE},
-    [TOKEN_CONTINUE]       = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_DEFAULT]        = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_ELSE]           = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_EXTENDS]        = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_FALSE]          = {literal,       NULL,        PREC_NONE},
-    [TOKEN_FINALLY]        = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_FOR]            = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_FUN]            = {closure,       NULL,        PREC_NONE},
-    [TOKEN_IF]             = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_NAMESPACE]      = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_NIL]            = {literal,       NULL,        PREC_NONE},
-    [TOKEN_OR]             = {NULL,          or_,         PREC_OR},
-    [TOKEN_REQUIRE]        = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_RETURN]         = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_SUPER]          = {super_,        NULL,        PREC_NONE},
-    [TOKEN_SWITCH]         = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_THIS]           = {this_,         NULL,        PREC_NONE},
-    [TOKEN_THROW]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_TRAIT]          = {trait,         NULL,        PREC_NONE},
-    [TOKEN_TRUE]           = {literal,       NULL,        PREC_NONE},
-    [TOKEN_TRY]            = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_USING]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_VAL]            = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_VAR]            = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_WHILE]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_WITH]           = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_YIELD]          = {yield,         NULL,        PREC_NONE},
-    [TOKEN_ERROR]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_EMPTY]          = {NULL,          NULL,        PREC_NONE},
-    [TOKEN_EOF]            = {NULL,          NULL,        PREC_NONE},
+    [TOKEN_LEFT_PAREN]     = {grouping,      call,        PREC_CALL,        true,   false},
+    [TOKEN_RIGHT_PAREN]    = {NULL,          NULL,        PREC_NONE,        false,  true},
+    [TOKEN_LEFT_BRACKET]   = {collection,    subscript,   PREC_CALL,        true,   false},
+    [TOKEN_RIGHT_BRACKET]  = {NULL,          NULL,        PREC_NONE,        false,  true},
+    [TOKEN_LEFT_BRACE]     = {lambda,        NULL,        PREC_NONE,        true,   false},
+    [TOKEN_RIGHT_BRACE]    = {NULL,          NULL,        PREC_NONE,        false,  true},
+    [TOKEN_COLON]          = {NULL,          NULL,        PREC_NONE,        false,  false},
+    [TOKEN_COMMA]          = {NULL,          NULL,        PREC_NONE,        false,  false},
+    [TOKEN_MINUS]          = {unary,         binary,      PREC_TERM,        true,   false},
+    [TOKEN_MODULO]         = {NULL,          binary,      PREC_FACTOR,      false,  false},
+    [TOKEN_PIPE]           = {NULL,          NULL,        PREC_NONE,        false,  false},
+    [TOKEN_PLUS]           = {NULL,          binary,      PREC_TERM,        false,  false},
+    [TOKEN_QUESTION]       = {NULL,          question,    PREC_CALL,        false,  false},
+    [TOKEN_SEMICOLON]      = {NULL,          NULL,        PREC_NONE,        true,   true},
+    [TOKEN_SLASH]          = {NULL,          binary,      PREC_FACTOR,      false,  false},
+    [TOKEN_STAR]           = {NULL,          binary,      PREC_FACTOR,      false,  false},
+    [TOKEN_BANG]           = {unary,         NULL,        PREC_NONE,        true,   false},
+    [TOKEN_BANG_EQUAL]     = {NULL,          binary,      PREC_EQUALITY,    false,  false},   
+    [TOKEN_EQUAL]          = {NULL,          NULL,        PREC_NONE,        false,  false},
+    [TOKEN_EQUAL_EQUAL]    = {NULL,          binary,      PREC_EQUALITY,    false,  false},
+    [TOKEN_GREATER]        = {NULL,          binary,      PREC_COMPARISON,  false,  false},
+    [TOKEN_GREATER_EQUAL]  = {NULL,          binary,      PREC_COMPARISON,  false,  false},
+    [TOKEN_LESS]           = {NULL,          binary,      PREC_COMPARISON,  false,  false},
+    [TOKEN_LESS_EQUAL]     = {NULL,          binary,      PREC_COMPARISON,  false,  false},
+    [TOKEN_DOT]            = {NULL,          dot,         PREC_CALL,        false,  false},
+    [TOKEN_DOT_DOT]        = {NULL,          binary,      PREC_CALL,        false,  false},
+    [TOKEN_IDENTIFIER]     = {variable,      NULL,        PREC_NONE,        true,   true},
+    [TOKEN_STRING]         = {string,        NULL,        PREC_NONE,        true,   true},
+    [TOKEN_INTERPOLATION]  = {interpolation, NULL,        PREC_NONE,        true,   true},
+    [TOKEN_NUMBER]         = {literal,       NULL,        PREC_NONE,        true,   true},
+    [TOKEN_INT]            = {literal,       NULL,        PREC_NONE,        true,   true},
+    [TOKEN_AND]            = {NULL,          and_,        PREC_AND,         false,  false},
+    [TOKEN_AS]             = {NULL,          NULL,        PREC_NONE,        false,  false},
+    [TOKEN_ASYNC]          = {async,         NULL,        PREC_NONE,        true,   false},
+    [TOKEN_AWAIT]          = {await,         NULL,        PREC_NONE,        true,   false},
+    [TOKEN_BREAK]          = {NULL,          NULL,        PREC_NONE,        true,   true},
+    [TOKEN_CASE]           = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_CATCH]          = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_CLASS]          = {class_,        NULL,        PREC_NONE,        true,   false},
+    [TOKEN_CONTINUE]       = {NULL,          NULL,        PREC_NONE,        true,   true},
+    [TOKEN_DEFAULT]        = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_ELSE]           = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_EXTENDS]        = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_FALSE]          = {literal,       NULL,        PREC_NONE,        true,   true},
+    [TOKEN_FINALLY]        = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_FOR]            = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_FUN]            = {closure,       NULL,        PREC_NONE,        true,   false},
+    [TOKEN_IF]             = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_NAMESPACE]      = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_NIL]            = {literal,       NULL,        PREC_NONE,        true,   true},
+    [TOKEN_OR]             = {NULL,          or_,         PREC_OR,          false,  false},
+    [TOKEN_REQUIRE]        = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_RETURN]         = {NULL,          NULL,        PREC_NONE,        true,   true},
+    [TOKEN_SUPER]          = {super_,        NULL,        PREC_NONE,        true,   true},
+    [TOKEN_SWITCH]         = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_THIS]           = {this_,         NULL,        PREC_NONE,        true,   true},
+    [TOKEN_THROW]          = {NULL,          NULL,        PREC_NONE,        true,   true},
+    [TOKEN_TRAIT]          = {trait,         NULL,        PREC_NONE,        true,   false},
+    [TOKEN_TRUE]           = {literal,       NULL,        PREC_NONE,        true,   true},
+    [TOKEN_TRY]            = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_USING]          = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_VAL]            = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_VAR]            = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_WHILE]          = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_WITH]           = {NULL,          NULL,        PREC_NONE,        true,   false},
+    [TOKEN_YIELD]          = {yield,         NULL,        PREC_NONE,        true,   true},
+    [TOKEN_ERROR]          = {NULL,          NULL,        PREC_NONE,        false,  false},
+    [TOKEN_EMPTY]          = {NULL,          NULL,        PREC_NONE,        true,   true},
+    [TOKEN_NEW_LINE]       = {NULL,          NULL,        PREC_NONE,        true,   true},
+    [TOKEN_EOF]            = {NULL,          NULL,        PREC_NONE,        true,   true},
 };
 
 static Ast* parsePrefix(Parser* parser, Precedence precedence, bool canAssign) {
@@ -908,7 +926,8 @@ static Ast* returnStatement(Parser* parser) {
     }
     else {
         Ast* expr = expression(parser);
-        consume(parser, TOKEN_SEMICOLON, "Expect ';' after return value.");
+        //consume(parser, TOKEN_SEMICOLON, "Expect ';' after return value.");
+        consumerTerminator(parser, "Expect ';' or new line after return type");
         return newAst(AST_STMT_RETURN, token, 1, expr);
     }
 }
@@ -1190,6 +1209,8 @@ void initParser(Parser* parser, Lexer* lexer, bool debugAst) {
     parser->lexer = lexer;
     parser->rootClass = syntheticToken("Object");
     parser->debugAst = debugAst;
+    parser->previousNewLine = false;
+    parser->currentNewLine = true;
     parser->hadError = false;
     parser->panicMode = false;
     advance(parser);
