@@ -1,15 +1,16 @@
 namespace test.features;
 
 trait TVehicle { 
-    isMoving(){ 
+
+    Bool isMoving(){ 
         return this.speed > 0;
     }
 
-    drive(speed){ 
+    drive(Number speed){ 
         this.speed = speed;
     }
 
-    accelerate(dSpeed){ 
+    accelerate(Number dSpeed){ 
         this.speed = this.speed + dSpeed;
     } 
 
@@ -38,7 +39,8 @@ println(TVehicle.getClass().superclass());
 println("");
 
 trait TTruck with TVehicle { 
-    carry(dLoad) { 
+
+    carry(Number dLoad) { 
         if(this.isMoving()) this.stop();
         this.load = this.load + dLoad;
     }
@@ -56,12 +58,13 @@ println(TTruck.hasMethod("carry"));
 println("");
 
 class Vehicle with TVehicle { 
-    __init__(color, speed){ 
+
+    __init__(String color, Number speed){ 
         this.color = color;
         this.speed = speed;
     }
 
-    toString(){ 
+    String toString(){ 
         val message = this.color + " " + this.getClassName().toLowercase();
         if(this.isMoving()) return message + " is moving at " + this.speed.toString() + " mph";
         else return message + " is stationary";
@@ -87,12 +90,13 @@ println(vehicle.instanceOf(TTruck));
 println("");
 
 class Truck extends Vehicle with TTruck { 
-    __init__(color, speed, load) { 
+
+    __init__(String color, Number speed, Number load) { 
         super.__init__(color, speed);
         this.load = load;
     }
 
-    toString(){ 
+    String toString(){ 
         val message = this.load.toString() + " ton " + this.color + " truck";
         if(this.isMoving()) return message + " is moving at " + this.speed.toString() + " mph";
         else return message + " is stationary";

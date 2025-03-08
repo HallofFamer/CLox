@@ -2,61 +2,62 @@ namespace test.features;
 
 class Complex { 
 
-    __init__(real, imaginary){ 
+    __init__(Number real, Number imaginary){ 
         this.real = real;
         this.imaginary = imaginary;
     }
 
-    isReal(){ 
+    Bool isReal(){ 
         return this.imaginary == 0;
     }
 
-    +(that){
+    Complex +(Complex that){
         return this.getClass()(this.real + that.real, this.imaginary + that.imaginary);
     } 
 
-    -(that){ 
+    Complex -(Complex that){ 
         return this.getClass()(this.real - that.real, this.imaginary - that.imaginary);
     }
 
-    *(that){ 
+    Complex *(Complex that){ 
         val real = this.real * that.real - this.imaginary * that.imaginary;
         val imaginary = this.real * that.imaginary + this.imaginary * that.real;
         return this.getClass()(real, imaginary);
     }
 
-    /(that){ 
+    Complex /(Complex that){ 
         val denominator = that.real * that.real + that.imaginary * that.imaginary;
         val real = (this.real * that.real + this.imaginary * that.imaginary) / denominator;
         val imaginary = (this.real * that.imaginary - this.imaginary * that.real) / denominator;
         return this.getClass()(real, imaginary);
     }
 
-    ==(that){ 
+    Bool ==(Object that){ 
+        if (!that.instanceOf(Complex)) return false;
         return (this.real == that.real) and (this.imaginary == that.imaginary);
     }
 
-    >(that){ 
+    Bool >(Complex that){ 
         return (this.real.hypot(this.imaginary)) > (that.real.hypot(that.imaginary));
     }
 
-    <(that){ 
+    Bool <(Complex that){ 
         return (this.real.hypot(this.imaginary)) < (that.real.hypot(that.imaginary));
     }
 
-    [](key) { 
+    Number [](String key) { 
         if (key == "real") return this.real;
         if (key == "imaginary") return this.imaginary;
         throw UnsupportedOperationException("Only real and imaginary keys are supported."); 
     }
 
-    []=(key, value) {
+    []=(String key, Numbeer value) {
         if (key == "real") this.real = value;
         if (key == "imaginary") this.imaginary = value;
         throw UnsupportedOperationException("Only real and imaginary keys are supported.");        
     }
 
-    toString(){ 
+    String toString(){ 
         if(this.real == 0){ 
             if(this.imaginary == 0) return "0";
             else return this.imaginary.toString() + "i";

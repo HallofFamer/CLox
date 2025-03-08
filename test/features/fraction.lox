@@ -20,9 +20,9 @@ class Fraction {
     }
 
     reduce(){
-        var gcd = this.numerator.gcd(this.denominator);
-        var numerator = this.numerator / gcd;
-        var denominator = this.denominator / gcd;
+        val gcd = this.numerator.gcd(this.denominator);
+        val numerator = this.numerator / gcd;
+        val denominator = this.denominator / gcd;
         return Fraction(numerator.toInt(), denominator.toInt());
     }
 

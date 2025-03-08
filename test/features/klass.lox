@@ -17,24 +17,24 @@ println("");
 
 class Point { 
 
-    __init__(x, y){ 
+    __init__(Int x, Int y){      
         this.x = x;
         this.y = y;
     }
 
-    class getHorizontal(x){ 
+    class Point getHorizontal(Int x){ 
         return this(x, 0);
     }
 
-    class getVertical(y){ 
+    class Point getVertical(Int y){ 
         return this(0, y);
     }
 
-    distance(p){ 
+    Number distance(Point p){ 
         return ((this.x - p.x).pow(2) + (this.y - p.y).pow(2)).sqrt();
     } 
 
-    toString(){ 
+    String toString(){ 
         return "(" + this.x.toString() + ", " + this.y.toString() + ")";
     }
 }

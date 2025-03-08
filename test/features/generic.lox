@@ -39,7 +39,8 @@ println("String is ASCII: ${string.isASCII}");
 
 println("Testing handling native exception: ");
 try { 
-    val range = 3.."abc";
+    var str = "abc";
+    val range = 3..str;
 }
 catch(IllegalArgumentException e){ 
     e.file = "property.lox";
@@ -51,7 +52,7 @@ println("");
 
 println("Testing inheritance: ");
 
-class Byte < Int { 
+class Byte extends Int { 
     __init__(value) { 
         super.__init__(value);
         if (value < -128 or value > 127) { 
