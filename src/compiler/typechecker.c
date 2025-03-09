@@ -70,11 +70,6 @@ static ObjString* createSymbol(TypeChecker* typeChecker, Token token) {
     return copyString(typeChecker->vm, token.start, token.length);
 }
 
-static ObjString* getClassFullNameFromShortName(TypeChecker* typeChecker, ObjString* name) {
-    if (typeChecker->currentNamespace == NULL) return name;
-    return concatenateString(typeChecker->vm, typeChecker->currentNamespace, name, ".");
-}
-
 static TypeInfo* getClassType(TypeChecker* typeChecker, ObjString* shortName, SymbolTable* symtab) {
     if (shortName == NULL) return NULL;
     TypeInfo* type = typeTableGet(typeChecker->vm->typetab, shortName);
@@ -165,7 +160,7 @@ static void checkInheritingSuperclass(TypeChecker* typeChecker, TypeInfo* superc
     if (typeChecker->currentClass->type == NULL || superclassBaseType == NULL) return;
     BehaviorTypeInfo* superclassType = AS_BEHAVIOR_TYPE(superclassBaseType);
 
-    for (int i = 0; i < superclassType->methods->count; i++) {
+    for (int i = 0; i < superclassType->methods->capacity; i++) {
         TypeEntry* methodEntry = &superclassType->methods->entries[i];
         if (methodEntry == NULL || methodEntry->key == NULL) continue;
         CallableTypeInfo* methodType = AS_CALLABLE_TYPE(methodEntry->value);
@@ -191,7 +186,7 @@ static void checkImplementingTraits(TypeChecker* typeChecker, Ast* traitList) {
         if (type == NULL) continue;
         else {
             BehaviorTypeInfo* traitType = AS_BEHAVIOR_TYPE(type);
-            for (int j = 0; j < traitType->methods->count; j++) {
+            for (int j = 0; j < traitType->methods->capacity; j++) {
                 TypeEntry* methodEntry = &traitType->methods->entries[i];
                 if (methodEntry == NULL || methodEntry->key == NULL) continue;
                 CallableTypeInfo* methodType = AS_CALLABLE_TYPE(methodEntry->value);
@@ -474,7 +469,7 @@ static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* calle
 static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
     ClassTypeChecker classTypeChecker;
     ObjString* shortName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
-    ObjString* fullName = getClassFullNameFromShortName(typeChecker, shortName);
+    ObjString* fullName = getClassFullName(typeChecker->vm, shortName, typeChecker->currentNamespace);
     TypeInfo* behaviorType = typeTableGet(typeChecker->vm->typetab, fullName);
     bool isAnonymous = (shortName->length == 1 && shortName->chars[0] == '@');
     initClassTypeChecker(typeChecker, &classTypeChecker, ast->token, behaviorType == NULL ? NULL : AS_BEHAVIOR_TYPE(behaviorType), isAnonymous);
@@ -670,7 +665,7 @@ static void typeCheckSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckThis(TypeChecker* typeChecker, Ast* ast) {
     if (typeChecker->currentClass->type) {
         if (typeChecker->currentFunction->isClass) {
-            ObjString* className = getClassFullNameFromShortName(typeChecker, createSymbol(typeChecker, typeChecker->currentClass->name));
+            ObjString* className = getClassFullName(typeChecker->vm, createSymbol(typeChecker, typeChecker->currentClass->name), typeChecker->currentNamespace);
             ObjString* metaclassName = getMetaclassNameFromClass(typeChecker->vm, className);
             ast->type = typeTableGet(typeChecker->vm->typetab, metaclassName);
         }
@@ -1011,7 +1006,7 @@ static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
     if (!typeChecker->currentClass->isAnonymous) {
         BehaviorTypeInfo* classType = NULL;
         if (ast->modifier.isClass) {
-            ObjString* className = getClassFullNameFromShortName(typeChecker, createSymbol(typeChecker, typeChecker->currentClass->name));
+            ObjString* className = getClassFullName(typeChecker->vm, createSymbol(typeChecker, typeChecker->currentClass->name), typeChecker->currentNamespace);
             ObjString* metaclassName = getMetaclassNameFromClass(typeChecker->vm, className);
             classType = AS_BEHAVIOR_TYPE(typeTableGet(typeChecker->vm->typetab, metaclassName));
         }

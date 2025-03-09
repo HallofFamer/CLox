@@ -117,12 +117,14 @@ void initResolver(VM* vm, Resolver* resolver, bool debugSymtab) {
     resolver->currentSymtab = NULL;
     resolver->globalSymtab = NULL;
     resolver->rootSymtab = NULL;
+
     resolver->rootClass = syntheticToken("Object");
     resolver->thisVar = syntheticToken("this");
     resolver->superVar = syntheticToken("super");
     resolver->loopDepth = 0;
     resolver->switchDepth = 0;
     resolver->tryDepth = 0;
+
     resolver->isTopLevel = true;
     resolver->debugSymtab = debugSymtab;
     resolver->hadError = false;
@@ -200,17 +202,13 @@ static SymbolItem* findThis(Resolver* resolver) {
         if (resolver->currentFunction->symtab->scope == SYMBOL_SCOPE_METHOD) {
             item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_LOCAL, SYMBOL_STATE_ACCESSED, false);
         }
-        else {
-            item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, false);
-        }
+        else item = newSymbolItem(resolver->thisVar, SYMBOL_CATEGORY_UPVALUE, SYMBOL_STATE_ACCESSED, false);
 
         if (resolver->currentFunction->modifier.isClassMethod) {
             ObjString* metaclassName = getMetaclassNameFromClass(resolver->vm, className);
             item->type = typeTableGet(resolver->vm->typetab, metaclassName);
         }
-        else {
-            item->type = typeTableGet(resolver->vm->typetab, className);
-        }
+        else item->type = typeTableGet(resolver->vm->typetab, className);
         symbolTableSet(resolver->currentSymtab, symbol, item);
     }
 
