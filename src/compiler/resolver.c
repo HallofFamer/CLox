@@ -182,8 +182,7 @@ static bool findSymbol(Resolver* resolver, Token token) {
 
 static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state, TypeInfo* type, bool isMutable) {
     ObjString* symbol = createSymbol(resolver, token);
-    SymbolItem* item = newSymbolItem(token, category, state, isMutable);
-    item->type = type;
+    SymbolItem* item = newSymbolItemWithType(token, category, state, isMutable, type);
     bool inserted = symbolTableSet(resolver->currentSymtab, symbol, item);
 
     if (inserted) return item;

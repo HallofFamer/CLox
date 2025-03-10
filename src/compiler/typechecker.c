@@ -323,6 +323,7 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
         SymbolItem* item = symbolTableGet(ast->symtab, name);
         if (item == NULL) return;
         ObjString* className = getClassNameFromMetaclass(typeChecker->vm, item->type->fullName);
+
         TypeInfo* classType = getClassType(typeChecker, className, ast->symtab);
         if (classType == NULL) return;
         ObjString* initializerName = newString(typeChecker->vm, "__init__");
@@ -490,8 +491,8 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
     Ast* traitList = astGetChild(ast, childIndex);
     if (astNumChild(traitList) > 0) {
         typeCheckChild(typeChecker, ast, childIndex);
+        checkImplementingTraits(typeChecker, traitList);
     }
-    checkImplementingTraits(typeChecker, traitList);
 
     childIndex++;
     typeCheckChild(typeChecker, ast, childIndex);
