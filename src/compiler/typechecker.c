@@ -166,7 +166,7 @@ static void checkInheritingSuperclass(TypeChecker* typeChecker, TypeInfo* superc
         CallableTypeInfo* methodType = AS_CALLABLE_TYPE(methodEntry->value);
 
         TypeInfo* subclassMethodType = typeTableGet(typeChecker->currentClass->type->methods, methodEntry->key);
-        if (subclassMethodType != NULL) {
+        if (subclassMethodType != NULL && subclassMethodType->shortName != typeChecker->vm->initString) {
             checkMethodSignatures(typeChecker, AS_CALLABLE_TYPE(subclassMethodType), methodType);
         }
     }

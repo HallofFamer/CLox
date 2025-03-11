@@ -83,7 +83,9 @@ static void consumerTerminator(Parser* parser, const char* message) {
         advance(parser);
         return;
     }
-    else if (parser->currentNewLine) return;
+    else if (parser->previousNewLine || parser->current.type == TOKEN_RIGHT_BRACE || parser->current.type == TOKEN_EOF) {
+        return;
+    }
     errorAtCurrent(parser, message);
 }
 
@@ -869,7 +871,7 @@ static Ast* continueStatement(Parser* parser) {
 static Ast* expressionStatement(Parser* parser) {
     Token token = parser->previous;
     Ast* expr = expression(parser);
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after expression.");
+    consumerTerminator(parser, "Expect semicolon or new-line after expression.");
     return newAst(AST_STMT_EXPRESSION, token, 1, expr);
 }
 
@@ -926,8 +928,7 @@ static Ast* returnStatement(Parser* parser) {
     }
     else {
         Ast* expr = expression(parser);
-        //consume(parser, TOKEN_SEMICOLON, "Expect ';' after return value.");
-        consumerTerminator(parser, "Expect ';' or new line after return type");
+        consumerTerminator(parser, "Expect semicolon or new-line after return value.");
         return newAst(AST_STMT_RETURN, token, 1, expr);
     }
 }
@@ -1138,7 +1139,7 @@ static Ast* namespaceDeclaration(Parser* parser) {
         namespaceDepth++;
     } while (match(parser, TOKEN_DOT));
 
-    consume(parser, TOKEN_SEMICOLON, "Expect semicolon after namespace declaration.");
+    consumerTerminator(parser, "Expect semicolon or new-line after namespace declaration.");
     return newAst(AST_DECL_NAMESPACE, token, 1, _namespace);
 }
 
@@ -1162,7 +1163,7 @@ static Ast* varDeclaration(Parser* parser, bool isMutable) {
         astAppendChild(varDecl, expr);
     }
 
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+    consumerTerminator(parser, "Expect semicolon or new-line after variable declaration.");
     return varDecl;
 }
 
