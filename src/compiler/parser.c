@@ -852,26 +852,26 @@ static Ast* block(Parser* parser) {
 static Ast* awaitStatement(Parser* parser) {
     Token token = parser->previous;
     Ast* expr = expression(parser);
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after await value.");
+    consumerTerminator(parser, "Expect semicolon or new line after awaiting promise.");
     return newAst(AST_STMT_AWAIT, token, 1, expr);
 }
 
 static Ast* breakStatement(Parser* parser) {
     Ast* stmt = emptyAst(AST_STMT_BREAK, parser->previous);
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after 'break'.");
+    consumerTerminator(parser, "Expect semicolon or new line after 'break'.");
     return stmt;
 }
 
 static Ast* continueStatement(Parser* parser) {
     Ast* stmt = emptyAst(AST_STMT_CONTINUE, parser->previous);
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
+    consumerTerminator(parser, "Expect semicolon or new line after 'continue'.");
     return stmt;
 }
 
 static Ast* expressionStatement(Parser* parser) {
     Token token = parser->previous;
     Ast* expr = expression(parser);
-    consumerTerminator(parser, "Expect semicolon or new-line after expression.");
+    consumerTerminator(parser, "Expect semicolon or new line after expression.");
     return newAst(AST_STMT_EXPRESSION, token, 1, expr);
 }
 
@@ -917,7 +917,7 @@ static Ast* ifStatement(Parser* parser) {
 static Ast* requireStatement(Parser* parser) {
     Token token = parser->previous;
     Ast* expr = expression(parser);
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after required file path.");
+    consumerTerminator(parser, "Expect semicolon or new line after required file path.");
     return newAst(AST_STMT_REQUIRE, token, 1, expr);
 }
 
@@ -928,7 +928,7 @@ static Ast* returnStatement(Parser* parser) {
     }
     else {
         Ast* expr = expression(parser);
-        consumerTerminator(parser, "Expect semicolon or new-line after return value.");
+        consumerTerminator(parser, "Expect semicolon or new line after return value.");
         return newAst(AST_STMT_RETURN, token, 1, expr);
     }
 }
@@ -977,7 +977,7 @@ static Ast* switchStatement(Parser* parser) {
 static Ast* throwStatement(Parser* parser) {
     Token token = parser->previous;
     Ast* expr = expression(parser);
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after thrown exception object.");
+    consumerTerminator(parser, "Expect semicolon or new line after thrown exception.");
     return newAst(AST_STMT_THROW, token, 1, expr);
 }
 
@@ -1029,7 +1029,7 @@ static Ast* usingStatement(Parser* parser) {
         astAppendChild(stmt, alias);
     }
 
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after using statement.");
+    consumerTerminator(parser, "Expect semicolon or new-line after using statement.");
     return stmt;
 }
 
@@ -1050,7 +1050,7 @@ static Ast* yieldStatement(Parser* parser) {
 
     bool isWith = match(parser, TOKEN_WITH);
     Ast* expr = expression(parser);
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after yield value.");
+    consumerTerminator(parser, "Expect semicolon or new line after yield value.");
 
     Ast* ast = newAst(AST_STMT_YIELD, token, 1, expr);
     ast->modifier.isWith = isWith;
@@ -1139,7 +1139,7 @@ static Ast* namespaceDeclaration(Parser* parser) {
         namespaceDepth++;
     } while (match(parser, TOKEN_DOT));
 
-    consumerTerminator(parser, "Expect semicolon or new-line after namespace declaration.");
+    consumerTerminator(parser, "Expect semicolon or new line after namespace declaration.");
     return newAst(AST_DECL_NAMESPACE, token, 1, _namespace);
 }
 
@@ -1163,7 +1163,7 @@ static Ast* varDeclaration(Parser* parser, bool isMutable) {
         astAppendChild(varDecl, expr);
     }
 
-    consumerTerminator(parser, "Expect semicolon or new-line after variable declaration.");
+    consumerTerminator(parser, "Expect semicolon or new line after variable declaration.");
     return varDecl;
 }
 

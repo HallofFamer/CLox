@@ -136,7 +136,6 @@ static void checkArguments(TypeChecker* typeChecker, const char* calleeDesc, Ast
 
 static void checkMethodSignatures(TypeChecker* typeChecker, CallableTypeInfo* subclassMethod, CallableTypeInfo* superclassMethod) {
     ObjString* className = createSymbol(typeChecker, typeChecker->currentClass->name);
-
     if (!isEqualType(subclassMethod->returnType, superclassMethod->returnType)) {
         typeError(typeChecker, "Method %s::%s expects return type to be %s but gets %s.", className->chars,
             subclassMethod->baseType.shortName->chars, superclassMethod->returnType->shortName->chars, subclassMethod->returnType->shortName->chars);
@@ -334,7 +333,7 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
             checkArguments(typeChecker, calleeDesc, args, AS_CALLABLE_TYPE(initializerType));
         }
         else if (astHasChild(args)) {
-            typeError(typeChecker, "Class %s's initializer expects to receive a total of 0 arguments but gets %d.", name->chars, astNumChild(args));
+            typeError(typeChecker, "Class %s's initializer expects to receive a total of 0 argument but gets %d.", name->chars, astNumChild(args));
         }
         ast->type = classType;
     }
@@ -462,6 +461,7 @@ static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* calle
     FunctionTypeChecker functionTypeChecker;
     initFunctionTypeChecker(typeChecker, &functionTypeChecker, ast->token, calleeType, isAsync, isClass);
     functionTypeChecker.symtab = ast->symtab;
+
     typeCheckChild(typeChecker, ast, 0);
     typeCheckChild(typeChecker, ast, 1);
     endFunctionTypeChecker(typeChecker);
@@ -500,7 +500,7 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
 }
 
 static void yield(TypeChecker* typeChecker, Ast* ast) {
-    if (astNumChild(ast)) {
+    if (astHasChild(ast)) {
         typeCheckChild(typeChecker, ast, 0);
     }
 }
