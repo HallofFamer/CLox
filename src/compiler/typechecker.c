@@ -382,13 +382,13 @@ static void inferAstTypeFromSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
 
     if (isSubtypeOfType(receiver->type, stringType)) {
         if (!isSubtypeOfType(index->type, intType)) {
-            typeError(typeChecker, "String index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+            typeError(typeChecker, "String's index must be an instance of Int, but gets %s.", index->type->shortName->chars);
         }
         ast->type = stringType;
     }
     else if (isSubtypeOfType(receiver->type, getNativeType(typeChecker->vm, "clox.std.collection.Array"))) {
         if (!isSubtypeOfType(index->type, intType)) {
-            typeError(typeChecker, "Array index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+            typeError(typeChecker, "Array's index must be an instance of Int, but gets %s.", index->type->shortName->chars);
         }
         ast->type = objectType;
     }
@@ -419,13 +419,13 @@ static void inferAstTypeFromSubscriptSet(TypeChecker* typeChecker, Ast* ast) {
 
     if (isSubtypeOfType(receiver->type, stringType)) {
         if (!isSubtypeOfType(index->type, intType)) {
-            typeError(typeChecker, "String index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+            typeError(typeChecker, "String's index must be an instance of Int, but gets %s.", index->type->shortName->chars);
         }
         ast->type = nilType;
     }
     else if (isSubtypeOfType(receiver->type, getNativeType(typeChecker->vm, "clox.std.collection.Array"))) {
         if (!isSubtypeOfType(index->type, intType)) {
-            typeError(typeChecker, "Array index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+            typeError(typeChecker, "Array's index must be an instance of Int, but gets %s.", index->type->shortName->chars);
         }
         ast->type = nilType;
     }
@@ -485,7 +485,9 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
         if (!isSubtypeOfType(superclassItem->type, getNativeType(typeChecker->vm, "Class"))) {
             typeError(typeChecker, "Superclass must be an instance of Class, but gets %s.", superclassItem->type->shortName->chars);
         }
-        checkInheritingSuperclass(typeChecker, typeChecker->currentClass->type->superclassType);
+        if (!typeChecker->currentClass->isAnonymous) {
+            checkInheritingSuperclass(typeChecker, typeChecker->currentClass->type->superclassType);
+        }
     }
 
     Ast* traitList = astGetChild(ast, childIndex);
@@ -792,7 +794,6 @@ static void typeCheckBlockStatement(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckCaseStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     typeCheckChild(typeChecker, ast, 1);
-    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckCatchStatement(TypeChecker* typeChecker, Ast* ast) {
