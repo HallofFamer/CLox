@@ -922,7 +922,7 @@ static Ast* requireStatement(Parser* parser) {
 
 static Ast* returnStatement(Parser* parser) {
     Token token = parser->previous;
-    if (match(parser, TOKEN_SEMICOLON)) {
+    if (match(parser, TOKEN_SEMICOLON) || !getRule(parser->current.type)->startExpr) {
         return emptyAst(AST_STMT_RETURN, token);
     }
     else {
@@ -1043,7 +1043,7 @@ static Ast* whileStatement(Parser* parser) {
 
 static Ast* yieldStatement(Parser* parser) {
     Token token = parser->previous;
-    if (match(parser, TOKEN_SEMICOLON)) {
+    if (match(parser, TOKEN_SEMICOLON) || !getRule(parser->current.type)->startExpr) {
         return emptyAst(AST_STMT_YIELD, token);
     }
 

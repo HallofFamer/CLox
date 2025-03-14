@@ -137,7 +137,7 @@ static void checkArguments(TypeChecker* typeChecker, const char* calleeDesc, Ast
 static void checkMethodSignatures(TypeChecker* typeChecker, CallableTypeInfo* subclassMethod, CallableTypeInfo* superclassMethod) {
     ObjString* className = createSymbol(typeChecker, typeChecker->currentClass->name);
     if (!isEqualType(subclassMethod->returnType, superclassMethod->returnType)) {
-        typeError(typeChecker, "Method %s::%s expects return type to be %s but gets %s.", className->chars,
+        typeError(typeChecker, "Method %s::%s expects return type to be an instance of %s but gets %s.", className->chars,
             subclassMethod->baseType.shortName->chars, superclassMethod->returnType->shortName->chars, subclassMethod->returnType->shortName->chars);
     }
 
@@ -220,7 +220,7 @@ static void inferAstTypeFromUnary(TypeChecker* typeChecker, Ast* ast, SymbolItem
             break;
         case TOKEN_MINUS:
             if (!isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "Number"))) {
-                typeError(typeChecker, "Unary negate expects operand to be a Number, %s given.", child->type->shortName->chars);
+                typeError(typeChecker, "Unary negate expects operand to be an instance of Number, %s given.", child->type->shortName->chars);
             }
             else if (isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "Int"))) {
                 defineAstType(typeChecker, ast, "Int", item);
@@ -504,6 +504,10 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
 static void yield(TypeChecker* typeChecker, Ast* ast) {
     if (astHasChild(ast)) {
         typeCheckChild(typeChecker, ast, 0);
+        Ast* child = astGetChild(ast, 0);
+        if (ast->modifier.isWith && !isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "Generator"))) {
+            typeError(typeChecker, "'yield with' expects expression to be an instance of Generator but gets %s.", child->type->shortName->chars);
+        }
     }
 }
 
@@ -511,7 +515,7 @@ static void await(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
     if (!isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "clox.std.util.Promise"))) {
-        typeError(typeChecker, "'await' expects expression to be a Promise but gets %s.", child->type->shortName->chars);
+        typeError(typeChecker, "'await' expects expression to be an instance of Promise but gets %s.", child->type->shortName->chars);
     }
 }
 
@@ -839,7 +843,7 @@ static void typeCheckRequireStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
     if (!hasAstType(typeChecker, child, "clox.std.lang.String")) {
-        typeError(typeChecker, "require statement expects expression to be a String but gets %s.", child->type->shortName->chars);
+        typeError(typeChecker, "require statement expects expression to be an instance of String but gets %s.", child->type->shortName->chars);
     }
 }
 
@@ -855,7 +859,7 @@ static void typeCheckReturnStatement(TypeChecker* typeChecker, Ast* ast) {
     else actualType = getNativeType(typeChecker->vm, "Nil");
 
     if (!isSubtypeOfType(actualType, expectedType)) {
-        typeError(typeChecker, "Function expects return value of type %s but gets %s.", 
+        typeError(typeChecker, "Function expects return value to be an instance of %s but gets %s.", 
             expectedType->shortName->chars, actualType->shortName->chars);
     }
 }
@@ -877,7 +881,7 @@ static void typeCheckThrowStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
     if (!hasAstType(typeChecker, child, "clox.std.lang.Exception")) {
-        typeError(typeChecker, "throw statement expects expression to be an Exception but gets %s.", child->type->shortName->chars);
+        typeError(typeChecker, "throw statement expects expression to be an instance of Exception but gets %s.", child->type->shortName->chars);
     }
 }
 
