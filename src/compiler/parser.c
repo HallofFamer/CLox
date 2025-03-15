@@ -44,11 +44,11 @@ static void parseError(Parser* parser, Token* token, const char* message) {
     longjmp(parser->jumpBuffer, 1);
 }
 
-static void error(Parser* parser, const char* message) {
+static void parseErrorAtPrevious(Parser* parser, const char* message) {
     parseError(parser, &parser->previous, message);
 }
 
-static void errorAtCurrent(Parser* parser, const char* message) {
+static void parseErrorAtCurrent(Parser* parser, const char* message) {
     parseError(parser, &parser->current, message);
 }
 
@@ -65,7 +65,7 @@ static void advance(Parser* parser) {
             continue;
         }
         else if (parser->next.type != TOKEN_ERROR) break;
-        errorAtCurrent(parser, parser->next.start);
+        parseErrorAtCurrent(parser, parser->next.start);
     }
 }
 
@@ -74,7 +74,7 @@ static void consume(Parser* parser, TokenSymbol type, const char* message) {
         advance(parser);
         return;
     }
-    errorAtCurrent(parser, message);
+    parseErrorAtCurrent(parser, message);
 }
 
 static void consumerTerminator(Parser* parser, const char* message) {
@@ -85,7 +85,7 @@ static void consumerTerminator(Parser* parser, const char* message) {
     else if (parser->previousNewLine || parser->current.type == TOKEN_RIGHT_BRACE || parser->current.type == TOKEN_EOF) {
         return;
     }
-    errorAtCurrent(parser, message);
+    parseErrorAtCurrent(parser, message);
 }
 
 static bool check(Parser* parser, TokenSymbol type) {
@@ -110,7 +110,7 @@ static int hexDigit(Parser* parser, char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return c - 'a' + 10;
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    error(parser, "Invalid hex escape sequence.");
+    parseErrorAtPrevious(parser, "Invalid hex escape sequence.");
     return -1;
 }
 
@@ -119,7 +119,7 @@ static int hexEscape(Parser* parser, const char* source, int base, int startInde
     for (int i = 0; i < base; i++) {
         int index = startIndex + i + 2;
         if (source[index] == '"' || source[index] == '\0') {
-            error(parser, "Incomplete hex escape sequence.");
+            parseErrorAtPrevious(parser, "Incomplete hex escape sequence.");
             break;
         }
 
@@ -133,12 +133,12 @@ static int hexEscape(Parser* parser, const char* source, int base, int startInde
 static int unicodeEscape(Parser* parser, const char* source, char* target, int base, int startIndex, int currentLength) {
     int value = hexEscape(parser, source, base, startIndex);
     int numBytes = utf8_num_bytes(value);
-    if (numBytes < 0) error(parser, "Negative unicode character specified.");
+    if (numBytes < 0) parseErrorAtPrevious(parser, "Negative unicode character specified.");
     if (value > 0xffff) numBytes++;
 
     if (numBytes > 0) {
         char* utfChar = utf8_encode(value);
-        if (utfChar == NULL) error(parser, "Invalid unicode character specified.");
+        if (utfChar == NULL) parseErrorAtPrevious(parser, "Invalid unicode character specified.");
         else {
             memcpy(target + currentLength, utfChar, (size_t)numBytes + 1);
             free(utfChar);
@@ -288,7 +288,7 @@ static Ast* argumentList(Parser* parser) {
     if (!check(parser, TOKEN_RIGHT_PAREN)) {
         do {
             Ast* child = expression(parser);
-            if (argCount == UINT8_MAX) error(parser, "Can't have more than 255 arguments.");
+            if (argCount == UINT8_MAX) parseErrorAtPrevious(parser, "Can't have more than 255 arguments.");
             astAppendChild(argList, child);
             argCount++;
         } while (match(parser, TOKEN_COMMA));
@@ -331,7 +331,7 @@ static Token identifierToken(Parser* parser, const char* message) {
             break;
     }
 
-    errorAtCurrent(parser, message);
+    parseErrorAtCurrent(parser, message);
     return parser->previous;
 }
 
@@ -472,7 +472,7 @@ static Ast* array(Parser* parser, Token token, Ast* element) {
         astAppendChild(elements, element);
 
         if (elementCount == UINT8_MAX) {
-            error(parser, "Cannot have more than 255 elements.");
+            parseErrorAtPrevious(parser, "Cannot have more than 255 elements.");
         }
         elementCount++;
     }
@@ -494,7 +494,7 @@ static Ast* dictionary(Parser* parser, Token token, Ast* key, Ast* value) {
         astAppendChild(values, value);
 
         if (entryCount == UINT8_MAX) {
-            error(parser, "Cannot have more than 255 entries.");
+            parseErrorAtPrevious(parser, "Cannot have more than 255 entries.");
         }
         entryCount++;
     }
@@ -557,13 +557,13 @@ static Ast* parameterList(Parser* parser, Token token) {
         Ast* param = parameter(parser, "Expect variadic parameter name.");
         param->modifier.isVariadic = true;
         astAppendChild(params, param);
-        if (match(parser, TOKEN_COMMA)) error(parser, "Cannot have more parameters following variadic parameter.");
+        if (match(parser, TOKEN_COMMA)) parseErrorAtPrevious(parser, "Cannot have more parameters following variadic parameter.");
         return params;
     }
 
     do {
         arity++;
-        if (arity > UINT8_MAX) errorAtCurrent(parser, "Can't have more than 255 parameters.");
+        if (arity > UINT8_MAX) parseErrorAtCurrent(parser, "Can't have more than 255 parameters.");
         Ast* param = parameter(parser, "Expect parameter name");
         astAppendChild(params, param);
     } while (match(parser, TOKEN_COMMA));
@@ -648,7 +648,7 @@ static Ast* traits(Parser* parser, Token* name) {
     do {
         traitCount++;
         if (traitCount > UINT4_MAX) {
-            errorAtCurrent(parser, "Can't have more than 15 parameters.");
+            parseErrorAtCurrent(parser, "Can't have more than 15 parameters.");
         }
 
         Ast* trait = identifier(parser, "Expect trait name.");
@@ -716,7 +716,7 @@ static Ast* async(Parser* parser, Token token, bool canAssign) {
         return function(parser, true, true);
     }
     else {
-        error(parser, "Can only use async as expression modifier for anonymous functions or lambda.");
+        parseErrorAtPrevious(parser, "Can only use async as expression modifier for anonymous functions or lambda.");
         return NULL;
     }
 }
@@ -802,7 +802,7 @@ ParseRule parseRules[] = {
 static Ast* parsePrefix(Parser* parser, Precedence precedence, bool canAssign) {
     ParsePrefixFn prefixRule = getRule(parser->previous.type)->prefix;
     if (prefixRule == NULL) {
-        error(parser, "Expect expression.");
+        parseErrorAtPrevious(parser, "Expect expression.");
         return NULL;
     }
     return prefixRule(parser, parser->previous, canAssign);
@@ -816,7 +816,7 @@ static Ast* parseInfix(Parser* parser, Precedence precedence, Ast* left, bool ca
     }
 
     if (canAssign && match(parser, TOKEN_EQUAL)) {
-        error(parser, "Invalid assignment target.");
+        parseErrorAtPrevious(parser, "Invalid assignment target.");
     }
     return left;
 }
@@ -949,7 +949,7 @@ static Ast* switchStatement(Parser* parser) {
         if (match(parser, TOKEN_CASE) || match(parser, TOKEN_DEFAULT)) {
             Token caseToken = parser->previous;
             if (state == 1) caseCount++;
-            if (state == 2) error(parser, "Can't have another case or default after the default case.");
+            if (state == 2) parseErrorAtPrevious(parser, "Can't have another case or default after the default case.");
 
             if (caseToken.type == TOKEN_CASE) {
                 state = 1;
@@ -997,7 +997,7 @@ static Ast* tryStatement(Parser* parser) {
         astAppendChild(stmt, catchStmt);
     }
     else {
-        errorAtCurrent(parser, "Must have a catch statement following a try statement.");
+        parseErrorAtCurrent(parser, "Must have a catch statement following a try statement.");
     }
 
     if (match(parser, TOKEN_FINALLY)) {
@@ -1132,7 +1132,7 @@ static Ast* namespaceDeclaration(Parser* parser) {
 
     do {
         if (namespaceDepth > UINT4_MAX) {
-            errorAtCurrent(parser, "Can't have more than 15 levels of namespace depth.");
+            parseErrorAtCurrent(parser, "Can't have more than 15 levels of namespace depth.");
         }
         astAppendChild(_namespace, identifier(parser, "Expect Namespace identifier."));
         namespaceDepth++;

@@ -191,12 +191,12 @@ static void checkImplementingTraits(TypeChecker* typeChecker, Ast* traitList) {
                 CallableTypeInfo* methodType = AS_CALLABLE_TYPE(methodEntry->value);
 
                 TypeInfo* subclassMethodType = typeTableGet(typeChecker->currentClass->type->methods, methodEntry->key);
-                if (subclassMethodType != NULL) {
+                if (subclassMethodType != NULL && subclassMethodType->shortName != typeChecker->vm->initString) {
                     checkMethodSignatures(typeChecker, AS_CALLABLE_TYPE(subclassMethodType), methodType);
                 }
 
                 TypeInfo* superclassMethodType = typeTableGet(superclassType->methods, methodEntry->key);
-                if (superclassMethodType != NULL) {
+                if (superclassMethodType != NULL && superclassMethodType->shortName != typeChecker->vm->initString) {
                     checkMethodSignatures(typeChecker, methodType, AS_CALLABLE_TYPE(superclassMethodType));
                 }
             }
