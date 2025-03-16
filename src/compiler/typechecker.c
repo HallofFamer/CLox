@@ -382,13 +382,13 @@ static void inferAstTypeFromSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
 
     if (isSubtypeOfType(receiver->type, stringType)) {
         if (!isSubtypeOfType(index->type, intType)) {
-            typeError(typeChecker, "String's index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+            typeError(typeChecker, "String's index must be an instance of Int but gets %s.", index->type->shortName->chars);
         }
         ast->type = stringType;
     }
     else if (isSubtypeOfType(receiver->type, getNativeType(typeChecker->vm, "clox.std.collection.Array"))) {
         if (!isSubtypeOfType(index->type, intType)) {
-            typeError(typeChecker, "Array's index must be an instance of Int, but gets %s.", index->type->shortName->chars);
+            typeError(typeChecker, "Array's index must be an instance of Int but gets %s.", index->type->shortName->chars);
         }
         ast->type = objectType;
     }
@@ -539,6 +539,7 @@ static void typeCheckAssign(TypeChecker* typeChecker, Ast* ast) {
     ObjString* name = copyString(typeChecker->vm, ast->token.start, ast->token.length);
     SymbolItem* item = symbolTableLookup(ast->symtab, name);
     if (item != NULL) typeCheckChild(typeChecker, ast, 0);
+    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckAwait(TypeChecker* typeChecker, Ast* ast) {

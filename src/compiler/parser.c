@@ -1043,14 +1043,13 @@ static Ast* whileStatement(Parser* parser) {
 
 static Ast* yieldStatement(Parser* parser) {
     Token token = parser->previous;
+    bool isWith = match(parser, TOKEN_WITH);
     if (match(parser, TOKEN_SEMICOLON) || !getRule(parser->current.type)->startExpr) {
         return emptyAst(AST_STMT_YIELD, token);
     }
 
-    bool isWith = match(parser, TOKEN_WITH);
     Ast* expr = expression(parser);
     consumerTerminator(parser, "Expect semicolon or new line after yield value.");
-
     Ast* ast = newAst(AST_STMT_YIELD, token, 1, expr);
     ast->modifier.isWith = isWith;
     return ast;
