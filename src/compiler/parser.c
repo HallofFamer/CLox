@@ -263,6 +263,7 @@ static void synchronize(Parser* parser) {
             case TOKEN_USING:
             case TOKEN_VAL:
             case TOKEN_VAR:
+            case TOKEN_VOID:
             case TOKEN_WHILE:
             case TOKEN_YIELD:
                 return;

@@ -286,9 +286,8 @@ static SymbolItem* declareVariable(Resolver* resolver, Ast* ast, bool isMutable)
     SymbolItem* item = insertSymbol(resolver, ast->token, category, SYMBOL_STATE_DECLARED, NULL, isMutable);
 
     if (item == NULL) {
-        char* name = tokenToCString(ast->token);
-        semanticError(resolver, "Already a variable with name '%s' in this scope.", name);
-        free(name);
+        ObjString* name = createSymbol(resolver, ast->token);
+        semanticError(resolver, "Already a variable with name '%s' in this scope.", name->chars);
     }
     return item;
 }
@@ -376,21 +375,20 @@ static SymbolItem* findGlobal(Resolver* resolver, Ast* ast) {
 
 static void checkMutability(Resolver* resolver, SymbolItem* item) {
     if (!item->isMutable) {
-        char* name = tokenToCString(item->token);
+        ObjString* name = createSymbol(resolver, item->token);
         switch (item->category) {
             case SYMBOL_CATEGORY_LOCAL:
-                semanticError(resolver, "Cannot assign to immutable local variable '%s'.", name);
+                semanticError(resolver, "Cannot assign to immutable local variable '%s'.", name->chars);
                 break;
             case SYMBOL_CATEGORY_UPVALUE:
-                semanticError(resolver, "Cannot assign to immutable captured upvalue '%s'.", name);
+                semanticError(resolver, "Cannot assign to immutable captured upvalue '%s'.", name->chars);
                 break;
             case SYMBOL_CATEGORY_GLOBAL:
-                semanticError(resolver, "Cannot assign to immutable global variables '%s'.", name);
+                semanticError(resolver, "Cannot assign to immutable global variables '%s'.", name->chars);
                 break;
             default:
                 break;
         }
-        free(name);
     }
 }
 
@@ -440,6 +438,7 @@ static void insertParamType(Resolver* resolver, Ast* ast, bool hasType) {
 static SymbolItem* getVariable(Resolver* resolver, Ast* ast) {
     ObjString* symbol = createSymbol(resolver, ast->token);
     SymbolItem* item = findLocal(resolver, ast);
+
     if (item != NULL) {
         if (item->state == SYMBOL_STATE_DEFINED) item->state = SYMBOL_STATE_ACCESSED;
         return item;
@@ -1232,12 +1231,13 @@ void resolve(Resolver* resolver, Ast* ast) {
     int symtabIndex = nextSymbolTableIndex(resolver);
     resolver->currentSymtab = newSymbolTable(symtabIndex, resolver->vm->symtab, SYMBOL_SCOPE_MODULE, 0);
     resolver->currentFunction->symtab = resolver->currentSymtab;
+
     resolver->globalSymtab = resolver->currentSymtab;
     resolver->rootSymtab = resolver->currentSymtab;
-    
     ast->symtab = resolver->currentSymtab;
     resolveAst(resolver, ast);
     endFunctionResolver(resolver);
+
     if (resolver->debugSymtab) {
         symbolTableOutput(resolver->rootSymtab);
         symbolTableOutput(resolver->vm->symtab);
