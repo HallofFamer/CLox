@@ -23,7 +23,7 @@ println("Query: " + url3.queryDict().toString());
 println("Fragment: " + url3.fragment);
 println("");
 
-val url3 = URL("", "", 0, "products/", "", "");
-println("URL3 is " + url3.toString());
-print("Relativize URL2 with URL3: ");
-println(url2.relativize(url3).toString());
+val url4 = URL("", "", 0, "products/", "", "");
+println("URL4 is " + url4.toString());
+print("Relativize URL2 with URL4: ");
+println(url2.relativize(url4).toString());

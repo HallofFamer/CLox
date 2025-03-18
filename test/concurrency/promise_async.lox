@@ -3,7 +3,7 @@ using clox.std.io.File;
 
 class FileReader { 
     
-    async readAsync(url) { 
+    async readAsync(String url) { 
         val fileReader = await File.openAsync(url, "r");
         print("Successfully opened: ");
         println(fileReader);
@@ -22,6 +22,5 @@ class FileReader {
 
 val fileReader = FileReader();
 println("Start reading file...\n");
-fileReader.readAsync("test/others/file_input.txt").then({|result| 
-    println("\nFinished reading file...");
-});
+await fileReader.readAsync("test/others/file_input.txt");
+println("\nFinished reading file...");

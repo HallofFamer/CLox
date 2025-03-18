@@ -1,0 +1,25 @@
+namespace test.features
+using clox.std.util.Promise
+
+val x = 5
+if (x >= 0) { 
+    println("x is natural number.")
+}
+else { println("x is not natural number.") }
+
+fun printNumber(num) { 
+    if (!num.instanceOf(Number))
+        return
+    else 
+        println("Number is: ${num}")
+}
+printNumber(5)
+
+fun sumNumbers(Number a, Number b) { 
+    return a 
+        + b
+}
+print("The sum of number 1 and 2 is: ")
+println(sumNumbers(1, 2))
+
+println("Semicolon inference test complete.")

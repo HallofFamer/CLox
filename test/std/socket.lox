@@ -16,6 +16,6 @@ server.bind(socketAddress);
 println("Starting to listen to Socket connections.");
 server.listen();
 println("Now accepting connection from Socket Client...");
-val socketAddress = server.accept();
+server.accept();
 val message = server.receive();
 println("Receiving message: " + message);
