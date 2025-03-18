@@ -254,7 +254,7 @@ static void typeTableOutputMethod(TypeTable* methods) {
             printf("      %s", method->modifier.isAsync ? "async " : "");
 
             if (method->returnType == NULL) printf("dynamic ");
-            else if (memcmp(method->returnType->shortName->chars, "Nil", 3) == 0) printf("void ");
+            else if (method->modifier.isVoid) printf("void ");
             else printf("%s ", method->returnType->shortName->chars);
             printf("%s(", entry->key->chars);
 
@@ -290,7 +290,7 @@ static void typeTableOutputBehavior(BehaviorTypeInfo* behavior) {
 static void typeTableOutputFunction(CallableTypeInfo* function) {
     printf("    signature: ");
     if (function->returnType == NULL) printf("dynamic ");
-    else if (memcmp(function->returnType->shortName->chars, "Nil", 3) == 0) printf("void ");
+    else if (function->modifier.isVoid) printf("void ");
     else printf("%s ", function->returnType->shortName->chars);
     printf("%s(", function->baseType.shortName->chars);
 

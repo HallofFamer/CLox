@@ -174,6 +174,7 @@ static void setFunctionTypeModifier(Ast* ast, CallableTypeInfo* callableType) {
     callableType->modifier.isInstanceMethod = !ast->modifier.isClass;
     callableType->modifier.isLambda = ast->modifier.isLambda;
     callableType->modifier.isVariadic = ast->modifier.isVariadic;
+    callableType->modifier.isVoid = ast->modifier.isVoid;
 }
 
 static bool findSymbol(Resolver* resolver, Token token) {
@@ -473,6 +474,7 @@ static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) 
     functionResolver.modifier.isInitializer = ast->modifier.isInitializer;
     functionResolver.modifier.isInstanceMethod = !ast->modifier.isClass;
     functionResolver.modifier.isLambda = isLambda;
+    functionResolver.modifier.isVoid = ast->modifier.isVoid;
 
     SymbolScope scope = getFunctionScope(ast);
     beginScope(resolver, ast, scope);
@@ -943,6 +945,9 @@ static void resolveReturnStatement(Resolver* resolver, Ast* ast) {
         semanticError(resolver, "Cannot use 'return' from an initializer.");
     }
     else if (astHasChild(ast)) {
+        if (resolver->currentFunction->modifier.isVoid) {
+            semanticError(resolver, "Cannot return value from a void function/method.");
+        }
         resolveChild(resolver, ast, 0);
     }
 }

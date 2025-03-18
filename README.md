@@ -43,6 +43,7 @@ https://github.com/munificent/craftinginterpreters
 - Promise API with event loop provided by libuv library for non-blocking IO operations.
 - Introduction of `async` and `await` keywords, which allows C#/JS style of concurrency.
 - Optional static typing support for function/method parameters and return values, types only exist at compile time and are erased at runtime. 
+- Semicolon inference as well as basic type inference for immutable local/global variables. 
 - Customized Runtime configuration for CLox using clox.ini.
 - Allow loading lox source files in lox script and another lox source file with `require` keyword.
 - Cross-platform build with Cmake and package manager with vcpkg.

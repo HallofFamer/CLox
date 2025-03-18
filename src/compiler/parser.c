@@ -277,7 +277,7 @@ static void synchronize(Parser* parser) {
 static Ast* expression(Parser* parser);
 static Ast* statement(Parser* parser);
 static Ast* block(Parser* parser);
-static Ast* function(Parser* parser, bool isAsync, bool isLambda);
+static Ast* function(Parser* parser, bool isAsync, bool isLambda, bool isVoid);
 static Ast* declaration(Parser* parser);
 static ParseRule* getRule(TokenSymbol type);
 static Ast* parsePrecedence(Parser* parser, Precedence precedence);
@@ -517,11 +517,11 @@ static Ast* collection(Parser* parser, Token token, bool canAssign) {
 }
 
 static Ast* closure(Parser* parser, Token token, bool canAssign) {
-    return function(parser, false, false);
+    return function(parser, false, false, false);
 }
 
 static Ast* lambda(Parser* parser, Token token, bool canAssign) {
-    return function(parser, false, true);
+    return function(parser, false, true, false);
 }
 
 static Ast* variable(Parser* parser, Token token, bool canAssign) {
@@ -588,13 +588,14 @@ static Ast* lambdaParameters(Parser* parser) {
     return params;
 }
 
-static Ast* function(Parser* parser, bool isAsync, bool isLambda) {
+static Ast* function(Parser* parser, bool isAsync, bool isLambda, bool isVoid) {
     Token token = parser->previous;
     Ast* params = isLambda ? lambdaParameters(parser) : functionParameters(parser);
     Ast* body = block(parser);
     Ast* func = newAst(AST_EXPR_FUNCTION, token, 2, params, body);
     func->modifier.isAsync = isAsync;
     func->modifier.isLambda = isLambda;
+    func->modifier.isVoid = isVoid;
     return func;
 }
 
@@ -603,10 +604,11 @@ static Ast* methods(Parser* parser, Token* name) {
     Ast* methodList = emptyAst(AST_LIST_METHOD, *name);
 
     while (!check(parser, TOKEN_RIGHT_BRACE) && !check(parser, TOKEN_EOF)) {
-        bool isAsync = false, isClass = false, isInitializer = false, hasReturnType = false;
+        bool isAsync = false, isClass = false, isInitializer = false, isVoid = false, hasReturnType = false;
         Ast* returnType = NULL;
         if (match(parser, TOKEN_ASYNC)) isAsync = true;
         if (match(parser, TOKEN_CLASS)) isClass = true;
+        if (match(parser, TOKEN_VOID)) isVoid = true;
         if (check2(parser, TOKEN_IDENTIFIER) || (check(parser, TOKEN_IDENTIFIER) && tokenIsOperator(parser->next))) {
             hasReturnType = true;
             returnType = type_(parser, "Expect method return type.");
@@ -623,6 +625,7 @@ static Ast* methods(Parser* parser, Token* name) {
         method->modifier.isAsync = isAsync;
         method->modifier.isClass = isClass;
         method->modifier.isInitializer = isInitializer;
+        method->modifier.isVoid = isVoid;
 
         if (hasReturnType) {
             astAppendChild(method, returnType);
@@ -711,10 +714,10 @@ static Ast* yield(Parser* parser, Token token, bool canAssign) {
 
 static Ast* async(Parser* parser, Token token, bool canAssign) { 
     if (match(parser, TOKEN_FUN)) {
-        return function(parser, true, false);
+        return function(parser, true, false, false);
     }
     else if (match(parser, TOKEN_LEFT_BRACE)) {
-        return function(parser, true, true);
+        return function(parser, true, true, false);
     }
     else {
         parseErrorAtPrevious(parser, "Can only use async as expression modifier for anonymous functions or lambda.");
@@ -1115,12 +1118,14 @@ static Ast* classDeclaration(Parser* parser) {
 }
 
 static Ast* funDeclaration(Parser* parser, bool isAsync, bool hasReturnType) {
+    bool isVoid = match(parser, TOKEN_VOID);
     Ast* returnType = hasReturnType ? type_(parser, "Expect function return type.") : NULL;
     consume(parser, TOKEN_IDENTIFIER, "Expect function name.");
     Token name = parser->previous;
-    Ast* body = function(parser, isAsync, false);
+    Ast* body = function(parser, isAsync, false, isVoid);
 
     Ast* ast = newAst(AST_DECL_FUN, name, 1, body);
+    ast->modifier.isVoid = true;
     if (returnType != NULL) astAppendChild(ast, returnType);
     return ast;
 }
@@ -1172,7 +1177,11 @@ static Ast* declaration(Parser* parser) {
         advance(parser);
         return funDeclaration(parser, true, false);
     }
-    if (check(parser, TOKEN_ASYNC) && checkNext(parser, TOKEN_IDENTIFIER)) {
+    else if (check(parser, TOKEN_ASYNC) && checkNext(parser, TOKEN_VOID)) {
+        advance(parser);
+        return funDeclaration(parser, true, false);
+    }
+    else if (check(parser, TOKEN_ASYNC) && checkNext(parser, TOKEN_IDENTIFIER)) {
         advance(parser);
         return funDeclaration(parser, true, true);
     }
@@ -1182,6 +1191,9 @@ static Ast* declaration(Parser* parser) {
     }
     else if ((check(parser, TOKEN_FUN) && checkNext(parser, TOKEN_IDENTIFIER))) {
         advance(parser);
+        return funDeclaration(parser, false, false);
+    }
+    else if (check(parser, TOKEN_VOID) && checkNext(parser, TOKEN_IDENTIFIER)) {
         return funDeclaration(parser, false, false);
     }
     else if (check2(parser, TOKEN_IDENTIFIER)) {

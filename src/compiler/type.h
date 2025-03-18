@@ -47,6 +47,7 @@ typedef struct {
     bool isInstanceMethod;
     bool isLambda;
     bool isVariadic;
+    bool isVoid;
 } CallableTypeModifier;
 
 typedef struct {
@@ -76,7 +77,8 @@ static inline CallableTypeModifier callableTypeInitModifier() {
         .isInitializer = false,
         .isInstanceMethod = false,
         .isLambda = false,
-        .isVariadic = false
+        .isVariadic = false,
+        .isVoid = false
     };
     return modifier;
 }
