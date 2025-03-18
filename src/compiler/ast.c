@@ -525,8 +525,9 @@ static void astOutputDeclClass(Ast* ast, int indentLevel) {
 static void astOutputDeclFun(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     char* async = ast->modifier.isAsync ? "async " : "";
+    char* _void = ast->modifier.isVoid ? "void " : "";
     char* funName = tokenToCString(ast->token);
-    printf("funDecl %s%s", async, funName);
+    printf("funDecl %s%s%s", async, _void, funName);
 
     if (astNumChild(ast) > 1) {
         Ast* returnType = astGetChild(ast, 1);
@@ -544,8 +545,9 @@ static void astOutputDeclMethod(Ast* ast, int indentLevel) {
     astOutputIndent(indentLevel);
     char* async = ast->modifier.isAsync ? "async " : "";
     char* _class = ast->modifier.isClass ? "class " : "";
+    char* _void = ast->modifier.isVoid ? "void " : "";
     char* methodName = tokenToCString(ast->token);
-    printf("methodDecl %s%s%s", async, _class, methodName);
+    printf("methodDecl %s%s%s%s", async, _class, _void, methodName);
 
     if (astNumChild(ast) > 2) {
         Ast* returnType = astGetChild(ast, 2);
@@ -589,7 +591,10 @@ static void astOutputDeclVar(Ast* ast, int indentLevel) {
     char* modifier = ast->modifier.isMutable ? "var" : "val";
     char* varName = tokenToCString(ast->token);
     printf("varDecl %s %s\n", modifier, varName);
-    if (astHasChild(ast)) astOutputChild(ast, indentLevel + 1, 0);
+
+    if (astHasChild(ast)) {
+        astOutputChild(ast, indentLevel + 1, 0);
+    }
     free(varName);
 }
 

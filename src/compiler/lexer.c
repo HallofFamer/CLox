@@ -230,10 +230,16 @@ static TokenSymbol identifierType(Lexer* lexer) {
             break;
         case 'u': return checkKeyword(lexer, 1, 4, "sing", TOKEN_USING);
         case 'v':
-            if (lexer->current - lexer->start > 2 && lexer->start[1] == 'a') {
-                switch (lexer->start[2]) {
-                    case 'l': return checkKeyword(lexer, 3, 0, "", TOKEN_VAL);
-                    case 'r': return checkKeyword(lexer, 3, 0, "", TOKEN_VAR);
+            if (lexer->current - lexer->start > 1) {
+                switch (lexer->start[1]) {
+                    case 'a':
+                        if (lexer->current - lexer->start > 2) {
+                            switch (lexer->start[2]) {
+                                case 'l': return checkKeyword(lexer, 3, 0, "", TOKEN_VAL);
+                                case 'r': return checkKeyword(lexer, 3, 0, "", TOKEN_VAR);
+                            }
+                        }
+                    case 'o': return checkKeyword(lexer, 2, 2, "id", TOKEN_VOID);
                 }
             }
             break;

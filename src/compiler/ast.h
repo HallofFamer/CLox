@@ -87,6 +87,7 @@ typedef struct {
     bool isMutable;
     bool isOptional;
     bool isVariadic;
+    bool isVoid;
     bool isWith;
 } AstModifier;
 
@@ -111,6 +112,7 @@ static inline AstModifier astInitModifier() {
         .isMutable = false,
         .isOptional = false,
         .isVariadic = false,
+        .isVoid = false,    
         .isWith = false
     };
 }

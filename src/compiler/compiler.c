@@ -745,6 +745,7 @@ static void compileInvoke(Compiler* compiler, Ast* ast) {
     Ast* args = astGetChild(ast, 1);
     uint8_t methodIndex = identifierConstant(compiler, &ast->token);
     uint8_t argCount = argumentList(compiler, args);
+
     OpCode opCode = ast->modifier.isOptional ? OP_OPTIONAL_INVOKE : OP_INVOKE;
     emitBytes(compiler, opCode, methodIndex);
     emitByte(compiler, argCount);
@@ -826,6 +827,7 @@ static void compileSuperInvoke(Compiler* compiler, Ast* ast) {
     uint8_t index = super_(compiler, ast);
     Ast* args = astGetChild(ast, 0);
     uint8_t argCount = argumentList(compiler, args);
+
     getVariable(compiler, findSymbolItem(compiler, ast->symtab, compiler->currentClass->superclass));
     emitBytes(compiler, OP_SUPER_INVOKE, index);
     emitByte(compiler, argCount);

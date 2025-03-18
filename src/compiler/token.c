@@ -69,6 +69,7 @@ const char* tokenNames[] = {
     [TOKEN_USING]          = "TOKEN_USING",
     [TOKEN_VAL]            = "TOKEN_VAL",
     [TOKEN_VAR]            = "TOKEN_VAR", 
+    [TOKEN_VOID]           = "TOKEN_VOID",
     [TOKEN_WHILE]          = "TOKEN_WHILE",
     [TOKEN_WITH]           = "TOKEN_WITH",
     [TOKEN_YIELD]          = "TOKEN_YIELD",
