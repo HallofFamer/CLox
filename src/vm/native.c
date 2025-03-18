@@ -282,8 +282,7 @@ ObjNamespace* getNativeNamespace(VM* vm, const char* name) {
 
 SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName, TypeInfo* type) {
     ObjString* symbol = newString(vm, symbolName);
-    SymbolItem* item = newSymbolItem(syntheticToken(symbolName), SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false);
-    item->type = type;
+    SymbolItem* item = newSymbolItemWithType(syntheticToken(symbolName), SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false, type);
     symbolTableSet(vm->symtab, symbol, item);
     return item;
 }

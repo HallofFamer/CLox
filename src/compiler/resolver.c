@@ -15,6 +15,7 @@ typedef struct {
     bool isInstanceMethod;
     bool isLambda;
     bool isVariadic;
+    bool isVoid;
 } ResolverModifier;
 
 struct ClassResolver {
@@ -66,7 +67,8 @@ static ResolverModifier resolverInitModifier() {
         .isInitializer = false,
         .isInstanceMethod = false,
         .isLambda = false,
-        .isVariadic = false
+        .isVariadic = false,
+        .isVoid = false
     };
     return modifier;
 }

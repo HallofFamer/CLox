@@ -472,6 +472,7 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
     ObjString* shortName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
     ObjString* fullName = getClassFullName(typeChecker->vm, shortName, typeChecker->currentNamespace);
     TypeInfo* behaviorType = typeTableGet(typeChecker->vm->typetab, fullName);
+
     bool isAnonymous = (shortName->length == 1 && shortName->chars[0] == '@');
     initClassTypeChecker(typeChecker, &classTypeChecker, ast->token, behaviorType == NULL ? NULL : AS_BEHAVIOR_TYPE(behaviorType), isAnonymous);
     int childIndex = 0;

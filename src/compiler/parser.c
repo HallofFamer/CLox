@@ -54,14 +54,14 @@ static void parseErrorAtCurrent(Parser* parser, const char* message) {
 
 static void advance(Parser* parser) {
     parser->previous = parser->current;
-    parser->previousNewLine = parser->currentNewLine;
+    parser->newLineAtPrevious = parser->newLineAtCurrent;
     parser->current = parser->next;
-    parser->currentNewLine = false;
+    parser->newLineAtCurrent = false;
 
     for (;;) {
         parser->next = scanToken(parser->lexer);
         if (parser->next.type == TOKEN_NEW_LINE) {
-            parser->currentNewLine = true;
+            parser->newLineAtCurrent = true;
             continue;
         }
         else if (parser->next.type != TOKEN_ERROR) break;
@@ -82,7 +82,7 @@ static void consumerTerminator(Parser* parser, const char* message) {
         advance(parser);
         return;
     }
-    else if (parser->previousNewLine || parser->current.type == TOKEN_RIGHT_BRACE || parser->current.type == TOKEN_EOF) {
+    else if (parser->newLineAtPrevious || parser->current.type == TOKEN_RIGHT_BRACE || parser->current.type == TOKEN_EOF) {
         return;
     }
     parseErrorAtCurrent(parser, message);
@@ -1209,8 +1209,8 @@ void initParser(Parser* parser, Lexer* lexer, bool debugAst) {
     parser->lexer = lexer;
     parser->rootClass = syntheticToken("Object");
     parser->debugAst = debugAst;
-    parser->previousNewLine = false;
-    parser->currentNewLine = true;
+    parser->newLineAtPrevious = false;
+    parser->newLineAtCurrent = true;
     parser->hadError = false;
     parser->panicMode = false;
     advance(parser);
