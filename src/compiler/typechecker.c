@@ -136,7 +136,10 @@ static void checkArguments(TypeChecker* typeChecker, const char* calleeDesc, Ast
 
 static void checkMethodSignatures(TypeChecker* typeChecker, CallableTypeInfo* subclassMethod, CallableTypeInfo* superclassMethod) {
     ObjString* className = createSymbol(typeChecker, typeChecker->currentClass->name);
-    if (!isEqualType(subclassMethod->returnType, superclassMethod->returnType)) {
+    if (!subclassMethod->modifier.isVoid && superclassMethod->modifier.isVoid) {
+        typeError(typeChecker, "Method %s::%s expects return type to be void.", className->chars, subclassMethod->baseType.shortName->chars);
+    }
+    else if (!isEqualType(subclassMethod->returnType, superclassMethod->returnType)) {
         typeError(typeChecker, "Method %s::%s expects return type to be an instance of %s but gets %s.", className->chars,
             subclassMethod->baseType.shortName->chars, superclassMethod->returnType->shortName->chars, subclassMethod->returnType->shortName->chars);
     }

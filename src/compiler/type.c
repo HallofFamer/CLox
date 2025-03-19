@@ -330,7 +330,7 @@ bool isEqualType(TypeInfo* type, TypeInfo* type2) {
 }
 
 bool isSubtypeOfType(TypeInfo* type, TypeInfo* type2) {
-    if (type == NULL || type2 == NULL || type->id == type2->id) return true;
+    if (isEqualType(type, type2)) return true;
     if (!IS_BEHAVIOR_TYPE(type) || !IS_BEHAVIOR_TYPE(type2)) return false;
     BehaviorTypeInfo* subtype = AS_BEHAVIOR_TYPE(type);
     BehaviorTypeInfo* supertype = AS_BEHAVIOR_TYPE(type2);
