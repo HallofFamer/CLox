@@ -239,6 +239,9 @@ static void typeTableOutputCategory(TypeCategory category) {
         case TYPE_CATEGORY_METHOD:
             printf("method");
             break;
+        case TYPE_CATEGORY_VOID:
+            printf("void");
+            break;
         default:
             printf("none");
     }

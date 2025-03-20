@@ -12,6 +12,7 @@ DECLARE_BUFFER(TypeInfoArray, TypeInfo*)
 
 #define IS_BEHAVIOR_TYPE(type) (type->category == TYPE_CATEGORY_CLASS || type->category == TYPE_CATEGORY_METACLASS || type->category == TYPE_CATEGORY_TRAIT)
 #define IS_CALLABLE_TYPE(type) (type->category == TYPE_CATEGORY_FUNCTION || type->category == TYPE_CATEGORY_METHOD)
+#define IS_VOID_TYPE(type) (type->category == TYPE_CATEGORY_VOID)
 
 #define AS_BEHAVIOR_TYPE(type) ((BehaviorTypeInfo*)type)
 #define AS_CALLABLE_TYPE(type) ((CallableTypeInfo*)type)
@@ -22,7 +23,8 @@ typedef enum {
     TYPE_CATEGORY_METACLASS,
     TYPE_CATEGORY_TRAIT,
     TYPE_CATEGORY_FUNCTION,
-    TYPE_CATEGORY_METHOD
+    TYPE_CATEGORY_METHOD,
+    TYPE_CATEGORY_VOID
 } TypeCategory;
 
 struct TypeInfo {
