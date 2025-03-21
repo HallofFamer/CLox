@@ -489,9 +489,9 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
         if (!isSubtypeOfType(superclassItem->type, getNativeType(typeChecker->vm, "Class"))) {
             typeError(typeChecker, "Superclass must be an instance of Class, but gets %s.", superclassItem->type->shortName->chars);
         }
-        if (!typeChecker->currentClass->isAnonymous) {
-            checkInheritingSuperclass(typeChecker, typeChecker->currentClass->type->superclassType);
-        }
+
+        if (typeChecker->currentClass->isAnonymous) ast->type = superclassItem->type;
+        else checkInheritingSuperclass(typeChecker, typeChecker->currentClass->type->superclassType);
     }
 
     Ast* traitList = astGetChild(ast, childIndex);

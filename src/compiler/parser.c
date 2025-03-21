@@ -794,6 +794,7 @@ ParseRule parseRules[] = {
     [TOKEN_USING]          = {NULL,          NULL,        PREC_NONE,        false},
     [TOKEN_VAL]            = {NULL,          NULL,        PREC_NONE,        false},
     [TOKEN_VAR]            = {NULL,          NULL,        PREC_NONE,        false},
+    [TOKEN_VOID]           = {NULL,          NULL,        PREC_NONE,        false},
     [TOKEN_WHILE]          = {NULL,          NULL,        PREC_NONE,        false},
     [TOKEN_WITH]           = {NULL,          NULL,        PREC_NONE,        false},
     [TOKEN_YIELD]          = {yield,         NULL,        PREC_NONE,        true},
