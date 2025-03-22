@@ -307,8 +307,11 @@ static void typeTableOutputFunction(CallableTypeInfo* function) {
 }
 
 static void typeTableOutputEntry(TypeEntry* entry) {
-    printf("  %s(%s)\n    id: %d\n    category: ", entry->value->shortName->chars, entry->value->fullName->chars, entry->value->id);
+    printf("  %s", entry->value->shortName->chars);
+    if (IS_BEHAVIOR_TYPE(entry->value)) printf("(%s)", entry->value->fullName->chars);
+    printf("\n    id: %d\n    category: ", entry->value->id);
     typeTableOutputCategory(entry->value->category);
+
     if (IS_BEHAVIOR_TYPE(entry->value)) typeTableOutputBehavior(AS_BEHAVIOR_TYPE(entry->value));
     else if (IS_CALLABLE_TYPE(entry->value)) typeTableOutputFunction(AS_CALLABLE_TYPE(entry->value));
     printf("\n");

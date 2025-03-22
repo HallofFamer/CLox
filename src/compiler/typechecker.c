@@ -308,6 +308,17 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
     inferAstTypeFromBinaryOperator(typeChecker, ast, item);
 }
 
+static void inferAstTypeFromReturn(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* callableType) {
+    if (callableType == NULL || callableType->returnType == NULL) {
+        return;
+    }
+
+    if (callableType->returnType->category == TYPE_CATEGORY_VOID) {
+        ast->type = getNativeType(typeChecker->vm, "void");
+    }
+    else ast->type = callableType->returnType;
+}
+
 static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
     Ast* callee = astGetChild(ast, 0);
     if (callee->type == NULL) return;
@@ -319,7 +330,7 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
         CallableTypeInfo* functionType = AS_CALLABLE_TYPE(typeTableGet(typeChecker->vm->typetab, name));
         sprintf_s(calleeDesc, UINT8_MAX, "Function %s", name->chars);
         checkArguments(typeChecker, calleeDesc, args, functionType);
-        ast->type = functionType->returnType;
+        inferAstTypeFromReturn(typeChecker, ast, functionType);
     }
     else if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Class"))) {
         SymbolItem* item = symbolTableGet(ast->symtab, name);
@@ -355,7 +366,7 @@ static void inferAstTypeFromInvoke(TypeChecker* typeChecker, Ast* ast) {
     char methodDesc[UINT8_MAX];
     sprintf_s(methodDesc, UINT8_MAX, "Method %s::%s", receiver->type->shortName->chars, methodName->chars);
     checkArguments(typeChecker, methodDesc, args, methodType);
-    ast->type = methodType->returnType;
+    inferAstTypeFromReturn(typeChecker, ast, methodType);
 }
 
 static void inferAstTypeFromSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
@@ -371,7 +382,7 @@ static void inferAstTypeFromSuperInvoke(TypeChecker* typeChecker, Ast* ast) {
     char methodDesc[UINT8_MAX];
     sprintf_s(methodDesc, UINT8_MAX, "Method %s::%s", superType->shortName->chars, methodName->chars);
     checkArguments(typeChecker, methodDesc, args, methodType);
-    ast->type = methodType->returnType;
+    inferAstTypeFromReturn(typeChecker, ast, methodType);
 }
 
 static void inferAstTypeFromSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
@@ -406,7 +417,7 @@ static void inferAstTypeFromSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
             typeError(typeChecker, "Method %s::[] expects argument 0 to be an instance of %s but gets %s.",
                 receiver->type->shortName->chars, paramType->shortName->chars, index->type->shortName->chars);
         }
-        ast->type = methodType->returnType;
+        inferAstTypeFromReturn(typeChecker, ast, methodType);
     }
 }
 
@@ -448,8 +459,7 @@ static void inferAstTypeFromSubscriptSet(TypeChecker* typeChecker, Ast* ast) {
             typeError(typeChecker, "Method %s::[]= expects argument 1 to be an instance of %s but gets %s.",
                 receiver->type->shortName->chars, paramType2->shortName->chars, value->type->shortName->chars);
         }
-
-        ast->type = methodType->returnType;
+        inferAstTypeFromReturn(typeChecker, ast, methodType);
     }
 }
 
@@ -483,7 +493,8 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
     if (type == BEHAVIOR_CLASS) {
         Ast* superclass = astGetChild(ast, childIndex);
         typeCheckChild(typeChecker, ast, childIndex);
-        SymbolItem* superclassItem = symbolTableLookup(ast->symtab, copyString(typeChecker->vm, superclass->token.start, superclass->token.length));
+        ObjString* superclassName = copyString(typeChecker->vm, superclass->token.start, superclass->token.length);
+        SymbolItem* superclassItem = symbolTableLookup(ast->symtab, superclassName);
         childIndex++;
 
         if (!isSubtypeOfType(superclassItem->type, getNativeType(typeChecker->vm, "Class"))) {
