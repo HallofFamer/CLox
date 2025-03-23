@@ -804,7 +804,6 @@ static void typeCheckExpression(TypeChecker* typeChecker, Ast* ast) {
 
 static void typeCheckAwaitStatement(TypeChecker* typeChecker, Ast* ast) {
     await(typeChecker, ast);
-    defineAstType(typeChecker, ast, "Nil", NULL);
 }
 
 static void typeCheckBlockStatement(TypeChecker* typeChecker, Ast* ast) {

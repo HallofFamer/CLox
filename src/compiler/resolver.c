@@ -10,7 +10,6 @@
 typedef struct {
     bool isAsync;
     bool isClassMethod;
-    bool isGenerator;
     bool isInitializer;
     bool isInstanceMethod;
     bool isLambda;
@@ -63,7 +62,6 @@ static ResolverModifier resolverInitModifier() {
     ResolverModifier modifier = {
         .isAsync = false,
         .isClassMethod = false,
-        .isGenerator = false,
         .isInitializer = false,
         .isInstanceMethod = false,
         .isLambda = false,
@@ -170,6 +168,7 @@ static TypeInfo* getTypeForSymbol(Resolver* resolver, Token token) {
 static void setFunctionTypeModifier(Ast* ast, CallableTypeInfo* callableType) {
     callableType->modifier.isAsync = ast->modifier.isAsync;
     callableType->modifier.isClassMethod = ast->modifier.isClass;
+    callableType->modifier.isGenerator = false;
     callableType->modifier.isInitializer = ast->modifier.isInitializer;
     callableType->modifier.isInstanceMethod = !ast->modifier.isClass;
     callableType->modifier.isLambda = ast->modifier.isLambda;
@@ -533,7 +532,6 @@ static void yield(Resolver* resolver, Ast* ast) {
         semanticError(resolver, "Cannot use 'yield' from an initializer.");
     }
 
-    resolver->currentFunction->modifier.isGenerator = true;
     if (astHasChild(ast)) {
         resolveChild(resolver, ast, 0);
     }
