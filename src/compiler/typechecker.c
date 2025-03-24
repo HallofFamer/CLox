@@ -62,6 +62,15 @@ void initTypeChecker(VM* vm, TypeChecker* typeChecker, bool debugTypetab) {
     typeChecker->currentNamespace = emptyString(vm);
     typeChecker->currentClass = NULL;
     typeChecker->currentFunction = NULL;
+
+    typeChecker->objectType = getNativeType(vm, "Object");
+    typeChecker->nilType = getNativeType(vm, "Nil");
+    typeChecker->boolType = getNativeType(vm, "Bool");
+    typeChecker->numberType = getNativeType(vm, "Number");
+    typeChecker->intType = getNativeType(vm, "Int");
+    typeChecker->stringType = getNativeType(vm, "String");
+
+
     typeChecker->debugTypetab = debugTypetab;
     typeChecker->hadError = false;
 }
@@ -222,10 +231,10 @@ static void inferAstTypeFromUnary(TypeChecker* typeChecker, Ast* ast, SymbolItem
             defineAstType(typeChecker, ast, "Bool", item);
             break;
         case TOKEN_MINUS:
-            if (!isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "Number"))) {
+            if (!isSubtypeOfType(child->type, typeChecker->numberType)) {
                 typeError(typeChecker, "Unary negate expects operand to be an instance of Number, %s given.", child->type->shortName->chars);
             }
-            else if (isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "Int"))) {
+            else if (isSubtypeOfType(child->type, typeChecker->intType)) {
                 defineAstType(typeChecker, ast, "Int", item);
             }
             else {
@@ -390,21 +399,17 @@ static void inferAstTypeFromSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
     Ast* index = astGetChild(ast, 1);
     if (receiver->type == NULL || index->type == NULL) return;
 
-    TypeInfo* objectType = getNativeType(typeChecker->vm, "Object");
-    TypeInfo* intType = getNativeType(typeChecker->vm, "Int");
-    TypeInfo* stringType = getNativeType(typeChecker->vm, "String");
-
-    if (isSubtypeOfType(receiver->type, stringType)) {
-        if (!isSubtypeOfType(index->type, intType)) {
+    if (isSubtypeOfType(receiver->type, typeChecker->stringType)) {
+        if (!isSubtypeOfType(index->type, typeChecker->intType)) {
             typeError(typeChecker, "String's index must be an instance of Int but gets %s.", index->type->shortName->chars);
         }
-        ast->type = stringType;
+        ast->type = typeChecker->stringType;
     }
     else if (isSubtypeOfType(receiver->type, getNativeType(typeChecker->vm, "clox.std.collection.Array"))) {
-        if (!isSubtypeOfType(index->type, intType)) {
+        if (!isSubtypeOfType(index->type, typeChecker->intType)) {
             typeError(typeChecker, "Array's index must be an instance of Int but gets %s.", index->type->shortName->chars);
         }
-        ast->type = objectType;
+        ast->type = typeChecker->objectType;
     }
     else {
         TypeInfo* baseType = typeTableMethodLookup(receiver->type, newString(typeChecker->vm, "[]"));
@@ -427,21 +432,17 @@ static void inferAstTypeFromSubscriptSet(TypeChecker* typeChecker, Ast* ast) {
     Ast* value = astGetChild(ast, 2);
     if (receiver->type == NULL || index->type == NULL) return;
 
-    TypeInfo* nilType = getNativeType(typeChecker->vm, "Nil");
-    TypeInfo* intType = getNativeType(typeChecker->vm, "Int");
-    TypeInfo* stringType = getNativeType(typeChecker->vm, "String");
-
-    if (isSubtypeOfType(receiver->type, stringType)) {
-        if (!isSubtypeOfType(index->type, intType)) {
+    if (isSubtypeOfType(receiver->type, typeChecker->stringType)) {
+        if (!isSubtypeOfType(index->type, typeChecker->intType)) {
             typeError(typeChecker, "String's index must be an instance of Int, but gets %s.", index->type->shortName->chars);
         }
-        ast->type = nilType;
+        ast->type = typeChecker->nilType;
     }
     else if (isSubtypeOfType(receiver->type, getNativeType(typeChecker->vm, "clox.std.collection.Array"))) {
-        if (!isSubtypeOfType(index->type, intType)) {
+        if (!isSubtypeOfType(index->type, typeChecker->intType)) {
             typeError(typeChecker, "Array's index must be an instance of Int, but gets %s.", index->type->shortName->chars);
         }
-        ast->type = nilType;
+        ast->type = typeChecker->nilType;
     }
     else {
         TypeInfo* baseType = typeTableMethodLookup(receiver->type, newString(typeChecker->vm, "[]="));
@@ -871,7 +872,7 @@ static void typeCheckReturnStatement(TypeChecker* typeChecker, Ast* ast) {
         typeCheckChild(typeChecker, ast, 0);
         actualType = astGetChild(ast, 0)->type;
     }
-    else actualType = getNativeType(typeChecker->vm, "Nil");
+    else actualType = typeChecker->nilType;
 
     if (!isSubtypeOfType(actualType, expectedType)) {
         typeError(typeChecker, "Function expects return value to be an instance of %s but gets %s.", 
