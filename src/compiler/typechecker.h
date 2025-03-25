@@ -20,6 +20,9 @@ typedef struct {
     TypeInfo* numberType;
     TypeInfo* intType;
     TypeInfo* stringType;
+    TypeInfo* classType;
+    TypeInfo* functionType;
+    TypeInfo* voidType;
 
     bool debugTypetab;
     bool hadError;

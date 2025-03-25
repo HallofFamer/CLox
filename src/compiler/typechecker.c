@@ -69,7 +69,9 @@ void initTypeChecker(VM* vm, TypeChecker* typeChecker, bool debugTypetab) {
     typeChecker->numberType = getNativeType(vm, "Number");
     typeChecker->intType = getNativeType(vm, "Int");
     typeChecker->stringType = getNativeType(vm, "String");
-
+    typeChecker->classType = getNativeType(vm, "Class");
+    typeChecker->functionType = getNativeType(vm, "Function");
+    typeChecker->voidType = getNativeType(vm, "void");
 
     typeChecker->debugTypetab = debugTypetab;
     typeChecker->hadError = false;
@@ -323,7 +325,7 @@ static void inferAstTypeFromReturn(TypeChecker* typeChecker, Ast* ast, CallableT
     }
 
     if (callableType->returnType->category == TYPE_CATEGORY_VOID) {
-        ast->type = getNativeType(typeChecker->vm, "void");
+        ast->type = typeChecker->voidType;
     }
     else ast->type = callableType->returnType;
 }
@@ -335,13 +337,13 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
     ObjString* name = createSymbol(typeChecker, callee->token);
     char calleeDesc[UINT8_MAX];
 
-    if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Function"))) {
+    if (isSubtypeOfType(callee->type, typeChecker->functionType)) {
         CallableTypeInfo* functionType = AS_CALLABLE_TYPE(typeTableGet(typeChecker->vm->typetab, name));
         sprintf_s(calleeDesc, UINT8_MAX, "Function %s", name->chars);
         checkArguments(typeChecker, calleeDesc, args, functionType);
         inferAstTypeFromReturn(typeChecker, ast, functionType);
     }
-    else if (isSubtypeOfType(callee->type, getNativeType(typeChecker->vm, "Class"))) {
+    else if (isSubtypeOfType(callee->type, typeChecker->classType)) {
         SymbolItem* item = symbolTableGet(ast->symtab, name);
         if (item == NULL) return;
         ObjString* className = getClassNameFromMetaclass(typeChecker->vm, item->type->fullName);
@@ -498,7 +500,7 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
         SymbolItem* superclassItem = symbolTableLookup(ast->symtab, superclassName);
         childIndex++;
 
-        if (!isSubtypeOfType(superclassItem->type, getNativeType(typeChecker->vm, "Class"))) {
+        if (!isSubtypeOfType(superclassItem->type, typeChecker->classType)) {
             typeError(typeChecker, "Superclass must be an instance of Class, but gets %s.", superclassItem->type->shortName->chars);
         }
 
@@ -858,7 +860,7 @@ static void typeCheckIfStatement(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckRequireStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* child = astGetChild(ast, 0);
-    if (!hasAstType(typeChecker, child, "clox.std.lang.String")) {
+    if (!isSubtypeOfType(child->type, typeChecker->stringType)) {
         typeError(typeChecker, "require statement expects expression to be an instance of String but gets %s.", child->type->shortName->chars);
     }
 }
