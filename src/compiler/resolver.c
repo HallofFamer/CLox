@@ -176,12 +176,6 @@ static void setFunctionTypeModifier(Ast* ast, CallableTypeInfo* callableType) {
     callableType->modifier.isVoid = ast->modifier.isVoid;
 }
 
-static bool findSymbol(Resolver* resolver, Token token) {
-    ObjString* symbol = createSymbol(resolver, token);
-    SymbolItem* item = symbolTableGet(resolver->currentSymtab, symbol);
-    return (item != NULL);
-}
-
 static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory category, SymbolState state, TypeInfo* type, bool isMutable) {
     ObjString* symbol = createSymbol(resolver, token);
     SymbolItem* item = newSymbolItemWithType(token, category, state, isMutable, type);

@@ -275,15 +275,15 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
 
     switch (ast->token.type) {
         case TOKEN_PLUS:
-            if (hasAstType(typeChecker, left, "clox.std.lang.String") && hasAstType(typeChecker, right, "clox.std.lang.String")) {
+            if (isSubtypeOfType(left->type, typeChecker->stringType) && isSubtypeOfType(right->type, typeChecker->stringType)) {
                 defineAstType(typeChecker, ast, "String", item);
                 return;
             }
-            else if (hasAstType(typeChecker, left, "clox.std.lang.Int") && hasAstType(typeChecker, right, "clox.std.lang.Int")) {
+            else if (isSubtypeOfType(left->type, typeChecker->intType) && isSubtypeOfType(right->type, typeChecker->intType)) {
                 defineAstType(typeChecker, ast, "Int", item);
                 return;
             }
-            else if (hasAstType(typeChecker, left, "clox.std.lang.Number") && hasAstType(typeChecker, right, "clox.std.lang.Number")) {
+            else if (isSubtypeOfType(left->type, typeChecker->numberType) && isSubtypeOfType(right->type, typeChecker->numberType)) {
                 defineAstType(typeChecker, ast, "Number", item);
                 return;
             }
@@ -291,23 +291,23 @@ static void inferAstTypeFromBinary(TypeChecker* typeChecker, Ast* ast, SymbolIte
         case TOKEN_MINUS:
         case TOKEN_STAR:
         case TOKEN_MODULO:
-            if (hasAstType(typeChecker, left, "clox.std.lang.Int") && hasAstType(typeChecker, right, "clox.std.lang.Int")) {
+            if (isSubtypeOfType(left->type, typeChecker->intType) && isSubtypeOfType(right->type, typeChecker->intType)) {
                 defineAstType(typeChecker, ast, "Int", item);
                 return;
             }
-            else if (hasAstType(typeChecker, left, "clox.std.lang.Number") && hasAstType(typeChecker, right, "clox.std.lang.Number")) {
+            else if (isSubtypeOfType(left->type, typeChecker->numberType) && isSubtypeOfType(right->type, typeChecker->numberType)) {
                 defineAstType(typeChecker, ast, "Number", item);
                 return;
             }
             break;
         case TOKEN_SLASH:
-            if (hasAstType(typeChecker, left, "clox.std.lang.Number") && hasAstType(typeChecker, right, "clox.std.lang.Number")) {
+            if (isSubtypeOfType(left->type, typeChecker->numberType) && isSubtypeOfType(right->type, typeChecker->numberType)) {
                 defineAstType(typeChecker, ast, "Number", item);
                 return;
             }
             break;
         case TOKEN_DOT_DOT:
-            if (hasAstType(typeChecker, left, "clox.std.lang.Int") && hasAstType(typeChecker, right, "clox.std.lang.Int")) {
+            if (isSubtypeOfType(left->type, typeChecker->intType) && isSubtypeOfType(right->type, typeChecker->intType)) {
                 defineAstType(typeChecker, ast, "clox.std.collection.Range", item);
                 return;
             }
