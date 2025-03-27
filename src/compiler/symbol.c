@@ -103,7 +103,7 @@ SymbolItem* symbolTableGet(SymbolTable* symtab, ObjString* key) {
 }
 
 bool symbolTableSet(SymbolTable* symtab, ObjString* key, SymbolItem* value) {
-    if (symtab->count + 1 > symtab->capacity * SYMBOL_TABLE_MAX_LOAD) {
+    if (symtab->count + 1 > symtab->capacity * TABLE_MAX_LOAD) {
         int capacity = bufferGrowCapacity(symtab->capacity);
         symbolTableAdjustCapacity(symtab, capacity);
     }

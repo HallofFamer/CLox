@@ -257,10 +257,6 @@ static void checkUnmodifiedVariables(Resolver* resolver, int flag) {
     }
 }
 
-static SymbolScope getFunctionScope(Ast* ast) {
-    return (ast->kind == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
-}
-
 static void beginScope(Resolver* resolver, Ast* ast, SymbolScope scope) {
     resolver->currentSymtab = newSymbolTable(nextSymbolTableIndex(resolver), resolver->currentSymtab, scope, resolver->currentSymtab->depth + 1);
     ast->symtab = resolver->currentSymtab;
@@ -469,7 +465,7 @@ static void function(Resolver* resolver, Ast* ast, bool isLambda, bool isAsync) 
     functionResolver.modifier.isLambda = isLambda;
     functionResolver.modifier.isVoid = ast->modifier.isVoid;
 
-    SymbolScope scope = getFunctionScope(ast);
+    SymbolScope scope = (ast->kind == AST_DECL_METHOD) ? SYMBOL_SCOPE_METHOD : SYMBOL_SCOPE_FUNCTION;
     beginScope(resolver, ast, scope);
     Ast* params = astGetChild(ast, 0);
     params->symtab = ast->symtab;
