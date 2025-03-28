@@ -6,8 +6,6 @@
 #include "../common/buffer.h"
 #include "../vm/object.h"
 
-#define SYMBOL_TABLE_MAX_LOAD 0.75
-
 SymbolItem* newSymbolItem(Token token, SymbolCategory category, SymbolState state, bool isMutable) {
     SymbolItem* item = (SymbolItem*)malloc(sizeof(SymbolItem));
     if (item != NULL) {

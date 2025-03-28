@@ -253,6 +253,7 @@ static void synchronize(Parser* parser) {
             case TOKEN_AWAIT:
             case TOKEN_CLASS:
             case TOKEN_FOR:
+            case TOKEN_FROM:
             case TOKEN_FUN:
             case TOKEN_IF:
             case TOKEN_NAMESPACE:
@@ -705,10 +706,10 @@ static Ast* yield(Parser* parser, Token token, bool canAssign) {
         return emptyAst(AST_EXPR_YIELD, token);
     }
 
-    bool isWith = match(parser, TOKEN_WITH);
+    bool isYieldFrom = match(parser, TOKEN_FROM);
     Ast* expr = expression(parser);
     Ast* ast = newAst(AST_EXPR_YIELD, token, 1, expr);
-    ast->modifier.isWith = isWith;
+    ast->modifier.isYieldFrom = isYieldFrom;
     return ast;
 }
 
@@ -720,7 +721,7 @@ static Ast* async(Parser* parser, Token token, bool canAssign) {
         return function(parser, true, true, false);
     }
     else {
-        parseErrorAtPrevious(parser, "Can only use async as expression modifier for anonymous functions or lambda.");
+        parseErrorAtPrevious(parser, "Can only use 'async' as expression modifier for anonymous functions or lambda.");
         return NULL;
     }
 }
@@ -777,6 +778,7 @@ ParseRule parseRules[] = {
     [TOKEN_FALSE]          = {literal,       NULL,        PREC_NONE,        true},
     [TOKEN_FINALLY]        = {NULL,          NULL,        PREC_NONE,        false},
     [TOKEN_FOR]            = {NULL,          NULL,        PREC_NONE,        false},
+    [TOKEN_FROM]           = {NULL,          NULL,        PREC_NONE,        false},
     [TOKEN_FUN]            = {closure,       NULL,        PREC_NONE,        true},
     [TOKEN_IF]             = {NULL,          NULL,        PREC_NONE,        false},
     [TOKEN_NAMESPACE]      = {NULL,          NULL,        PREC_NONE,        false},
@@ -883,7 +885,7 @@ static Ast* forStatement(Parser* parser) {
     Token token = parser->previous;
     Ast* stmt = emptyAst(AST_STMT_FOR, token);
     consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
-    consume(parser, TOKEN_VAR, "Expect 'var' keyword after '(' in For loop.");
+    consume(parser, TOKEN_VAR, "Expect 'var' keyword after '(' in for loop.");
     Ast* decl = emptyAst(AST_LIST_VAR, parser->previous);
 
     if (match(parser, TOKEN_LEFT_PAREN)) { 
@@ -954,7 +956,7 @@ static Ast* switchStatement(Parser* parser) {
         if (match(parser, TOKEN_CASE) || match(parser, TOKEN_DEFAULT)) {
             Token caseToken = parser->previous;
             if (state == 1) caseCount++;
-            if (state == 2) parseErrorAtPrevious(parser, "Can't have another case or default after the default case.");
+            if (state == 2) parseErrorAtPrevious(parser, "Can't have another 'case' or 'default' after the default case.");
 
             if (caseToken.type == TOKEN_CASE) {
                 state = 1;
@@ -967,7 +969,7 @@ static Ast* switchStatement(Parser* parser) {
             }
             else {
                 state = 2;
-                consume(parser, TOKEN_COLON, "Expect ':' after default.");
+                consume(parser, TOKEN_COLON, "Expect ':' after 'default'.");
                 Ast* defaultBody = statement(parser);
                 Ast* defaultStmt = newAst(AST_STMT_DEFAULT, syntheticToken("default"), 1, defaultBody);
                 astAppendChild(stmt, defaultStmt);
@@ -991,18 +993,18 @@ static Ast* tryStatement(Parser* parser) {
     astAppendChild(stmt, tryStmt);
 
     if (match(parser, TOKEN_CATCH)) {
-        consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after catch");
+        consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'catch'");
         consume(parser, TOKEN_IDENTIFIER, "Expect type name to catch");
         Token exceptionType = parser->previous;
         Ast* exceptionVar = identifier(parser, "Expect identifier after exception type.");
 
-        consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after catch statement");
+        consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after 'catch' statement");
         Ast* catchBody = statement(parser);
         Ast* catchStmt = newAst(AST_STMT_CATCH, exceptionType, 2, exceptionVar, catchBody);
         astAppendChild(stmt, catchStmt);
     }
     else {
-        parseErrorAtCurrent(parser, "Must have a catch statement following a try statement.");
+        parseErrorAtCurrent(parser, "Must have a 'catch' statement following a 'try' statement.");
     }
 
     if (match(parser, TOKEN_FINALLY)) {
@@ -1041,14 +1043,14 @@ static Ast* whileStatement(Parser* parser) {
     Token token = parser->previous;
     consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
     Ast* condition = expression(parser);
-    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after loop condition.");
     Ast* body = statement(parser);
     return newAst(AST_STMT_WHILE, token, 2, condition, body);
 }
 
 static Ast* yieldStatement(Parser* parser) {
     Token token = parser->previous;
-    bool isWith = match(parser, TOKEN_WITH);
+    bool isYieldFrom = match(parser, TOKEN_FROM);
     if (match(parser, TOKEN_SEMICOLON) || !getRule(parser->current.type)->startExpr) {
         return emptyAst(AST_STMT_YIELD, token);
     }
@@ -1056,7 +1058,7 @@ static Ast* yieldStatement(Parser* parser) {
     Ast* expr = expression(parser);
     consumerTerminator(parser, "Expect semicolon or new line after yield value.");
     Ast* ast = newAst(AST_STMT_YIELD, token, 1, expr);
-    ast->modifier.isWith = isWith;
+    ast->modifier.isYieldFrom = isYieldFrom;
     return ast;
 }
 
@@ -1126,7 +1128,7 @@ static Ast* funDeclaration(Parser* parser, bool isAsync, bool hasReturnType) {
     Ast* body = function(parser, isAsync, false, isVoid);
 
     Ast* ast = newAst(AST_DECL_FUN, name, 1, body);
-    ast->modifier.isVoid = true;
+    ast->modifier.isVoid = isVoid;
     if (returnType != NULL) astAppendChild(ast, returnType);
     return ast;
 }
