@@ -133,7 +133,7 @@ int opCodeOffset(Chunk* chunk, int ip) {
         case OP_RETURN: return 1;
         case OP_RETURN_NONLOCAL: return 2;
         case OP_YIELD: return 1;
-        case OP_YIELD_WITH: return 1;
+        case OP_YIELD_FROM: return 1;
         case OP_AWAIT: return 1;
         case OP_END: return 1;
         default: return 0;

@@ -598,7 +598,7 @@ static void yield(Compiler* compiler, Ast* ast) {
     if (!astHasChild(ast)) emitBytes(compiler, OP_NIL, OP_YIELD);
     else {
         compileChild(compiler, ast, 0);
-        emitByte(compiler, ast->modifier.isWith ? OP_YIELD_WITH : OP_YIELD);
+        emitByte(compiler, ast->modifier.isYieldFrom ? OP_YIELD_FROM : OP_YIELD);
     }
 }
 

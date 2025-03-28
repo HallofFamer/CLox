@@ -523,8 +523,8 @@ static void yield(TypeChecker* typeChecker, Ast* ast) {
     if (astHasChild(ast)) {
         typeCheckChild(typeChecker, ast, 0);
         Ast* child = astGetChild(ast, 0);
-        if (ast->modifier.isWith && !isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "Generator"))) {
-            typeError(typeChecker, "'yield with' expects expression to be an instance of Generator but gets %s.", child->type->shortName->chars);
+        if (ast->modifier.isYieldFrom && !isSubtypeOfType(child->type, getNativeType(typeChecker->vm, "Generator"))) {
+            typeError(typeChecker, "'yield from' expects expression to be an instance of Generator but gets %s.", child->type->shortName->chars);
         }
     }
 }
