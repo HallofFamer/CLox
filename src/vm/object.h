@@ -121,6 +121,7 @@ struct Obj {
     ObjType type;
     ObjClass* klass;
     bool isMarked;
+    GCGenerationType generation;
     struct Obj* next;
 };
 

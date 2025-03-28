@@ -11,6 +11,7 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     object->type = type;
     object->klass = klass;
     object->isMarked = false;
+    object->generation = GC_GENERATION_TYPE_EDEN;
     object->objectID = 0;
     object->shapeID = getDefaultShapeIDForObject(object);
 

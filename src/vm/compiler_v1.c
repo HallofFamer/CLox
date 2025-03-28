@@ -1097,7 +1097,7 @@ static void yield(CompilerV1* compiler, bool canAssign) {
     }
     else if (match(compiler->parser, TOKEN_WITH_V1)) {
         expression(compiler);
-        emitByte(compiler, OP_YIELD_WITH);
+        emitByte(compiler, OP_YIELD_FROM);
     }
     else {
         expression(compiler);
@@ -1758,7 +1758,7 @@ static void yieldStatement(CompilerV1* compiler) {
     else if (match(compiler->parser, TOKEN_WITH_V1)) {
         expression(compiler);
         consume(compiler->parser, TOKEN_SEMICOLON_V1, "Expect ';' after yield value.");
-        emitByte(compiler, OP_YIELD_WITH);
+        emitByte(compiler, OP_YIELD_FROM);
     }
     else {
         expression(compiler);

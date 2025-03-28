@@ -87,7 +87,6 @@ void freeGC(VM* vm) {
 static GCRememberedEntry* findRememberedSetEntry(GCRememberedEntry* entries, int capacity, Obj* object) {
     uint64_t hash = (object->type == OBJ_INSTANCE) ? (object->objectID >> 2) : (object->objectID >> 2) + 1;
     uint32_t index = (uint32_t)hash & ((uint32_t)capacity - 1);
-    printf("object index: %d, capacity: %d\n", index, capacity);
     for (;;) {
         GCRememberedEntry* entry = &entries[index];
         if (entry->object == NULL || entry->object == object) {
@@ -134,7 +133,14 @@ bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object)
 
     GCRememberedEntry* entry = findRememberedSetEntry(rememberedSet->entries, rememberedSet->capacity, object);
     bool isNewObject = entry->object == NULL;
-    if (isNewObject) rememberedSet->count++;
+    if (isNewObject) {
+#ifdef DEBUG_LOG_GC
+        printf("%p added to remembered set ", (void*)object);
+        printValue(OBJ_VAL(object));
+        printf("\n");
+#endif
+        rememberedSet->count++;
+    }
 
     entry->object = object;
     return isNewObject;
