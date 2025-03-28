@@ -25,5 +25,7 @@ typedef struct CallFrame CallFrame;
 typedef struct CompilerV1 CompilerV1;
 typedef struct ClassCompilerV1 ClassCompilerV1;
 typedef struct Compiler Compiler;
+typedef enum GCGenerationType GCGenerationType;
+typedef struct GC GC;
 
 #endif // !clox_common_h

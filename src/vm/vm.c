@@ -164,11 +164,14 @@ void initVM(VM* vm) {
     vm->numSymtabs = 0;
     vm->symtab = newSymbolTable(vm->numSymtabs++, NULL, SYMBOL_SCOPE_GLOBAL, -1);
     vm->typetab = newTypeTable(0);
+    vm->initString = NULL;
+    vm->voidString = NULL;
+    vm->gc = newGC(vm);
+
     vm->objects = NULL;
     vm->objectIndex = 0;
     vm->bytesAllocated = 0;
     vm->nextGC = vm->config.gcHeapSize;
-
     vm->grayCount = 0;
     vm->grayCapacity = 0;
     vm->grayStack = NULL;
@@ -185,8 +188,11 @@ void initVM(VM* vm) {
     initShapeTree(vm);
     initGenericIDMap(vm);
     initLoop(vm);
-    vm->initString = NULL;
+
     vm->initString = copyString(vm, "__init__", 8);
+    vm->voidString = copyString(vm, "void", 4);
+    TypeInfo* voidType = newTypeInfo(0, sizeof(TypeInfo), TYPE_CATEGORY_VOID, vm->voidString, vm->voidString);
+    typeTableSet(vm->typetab, vm->voidString, voidType);
     vm->runningGenerator = NULL;
 
     registerLangPackage(vm);
@@ -208,6 +214,7 @@ void freeVM(VM* vm) {
     freeSymbolTable(vm->symtab);
     freeTypeTable(vm->typetab);
     freeObjects(vm);
+    freeGC(vm);
     freeLoop(vm);
 }
 
@@ -1403,7 +1410,7 @@ InterpretResult run(VM* vm) {
                 LOAD_FRAME();
                 break;
             }
-            case OP_YIELD_WITH: {
+            case OP_YIELD_FROM: {
                 Value result = peek(vm, 0);
                 ObjString* name = frame->closure->function->name;
                 Value receiver = vm->runningGenerator->frame->slots[0];

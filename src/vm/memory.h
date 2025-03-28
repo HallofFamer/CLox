@@ -6,6 +6,38 @@
 #include "value.h"
 #include "vm.h"
 
+enum GCGenerationType {
+    GC_GENERATION_TYPE_EDEN,
+    GC_GENERATION_TYPE_YOUNG,
+    GC_GENERATION_TYPE_OLD,
+    GC_GENERATION_TYPE_PERMANENT
+};
+
+typedef struct {
+    Obj* object;
+} GCRememberedEntry;
+
+typedef struct {
+    int count;
+    int capacity;
+    GCRememberedEntry* entries;
+} GCRememberedSet;
+
+typedef struct {
+    GCGenerationType type;
+    Obj* objects;
+    GCRememberedSet rememberdSet;
+    size_t bytesAllocated;
+    size_t nextGC;
+} GCGeneration;
+
+struct GC {
+    GCGeneration* generations[4];
+    int grayCount;
+    int grayCapacity;
+    Obj** grayStack;
+};
+
 #define ALLOCATE(type, count) \
     (type*)reallocate(vm, NULL, 0, sizeof(type) * (count))
 
@@ -24,6 +56,10 @@
     reallocate(vm, pointer, sizeof(type) * (oldCount), 0)
 
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize);
+GC* newGC(VM* vm);
+void freeGC(VM* vm);
+bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object);
+bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object);
 void markObject(VM* vm, Obj* object);
 void markValue(VM* vm, Value value);
 void collectGarbage(VM* vm);

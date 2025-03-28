@@ -106,6 +106,7 @@ struct VM {
     SymbolTable* symtab;
     TypeTable* typetab;
     Compiler* compiler;
+    GC* gc;
 
     int behaviorCount;
     int namespaceCount;
@@ -120,6 +121,7 @@ struct VM {
     GenericIDMap genericIDMap;
 
     ObjString* initString;
+    ObjString* voidString;
     ObjModule* currentModule;
     ObjUpvalue* openUpvalues;
 

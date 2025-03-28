@@ -30,6 +30,116 @@ void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize) {
     return result;
 }
 
+static void initGCRememberedSet(GCRememberedSet* rememberedSet) {
+    rememberedSet->capacity = 0;
+    rememberedSet->count = 0;
+    rememberedSet->entries = NULL;
+}
+
+static void freeGCRememeberedSet(VM* vm, GCRememberedSet* rememberedSet) {
+    FREE_ARRAY(GCRememberedEntry, rememberedSet->entries, rememberedSet->capacity);
+    initGCRememberedSet(rememberedSet);
+}
+
+static void initGCGenerations(GC* gc) {
+    for (int i = 0; i <= GC_GENERATION_TYPE_PERMANENT; i++) {
+        gc->generations[i] = (GCGeneration*)malloc(sizeof(GCGeneration));
+        if (gc->generations[i] != NULL) {
+            gc->generations[i]->bytesAllocated = 0;
+            gc->generations[i]->nextGC = ((size_t)i + 1) * 1024 * 1024; // will update later.
+            gc->generations[i]->objects = NULL;
+            gc->generations[i]->type = i;
+            initGCRememberedSet(&gc->generations[i]->rememberdSet);
+        }
+        else {
+            fprintf(stderr, "Not enough memory to allocate heaps for garbage collector.");
+            exit(74);
+        }
+    }
+}
+
+static void freeGCGenerations(VM* vm) {
+    for (int i = 0; i <= GC_GENERATION_TYPE_PERMANENT; i++) {
+        freeGCRememeberedSet(vm, &vm->gc->generations[i]->rememberdSet);
+        free(vm->gc->generations[i]);
+    }
+}
+
+GC* newGC(VM* vm) {
+    GC* gc = (GC*)malloc(sizeof(GC));
+    if (gc != NULL) {
+        initGCGenerations(gc);
+        gc->grayCapacity = 0;
+        gc->grayCount = 0;
+        gc->grayStack = NULL;
+        return gc;
+    }
+
+    fprintf(stderr, "Not enough memory to allocate for garbage collector.");
+    exit(74);
+}
+
+void freeGC(VM* vm) {
+    freeGCGenerations(vm);
+    free(vm->gc);
+}
+
+static GCRememberedEntry* findRememberedSetEntry(GCRememberedEntry* entries, int capacity, Obj* object) {
+    uint64_t hash = (object->type == OBJ_INSTANCE) ? (object->objectID >> 2) : (object->objectID >> 2) + 1;
+    uint32_t index = (uint32_t)hash & ((uint32_t)capacity - 1);
+    printf("object index: %d, capacity: %d\n", index, capacity);
+    for (;;) {
+        GCRememberedEntry* entry = &entries[index];
+        if (entry->object == NULL || entry->object == object) {
+            return entry;
+        }
+        index = (index + 1) & (capacity - 1);
+    }
+}
+
+bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object) {
+    if (rememberedSet->count == 0) return false;
+    GCRememberedEntry* entry = findRememberedSetEntry(rememberedSet->entries, rememberedSet->capacity, object);
+    if (entry->object == NULL) return false;
+    return true;
+}
+
+static void rememberedSetAdjustCapacity(VM* vm, GCRememberedSet* rememberedSet, int capacity) {
+    GCRememberedEntry* entries = ALLOCATE(GCRememberedEntry, capacity);
+    for (int i = 0; i < capacity; i++) {
+        entries[i].object = NULL;
+    }
+
+    rememberedSet->count = 0;
+    for (int i = 0; i < rememberedSet->capacity; i++) {
+        GCRememberedEntry* entry = &rememberedSet->entries[i];
+        if (entry->object == NULL) continue;
+
+        GCRememberedEntry* dest = findRememberedSetEntry(entries, capacity, entry->object);
+        dest->object = entry->object;
+        rememberedSet->count++;
+    }
+
+    FREE_ARRAY(GCRememberedEntry, rememberedSet->entries, rememberedSet->capacity);
+    rememberedSet->entries = entries;
+    rememberedSet->capacity = capacity;
+}
+
+bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object) {
+    ENSURE_OBJECT_ID(object);
+    if (rememberedSet->count + 1 > rememberedSet->capacity * TABLE_MAX_LOAD) {
+        int capacity = GROW_CAPACITY(rememberedSet->capacity);
+        rememberedSetAdjustCapacity(vm, rememberedSet, capacity);
+    }
+
+    GCRememberedEntry* entry = findRememberedSetEntry(rememberedSet->entries, rememberedSet->capacity, object);
+    bool isNewObject = entry->object == NULL;
+    if (isNewObject) rememberedSet->count++;
+
+    entry->object = object;
+    return isNewObject;
+}
+
 void markObject(VM* vm, Obj* object) {
     if (object == NULL) return;
     if (object->isMarked) return;
