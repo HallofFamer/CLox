@@ -934,7 +934,7 @@ static void resolveReturnStatement(Resolver* resolver, Ast* ast) {
     }
     else if (astHasChild(ast)) {
         if (resolver->currentFunction->modifier.isVoid) {
-            semanticError(resolver, "Cannot return value from a void function/method.");
+            semanticError(resolver, "Cannot use 'return' from a void function/method.");
         }
         resolveChild(resolver, ast, 0);
     }

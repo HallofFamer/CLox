@@ -877,8 +877,17 @@ static void typeCheckReturnStatement(TypeChecker* typeChecker, Ast* ast) {
     else actualType = typeChecker->nilType;
 
     if (!isSubtypeOfType(actualType, expectedType)) {
-        typeError(typeChecker, "Function expects return value to be an instance of %s but gets %s.", 
-            expectedType->shortName->chars, actualType->shortName->chars);
+        char calleeDesc[UINT8_MAX];
+        ObjString* calleeName = createSymbol(typeChecker, typeChecker->currentFunction->name);
+        if (typeChecker->currentFunction->type->baseType.category == TYPE_CATEGORY_METHOD) {
+            ObjString* className = createSymbol(typeChecker, typeChecker->currentClass->name);
+            sprintf_s(calleeDesc, UINT8_MAX, "Method %s::%s", className->chars, calleeName->chars);
+        }
+        else {
+            sprintf_s(calleeDesc, UINT8_MAX, "Function %s", calleeName->chars);
+        }
+        typeError(typeChecker, "%s expects return value to be an instance of %s but gets %s.", 
+            calleeDesc, expectedType->shortName->chars, actualType->shortName->chars);
     }
 }
 
