@@ -183,7 +183,7 @@ static SymbolItem* insertSymbol(Resolver* resolver, Token token, SymbolCategory 
 
     if (inserted) return item;
     else {
-        free(item);
+        freeSymbolItem(item);
         return NULL;
     }
 }

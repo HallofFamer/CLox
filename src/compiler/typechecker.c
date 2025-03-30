@@ -196,6 +196,7 @@ static void checkImplementingTraits(TypeChecker* typeChecker, Ast* traitList) {
         Ast* trait = astGetChild(traitList, 0);
         ObjString* name = createSymbol(typeChecker, trait->token);
         TypeInfo* type = getClassType(typeChecker, name, traitList->symtab);
+
         if (type == NULL) continue;
         else {
             BehaviorTypeInfo* traitType = AS_BEHAVIOR_TYPE(type);
@@ -234,7 +235,7 @@ static void inferAstTypeFromUnary(TypeChecker* typeChecker, Ast* ast, SymbolItem
             break;
         case TOKEN_MINUS:
             if (!isSubtypeOfType(child->type, typeChecker->numberType)) {
-                typeError(typeChecker, "Unary negate expects operand to be an instance of Number, %s given.", child->type->shortName->chars);
+                typeError(typeChecker, "Unary negate expects operand to be an instance of Number but gets %s.", child->type->shortName->chars);
             }
             else if (isSubtypeOfType(child->type, typeChecker->intType)) {
                 defineAstType(typeChecker, ast, "Int", item);
@@ -879,6 +880,7 @@ static void typeCheckReturnStatement(TypeChecker* typeChecker, Ast* ast) {
     if (!isSubtypeOfType(actualType, expectedType)) {
         char calleeDesc[UINT8_MAX];
         ObjString* calleeName = createSymbol(typeChecker, typeChecker->currentFunction->name);
+
         if (typeChecker->currentFunction->type->baseType.category == TYPE_CATEGORY_METHOD) {
             ObjString* className = createSymbol(typeChecker, typeChecker->currentClass->name);
             sprintf_s(calleeDesc, UINT8_MAX, "Method %s::%s", className->chars, calleeName->chars);
@@ -886,6 +888,7 @@ static void typeCheckReturnStatement(TypeChecker* typeChecker, Ast* ast) {
         else {
             sprintf_s(calleeDesc, UINT8_MAX, "Function %s", calleeName->chars);
         }
+
         typeError(typeChecker, "%s expects return value to be an instance of %s but gets %s.", 
             calleeDesc, expectedType->shortName->chars, actualType->shortName->chars);
     }
