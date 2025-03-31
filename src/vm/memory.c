@@ -531,7 +531,7 @@ static void traceReferences(VM* vm) {
 
 static void sweep(VM* vm) {
     Obj* previous = NULL;
-    Obj* object = vm->objects;
+    Obj* object = vm->gc->generations[GC_GENERATION_TYPE_EDEN]->objects;
     while (object != NULL) {
         if (object->isMarked) {
             object->isMarked = false;
@@ -545,7 +545,7 @@ static void sweep(VM* vm) {
                 previous->next = object;
             } 
             else {
-                vm->objects = object;
+                vm->gc->generations[GC_GENERATION_TYPE_EDEN]->objects = object;
             }
             freeObject(vm, unreached);
         }
@@ -571,7 +571,7 @@ void collectGarbage(VM* vm) {
 }
 
 void freeObjects(VM* vm) {
-    Obj* object = vm->objects;
+    Obj* object = vm->gc->generations[GC_GENERATION_TYPE_EDEN]->objects;
     while (object != NULL) {
         Obj* next = object->next;
         freeObject(vm, object);
