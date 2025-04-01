@@ -157,13 +157,13 @@ void markObject(VM* vm, Obj* object) {
 #endif
 
     object->isMarked = true;
-    if (vm->grayCapacity < vm->grayCount + 1) {
-        vm->grayCapacity = GROW_CAPACITY(vm->grayCapacity);
-        Obj** grayStack = (Obj**)realloc(vm->grayStack, sizeof(Obj*) * vm->grayCapacity);
+    if (vm->gc->grayCapacity < vm->gc->grayCount + 1) {
+        vm->gc->grayCapacity = GROW_CAPACITY(vm->gc->grayCapacity);
+        Obj** grayStack = (Obj**)realloc(vm->gc->grayStack, sizeof(Obj*) * vm->gc->grayCapacity);
         if (grayStack == NULL) exit(1);
-        vm->grayStack = grayStack;
+        vm->gc->grayStack = grayStack;
     }
-    vm->grayStack[vm->grayCount++] = object;
+    vm->gc->grayStack[vm->gc->grayCount++] = object;
 }
 
 void markValue(VM* vm, Value value) {
@@ -523,8 +523,8 @@ static void markRoots(VM* vm) {
 }
 
 static void traceReferences(VM* vm) {
-    while (vm->grayCount > 0) {
-        Obj* object = vm->grayStack[--vm->grayCount];
+    while (vm->gc->grayCount > 0) {
+        Obj* object = vm->gc->grayStack[--vm->gc->grayCount];
         blackenObject(vm, object);
     }
 }
@@ -577,5 +577,5 @@ void freeObjects(VM* vm) {
         freeObject(vm, object);
         object = next;
     }
-    free(vm->grayStack);
+    free(vm->gc->grayStack);
 }

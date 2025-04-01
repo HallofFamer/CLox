@@ -15,11 +15,12 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
     object->objectID = 0;
     object->shapeID = getDefaultShapeIDForObject(object);
 
-    object->next = vm->gc->generations[GC_GENERATION_TYPE_EDEN]->objects;
-    vm->gc->generations[GC_GENERATION_TYPE_EDEN]->objects = object;
+    GCGeneration* generation = vm->gc->generations[GC_GENERATION_TYPE_EDEN];
+    object->next = generation->objects;
+    generation->objects = object;
 
 #ifdef DEBUG_LOG_GC
-    printf("%p allocate %zu for %d\n", (void*)object, size, type);
+    printf("%p allocate %zu for %d at generation %d\n", (void*)object, size, type, GC_GENERATION_TYPE_EDEN);
 #endif
 
     return object;
