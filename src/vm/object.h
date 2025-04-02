@@ -13,7 +13,8 @@
 #include "value.h"
 #include "../compiler/chunk.h"
 
-#define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass)
+#define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass, GC_GENERATION_TYPE_EDEN)
+#define ALLOCATE_OBJ_GEN(type, objectType, objectClass, generation) (type*)allocateObject(vm, sizeof(type), objectType, objectClass, generation)
 #define ALLOCATE_CLASS(classClass) ALLOCATE_OBJ(ObjClass, OBJ_CLASS, classClass)
 #define ALLOCATE_CLOSURE(closureClass) ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE, closureClass)
 #define ALLOCATE_NAMESPACE(namespaceClass) ALLOCATE_OBJ(ObjNamespace, OBJ_NAMESPACE, namespaceClass)
@@ -336,7 +337,7 @@ struct ObjString {
     char chars[];
 };
 
-Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass);
+Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass, GCGenerationType generation);
 ObjArray* newArray(VM* vm);
 ObjBoundMethod* newBoundMethod(VM* vm, Value receiver, Value method);
 ObjClass* newClass(VM* vm, ObjString* name, ObjType classType);

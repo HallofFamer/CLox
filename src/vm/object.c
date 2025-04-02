@@ -6,21 +6,21 @@
 #include "object.h"
 #include "../common/os.h"
 
-Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass) {
+Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass, GCGenerationType generation) {
     Obj* object = (Obj*)reallocate(vm, NULL, 0, size);
     object->type = type;
     object->klass = klass;
     object->isMarked = false;
-    object->generation = GC_GENERATION_TYPE_EDEN;
+    object->generation = generation;
     object->objectID = 0;
     object->shapeID = getDefaultShapeIDForObject(object);
 
-    GCGeneration* generation = vm->gc->generations[GC_GENERATION_TYPE_EDEN];
-    object->next = generation->objects;
-    generation->objects = object;
+    GCGeneration* gcGeneration = vm->gc->generations[generation];
+    object->next = gcGeneration->objects;
+    gcGeneration->objects = object;
 
 #ifdef DEBUG_LOG_GC
-    printf("%p allocate %zu for %d at generation %d\n", (void*)object, size, type, GC_GENERATION_TYPE_EDEN);
+    printf("%p allocate %zu for %d at generation %d\n", (void*)object, size, type, generation);
 #endif
 
     return object;
