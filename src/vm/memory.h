@@ -6,6 +6,8 @@
 #include "value.h"
 #include "vm.h"
 
+#define GC_GENERATION_COUNT 4
+
 enum GCGenerationType {
     GC_GENERATION_TYPE_EDEN,
     GC_GENERATION_TYPE_YOUNG,
@@ -60,6 +62,7 @@ GC* newGC(VM* vm);
 void freeGC(VM* vm);
 bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object);
 bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object);
+void markRememberedSet(VM* vm, GCGenerationType generation);
 void markObject(VM* vm, Obj* object);
 void markValue(VM* vm, Value value);
 void collectGarbage(VM* vm);

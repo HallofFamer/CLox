@@ -146,6 +146,14 @@ bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object)
     return isNewObject;
 }
 
+void markRememberedSet(VM* vm, GCGenerationType generation) {
+    GCRememberedSet* rememberedSet = &vm->gc->generations[generation]->rememberdSet;
+    for (int i = 0; i < rememberedSet->capacity; i++) {
+        GCRememberedEntry* entry = &rememberedSet->entries[i];
+        markObject(vm, entry->object);
+    }
+}
+
 void markObject(VM* vm, Obj* object) {
     if (object == NULL) return;
     if (object->isMarked) return;
@@ -517,6 +525,7 @@ static void markRoots(VM* vm) {
     markTable(vm, &vm->classes);
     markTable(vm, &vm->namespaces);
     markTable(vm, &vm->modules);
+    markRememberedSet(vm, GC_GENERATION_TYPE_EDEN);
     markCompilerRoots(vm);
     markObject(vm, (Obj*)vm->initString);
     markObject(vm, (Obj*)vm->runningGenerator);
