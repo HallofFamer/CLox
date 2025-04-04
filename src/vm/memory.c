@@ -41,12 +41,12 @@ static void freeGCRememeberedSet(VM* vm, GCRememberedSet* rememberedSet) {
     initGCRememberedSet(rememberedSet);
 }
 
-static void initGCGenerations(GC* gc) {
+static void initGCGenerations(GC* gc, size_t heapSizes[]) {
     for (int i = 0; i <= GC_GENERATION_TYPE_PERMANENT; i++) {
         gc->generations[i] = (GCGeneration*)malloc(sizeof(GCGeneration));
         if (gc->generations[i] != NULL) {
             gc->generations[i]->bytesAllocated = 0;
-            gc->generations[i]->nextGC = ((size_t)i + 1) * 1024 * 1024; // will update later.
+            gc->generations[i]->heapSize = heapSizes[i]; // will update later.
             gc->generations[i]->objects = NULL;
             gc->generations[i]->type = i;
             initGCRememberedSet(&gc->generations[i]->rememberdSet);
@@ -68,7 +68,8 @@ static void freeGCGenerations(VM* vm) {
 GC* newGC(VM* vm) {
     GC* gc = (GC*)malloc(sizeof(GC));
     if (gc != NULL) {
-        initGCGenerations(gc);
+        size_t heapSizes[] = { vm->config.gcEdenHeapSize, vm->config.gcYoungHeapSize, vm->config.gcOldHeapSize, vm->config.gcHeapSize };
+        initGCGenerations(gc, heapSizes);
         gc->grayCapacity = 0;
         gc->grayCount = 0;
         gc->grayStack = NULL;

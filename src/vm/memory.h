@@ -30,7 +30,7 @@ typedef struct {
     Obj* objects;
     GCRememberedSet rememberdSet;
     size_t bytesAllocated;
-    size_t nextGC;
+    size_t heapSize;
 } GCGeneration;
 
 struct GC {
