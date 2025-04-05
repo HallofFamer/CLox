@@ -28,7 +28,7 @@ typedef struct {
 typedef struct {
     GCGenerationType type;
     Obj* objects;
-    GCRememberedSet rememberdSet;
+    GCRememberedSet remSet;
     size_t bytesAllocated;
     size_t heapSize;
 } GCGeneration;

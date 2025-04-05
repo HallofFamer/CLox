@@ -49,7 +49,7 @@ static void initGCGenerations(GC* gc, size_t heapSizes[]) {
             gc->generations[i]->heapSize = heapSizes[i]; // will update later.
             gc->generations[i]->objects = NULL;
             gc->generations[i]->type = i;
-            initGCRememberedSet(&gc->generations[i]->rememberdSet);
+            initGCRememberedSet(&gc->generations[i]->remSet);
         }
         else {
             fprintf(stderr, "Not enough memory to allocate heaps for garbage collector.");
@@ -60,7 +60,7 @@ static void initGCGenerations(GC* gc, size_t heapSizes[]) {
 
 static void freeGCGenerations(VM* vm) {
     for (int i = 0; i <= GC_GENERATION_TYPE_PERMANENT; i++) {
-        freeGCRememeberedSet(vm, &vm->gc->generations[i]->rememberdSet);
+        freeGCRememeberedSet(vm, &vm->gc->generations[i]->remSet);
         free(vm->gc->generations[i]);
     }
 }
@@ -148,7 +148,7 @@ bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object)
 }
 
 void markRememberedSet(VM* vm, GCGenerationType generation) {
-    GCRememberedSet* rememberedSet = &vm->gc->generations[generation]->rememberdSet;
+    GCRememberedSet* rememberedSet = &vm->gc->generations[generation]->remSet;
     for (int i = 0; i < rememberedSet->capacity; i++) {
         GCRememberedEntry* entry = &rememberedSet->entries[i];
         markObject(vm, entry->object);
@@ -523,6 +523,10 @@ static void markRoots(VM* vm) {
         markObject(vm, (Obj*)upvalue);
     }
 
+    for (ObjGenerator* generator = vm->runningGenerator; generator != NULL; generator = generator->outer) {
+        markObject(vm, (Obj*)generator);
+    }
+
     markTable(vm, &vm->classes);
     markTable(vm, &vm->namespaces);
     markTable(vm, &vm->modules);
@@ -572,7 +576,7 @@ void collectGarbage(VM* vm) {
     traceReferences(vm);
     tableRemoveWhite(&vm->strings);
     sweep(vm);
-    vm->nextGC = vm->bytesAllocated * vm->config.gcGrowthFactor;
+    vm->gc->generations[] = vm->bytesAllocated * vm->config.gcGrowthFactor;
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc end\n");
