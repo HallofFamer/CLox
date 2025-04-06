@@ -21,6 +21,7 @@
 
 #define OBJ_TYPE(value)             (AS_OBJ(value)->type)
 #define OBJ_KLASS(value)            (AS_OBJ(value)->klass)
+#define OBJ_GEN(value)              (AS_OBJ(value)->generation)
 
 #define IS_ARRAY(value)             isObjType(value, OBJ_ARRAY)
 #define IS_BOOL_INSTANCE(arg)       (IS_BOOL(arg) || (IS_VALUE_INSTANCE(arg) && IS_BOOL(AS_VALUE_INSTANCE(arg)->value)))

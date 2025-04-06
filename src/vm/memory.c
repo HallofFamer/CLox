@@ -576,7 +576,9 @@ void collectGarbage(VM* vm) {
     traceReferences(vm);
     tableRemoveWhite(&vm->strings);
     sweep(vm);
-    vm->gc->generations[] = vm->bytesAllocated * vm->config.gcGrowthFactor;
+    if (vm->gc->generations[GC_GENERATION_TYPE_EDEN]->bytesAllocated > vm->config.gcEdenHeapSize >> 1) {
+        vm->gc->generations[GC_GENERATION_TYPE_EDEN]->heapSize = vm->bytesAllocated * vm->config.gcGrowthFactor;
+    }
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc end\n");
