@@ -105,6 +105,7 @@ ObjFile* newFile(VM* vm, ObjString* name) {
     file->mode = emptyString(vm);
     file->isOpen = false;
     file->offset = 0;
+
     file->fsStat = NULL;
     file->fsOpen = NULL;
     file->fsRead = NULL;
@@ -168,6 +169,7 @@ ObjModule* newModule(VM* vm, ObjString* path) {
     module->path = path;
     module->closure = NULL;
     module->isNative = false;
+
     initIDMap(&module->valIndexes);
     initValueArray(&module->valFields);
     initIDMap(&module->varIndexes);
@@ -270,6 +272,7 @@ ObjTimer* newTimer(VM* vm, ObjClosure* closure, int delay, int interval) {
     ObjTimer* timer = ALLOCATE_OBJ(ObjTimer, OBJ_TIMER, vm->timerClass);
     TimerData* data = ALLOCATE_STRUCT(TimerData);
     timer->timer = ALLOCATE_STRUCT(uv_timer_t);
+
     if (timer->timer != NULL) {
         timer->timer->data = timerData(vm, closure, delay, interval);
         if (timer->timer->data == NULL) {
