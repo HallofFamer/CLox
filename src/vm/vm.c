@@ -141,6 +141,15 @@ static int parseConfiguration(void* data, const char* section, const char* name,
     else if (HAS_CONFIG("gc", "gcStressMode")) {
         config->gcStressMode = (bool)atoi(value);
     }
+    else if (HAS_CONFIG("gc_generation", "gcEdenHeapSize")) {
+        config->gcEdenHeapSize = (size_t)atol(value);
+    }
+    else if (HAS_CONFIG("gc_generation", "gcYoungHeapSize")) {
+        config->gcYoungHeapSize = (size_t)atol(value);
+    }
+    else if (HAS_CONFIG("gc_generation", "gcOldHeapSize")) {
+        config->gcOldHeapSize = (size_t)atol(value);
+    }
     else {
         return 0;
     }
@@ -168,18 +177,11 @@ void initVM(VM* vm) {
     vm->voidString = NULL;
     vm->gc = newGC(vm);
 
-    vm->objects = NULL;
-    vm->objectIndex = 0;
-    vm->bytesAllocated = 0;
-    vm->nextGC = vm->config.gcHeapSize;
-    vm->grayCount = 0;
-    vm->grayCapacity = 0;
-    vm->grayStack = NULL;
-
     vm->behaviorCount = 0;
     vm->namespaceCount = 0;
     vm->moduleCount = 1;
     vm->promiseCount = 0;
+    vm->objectIndex = 0;
 
     initTable(&vm->classes);
     initTable(&vm->namespaces);

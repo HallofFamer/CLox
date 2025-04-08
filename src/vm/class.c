@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "class.h"
+#include "memory.h"
 #include "vm.h"
 #include "../common/os.h"
 

@@ -69,7 +69,7 @@ void collectGarbage(VM* vm);
 void freeObjects(VM* vm);
 
 static bool sourceOlderThanTarget(Obj* source, Value target) {
-    return IS_OBJ(target) && (source->generation > AS_OBJ(target)->generation);
+    return IS_OBJ(target) && (source->generation > OBJ_GEN(target));
 }
 
 #endif // !clox_memory_h

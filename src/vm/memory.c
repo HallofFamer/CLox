@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "compiler_v1.h"
+#include "hash.h"
 #include "memory.h"
 
 #ifdef DEBUG_LOG_GC
@@ -9,13 +9,14 @@
 #endif
 
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize) {
-    vm->bytesAllocated += newSize - oldSize;
+    GCGeneration* generationHeap = vm->gc->generations[GC_GENERATION_TYPE_EDEN];
+    generationHeap->bytesAllocated += newSize - oldSize;
     if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
         collectGarbage(vm);
 #endif
 
-        if (vm->bytesAllocated > vm->nextGC) {
+        if (generationHeap->bytesAllocated > generationHeap->heapSize) {
             collectGarbage(vm);
         }
     }
@@ -86,7 +87,7 @@ void freeGC(VM* vm) {
 }
 
 static GCRememberedEntry* findRememberedSetEntry(GCRememberedEntry* entries, int capacity, Obj* object) {
-    uint64_t hash = (object->type == OBJ_INSTANCE) ? (object->objectID >> 2) : (object->objectID >> 2) + 1;
+    uint64_t hash = hashObject(object);
     uint32_t index = (uint32_t)hash & ((uint32_t)capacity - 1);
     for (;;) {
         GCRememberedEntry* entry = &entries[index];
@@ -567,22 +568,25 @@ static void sweep(VM* vm) {
 }
 
 void collectGarbage(VM* vm) {
+    GCGeneration* edenHeap = vm->gc->generations[GC_GENERATION_TYPE_EDEN];
+
 #ifdef DEBUG_LOG_GC
     printf("-- gc begin\n");
-    size_t before = vm->bytesAllocated;
+    size_t before = edenHeap->bytesAllocated;
 #endif
 
     markRoots(vm);
     traceReferences(vm);
     tableRemoveWhite(&vm->strings);
     sweep(vm);
-    if (vm->gc->generations[GC_GENERATION_TYPE_EDEN]->bytesAllocated > vm->config.gcEdenHeapSize >> 1) {
-        vm->gc->generations[GC_GENERATION_TYPE_EDEN]->heapSize = vm->bytesAllocated * vm->config.gcGrowthFactor;
+
+    if (edenHeap->bytesAllocated > vm->config.gcEdenHeapSize >> 1) {
+        edenHeap->heapSize = edenHeap->bytesAllocated * vm->config.gcGrowthFactor;
     }
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc end\n");
-    printf("   collected %zu bytes (from %zu to %zu) next at %zu\n", before - vm->bytesAllocated, before, vm->bytesAllocated, vm->nextGC);
+    printf("   collected %zu bytes (from %zu to %zu) next at %zu\n", before - edenHeap->bytesAllocated, before, edenHeap->bytesAllocated, edenHeap->heapSize);
 #endif
 }
 

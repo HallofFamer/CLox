@@ -57,6 +57,10 @@ typedef struct {
     size_t gcHeapSize;
     size_t gcGrowthFactor;
     bool gcStressMode;
+
+    size_t gcEdenHeapSize;
+    size_t gcYoungHeapSize;
+    size_t gcOldHeapSize;
 } Configuration;
 
 struct VM {
@@ -124,15 +128,7 @@ struct VM {
     ObjString* voidString;
     ObjModule* currentModule;
     ObjUpvalue* openUpvalues;
-
-    size_t bytesAllocated;
-    size_t nextGC;
-    Obj* objects;
     uint64_t objectIndex;
-
-    int grayCount;
-    int grayCapacity;
-    Obj** grayStack;
 };
 
 enum InterpretResult {
