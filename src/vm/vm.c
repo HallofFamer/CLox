@@ -255,7 +255,7 @@ static void concatenate(VM* vm) {
     ObjString* a = AS_STRING(peek(vm, 1));
 
     int length = a->length + b->length;
-    char* chars = ALLOCATE(char, length + 1);
+    char* chars = ALLOCATE(char, length + 1, GC_GENERATION_TYPE_PERMANENT);
     memcpy(chars, a->chars, a->length);
     memcpy(chars + a->length, b->chars, b->length);
     chars[length] = '\0';

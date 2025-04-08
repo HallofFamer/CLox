@@ -48,7 +48,7 @@ ObjString* copyString(VM* vm, const char* chars, int length) {
     ObjString* interned = tableFindString(&vm->strings, chars, length, hash);
     if (interned != NULL) return interned;
 
-    char* heapChars = ALLOCATE(char, (size_t)length + 1);
+    char* heapChars = ALLOCATE(char, (size_t)length + 1, GC_GENERATION_TYPE_PERMANENT);
     memcpy(heapChars, chars, length);
     heapChars[length] = '\0';
     return allocateString(vm, heapChars, length, hash);
@@ -87,7 +87,7 @@ static void capitalizeFirstIndex(VM* vm, char* source, char* target, int length)
 
 ObjString* capitalizeString(VM* vm, ObjString* string) {
     if (string->length == 0) return string;
-    char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
+    char* heapChars = ALLOCATE(char, (size_t)string->length + 1, GC_GENERATION_TYPE_PERMANENT);
     int offset = utf8CodePointOffset(vm, string->chars, 0);
     capitalizeFirstIndex(vm, string->chars, heapChars, offset);
 
@@ -129,7 +129,7 @@ static void decapitalizeFirstIndex(VM* vm, char* source, char* target, int lengt
 
 ObjString* decapitalizeString(VM* vm, ObjString* string) {
     if (string->length == 0) return string;
-    char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
+    char* heapChars = ALLOCATE(char, (size_t)string->length + 1, GC_GENERATION_TYPE_PERMANENT);
     int offset = utf8CodePointOffset(vm, string->chars, 0);
     decapitalizeFirstIndex(vm, string->chars, heapChars, offset);
 
@@ -147,7 +147,7 @@ ObjString* replaceString(VM* vm, ObjString* original, ObjString* target, ObjStri
 
     int newLength = original->length - target->length + replace->length;
     push(vm, OBJ_VAL(target));
-    char* heapChars = ALLOCATE(char, (size_t)newLength + 1);
+    char* heapChars = ALLOCATE(char, (size_t)newLength + 1, GC_GENERATION_TYPE_PERMANENT);
     pop(vm);
 
     int offset = 0;
@@ -171,7 +171,7 @@ ObjString* replaceString(VM* vm, ObjString* original, ObjString* target, ObjStri
 }
 
 ObjString* reverseString(VM* vm, ObjString* original) {
-    char* heapChars = ALLOCATE(char, (size_t)original->length + 1);
+    char* heapChars = ALLOCATE(char, (size_t)original->length + 1, GC_GENERATION_TYPE_PERMANENT);
     int i = 0;
     while (i < original->length) {
         int offset = utf8CodePointOffset(vm, original->chars, i);
@@ -218,7 +218,7 @@ ObjString* subString(VM* vm, ObjString* original, int fromIndex, int toIndex) {
     }
 
     int newLength = toIndex - fromIndex + 1;
-    char* heapChars = ALLOCATE(char, (size_t)newLength + 1);
+    char* heapChars = ALLOCATE(char, (size_t)newLength + 1, GC_GENERATION_TYPE_PERMANENT);
     for (int i = 0; i < newLength; i++) {
         heapChars[i] = original->chars[fromIndex + i];
     }
@@ -229,7 +229,7 @@ ObjString* subString(VM* vm, ObjString* original, int fromIndex, int toIndex) {
 
 ObjString* toLowerString(VM* vm, ObjString* string) {
     if (string->length == 0) return string;
-    char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
+    char* heapChars = ALLOCATE(char, (size_t)string->length + 1, GC_GENERATION_TYPE_PERMANENT);
     memcpy(heapChars, string->chars, (size_t)string->length + 1);
     utf8lwr(heapChars);
     return takeString(vm, heapChars, (int)string->length);
@@ -237,7 +237,7 @@ ObjString* toLowerString(VM* vm, ObjString* string) {
 
 ObjString* toUpperString(VM* vm, ObjString* string) {
     if (string->length == 0) return string;
-    char* heapChars = ALLOCATE(char, (size_t)string->length + 1);
+    char* heapChars = ALLOCATE(char, (size_t)string->length + 1, GC_GENERATION_TYPE_PERMANENT);
     memcpy(heapChars, string->chars, (size_t)string->length + 1);
     utf8upr(heapChars);
     return takeString(vm, heapChars, (int)string->length);
@@ -259,7 +259,7 @@ ObjString* trimString(VM* vm, ObjString* string) {
     }
 
     int newLength = string->length - ltLen - rtLen + 1;
-    char* heapChars = ALLOCATE(char, (size_t)newLength + 1);
+    char* heapChars = ALLOCATE(char, (size_t)newLength + 1, GC_GENERATION_TYPE_PERMANENT);
     for (int i = 0; i < newLength; i++) {
         heapChars[i] = string->chars[i + ltLen];
     }
@@ -362,10 +362,15 @@ int utf8CodePointOffset(VM* vm, const char* string, int index) {
 ObjString* utf8CodePointAtIndex(VM* vm, const char* string, int index) {
     int length = utf8CodePointOffset(vm, string, index);
     switch (length) {
-        case 1: return copyString(vm, (char[]) { string[index], '\0' }, 1);
-        case 2: return copyString(vm, (char[]) { string[index], string[index + 1], '\0' }, 2);
-        case 3: return copyString(vm, (char[]) { string[index], string[index + 1], string[index + 2], '\0' }, 3);
-        case 4: return copyString(vm, (char[]) { string[index], string[index + 1], string[index + 2], string[index + 3], '\0' }, 4);
-        default: return emptyString(vm);
+        case 1: 
+            return copyString(vm, (char[]) { string[index], '\0' }, 1);
+        case 2: 
+            return copyString(vm, (char[]) { string[index], string[index + 1], '\0' }, 2);
+        case 3: 
+            return copyString(vm, (char[]) { string[index], string[index + 1], string[index + 2], '\0' }, 3);
+        case 4: 
+            return copyString(vm, (char[]) { string[index], string[index + 1], string[index + 2], string[index + 3], '\0' }, 4);
+        default: 
+            return emptyString(vm);
     }
 }

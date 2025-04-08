@@ -29,7 +29,7 @@ LOX_FUNCTION(error){
 
 LOX_FUNCTION(gc) {
     ASSERT_ARG_COUNT("gc()", 0);
-    collectGarbage(vm);
+    collectGarbage(vm, GC_GENERATION_TYPE_EDEN);
     RETURN_NIL;
 }
 
@@ -297,11 +297,11 @@ void loadSourceFile(VM* vm, const char* filePath) {
 }
 
 void registerNativeFunctions(VM* vm){
-    DEF_FUNCTION(assert, 2, RETURN_TYPE(Nil), PARAM_TYPE(Object), PARAM_TYPE(String));
-    DEF_FUNCTION(clock, 0, RETURN_TYPE(Float));
-    DEF_FUNCTION(error, 1, RETURN_TYPE(Nil), PARAM_TYPE(String));
-    DEF_FUNCTION(gc, 0, RETURN_TYPE(Nil));
-    DEF_FUNCTION(print, 1, RETURN_TYPE(Nil), PARAM_TYPE(Object));
-    DEF_FUNCTION(println, 1, RETURN_TYPE(Nil), PARAM_TYPE(Object));
+    DEF_FUNCTION(assert, 2, RETURN_TYPE(void), PARAM_TYPE(Object), PARAM_TYPE(String));
+    DEF_FUNCTION(clock, 0, RETURN_TYPE(Number));
+    DEF_FUNCTION(error, 1, RETURN_TYPE(void), PARAM_TYPE(String));
+    DEF_FUNCTION(gc, 0, RETURN_TYPE(void));
+    DEF_FUNCTION(print, 1, RETURN_TYPE(void), PARAM_TYPE(Object));
+    DEF_FUNCTION(println, 1, RETURN_TYPE(void), PARAM_TYPE(Object));
     DEF_FUNCTION(read, 0, RETURN_TYPE(String));
 }

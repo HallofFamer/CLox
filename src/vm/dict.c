@@ -28,7 +28,7 @@ ObjEntry* dictFindEntry(ObjEntry* entries, int capacity, Value key) {
 }
 
 void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
-    ObjEntry* entries = ALLOCATE(ObjEntry, capacity);
+    ObjEntry* entries = ALLOCATE(ObjEntry, capacity, dict->obj.generation);
     for (int i = 0; i < capacity; i++) {
         entries[i].key = UNDEFINED_VAL;
         entries[i].value = NIL_VAL;

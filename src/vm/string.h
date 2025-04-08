@@ -5,7 +5,7 @@
 #include "object.h"
 #include "../inc/utf8.h"
 
-#define ALLOCATE_STRING(length, stringClass) (ObjString*)allocateObject(vm, sizeof(ObjString) + length + 1, OBJ_STRING, stringClass)
+#define ALLOCATE_STRING(length, stringClass) (ObjString*)allocateObject(vm, sizeof(ObjString) + length + 1, OBJ_STRING, stringClass, GC_GENERATION_TYPE_EDEN)
 
 ObjString* createString(VM* vm, char* chars, int length, uint32_t hash, ObjClass* klass);
 ObjString* takeString(VM* vm, char* chars, int length);
