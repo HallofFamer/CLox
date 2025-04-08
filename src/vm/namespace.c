@@ -60,7 +60,7 @@ bool sourceFileExists(ObjString* filePath) {
 
 ObjString* locateSourceFile(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
     int length = enclosingNamespace->fullName->length + shortName->length + 5;
-    char* heapChars = ALLOCATE(char, length + 1);
+    char* heapChars = ALLOCATE(char, length + 1, GC_GENERATION_TYPE_PERMANENT);
     int offset = 0;
     while (offset < enclosingNamespace->fullName->length) {
         char currentChar = enclosingNamespace->fullName->chars[offset];
@@ -109,7 +109,7 @@ bool sourceDirectoryExists(ObjString* directoryPath) {
 
 ObjString* locateSourceDirectory(VM* vm, ObjString* shortName, ObjNamespace* enclosingNamespace) {
     int length = enclosingNamespace->fullName->length + shortName->length + 1;
-    char* heapChars = ALLOCATE(char, length + 1);
+    char* heapChars = ALLOCATE(char, length + 1, GC_GENERATION_TYPE_PERMANENT);
     int offset = 0;
     while (offset < enclosingNamespace->fullName->length) {
         char currentChar = enclosingNamespace->fullName->chars[offset];

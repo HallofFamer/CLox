@@ -8,8 +8,8 @@
 #include "debug.h"
 #endif
 
-void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize) {
-    GCGeneration* generationHeap = vm->gc->generations[GC_GENERATION_TYPE_EDEN];
+void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenerationType generation) {
+    GCGeneration* generationHeap = vm->gc->generations[generation];
     generationHeap->bytesAllocated += newSize - oldSize;
     if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
@@ -106,7 +106,7 @@ bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object) {
 }
 
 static void rememberedSetAdjustCapacity(VM* vm, GCRememberedSet* rememberedSet, int capacity) {
-    GCRememberedEntry* entries = ALLOCATE(GCRememberedEntry, capacity);
+    GCRememberedEntry* entries = ALLOCATE(GCRememberedEntry, capacity, GC_GENERATION_TYPE_EDEN);
     for (int i = 0; i < capacity; i++) {
         entries[i].object = NULL;
     }
@@ -491,7 +491,7 @@ static void freeObject(VM* vm, Obj* object) {
         }
         case OBJ_STRING: {
             ObjString* string = (ObjString*)object;
-            reallocate(vm, object, sizeof(ObjString) + string->length + 1, 0);
+            reallocate(vm, object, sizeof(ObjString) + string->length + 1, 0, GC_GENERATION_TYPE_EDEN);
             break;
         } 
         case OBJ_TIMER: { 

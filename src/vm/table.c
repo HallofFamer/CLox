@@ -49,7 +49,7 @@ bool tableGet(Table* table, ObjString* key, Value* value) {
 }
 
 static void adjustCapacity(VM* vm, Table* table, int capacity) {
-    Entry* entries = ALLOCATE(Entry, capacity);
+    Entry* entries = ALLOCATE(Entry, capacity, GC_GENERATION_TYPE_EDEN);
     for (int i = 0; i < capacity; i++) {
         entries[i].key = NULL;
         entries[i].value = NIL_VAL;

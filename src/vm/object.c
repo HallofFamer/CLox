@@ -7,7 +7,7 @@
 #include "../common/os.h"
 
 Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass, GCGenerationType generation) {
-    Obj* object = (Obj*)reallocate(vm, NULL, 0, size);
+    Obj* object = (Obj*)reallocate(vm, NULL, 0, size, generation);
     object->type = type;
     object->klass = klass;
     object->isMarked = false;
@@ -15,9 +15,9 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass, GCGenera
     object->objectID = 0;
     object->shapeID = getDefaultShapeIDForObject(object);
 
-    GCGeneration* gcGeneration = vm->gc->generations[generation];
-    object->next = gcGeneration->objects;
-    gcGeneration->objects = object;
+    GCGeneration* generationHeap = vm->gc->generations[generation];
+    object->next = generationHeap->objects;
+    generationHeap->objects = object;
 
 #ifdef DEBUG_LOG_GC
     printf("%p allocate %zu for %d at generation %d\n", (void*)object, size, type, generation);
@@ -59,7 +59,7 @@ ObjClass* newClass(VM* vm, ObjString* name, ObjType classType) {
 
 void initClosure(VM* vm, ObjClosure* closure, ObjFunction* function) {
     push(vm, OBJ_VAL(closure));
-    ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
+    ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount, closure->obj.generation);
     for (int i = 0; i < function->upvalueCount; i++) {
         upvalues[i] = NULL;
     }

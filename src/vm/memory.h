@@ -40,24 +40,24 @@ struct GC {
     Obj** grayStack;
 };
 
-#define ALLOCATE(type, count) \
-    (type*)reallocate(vm, NULL, 0, sizeof(type) * (count))
+#define ALLOCATE(type, count, generation) \
+    (type*)reallocate(vm, NULL, 0, sizeof(type) * (count), generation)
 
 #define ALLOCATE_STRUCT(type) (type*)malloc(sizeof(type))
 
-#define FREE(type, pointer) reallocate(vm, pointer, sizeof(type), 0)
+#define FREE(type, pointer) reallocate(vm, pointer, sizeof(type), 0, GC_GENERATION_TYPE_EDEN)
 
 #define GROW_CAPACITY(capacity) \
     ((capacity) < 8 ? 8 : (capacity) * 2)
 
 #define GROW_ARRAY(type, pointer, oldCount, newCount) \
     (type*)reallocate(vm, pointer, sizeof(type) * (oldCount), \
-        sizeof(type) * (newCount))
+        sizeof(type) * (newCount), GC_GENERATION_TYPE_EDEN)
 
 #define FREE_ARRAY(type, pointer, oldCount) \
-    reallocate(vm, pointer, sizeof(type) * (oldCount), 0)
+    reallocate(vm, pointer, sizeof(type) * (oldCount), 0, GC_GENERATION_TYPE_EDEN)
 
-void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize);
+void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenerationType generation);
 GC* newGC(VM* vm);
 void freeGC(VM* vm);
 bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object);
