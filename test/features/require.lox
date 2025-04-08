@@ -1,9 +1,9 @@
-namespace test.features;
-val filePath = "test/features/fraction.lox";
-require filePath;
+namespace test.features
+val filePath = "test/features/fraction.lox"
+require filePath
 
-var frac = Fraction(3, 6);
-var frac2 = frac.reduce();
-println(frac.toString());
-println(frac2.toString());
-println(frac == frac2);
+var frac = Fraction(3, 6)
+var frac2 = frac.reduce()
+println(frac.toString())
+println(frac2.toString())
+println(frac == frac2)

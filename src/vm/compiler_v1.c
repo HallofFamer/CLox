@@ -279,7 +279,7 @@ static char* parseString(ParserV1* parser, int* length) {
         j++;
     }
 
-    target = (char*)reallocate(parser->vm, target, (size_t)maxLength + 1, (size_t)j + 1);
+    target = (char*)reallocate(parser->vm, target, (size_t)maxLength + 1, (size_t)j + 1, GC_GENERATION_TYPE_PERMANENT);
     target[j] = '\0';
     *length = j;
     return target;

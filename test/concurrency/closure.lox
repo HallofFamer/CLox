@@ -1,17 +1,17 @@
-namespace test.concurrency;
-using clox.std.io.File;
+namespace test.concurrency
+using clox.std.io.File
 
 async fun executeAsync(closure) { 
     if (!closure.isAsync()) { 
-        throw Exception("Only async closure can be executed.");
+        throw Exception("Only async closure can be executed.")
     }
-    await closure();
+    await closure()
 }
 
 executeAsync(async fun(){ 
-    val fileReader = await File.openAsync("test/others/file_input.txt", "r");
-    println("Successfully opened read stream.");
+    val fileReader = await File.openAsync("test/others/file_input.txt", "r")
+    println("Successfully opened read stream.")
 
-    await fileReader.closeAsync();
-    println("Read stream has been closed.");
-});
+    await fileReader.closeAsync()
+    println("Read stream has been closed.")
+})

@@ -1,67 +1,67 @@
-namespace test.concurrency;
+namespace test.concurrency
 
 fun fibonacci(){ 
-    var last = 0;
-    var current = yield 1;
+    var last = 0
+    var current = yield 1
 
     while(true) { 
-        current = last + current;
-        last = current - last;
-        yield current;
+        current = last + current
+        last = current - last
+        yield current
     }
 }
 
-val generator = fibonacci();
-println("Testing Infinite Fibonacci number generator: ${generator}");
-var i = 1;
+val generator = fibonacci()
+println("Testing Infinite Fibonacci number generator: ${generator}")
+var i = 1
 while(i <= 10) {
-    println("Fibonacci number at index ${i}: ${generator.next().value}");
-    i = i + 1;
+    println("Fibonacci number at index ${i}: ${generator.next().value}")
+    i = i + 1
 }
-println("");
+println("")
 
 class MultiGenerator { 
     
     __init__(){ 
-        this.totalYields = 0;
+        this.totalYields = 0
     }
 
     inner(arg, arg2){ 
-        println("Inner Generator starts...");
-        yield arg;
-        yield arg2;
-        println("Inner Generator ends...");
+        println("Inner Generator starts...")
+        yield arg
+        yield arg2
+        println("Inner Generator ends...")
     }
 
     middle(arg, arg2){ 
         println("Middle Generator starts...");
         yield arg;
-        yield with this.inner(2, 3);
+        yield from this.inner(2, 3);
         yield arg2;
         println("Middle Generator ends...");
     }
 
     outer(arg, arg2){ 
-        println("Outer Generator start...");
-        yield arg;
-        yield with this.middle(1, 4);
-        yield arg2;
-        println("Outer Generator ends..."); 
+        println("Outer Generator start...")
+        yield arg
+        yield from this.middle(1, 4)
+        yield arg2
+        println("Outer Generator ends...")
     }
 
     __onYield__(name, result){
-        println("Intercepting yield at method ${name}");
-        this.totalYields = this.totalYields + 1;
-        return result;
+        println("Intercepting yield at method ${name}")
+        this.totalYields = this.totalYields + 1
+        return result
     }
 }
 
-println("Testing nested generators:");
-val multi = MultiGenerator();
-val generator2 = multi.outer(0, 5);
-println("Generator receiver: ${generator2.getReceiver()}");
+println("Testing nested generators:")
+val multi = MultiGenerator()
+val generator2 = multi.outer(0, 5)
+println("Generator receiver: ${generator2.getReceiver()}")
 
 while(!generator2.nextFinished()) { 
-    println("Generator yield value: ${generator2.value}");
+    println("Generator yield value: ${generator2.value}")
 }
-println("Total number of yields: ${multi.totalYields}");
+println("Total number of yields: ${multi.totalYields}")
