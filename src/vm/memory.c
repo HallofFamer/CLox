@@ -17,7 +17,7 @@ void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenera
 #endif
 
         if (generationHeap->bytesAllocated > generationHeap->heapSize) {
-            collectGarbage(vm);
+            collectGarbage(vm, generation);
         }
     }
 
@@ -567,12 +567,12 @@ static void sweep(VM* vm) {
     }
 }
 
-void collectGarbage(VM* vm) {
-    GCGeneration* edenHeap = vm->gc->generations[GC_GENERATION_TYPE_EDEN];
+void collectGarbage(VM* vm, GCGenerationType generation) {
+    GCGeneration* generationHeap = vm->gc->generations[generation];
 
 #ifdef DEBUG_LOG_GC
-    printf("-- gc begin\n");
-    size_t before = edenHeap->bytesAllocated;
+    printf("-- gc begin for generation %d\n", generation);
+    size_t before = generationHeap->bytesAllocated;
 #endif
 
     markRoots(vm);
@@ -580,13 +580,13 @@ void collectGarbage(VM* vm) {
     tableRemoveWhite(&vm->strings);
     sweep(vm);
 
-    if (edenHeap->bytesAllocated > vm->config.gcEdenHeapSize >> 1) {
-        edenHeap->heapSize = edenHeap->bytesAllocated * vm->config.gcGrowthFactor;
+    if (generationHeap->bytesAllocated > generationHeap->heapSize >> 1) {
+        generationHeap->heapSize = generationHeap->bytesAllocated * vm->config.gcGrowthFactor;
     }
 
 #ifdef DEBUG_LOG_GC
-    printf("-- gc end\n");
-    printf("   collected %zu bytes (from %zu to %zu) next at %zu\n", before - edenHeap->bytesAllocated, before, edenHeap->bytesAllocated, edenHeap->heapSize);
+    printf("-- gc end for generation %d\n", generation);
+    printf("   collected %zu bytes (from %zu to %zu) next at %zu\n", before - generationHeap->bytesAllocated, before, generationHeap->bytesAllocated, generationHeap->heapSize);
 #endif
 }
 
