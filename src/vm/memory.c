@@ -9,11 +9,11 @@
 #endif
 
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenerationType generation) {
-    GCGeneration* generationHeap = vm->gc->generations[generation];
+    GCGeneration* generationHeap = GENERATION_HEAP(generation);
     generationHeap->bytesAllocated += newSize - oldSize;
     if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
-        collectGarbage(vm);
+        collectGarbage(vm, generation);
 #endif
 
         if (generationHeap->bytesAllocated > generationHeap->heapSize) {
@@ -47,7 +47,7 @@ static void initGCGenerations(GC* gc, size_t heapSizes[]) {
         gc->generations[i] = (GCGeneration*)malloc(sizeof(GCGeneration));
         if (gc->generations[i] != NULL) {
             gc->generations[i]->bytesAllocated = 0;
-            gc->generations[i]->heapSize = heapSizes[i]; // will update later.
+            gc->generations[i]->heapSize = heapSizes[i]; 
             gc->generations[i]->objects = NULL;
             gc->generations[i]->type = i;
             initGCRememberedSet(&gc->generations[i]->remSet);
@@ -544,9 +544,9 @@ static void traceReferences(VM* vm) {
     }
 }
 
-static void sweep(VM* vm) {
+static void sweep(VM* vm, GCGenerationType generation) {
     Obj* previous = NULL;
-    Obj* object = vm->gc->generations[GC_GENERATION_TYPE_EDEN]->objects;
+    Obj* object = GENERATION_HEAP(generation)->objects;
     while (object != NULL) {
         if (object->isMarked) {
             object->isMarked = false;
@@ -560,7 +560,7 @@ static void sweep(VM* vm) {
                 previous->next = object;
             } 
             else {
-                vm->gc->generations[GC_GENERATION_TYPE_EDEN]->objects = object;
+                GENERATION_HEAP(generation)->objects = object;
             }
             freeObject(vm, unreached);
         }
@@ -568,7 +568,8 @@ static void sweep(VM* vm) {
 }
 
 void collectGarbage(VM* vm, GCGenerationType generation) {
-    GCGeneration* generationHeap = vm->gc->generations[generation];
+    if (generation > 0) collectGarbage(vm, generation - 1);
+    GCGeneration* generationHeap = GENERATION_HEAP(generation);
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc begin for generation %d\n", generation);
@@ -578,7 +579,7 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
     markRoots(vm);
     traceReferences(vm);
     tableRemoveWhite(&vm->strings);
-    sweep(vm);
+    sweep(vm, generation);
 
     if (generationHeap->bytesAllocated > generationHeap->heapSize >> 1) {
         generationHeap->heapSize = generationHeap->bytesAllocated * vm->config.gcGrowthFactor;

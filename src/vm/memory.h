@@ -57,6 +57,8 @@ struct GC {
 #define FREE_ARRAY(type, pointer, oldCount) \
     reallocate(vm, pointer, sizeof(type) * (oldCount), 0, GC_GENERATION_TYPE_EDEN)
 
+#define GENERATION_HEAP(generation) vm->gc->generations[generation]
+
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenerationType generation);
 GC* newGC(VM* vm);
 void freeGC(VM* vm);
