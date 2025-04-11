@@ -152,13 +152,12 @@ void markRememberedSet(VM* vm, GCGenerationType generation) {
     GCRememberedSet* rememberedSet = &vm->gc->generations[generation]->remSet;
     for (int i = 0; i < rememberedSet->capacity; i++) {
         GCRememberedEntry* entry = &rememberedSet->entries[i];
-        markObject(vm, entry->object);
+        markObject(vm, entry->object, generation);
     }
 }
 
-void markObject(VM* vm, Obj* object) {
-    if (object == NULL) return;
-    if (object->isMarked) return;
+void markObject(VM* vm, Obj* object, GCGenerationType generation) {
+    if (object == NULL || object->generation > generation || object->isMarked) return;
 
 #ifdef DEBUG_LOG_GC
     printf("%p mark ", (void*)object);
@@ -177,16 +176,16 @@ void markObject(VM* vm, Obj* object) {
 }
 
 void markValue(VM* vm, Value value) {
-    if (IS_OBJ(value)) markObject(vm, AS_OBJ(value));
+    if (IS_OBJ(value)) markObject(vm, AS_OBJ(value), GC_GENERATION_TYPE_EDEN);
 }
 
-static void markArray(VM* vm, ValueArray* array) {
+static void markArray(VM* vm, ValueArray* array, GCGenerationType generation) {
     for (int i = 0; i < array->count; i++) {
         markValue(vm, array->values[i]);
     }
 }
 
-static void blackenObject(VM* vm, Obj* object) {
+static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
 #ifdef DEBUG_LOG_GC
     printf("%p blacken ", (void*)object);
     printValue(OBJ_VAL(object));
@@ -196,7 +195,7 @@ static void blackenObject(VM* vm, Obj* object) {
     switch (object->type) {
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
-            markArray(vm, &array->elements);
+            markArray(vm, &array->elements, generation);
             break;
         }
         case OBJ_BOUND_METHOD: {
@@ -207,23 +206,23 @@ static void blackenObject(VM* vm, Obj* object) {
         }
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
-            markObject(vm, (Obj*)klass->name);
-            markObject(vm, (Obj*)klass->fullName);
-            markObject(vm, (Obj*)klass->superclass);
-            markObject(vm, (Obj*)klass->obj.klass);
-            markObject(vm, (Obj*)klass->namespace);
-            markArray(vm, &klass->traits);
+            markObject(vm, (Obj*)klass->name, generation);
+            markObject(vm, (Obj*)klass->fullName, generation);
+            markObject(vm, (Obj*)klass->superclass, generation);
+            markObject(vm, (Obj*)klass->obj.klass, generation);
+            markObject(vm, (Obj*)klass->namespace, generation);
+            markArray(vm, &klass->traits, generation);
             markIDMap(vm, &klass->indexes);
-            markArray(vm, &klass->fields);
+            markArray(vm, &klass->fields, generation);
             markTable(vm, &klass->methods);
             break;
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
-            markObject(vm, (Obj*)closure->function);
-            markObject(vm, (Obj*)closure->module);
+            markObject(vm, (Obj*)closure->function, generation);
+            markObject(vm, (Obj*)closure->module, generation);
             for (int i = 0; i < closure->upvalueCount; i++) {
-                markObject(vm, (Obj*)closure->upvalues[i]);
+                markObject(vm, (Obj*)closure->upvalues[i], generation);
             }
             break;
         }
@@ -231,7 +230,7 @@ static void blackenObject(VM* vm, Obj* object) {
             ObjDictionary* dict = (ObjDictionary*)object;
             for (int i = 0; i < dict->capacity; i++) {
                 ObjEntry* entry = &dict->entries[i];
-                markObject(vm, (Obj*)entry);
+                markObject(vm, (Obj*)entry, generation);
             }
             break;
         }
@@ -243,91 +242,91 @@ static void blackenObject(VM* vm, Obj* object) {
         }
         case OBJ_EXCEPTION: { 
             ObjException* exception = (ObjException*)object;
-            markObject(vm, (Obj*)exception->message);
-            markObject(vm, (Obj*)exception->stacktrace);
+            markObject(vm, (Obj*)exception->message, generation);
+            markObject(vm, (Obj*)exception->stacktrace, generation);
             break;
         }
         case OBJ_FILE: {
             ObjFile* file = (ObjFile*)object;
-            markObject(vm, (Obj*)file->name);
-            markObject(vm, (Obj*)file->mode);
+            markObject(vm, (Obj*)file->name, generation);
+            markObject(vm, (Obj*)file->mode, generation);
             break;
         }
         case OBJ_FRAME: {
             ObjFrame* frame = (ObjFrame*)object;
-            markObject(vm, (Obj*)frame->closure);
+            markObject(vm, (Obj*)frame->closure, generation);
             break;
         }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*)object;
-            markObject(vm, (Obj*)function->name);
-            markArray(vm, &function->chunk.constants);
-            markArray(vm, &function->chunk.identifiers);
+            markObject(vm, (Obj*)function->name, generation);
+            markArray(vm, &function->chunk.constants, generation);
+            markArray(vm, &function->chunk.identifiers, generation);
             break;
         }
         case OBJ_GENERATOR: {
             ObjGenerator* generator = (ObjGenerator*)object;
-            markObject(vm, (Obj*)generator->frame);
-            markObject(vm, (Obj*)generator->outer);
-            markObject(vm, (Obj*)generator->inner);
+            markObject(vm, (Obj*)generator->frame, generation);
+            markObject(vm, (Obj*)generator->outer, generation);
+            markObject(vm, (Obj*)generator->inner, generation);
             markValue(vm, generator->value);
             break;
         }
         case OBJ_INSTANCE: {
             ObjInstance* instance = (ObjInstance*)object;
-            markObject(vm, (Obj*)object->klass);
-            markArray(vm, &instance->fields);
+            markObject(vm, (Obj*)object->klass, generation);
+            markArray(vm, &instance->fields, generation);
             break;
         }
         case OBJ_METHOD: {
             ObjMethod* method = (ObjMethod*)object;
-            markObject(vm, (Obj*)method->behavior);
-            markObject(vm, (Obj*)method->closure);
+            markObject(vm, (Obj*)method->behavior, generation);
+            markObject(vm, (Obj*)method->closure, generation);
             break;
         }
         case OBJ_MODULE: {
             ObjModule* module = (ObjModule*)object;
-            markObject(vm, (Obj*)module->path);
-            if (module->closure != NULL) markObject(vm, (Obj*)module->closure);
+            markObject(vm, (Obj*)module->path, generation);
+            if (module->closure != NULL) markObject(vm, (Obj*)module->closure, generation);
             markIDMap(vm, &module->valIndexes);
-            markArray(vm, &module->valFields);
+            markArray(vm, &module->valFields, generation);
             markIDMap(vm, &module->varIndexes);
-            markArray(vm, &module->varFields);
+            markArray(vm, &module->varFields, generation);
             break;
         }
         case OBJ_NAMESPACE: {
             ObjNamespace* namespace = (ObjNamespace*)object;
-            markObject(vm, (Obj*)namespace->shortName);
-            markObject(vm, (Obj*)namespace->fullName);
-            markObject(vm, (Obj*)namespace->enclosing);
+            markObject(vm, (Obj*)namespace->shortName, generation);
+            markObject(vm, (Obj*)namespace->fullName, generation);
+            markObject(vm, (Obj*)namespace->enclosing, generation);
             markTable(vm, &namespace->values);
             break;
         }
         case OBJ_NATIVE_FUNCTION: {
             ObjNativeFunction* nativeFunction = (ObjNativeFunction*)object;
-            markObject(vm, (Obj*)nativeFunction->name);
+            markObject(vm, (Obj*)nativeFunction->name, generation);
             break;
         }
         case OBJ_NATIVE_METHOD: {
             ObjNativeMethod* nativeMethod = (ObjNativeMethod*)object;
-            markObject(vm, (Obj*)nativeMethod->klass);
-            markObject(vm, (Obj*)nativeMethod->name);
+            markObject(vm, (Obj*)nativeMethod->klass, generation);
+            markObject(vm, (Obj*)nativeMethod->name, generation);
             break;
         }
         case OBJ_NODE: {
             ObjNode* node = (ObjNode*)object;
             markValue(vm, node->element);
-            markObject(vm, (Obj*)node->prev);
-            markObject(vm, (Obj*)node->next);
+            markObject(vm, (Obj*)node->prev, generation);
+            markObject(vm, (Obj*)node->next, generation);
             break;
         }
         case OBJ_PROMISE: {
             ObjPromise* promise = (ObjPromise*)object;
             markValue(vm, promise->value);
-            markObject(vm, (Obj*)promise->captures);
-            markObject(vm, (Obj*)promise->exception);
+            markObject(vm, (Obj*)promise->captures, generation);
+            markObject(vm, (Obj*)promise->exception, generation);
             markValue(vm, promise->executor);
-            markArray(vm, &promise->handlers);
+            markArray(vm, &promise->handlers, generation);
             break;
         }
         case OBJ_RECORD: {
@@ -340,7 +339,7 @@ static void blackenObject(VM* vm, Obj* object) {
             if (timer->timer != NULL && timer->timer->data != NULL) {
                 TimerData* data = (TimerData*)timer->timer->data;
                 markValue(vm, data->receiver);
-                markObject(vm, (Obj*)data->closure);
+                markObject(vm, (Obj*)data->closure, generation);
             }
             break;
         }
@@ -349,8 +348,8 @@ static void blackenObject(VM* vm, Obj* object) {
             break;
         case OBJ_VALUE_INSTANCE: { 
             ObjValueInstance* instance = (ObjValueInstance*)object;
-            markObject(vm, (Obj*)object->klass);
-            markArray(vm, &instance->fields);
+            markObject(vm, (Obj*)object->klass, generation);
+            markArray(vm, &instance->fields, generation);
             break;
         }
         default:
@@ -511,21 +510,21 @@ static void freeObject(VM* vm, Obj* object) {
     }
 }
 
-static void markRoots(VM* vm) {
+static void markRoots(VM* vm, GCGenerationType generation) {
     for (Value* slot = vm->stack; slot < vm->stackTop; slot++) {
         markValue(vm, *slot);
     }
 
     for (int i = 0; i < vm->frameCount; i++) {
-        markObject(vm, (Obj*)vm->frames[i].closure);
+        markObject(vm, (Obj*)vm->frames[i].closure, generation);
     }
 
     for (ObjUpvalue* upvalue = vm->openUpvalues; upvalue != NULL; upvalue = upvalue->next) {
-        markObject(vm, (Obj*)upvalue);
+        markObject(vm, (Obj*)upvalue, generation);
     }
 
     for (ObjGenerator* generator = vm->runningGenerator; generator != NULL; generator = generator->outer) {
-        markObject(vm, (Obj*)generator);
+        markObject(vm, (Obj*)generator, generation);
     }
 
     markTable(vm, &vm->classes);
@@ -533,14 +532,14 @@ static void markRoots(VM* vm) {
     markTable(vm, &vm->modules);
     markRememberedSet(vm, GC_GENERATION_TYPE_EDEN);
     markCompilerRoots(vm);
-    markObject(vm, (Obj*)vm->initString);
-    markObject(vm, (Obj*)vm->runningGenerator);
+    markObject(vm, (Obj*)vm->initString, generation);
+    markObject(vm, (Obj*)vm->runningGenerator, generation);
 }
 
-static void traceReferences(VM* vm) {
+static void traceReferences(VM* vm, GCGenerationType generation) {
     while (vm->gc->grayCount > 0) {
         Obj* object = vm->gc->grayStack[--vm->gc->grayCount];
-        blackenObject(vm, object);
+        blackenObject(vm, object, generation);
     }
 }
 
@@ -569,6 +568,7 @@ static void sweep(VM* vm, GCGenerationType generation) {
 
 void collectGarbage(VM* vm, GCGenerationType generation) {
     if (generation > 0) collectGarbage(vm, generation - 1);
+#pragma warning(suppress : 33010)
     GCGeneration* generationHeap = GENERATION_HEAP(generation);
 
 #ifdef DEBUG_LOG_GC
@@ -576,8 +576,8 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
     size_t before = generationHeap->bytesAllocated;
 #endif
 
-    markRoots(vm);
-    traceReferences(vm);
+    markRoots(vm, generation);
+    traceReferences(vm, generation);
     tableRemoveWhite(&vm->strings);
     sweep(vm, generation);
 

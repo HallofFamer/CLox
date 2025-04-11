@@ -65,7 +65,7 @@ void freeGC(VM* vm);
 bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object);
 bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object);
 void markRememberedSet(VM* vm, GCGenerationType generation);
-void markObject(VM* vm, Obj* object);
+void markObject(VM* vm, Obj* object, GCGenerationType generation);
 void markValue(VM* vm, Value value);
 void collectGarbage(VM* vm, GCGenerationType generation);
 void freeObjects(VM* vm);
