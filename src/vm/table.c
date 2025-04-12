@@ -131,10 +131,10 @@ void tableRemoveWhite(Table* table) {
     }
 }
 
-void markTable(VM* vm, Table* table) {
+void markTable(VM* vm, Table* table, GCGenerationType generation) {
     for (int i = 0; i < table->capacity; i++) {
         Entry* entry = &table->entries[i];
-        markObject(vm, (Obj*)entry->key);
+        markObject(vm, (Obj*)entry->key, generation);
         markValue(vm, entry->value);
     }
 }
