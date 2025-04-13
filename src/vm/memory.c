@@ -8,6 +8,8 @@
 #include "debug.h"
 #endif
 
+#pragma warning(disable : 33010)
+
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenerationType generation) {
     GCGeneration* generationHeap = GENERATION_HEAP(generation);
     generationHeap->bytesAllocated += newSize - oldSize;
@@ -214,7 +216,7 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
             markArray(vm, &klass->traits, generation);
             markIDMap(vm, &klass->indexes);
             markArray(vm, &klass->fields, generation);
-            markTable(vm, &klass->methods);
+            markTable(vm, &klass->methods, generation);
             break;
         }
         case OBJ_CLOSURE: {
@@ -230,6 +232,7 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
             ObjDictionary* dict = (ObjDictionary*)object;
             for (int i = 0; i < dict->capacity; i++) {
                 ObjEntry* entry = &dict->entries[i];
+                markValue(vm, entry->key);
                 markObject(vm, (Obj*)entry, generation);
             }
             break;
@@ -299,7 +302,7 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
             markObject(vm, (Obj*)namespace->shortName, generation);
             markObject(vm, (Obj*)namespace->fullName, generation);
             markObject(vm, (Obj*)namespace->enclosing, generation);
-            markTable(vm, &namespace->values);
+            markTable(vm, &namespace->values, generation);
             break;
         }
         case OBJ_NATIVE_FUNCTION: {
@@ -527,13 +530,12 @@ static void markRoots(VM* vm, GCGenerationType generation) {
         markObject(vm, (Obj*)generator, generation);
     }
 
-    markTable(vm, &vm->classes);
-    markTable(vm, &vm->namespaces);
-    markTable(vm, &vm->modules);
-    markRememberedSet(vm, GC_GENERATION_TYPE_EDEN);
+    markTable(vm, &vm->classes, generation);
+    markTable(vm, &vm->namespaces, generation);
+    markTable(vm, &vm->modules, generation);
+    markRememberedSet(vm, generation);
     markCompilerRoots(vm);
     markObject(vm, (Obj*)vm->initString, generation);
-    markObject(vm, (Obj*)vm->runningGenerator, generation);
 }
 
 static void traceReferences(VM* vm, GCGenerationType generation) {
@@ -566,9 +568,25 @@ static void sweep(VM* vm, GCGenerationType generation) {
     }
 }
 
+static void processRememberedSet(VM* vm, GCGenerationType generation) {
+    if (generation >= GC_GENERATION_TYPE_OLD) return;
+    GCRememberedSet* currentRemSet = &GENERATION_HEAP(generation)->remSet;
+    GCRememberedSet* nextRemSet = &GENERATION_HEAP(generation + 1)->remSet;
+
+    for (int i = 0; i < currentRemSet->capacity; i++) {
+        GCRememberedEntry* entry = &currentRemSet->entries[i];
+        if (entry->object != NULL) {
+            if (entry->object->generation > generation + 1) {
+                rememberedSetPutObject(vm, nextRemSet, entry->object);
+            }
+            entry->object = NULL;
+        }
+    }
+    currentRemSet->count = 0;
+}
+
 void collectGarbage(VM* vm, GCGenerationType generation) {
     if (generation > 0) collectGarbage(vm, generation - 1);
-#pragma warning(suppress : 33010)
     GCGeneration* generationHeap = GENERATION_HEAP(generation);
 
 #ifdef DEBUG_LOG_GC
@@ -580,6 +598,7 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
     traceReferences(vm, generation);
     tableRemoveWhite(&vm->strings);
     sweep(vm, generation);
+    processRememberedSet(vm, generation);
 
     if (generationHeap->bytesAllocated > generationHeap->heapSize >> 1) {
         generationHeap->heapSize = generationHeap->bytesAllocated * vm->config.gcGrowthFactor;
