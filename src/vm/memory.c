@@ -579,10 +579,9 @@ static void processRememberedSet(VM* vm, GCGenerationType generation) {
             if (entry->object->generation > generation + 1) {
                 rememberedSetPutObject(vm, nextRemSet, entry->object);
             }
-            entry->object = NULL;
         }
     }
-    currentRemSet->count = 0;
+    freeGCRememeberedSet(vm, currentRemSet);
 }
 
 void collectGarbage(VM* vm, GCGenerationType generation) {
@@ -611,7 +610,7 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
 }
 
 void freeObjects(VM* vm) {
-    Obj* object = vm->gc->generations[GC_GENERATION_TYPE_EDEN]->objects;
+    Obj* object = GENERATION_HEAP(GC_GENERATION_TYPE_EDEN)->objects;
     while (object != NULL) {
         Obj* next = object->next;
         freeObject(vm, object);
