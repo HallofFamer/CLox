@@ -70,7 +70,7 @@ void markValue(VM* vm, Value value);
 void collectGarbage(VM* vm, GCGenerationType generation);
 void freeObjects(VM* vm);
 
-static bool sourceOlderThanTarget(Obj* source, Value target) {
+static inline bool sourceOlderThanTarget(Obj* source, Value target) {
     return IS_OBJ(target) && (source->generation > OBJ_GEN(target));
 }
 

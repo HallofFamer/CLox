@@ -610,11 +610,13 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
 }
 
 void freeObjects(VM* vm) {
-    Obj* object = GENERATION_HEAP(GC_GENERATION_TYPE_EDEN)->objects;
-    while (object != NULL) {
-        Obj* next = object->next;
-        freeObject(vm, object);
-        object = next;
+    for (int i = 0; i <= GC_GENERATION_TYPE_PERMANENT; i++) {
+        Obj* object = GENERATION_HEAP(i)->objects;
+        while (object != NULL) {
+            Obj* next = object->next;
+            freeObject(vm, object);
+            object = next;
+        }
     }
     free(vm->gc->grayStack);
 }
