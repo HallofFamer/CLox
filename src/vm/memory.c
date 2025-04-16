@@ -45,7 +45,7 @@ static void freeGCRememeberedSet(VM* vm, GCRememberedSet* rememberedSet) {
 }
 
 static void initGCGenerations(GC* gc, size_t heapSizes[]) {
-    for (int i = 0; i <= GC_GENERATION_TYPE_PERMANENT; i++) {
+    for (int i = 0; i < GC_GENERATION_COUNT; i++) {
         gc->generations[i] = (GCGeneration*)malloc(sizeof(GCGeneration));
         if (gc->generations[i] != NULL) {
             gc->generations[i]->bytesAllocated = 0;
@@ -100,7 +100,7 @@ static GCRememberedEntry* findRememberedSetEntry(GCRememberedEntry* entries, int
     }
 }
 
-bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object) {
+static bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object) {
     if (rememberedSet->count == 0) return false;
     GCRememberedEntry* entry = findRememberedSetEntry(rememberedSet->entries, rememberedSet->capacity, object);
     if (entry->object == NULL) return false;
@@ -128,7 +128,7 @@ static void rememberedSetAdjustCapacity(VM* vm, GCRememberedSet* rememberedSet, 
     rememberedSet->capacity = capacity;
 }
 
-bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object) {
+static bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object) {
     ENSURE_OBJECT_ID(object);
     if (rememberedSet->count + 1 > rememberedSet->capacity * TABLE_MAX_LOAD) {
         int capacity = GROW_CAPACITY(rememberedSet->capacity);
@@ -148,6 +148,11 @@ bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object)
 
     entry->object = object;
     return isNewObject;
+}
+
+void addToRememberedSet(VM* vm, GCGenerationType generation, Obj* object) {
+    GCRememberedSet* rememberedSet = &vm->gc->generations[generation]->remSet;
+    rememberedSetPutObject(vm, rememberedSet, object);
 }
 
 void markRememberedSet(VM* vm, GCGenerationType generation) {
@@ -610,7 +615,7 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
 }
 
 void freeObjects(VM* vm) {
-    for (int i = 0; i <= GC_GENERATION_TYPE_PERMANENT; i++) {
+    for (int i = 0; i < GC_GENERATION_COUNT; i++) {
         Obj* object = GENERATION_HEAP(i)->objects;
         while (object != NULL) {
             Obj* next = object->next;

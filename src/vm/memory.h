@@ -59,11 +59,18 @@ struct GC {
 
 #define GENERATION_HEAP(generation) vm->gc->generations[generation]
 
+#define PROCESS_WRITE_BARRIER(source, target) \
+    do { \
+       if (sourceOlderThanTarget(source, target)) { \
+           GCGenerationType generation = OBJ_GEN(target); \
+           addToRememberedSet(vm, generation, source); \
+       } \
+    } while (false)
+
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenerationType generation);
 GC* newGC(VM* vm);
 void freeGC(VM* vm);
-bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object);
-bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object);
+void addToRememberedSet(VM* vm, GCGenerationType generation, Obj* object);
 void markRememberedSet(VM* vm, GCGenerationType generation);
 void markObject(VM* vm, Obj* object, GCGenerationType generation);
 void markValue(VM* vm, Value value);
