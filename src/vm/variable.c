@@ -893,7 +893,7 @@ bool setInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Val
         return setGenericInstanceVariable(vm, AS_OBJ(receiver), chunk, byte, value);
     }
     else {
-        runtimeError(vm, "Only instances and classes can set properties.");
+        runtimeError(vm, "Cannot set properties on %s.", valueToString(vm, value));
         exit(70);
     }
     return false;

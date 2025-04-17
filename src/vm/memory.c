@@ -176,7 +176,10 @@ void markObject(VM* vm, Obj* object, GCGenerationType generation) {
     if (vm->gc->grayCapacity < vm->gc->grayCount + 1) {
         vm->gc->grayCapacity = GROW_CAPACITY(vm->gc->grayCapacity);
         Obj** grayStack = (Obj**)realloc(vm->gc->grayStack, sizeof(Obj*) * vm->gc->grayCapacity);
-        if (grayStack == NULL) exit(1);
+        if (grayStack == NULL) {
+            fprintf(stderr, "Not enough memory to allocate for GC gray stack.");
+            exit(74);
+        }
         vm->gc->grayStack = grayStack;
     }
     vm->gc->grayStack[vm->gc->grayCount++] = object;
