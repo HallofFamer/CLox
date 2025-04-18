@@ -93,6 +93,7 @@ typedef struct {
 typedef struct {
     int count;
     int capacity;
+    GCGenerationType generation;
     uint8_t* code;
     int* lines;
     ValueArray constants;
@@ -100,7 +101,7 @@ typedef struct {
     InlineCache* inlineCaches;
 } Chunk;
 
-void initChunk(Chunk* chunk);
+void initChunk(Chunk* chunk, GCGenerationType generation);
 void freeChunk(VM* vm, Chunk* chunk);
 void writeChunk(VM* vm, Chunk* chunk, uint8_t byte, int line);
 int addConstant(VM* vm, Chunk* chunk, Value value);

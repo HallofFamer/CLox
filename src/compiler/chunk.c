@@ -4,7 +4,7 @@
 #include "../vm/memory.h"
 #include "../vm/vm.h"
 
-void initChunk(Chunk* chunk) {
+void initChunk(Chunk* chunk, GCGenerationType generation) {
     chunk->count = 0;
     chunk->capacity = 0;
     chunk->code = NULL;
@@ -20,7 +20,7 @@ void freeChunk(VM* vm, Chunk* chunk) {
     FREE_ARRAY(InlineCache, chunk->inlineCaches, chunk->identifiers.capacity);
     freeValueArray(vm, &chunk->constants);
     freeValueArray(vm, &chunk->identifiers);
-    initChunk(chunk);
+    initChunk(chunk, chunk->generation);
 }
 
 void writeChunk(VM* vm, Chunk* chunk, uint8_t byte, int line) {

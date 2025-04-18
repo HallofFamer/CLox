@@ -83,10 +83,10 @@ void idMapAddAll(VM* vm, IDMap* from, IDMap* to) {
     }
 }
 
-void markIDMap(VM* vm, IDMap* idMap) {
+void markIDMap(VM* vm, IDMap* idMap, GCGenerationType generation) {
     for (int i = 0; i < idMap->capacity; i++) {
         IDEntry* entry = &idMap->entries[i];
-        markObject(vm, (Obj*)entry->key, GC_GENERATION_TYPE_EDEN);
+        markObject(vm, (Obj*)entry->key, generation);
     }
 }
 

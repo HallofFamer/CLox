@@ -1876,8 +1876,8 @@ ObjFunction* compileV1(VM* vm, const char* source) {
 void markCompilerRoots(VM* vm) {
     CompilerV1* compiler = vm->currentCompiler;
     while (compiler != NULL) {
-        markObject(vm, (Obj*)compiler->function);
-        markIDMap(vm, &compiler->indexes);
+        markObject(vm, (Obj*)compiler->function, GC_GENERATION_TYPE_EDEN);
+        markIDMap(vm, &compiler->indexes, GC_GENERATION_TYPE_EDEN);
         compiler = compiler->enclosing;
     }
 }

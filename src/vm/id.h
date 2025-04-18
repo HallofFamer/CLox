@@ -37,7 +37,7 @@ void freeIDMap(VM* vm, IDMap* idMap);
 bool idMapGet(IDMap* idMap, ObjString* key, int* index);
 bool idMapSet(VM* vm, IDMap* idMap, ObjString* key, int index);
 void idMapAddAll(VM* vm, IDMap* from, IDMap* to);
-void markIDMap(VM* vm, IDMap* idMap);
+void markIDMap(VM* vm, IDMap* idMap, GCGenerationType generation);
 
 void initGenericIDMap(VM* vm);
 void freeGenericIDMap(VM* vm, GenericIDMap* genericIDMap);
