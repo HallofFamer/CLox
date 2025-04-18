@@ -28,8 +28,11 @@ LOX_FUNCTION(error){
 }
 
 LOX_FUNCTION(gc) {
-    ASSERT_ARG_COUNT("gc()", 0);
-    collectGarbage(vm, GC_GENERATION_TYPE_EDEN);
+    ASSERT_ARG_COUNT("gc(generation)", 1);
+    ASSERT_ARG_TYPE("gc(generation)", 0, Int);
+    int generation = AS_INT(args[0]);
+    ASSERT_INDEX_WITHIN_BOUNDS("gc(generation)", generation, 0, 3, 0);
+    collectGarbage(vm, generation);
     RETURN_NIL;
 }
 
@@ -300,7 +303,7 @@ void registerNativeFunctions(VM* vm){
     DEF_FUNCTION(assert, 2, RETURN_TYPE(void), PARAM_TYPE(Object), PARAM_TYPE(String));
     DEF_FUNCTION(clock, 0, RETURN_TYPE(Number));
     DEF_FUNCTION(error, 1, RETURN_TYPE(void), PARAM_TYPE(String));
-    DEF_FUNCTION(gc, 0, RETURN_TYPE(void));
+    DEF_FUNCTION(gc, 1, RETURN_TYPE(void), PARAM_TYPE(Int));
     DEF_FUNCTION(print, 1, RETURN_TYPE(void), PARAM_TYPE(Object));
     DEF_FUNCTION(println, 1, RETURN_TYPE(void), PARAM_TYPE(Object));
     DEF_FUNCTION(read, 0, RETURN_TYPE(String));

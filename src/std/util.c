@@ -943,8 +943,8 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(vm->promiseClass, Promise, finally, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(TCallable));
     DEF_METHOD(vm->promiseClass, Promise, fulfill, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(TCallable));
     DEF_METHOD(vm->promiseClass, Promise, isResolved, 0, RETURN_TYPE(Bool));
-    DEF_METHOD(vm->promiseClass, Promise, raceAll, 1, RETURN_TYPE(Nil), PARAM_TYPE(TCallable));
-    DEF_METHOD(vm->promiseClass, Promise, reject, 1, RETURN_TYPE(Nil), PARAM_TYPE(Exception));
+    DEF_METHOD(vm->promiseClass, Promise, raceAll, 1, RETURN_TYPE(void), PARAM_TYPE(TCallable));
+    DEF_METHOD(vm->promiseClass, Promise, reject, 1, RETURN_TYPE(void), PARAM_TYPE(Exception));
     DEF_METHOD(vm->promiseClass, Promise, then, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(TCallable));
     DEF_METHOD(vm->promiseClass, Promise, thenAll, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(Object));
     DEF_METHOD(vm->promiseClass, Promise, thenChain, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(Object));
@@ -966,7 +966,7 @@ void registerUtilPackage(VM* vm) {
     DEF_METHOD(randomClass, Random, nextFloat, 0, RETURN_TYPE(Float));
     DEF_METHOD(randomClass, Random, nextInt, 0, RETURN_TYPE(Int));
     DEF_METHOD(randomClass, Random, nextIntBounded, 1, RETURN_TYPE(Int), PARAM_TYPE(Int));
-    DEF_METHOD(randomClass, Random, setSeed, 1, RETURN_TYPE(Nil), PARAM_TYPE(Int));
+    DEF_METHOD(randomClass, Random, setSeed, 1, RETURN_TYPE(void), PARAM_TYPE(Int));
 
     bindSuperclass(vm, regexClass, vm->objectClass);
     DEF_INTERCEPTOR(regexClass, Regex, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.util.Regex), PARAM_TYPE(String));
@@ -977,7 +977,7 @@ void registerUtilPackage(VM* vm) {
     bindSuperclass(vm, vm->timerClass, vm->objectClass);
     vm->timerClass->classType = OBJ_TIMER;
     DEF_INTERCEPTOR(vm->timerClass, Timer, INTERCEPTOR_INIT, __init__, 3, RETURN_TYPE(clox.std.util.Timer), PARAM_TYPE(TCallable), PARAM_TYPE(Int), PARAM_TYPE(Int));
-    DEF_METHOD(vm->timerClass, Timer, clear, 0, RETURN_TYPE(Nil));
+    DEF_METHOD(vm->timerClass, Timer, clear, 0, RETURN_TYPE(void));
     DEF_METHOD(vm->timerClass, Timer, isRunning, 0, RETURN_TYPE(Bool));
     DEF_METHOD(vm->timerClass, Timer, run, 0, RETURN_TYPE(clox.std.util.Timer));
     DEF_METHOD(vm->timerClass, Timer, toString, 0, RETURN_TYPE(String));

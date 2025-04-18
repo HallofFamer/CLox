@@ -1960,9 +1960,9 @@ void registerLangPackage(VM* vm) {
 
     DEF_METHOD(comparableTrait, TComparable, compareTo, 1, RETURN_TYPE(Object), PARAM_TYPE(TComparable));
     DEF_METHOD(comparableTrait, TComparable, equals, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(comparableTrait, TComparable, == , __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(comparableTrait, TComparable, > , __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
-    DEF_OPERATOR(comparableTrait, TComparable, < , __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(comparableTrait, TComparable, ==, __equal__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(comparableTrait, TComparable, >, __greater__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
+    DEF_OPERATOR(comparableTrait, TComparable, <, __less__, 1, RETURN_TYPE(Bool), PARAM_TYPE(TComparable));
     insertGlobalSymbolTable(vm, "TComparable", traitType);
 
     bindSuperclass(vm, vm->numberClass, vm->objectClass);
@@ -1992,7 +1992,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->numberClass, Number, round, 0, RETURN_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, sin, 0, RETURN_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, sqrt, 0, RETURN_TYPE(Number));
-    DEF_METHOD(vm->numberClass, Number, step, 3, RETURN_TYPE(Number), PARAM_TYPE(Number), PARAM_TYPE(Number), PARAM_TYPE(Object));
+    DEF_METHOD(vm->numberClass, Number, step, 3, RETURN_TYPE(void), PARAM_TYPE(Number), PARAM_TYPE(Number), PARAM_TYPE(Object));
     DEF_METHOD(vm->numberClass, Number, tan, 0, RETURN_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, toInt, 0, RETURN_TYPE(Number));
     DEF_METHOD(vm->numberClass, Number, toString, 0, RETURN_TYPE(String));
@@ -2015,20 +2015,20 @@ void registerLangPackage(VM* vm) {
     DEF_INTERCEPTOR(vm->intClass, Int, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(Int), PARAM_TYPE(Object));
     DEF_METHOD(vm->intClass, Int, abs, 0, RETURN_TYPE(Int));
     DEF_METHOD(vm->intClass, Int, clone, 0, RETURN_TYPE(Int));
-    DEF_METHOD(vm->intClass, Int, downTo, 2, RETURN_TYPE(Nil), PARAM_TYPE(Int), PARAM_TYPE(Object));
+    DEF_METHOD(vm->intClass, Int, downTo, 2, RETURN_TYPE(void), PARAM_TYPE(Int), PARAM_TYPE(Object));
     DEF_METHOD(vm->intClass, Int, factorial, 0, RETURN_TYPE(Int));
     DEF_METHOD(vm->intClass, Int, gcd, 1, RETURN_TYPE(Int), PARAM_TYPE(Int));
     DEF_METHOD(vm->intClass, Int, isEven, 0, RETURN_TYPE(Bool));
     DEF_METHOD(vm->intClass, Int, isOdd, 0, RETURN_TYPE(Bool));
     DEF_METHOD(vm->intClass, Int, lcm, 1, RETURN_TYPE(Int), PARAM_TYPE(Int));
     DEF_METHOD(vm->intClass, Int, objectID, 0, RETURN_TYPE(Int));
-    DEF_METHOD(vm->intClass, Int, timesRepeat, 1, RETURN_TYPE(Int));
+    DEF_METHOD(vm->intClass, Int, timesRepeat, 1, RETURN_TYPE(void));
     DEF_METHOD(vm->intClass, Int, toBinary, 0, RETURN_TYPE(Int));
     DEF_METHOD(vm->intClass, Int, toFloat, 0, RETURN_TYPE(Int));
     DEF_METHOD(vm->intClass, Int, toHexadecimal, 0, RETURN_TYPE(Int));
     DEF_METHOD(vm->intClass, Int, toOctal, 0, RETURN_TYPE(Int));
     DEF_METHOD(vm->intClass, Int, toString, 0, RETURN_TYPE(String));
-    DEF_METHOD(vm->intClass, Int, upTo, 2, RETURN_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Object));
+    DEF_METHOD(vm->intClass, Int, upTo, 2, RETURN_TYPE(void), PARAM_TYPE(Int), PARAM_TYPE(Object));
     DEF_OPERATOR(vm->intClass, Int, +, __add__, 1, RETURN_TYPE(Int), PARAM_TYPE(Int));
     DEF_OPERATOR(vm->intClass, Int, -, __subtract__, 1, RETURN_TYPE(Int), PARAM_TYPE(Int));
     DEF_OPERATOR(vm->intClass, Int, *, __multiply__, 1, RETURN_TYPE(Int), PARAM_TYPE(Int));
@@ -2142,7 +2142,7 @@ void registerLangPackage(VM* vm) {
     DEF_METHOD(vm->generatorClass, Generator, nextFinished, 0, RETURN_TYPE(Object));
     DEF_METHOD(vm->generatorClass, Generator, returns, 1, RETURN_TYPE(Object), PARAM_TYPE(Object));
     DEF_METHOD(vm->generatorClass, Generator, send, 1, RETURN_TYPE(Object), PARAM_TYPE(Object));
-    DEF_METHOD(vm->generatorClass, Generator, setReceiver, 1, RETURN_TYPE(Object), PARAM_TYPE(Object));
+    DEF_METHOD(vm->generatorClass, Generator, setReceiver, 1, RETURN_TYPE(void), PARAM_TYPE(Object));
     DEF_METHOD(vm->generatorClass, Generator, step, 1, RETURN_TYPE(Object), PARAM_TYPE(Object));
     DEF_METHOD(vm->generatorClass, Generator, throws, 1, RETURN_TYPE(Object), PARAM_TYPE(Object));
     DEF_METHOD(vm->generatorClass, Generator, toString, 0, RETURN_TYPE(String));
@@ -2156,7 +2156,7 @@ void registerLangPackage(VM* vm) {
     setClassProperty(vm, vm->generatorClass, "stateReturn", INT_VAL(GENERATOR_RETURN));
     setClassProperty(vm, vm->generatorClass, "stateThrow", INT_VAL(GENERATOR_THROW));
     setClassProperty(vm, vm->generatorClass, "stateError", INT_VAL(GENERATOR_ERROR));
-    DEF_METHOD(generatorMetaclass, GeneratorClass, run, 2, RETURN_TYPE(Nil), PARAM_TYPE(Object), PARAM_TYPE(Object));
+    DEF_METHOD(generatorMetaclass, GeneratorClass, run, 2, RETURN_TYPE(void), PARAM_TYPE(Object), PARAM_TYPE(Object));
 
     bindSuperclass(vm, vm->exceptionClass, vm->objectClass);
     vm->exceptionClass->classType = OBJ_EXCEPTION;

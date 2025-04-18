@@ -767,7 +767,7 @@ void registerIOPackage(VM* vm) {
     DEF_METHOD_ASYNC(ioStreamClass, IOStream, closeAsync, 0, RETURN_TYPE(clox.std.util.Promise));
     DEF_METHOD(ioStreamClass, IOStream, file, 0, RETURN_TYPE(clox.std.io.File));
     DEF_METHOD(ioStreamClass, IOStream, getPosition, 0, RETURN_TYPE(Int));
-    DEF_METHOD(ioStreamClass, IOStream, reset, 0, RETURN_TYPE(Nil));
+    DEF_METHOD(ioStreamClass, IOStream, reset, 0, RETURN_TYPE(void));
 
     bindSuperclass(vm, readStreamClass, ioStreamClass);
     DEF_INTERCEPTOR(readStreamClass, ReadStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.ReadStream), PARAM_TYPE(Object));
@@ -777,9 +777,9 @@ void registerIOPackage(VM* vm) {
 
     bindSuperclass(vm, writeStreamClass, ioStreamClass);
     DEF_INTERCEPTOR(writeStreamClass, WriteStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.WriteStream), PARAM_TYPE(Object));
-    DEF_METHOD(writeStreamClass, WriteStream, flush, 0, RETURN_TYPE(Nil));
+    DEF_METHOD(writeStreamClass, WriteStream, flush, 0, RETURN_TYPE(void));
     DEF_METHOD_ASYNC(writeStreamClass, WriteStream, flushAsync, 0, RETURN_TYPE(clox.std.util.Promise));
-    DEF_METHOD(writeStreamClass, WriteStream, write, 1, RETURN_TYPE(Nil), PARAM_TYPE(Object));
+    DEF_METHOD(writeStreamClass, WriteStream, write, 1, RETURN_TYPE(void), PARAM_TYPE(Object));
 
     bindSuperclass(vm, binaryReadStreamClass, readStreamClass);
     DEF_INTERCEPTOR(binaryReadStreamClass, BinaryReadStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.BinaryReadStream), PARAM_TYPE(Object));
@@ -790,9 +790,9 @@ void registerIOPackage(VM* vm) {
 
     bindSuperclass(vm, binaryWriteStreamClass, writeStreamClass);
     DEF_INTERCEPTOR(binaryWriteStreamClass, BinaryWriteStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.BinaryWriteStream), PARAM_TYPE(Object));
-    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, write, 1, RETURN_TYPE(Nil), PARAM_TYPE(Int));
+    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, write, 1, RETURN_TYPE(void), PARAM_TYPE(Int));
     DEF_METHOD_ASYNC(binaryWriteStreamClass, BinaryWriteStream, writeAsync, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(Int));
-    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeBytes, 1, RETURN_TYPE(Nil), PARAM_TYPE(clox.std.collection.Array));
+    DEF_METHOD(binaryWriteStreamClass, BinaryWriteStream, writeBytes, 1, RETURN_TYPE(void), PARAM_TYPE(clox.std.collection.Array));
     DEF_METHOD_ASYNC(binaryWriteStreamClass, BinaryWriteStream, writeBytesAsync, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(clox.std.collection.Array));
 
     bindSuperclass(vm, fileReadStreamClass, readStreamClass);
@@ -809,13 +809,13 @@ void registerIOPackage(VM* vm) {
 
     bindSuperclass(vm, fileWriteStreamClass, writeStreamClass);
     DEF_INTERCEPTOR(fileWriteStreamClass, FileWriteStream, INTERCEPTOR_INIT, __init__, 1, RETURN_TYPE(clox.std.io.FileWriteStream), PARAM_TYPE(Object));
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, write, 1, RETURN_TYPE(Nil), PARAM_TYPE(String));
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, write, 1, RETURN_TYPE(void), PARAM_TYPE(String));
     DEF_METHOD_ASYNC(fileWriteStreamClass, FileWriteStream, writeAsync, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(String));
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeLine, 0, RETURN_TYPE(Nil));
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeLine, 0, RETURN_TYPE(void));
     DEF_METHOD_ASYNC(fileWriteStreamClass, FileWriteStream, writeLineAsync, 0, RETURN_TYPE(clox.std.util.Promise));
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeSpace, 0, RETURN_TYPE(Nil));
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeSpace, 0, RETURN_TYPE(void));
     DEF_METHOD_ASYNC(fileWriteStreamClass, FileWriteStream, writeSpaceAsync, 0, RETURN_TYPE(clox.std.util.Promise));
-    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeString, 1, RETURN_TYPE(Nil), PARAM_TYPE(String));
+    DEF_METHOD(fileWriteStreamClass, FileWriteStream, writeString, 1, RETURN_TYPE(void), PARAM_TYPE(String));
     DEF_METHOD_ASYNC(fileWriteStreamClass, FileWriteStream, writeStringAsync, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(String));
 
     ObjClass* ioExceptionClass = defineNativeException(vm, "IOException", vm->exceptionClass);

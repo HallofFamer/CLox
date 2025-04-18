@@ -856,9 +856,9 @@ void registerNetPackage(VM* vm) {
     bindSuperclass(vm, socketClass, vm->objectClass);
     bindTrait(vm, socketClass, closableTrait);
     DEF_INTERCEPTOR(socketClass, Socket, INTERCEPTOR_INIT, __init__, 3, RETURN_TYPE(clox.std.net.Socket), PARAM_TYPE(Int), PARAM_TYPE(Int), PARAM_TYPE(Int));
-    DEF_METHOD(socketClass, Socket, close, 0, RETURN_TYPE(Nil));
+    DEF_METHOD(socketClass, Socket, close, 0, RETURN_TYPE(void));
     DEF_METHOD(socketClass, Socket, receive, 0, RETURN_TYPE(String));
-    DEF_METHOD(socketClass, Socket, send, 1, RETURN_TYPE(Nil), PARAM_TYPE(String));
+    DEF_METHOD(socketClass, Socket, send, 1, RETURN_TYPE(void), PARAM_TYPE(String));
     DEF_METHOD(socketClass, Socket, toString, 0, RETURN_TYPE(String));
 
     setClassProperty(vm, socketClass, "afUNSPEC", INT_VAL(AF_UNSPEC));
@@ -881,12 +881,12 @@ void registerNetPackage(VM* vm) {
     setClassProperty(vm, socketClass, "protoRAW", INT_VAL(IPPROTO_RAW));
 
     bindSuperclass(vm, socketClientClass, socketClass);
-    DEF_METHOD(socketClientClass, SocketClient, connect, 1, RETURN_TYPE(Nil), PARAM_TYPE(clox.std.net.SocketAddress));
+    DEF_METHOD(socketClientClass, SocketClient, connect, 1, RETURN_TYPE(void), PARAM_TYPE(clox.std.net.SocketAddress));
 
     bindSuperclass(vm, socketServerClass, socketClass);
-    DEF_METHOD(socketServerClass, SocketServer, accept, 0, RETURN_TYPE(Nil));
-    DEF_METHOD(socketServerClass, SocketServer, bind, 1, RETURN_TYPE(Nil), PARAM_TYPE(clox.std.net.SocketAddress));
-    DEF_METHOD(socketServerClass, SocketServer, listen, 0, RETURN_TYPE(Nil));
+    DEF_METHOD(socketServerClass, SocketServer, accept, 0, RETURN_TYPE(void));
+    DEF_METHOD(socketServerClass, SocketServer, bind, 1, RETURN_TYPE(void), PARAM_TYPE(clox.std.net.SocketAddress));
+    DEF_METHOD(socketServerClass, SocketServer, listen, 0, RETURN_TYPE(void));
 
     bindSuperclass(vm, httpRequestClass, vm->objectClass);
     DEF_INTERCEPTOR(httpRequestClass, HTTPRequest, INTERCEPTOR_INIT, __init__, 4, RETURN_TYPE(clox.std.net.HTTPRequest), PARAM_TYPE(Object), PARAM_TYPE(Int), PARAM_TYPE(clox.std.collection.Dictionary), PARAM_TYPE(clox.std.collection.Dictionary));
@@ -921,10 +921,10 @@ void registerNetPackage(VM* vm) {
     bindSuperclass(vm, httpClientClass, vm->objectClass);
     bindTrait(vm, httpClientClass, closableTrait);
     DEF_INTERCEPTOR(httpClientClass, HTTPClient, INTERCEPTOR_INIT, __init__, 0, RETURN_TYPE(clox.std.net.HTTPClient));
-    DEF_METHOD(httpClientClass, HTTPClient, close, 0, RETURN_TYPE(Nil));
+    DEF_METHOD(httpClientClass, HTTPClient, close, 0, RETURN_TYPE(void));
     DEF_METHOD(httpClientClass, HTTPClient, delete, 1, RETURN_TYPE(clox.std.net.HTTPResponse), PARAM_TYPE(Object));
     DEF_METHOD_ASYNC(httpClientClass, HTTPClient, deleteAsync, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(Object));
-    DEF_METHOD(httpClientClass, HTTPClient, download, 2, RETURN_TYPE(Nil), PARAM_TYPE(Object), PARAM_TYPE(Object));
+    DEF_METHOD(httpClientClass, HTTPClient, download, 2, RETURN_TYPE(void), PARAM_TYPE(Object), PARAM_TYPE(Object));
     DEF_METHOD_ASYNC(httpClientClass, HTTPClient, downloadAsync, 2, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(Object), PARAM_TYPE(Object));
     DEF_METHOD(httpClientClass, HTTPClient, get, 1, RETURN_TYPE(clox.std.net.HTTPResponse), PARAM_TYPE(Object));
     DEF_METHOD_ASYNC(httpClientClass, HTTPClient, getAsync, 1, RETURN_TYPE(clox.std.util.Promise), PARAM_TYPE(Object));
