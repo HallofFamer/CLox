@@ -248,6 +248,7 @@ Value getClassProperty(VM* vm, ObjClass* klass, char* name) {
 }
 
 void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value) {
+    PROCESS_WRITE_BARRIER((Obj*)klass, value);
     ObjString* propertyName = newString(vm, name);
     int index;
     if (!idMapGet(&klass->indexes, propertyName, &index)) {

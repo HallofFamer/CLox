@@ -150,7 +150,7 @@ static bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* 
     return isNewObject;
 }
 
-void addToRememberedSet(VM* vm, GCGenerationType generation, Obj* object) {
+void addToRememberedSet(VM* vm, Obj* object, GCGenerationType generation) {
     GCRememberedSet* rememberedSet = &vm->gc->generations[generation]->remSet;
     rememberedSetPutObject(vm, rememberedSet, object);
 }
@@ -185,13 +185,13 @@ void markObject(VM* vm, Obj* object, GCGenerationType generation) {
     vm->gc->grayStack[vm->gc->grayCount++] = object;
 }
 
-void markValue(VM* vm, Value value) {
-    if (IS_OBJ(value)) markObject(vm, AS_OBJ(value), GC_GENERATION_TYPE_EDEN);
+void markValue(VM* vm, Value value, GCGenerationType generation) {
+    if (IS_OBJ(value)) markObject(vm, AS_OBJ(value), generation);
 }
 
 static void markArray(VM* vm, ValueArray* array, GCGenerationType generation) {
     for (int i = 0; i < array->count; i++) {
-        markValue(vm, array->values[i]);
+        markValue(vm, array->values[i], generation);
     }
 }
 
@@ -210,8 +210,8 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
         }
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* boundMethod = (ObjBoundMethod*)object;
-            markValue(vm, boundMethod->receiver);
-            markValue(vm, boundMethod->method);
+            markValue(vm, boundMethod->receiver, generation);
+            markValue(vm, boundMethod->method, generation);
             break;
         }
         case OBJ_CLASS: {
@@ -222,7 +222,7 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
             markObject(vm, (Obj*)klass->obj.klass, generation);
             markObject(vm, (Obj*)klass->namespace, generation);
             markArray(vm, &klass->traits, generation);
-            markIDMap(vm, &klass->indexes);
+            markIDMap(vm, &klass->indexes, generation);
             markArray(vm, &klass->fields, generation);
             markTable(vm, &klass->methods, generation);
             break;
@@ -240,15 +240,15 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
             ObjDictionary* dict = (ObjDictionary*)object;
             for (int i = 0; i < dict->capacity; i++) {
                 ObjEntry* entry = &dict->entries[i];
-                markValue(vm, entry->key);
+                markValue(vm, entry->key, generation);
                 markObject(vm, (Obj*)entry, generation);
             }
             break;
         }
         case OBJ_ENTRY: {
             ObjEntry* entry = (ObjEntry*)object;
-            markValue(vm, entry->key);
-            markValue(vm, entry->value);
+            markValue(vm, entry->key, generation);
+            markValue(vm, entry->value, generation);
             break;
         }
         case OBJ_EXCEPTION: { 
@@ -280,7 +280,7 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
             markObject(vm, (Obj*)generator->frame, generation);
             markObject(vm, (Obj*)generator->outer, generation);
             markObject(vm, (Obj*)generator->inner, generation);
-            markValue(vm, generator->value);
+            markValue(vm, generator->value, generation);
             break;
         }
         case OBJ_INSTANCE: {
@@ -299,9 +299,9 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
             ObjModule* module = (ObjModule*)object;
             markObject(vm, (Obj*)module->path, generation);
             if (module->closure != NULL) markObject(vm, (Obj*)module->closure, generation);
-            markIDMap(vm, &module->valIndexes);
+            markIDMap(vm, &module->valIndexes, generation);
             markArray(vm, &module->valFields, generation);
-            markIDMap(vm, &module->varIndexes);
+            markIDMap(vm, &module->varIndexes, generation);
             markArray(vm, &module->varFields, generation);
             break;
         }
@@ -326,36 +326,36 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
         }
         case OBJ_NODE: {
             ObjNode* node = (ObjNode*)object;
-            markValue(vm, node->element);
+            markValue(vm, node->element, generation);
             markObject(vm, (Obj*)node->prev, generation);
             markObject(vm, (Obj*)node->next, generation);
             break;
         }
         case OBJ_PROMISE: {
             ObjPromise* promise = (ObjPromise*)object;
-            markValue(vm, promise->value);
+            markValue(vm, promise->value, generation);
             markObject(vm, (Obj*)promise->captures, generation);
             markObject(vm, (Obj*)promise->exception, generation);
-            markValue(vm, promise->executor);
+            markValue(vm, promise->executor, generation);
             markArray(vm, &promise->handlers, generation);
             break;
         }
         case OBJ_RECORD: {
             ObjRecord* record = (ObjRecord*)object;
-            if (record->markFunction) record->markFunction(record->data);
+            if (record->markFunction) record->markFunction(record->data, generation);
             break;
         }
         case OBJ_TIMER: { 
             ObjTimer* timer = (ObjTimer*)object;
             if (timer->timer != NULL && timer->timer->data != NULL) {
                 TimerData* data = (TimerData*)timer->timer->data;
-                markValue(vm, data->receiver);
+                markValue(vm, data->receiver, generation);
                 markObject(vm, (Obj*)data->closure, generation);
             }
             break;
         }
         case OBJ_UPVALUE:
-            markValue(vm, ((ObjUpvalue*)object)->closed);
+            markValue(vm, ((ObjUpvalue*)object)->closed, generation);
             break;
         case OBJ_VALUE_INSTANCE: { 
             ObjValueInstance* instance = (ObjValueInstance*)object;
@@ -523,7 +523,7 @@ static void freeObject(VM* vm, Obj* object) {
 
 static void markRoots(VM* vm, GCGenerationType generation) {
     for (Value* slot = vm->stack; slot < vm->stackTop; slot++) {
-        markValue(vm, *slot);
+        markValue(vm, *slot, generation);
     }
 
     for (int i = 0; i < vm->frameCount; i++) {

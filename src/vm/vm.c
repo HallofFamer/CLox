@@ -869,6 +869,7 @@ InterpretResult run(VM* vm) {
                     Value element = pop(vm);
                     int index = AS_INT(pop(vm));
                     ObjArray* array = AS_ARRAY(pop(vm));
+                    PROCESS_WRITE_BARRIER((Obj*)array, element);
                     valueArrayPut(vm, &array->elements, index, element);
                     push(vm, OBJ_VAL(array));
                 }
@@ -876,6 +877,8 @@ InterpretResult run(VM* vm) {
                     Value value = pop(vm);
                     Value key = pop(vm);
                     ObjDictionary* dictionary = AS_DICTIONARY(pop(vm));
+                    PROCESS_WRITE_BARRIER((Obj*)dictionary, key);
+                    PROCESS_WRITE_BARRIER((Obj*)dictionary, value);
                     dictSet(vm, dictionary, key, value);
                     push(vm, OBJ_VAL(dictionary));
                 }

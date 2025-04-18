@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "memory.h"
 #include "namespace.h"
 #include "variable.h"
 #include "vm.h"
@@ -789,6 +790,8 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
 static bool setGenericInstanceVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, Value value) {
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     int shapeID = object->shapeID;
+    PROCESS_WRITE_BARRIER((Obj*)object, value);
+
     if (inlineCache->type == CACHE_IVAR && inlineCache->id == shapeID) {
 #ifdef DEBUG_TRACE_CACHE
         printf("Cache hit for setting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
@@ -815,6 +818,8 @@ bool setInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Val
     if (IS_INSTANCE(receiver)) {
         ObjInstance* instance = AS_INSTANCE(receiver);
         int shapeID = instance->obj.shapeID;
+        PROCESS_WRITE_BARRIER((Obj*)instance, value);
+
         if (inlineCache->type == CACHE_IVAR && inlineCache->id == shapeID) {
 #ifdef DEBUG_TRACE_CACHE
             printf("Cache hit for setting instance variable: Shape ID %d at index %d.\n", inlineCache->id, inlineCache->index);
@@ -845,6 +850,8 @@ bool setInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Val
     }
     else if (IS_CLASS(receiver)) {
         ObjClass* klass = AS_CLASS(receiver);
+        PROCESS_WRITE_BARRIER((Obj*)klass, value);
+
         if (inlineCache->type == CACHE_CVAR && inlineCache->id == klass->behaviorID) {
 #ifdef DEBUG_TRACE_CACHE
             printf("Cache hit for setting class variable: Behavior ID %d at index %d.\n", inlineCache->id, inlineCache->index);
@@ -874,6 +881,7 @@ bool setInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Val
     }
     else if (IS_NAMESPACE(receiver)) { 
         ObjNamespace* namespace = AS_NAMESPACE(receiver);
+        PROCESS_WRITE_BARRIER((Obj*)namespace, value);
         if (!IS_CLASS(value) && !IS_NAMESPACE(value)) { 
             runtimeError(vm, "Only classes, traits and sub-namespaces may be assigned to namespace %s.", namespace->fullName->chars);
             exit(70);

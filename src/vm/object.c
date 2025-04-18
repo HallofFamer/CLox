@@ -137,7 +137,7 @@ ObjFunction* newFunction(VM* vm) {
     function->isGenerator = false;
     function->isAsync = false;
     function->name = NULL;
-    initChunk(&function->chunk);
+    initChunk(&function->chunk, function->obj.generation);
     return function;
 }
 
@@ -316,6 +316,7 @@ Value getObjPropertyByIndex(VM* vm, ObjInstance* object, int index) {
 }
 
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
+    PROCESS_WRITE_BARRIER((Obj*)object, value);
     IDMap* idMap = getShapeIndexes(vm, object->obj.shapeID);
     ObjString* key = newString(vm, name);
     int index;
@@ -330,6 +331,7 @@ void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
 }
 
 void setObjPropertyByIndex(VM* vm, ObjInstance* object, int index, Value value) {
+    PROCESS_WRITE_BARRIER((Obj*)object, value);
     if (index < object->fields.count) {
         runtimeError(vm, "Invalid index %d for object property", index);
         exit(70);
