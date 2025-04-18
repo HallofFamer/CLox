@@ -1,45 +1,45 @@
-namespace test.features;
+namespace test.features
 
 class Listener { 
     listen(port){
-        println("Listening to port: " + port.toString());
-    }
+        println("Listening to port: " + port.toString()) 
+    }  
 
     toString(){ 
-        return "Listener class: " + this.getClassName();
+        return "Listener class: " + this.getClassName()
     }
 }
 
 val listenerTrait = trait { 
     isValidPort(port){ 
-        return (port >= 0 and port <= 65536);
+        return (port >= 0 and port <= 65536)
     }
-};
+}
 
 val listenerClass = class extends Listener with listenerTrait { 
     listen(port){
         if(this.isValidPort(port)){ 
-            super.listen(port);
-            println(this.toString());  
+            super.listen(port)
+            println(this.toString())
         }
         else{ 
-            println("Invalid port number specified: " + port.toString());
+            println("Invalid port number specified: " + port.toString())
         }
     }
 };
 
-println("Creating anonymous trait: ");
-println(listenerTrait);
-println("Creating anonymous class: ");
-println(listenerClass);
-println("Superclass of anonymous class: ");
-println(listenerClass.superclass());
-println("");
+println("Creating anonymous trait: ")
+println(listenerTrait)
+println("Creating anonymous class: ")
+println(listenerClass)
+println("Superclass of anonymous class: ")
+println(listenerClass.superclass())
+println("")
 
-println("Creating an instance of anonymous class: ");
-var listener = listenerClass();
-println(listenerClass);
-println("Calling method listen on object listener: ");
-listener.listen(8080);
-println("Calling method listen with an invalid port: ");
-listener.listen(-1);
+println("Creating an instance of anonymous class: ")
+var listener = listenerClass()
+println(listenerClass)
+println("Calling method listen on object listener: ")
+listener.listen(8080)
+println("Calling method listen with an invalid port: ")
+listener.listen(-1)

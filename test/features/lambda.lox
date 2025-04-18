@@ -1,75 +1,75 @@
-namespace test.features;
+namespace test.features
 
 var square = fun(a){ 
-    return a * a;
-};
-print("Using anonymous function for square(2): ");
-println(square(2));
-print("Invoke anonymous function pow(2, 3) directly: ");
-fun(a, b){ println(a.pow(b)); }(2, 3);
-print("Class of anonymous function: ");
-println(square.getClassName());
-print("Arity of anonymous function: ");
-println(square.arity());
-print("Name of anonymous function: ");
-println(square.name());
+    return a * a
+}
+print("Using anonymous function for square(2): ")
+println(square(2))
+print("Invoke anonymous function pow(2, 3) directly: ")
+fun(a, b){ println(a.pow(b)); }(2, 3)
+print("Class of anonymous function: ")
+println(square.getClassName())
+print("Arity of anonymous function: ")
+println(square.arity())
+print("Name of anonymous function: ")
+println(square.name())
 
 var calculate = fun(n, operation){ 
-    return operation(n);
-};
-print("Higher order function multiply(2, 3): ");
-println(calculate(2, fun(a){ return a * 3; }));
+    return operation(n)
+}
+print("Higher order function multiply(2, 3): ")
+println(calculate(2, fun(a){ return a * 3; }))
 var curry = fun(x){
     return fun(y){
-        return x * y;
-    };
-};
-print("Curried Higher order function multiply(2)(3): ");
-println(curry(2)(3));
+        return x * y
+    }
+}
+print("Curried Higher order function multiply(2)(3): ")
+println(curry(2)(3))
 
 var pow = fun(x, y) {
-    return x.pow(y);
-};
-print("Call function dynamically using pow.call(2, 3): ");
-println(pow.call(2, 3));
-println("");
+    return x.pow(y)
+}
+print("Call function dynamically using pow.call(2, 3): ")
+println(pow.call(2, 3))
+println("")
 
 fun sum(..args){ 
-    var i = 0;
-    var sum = 0;
+    var i = 0
+    var sum = 0
     while(i < args.length()){
-        sum = sum + args[i];
-        i = i + 1;
+        sum = sum + args[i]
+        i = i + 1
     }
-    return sum;
+    return sum
 }
-print("Creating a variadic function sum(..args): ");
-println(sum(1, 2, 3, 4, 5));
-print("Function sum is variadic: ");
-println(sum.isVariadic());
-println("");
+print("Creating a variadic function sum(..args): ")
+println(sum(1, 2, 3, 4, 5))
+print("Function sum is variadic: ")
+println(sum.isVariadic())
+println("")
 
-var lambda0 = { 5; };
-var lambda1 = {|x| x * 2; };
+var lambda0 = { 5; }
+var lambda1 = {|x| x * 2; }
 var lambda2 = {
     |x, y|
-    var z = x.pow(y);
-    z = x + 2;
-    z;
-};
-println("Creating lambda closures: ");
-print("Evaluate lambda without parameter: ");
-println(lambda0());
-print("Evaluate lambda with 1 parameter: ");
-println(lambda1(4));
-print("Evaluate lambda with 2 parameters: ");
-println(lambda2(2, 3));
-println("");
-
-println("Testing nonlocal return for lambda: ");
-fun nonlocal(closure) {
-    println("Start closure");
-    closure();
-    println("Local return");
+    var z = x.pow(y)
+    z = x + 2
+    z
 }
-nonlocal({ println("Nonlocal return"); return 5; });
+println("Creating lambda closures: ")
+print("Evaluate lambda without parameter: ")
+println(lambda0())
+print("Evaluate lambda with 1 parameter: ")
+println(lambda1(4))
+print("Evaluate lambda with 2 parameters: ")
+println(lambda2(2, 3))
+println("")
+
+println("Testing nonlocal return for lambda: ")
+fun nonlocal(closure) {
+    println("Start closure")
+    closure()
+    println("Local return")
+}
+nonlocal({ println("Nonlocal return"); return 5 })
