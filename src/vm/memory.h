@@ -6,7 +6,7 @@
 #include "value.h"
 #include "vm.h"
 
-#define GC_GENERATION_COUNT 4
+#define GC_GENERATION_TYPE_COUNT 4
 
 enum GCGenerationType {
     GC_GENERATION_TYPE_EDEN,

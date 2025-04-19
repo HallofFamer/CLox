@@ -45,7 +45,7 @@ static void freeGCRememeberedSet(VM* vm, GCRememberedSet* rememberedSet) {
 }
 
 static void initGCGenerations(GC* gc, size_t heapSizes[]) {
-    for (int i = 0; i < GC_GENERATION_COUNT; i++) {
+    for (int i = 0; i < GC_GENERATION_TYPE_COUNT; i++) {
         gc->generations[i] = (GCGeneration*)malloc(sizeof(GCGeneration));
         if (gc->generations[i] != NULL) {
             gc->generations[i]->bytesAllocated = 0;
@@ -186,7 +186,9 @@ void markObject(VM* vm, Obj* object, GCGenerationType generation) {
 }
 
 void markValue(VM* vm, Value value, GCGenerationType generation) {
-    if (IS_OBJ(value)) markObject(vm, AS_OBJ(value), generation);
+    if (IS_OBJ(value)) {
+        markObject(vm, AS_OBJ(value), generation);
+    }
 }
 
 static void markArray(VM* vm, ValueArray* array, GCGenerationType generation) {
@@ -342,7 +344,9 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
         }
         case OBJ_RECORD: {
             ObjRecord* record = (ObjRecord*)object;
-            if (record->markFunction) record->markFunction(record->data, generation);
+            if (record->markFunction) {
+                record->markFunction(record->data, generation);
+            }
             break;
         }
         case OBJ_TIMER: { 
@@ -618,7 +622,7 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
 }
 
 void freeObjects(VM* vm) {
-    for (int i = 0; i < GC_GENERATION_COUNT; i++) {
+    for (int i = 0; i < GC_GENERATION_TYPE_COUNT; i++) {
         Obj* object = GENERATION_HEAP(i)->objects;
         while (object != NULL) {
             Obj* next = object->next;
