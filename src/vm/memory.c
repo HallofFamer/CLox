@@ -11,7 +11,7 @@
 #pragma warning(disable : 33010)
 
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenerationType generation) {
-    GCGeneration* generationHeap = GENERATION_HEAP(generation);
+    GCGeneration* generationHeap = GET_GC_GENERATION(generation);
     generationHeap->bytesAllocated += newSize - oldSize;
     if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
@@ -559,7 +559,7 @@ static void traceReferences(VM* vm, GCGenerationType generation) {
 
 static void sweep(VM* vm, GCGenerationType generation) {
     Obj* previous = NULL;
-    Obj* object = GENERATION_HEAP(generation)->objects;
+    Obj* object = GET_GC_GENERATION(generation)->objects;
     while (object != NULL) {
         if (object->isMarked) {
             object->isMarked = false;
@@ -573,7 +573,7 @@ static void sweep(VM* vm, GCGenerationType generation) {
                 previous->next = object;
             } 
             else {
-                GENERATION_HEAP(generation)->objects = object;
+                GET_GC_GENERATION(generation)->objects = object;
             }
             freeObject(vm, unreached);
         }
@@ -582,8 +582,8 @@ static void sweep(VM* vm, GCGenerationType generation) {
 
 static void processRememberedSet(VM* vm, GCGenerationType generation) {
     if (generation >= GC_GENERATION_TYPE_OLD) return;
-    GCRememberedSet* currentRemSet = &GENERATION_HEAP(generation)->remSet;
-    GCRememberedSet* nextRemSet = &GENERATION_HEAP(generation + 1)->remSet;
+    GCRememberedSet* currentRemSet = &GET_GC_GENERATION(generation)->remSet;
+    GCRememberedSet* nextRemSet = &GET_GC_GENERATION(generation + 1)->remSet;
 
     for (int i = 0; i < currentRemSet->capacity; i++) {
         GCRememberedEntry* entry = &currentRemSet->entries[i];
@@ -598,7 +598,7 @@ static void processRememberedSet(VM* vm, GCGenerationType generation) {
 
 void collectGarbage(VM* vm, GCGenerationType generation) {
     if (generation > 0) collectGarbage(vm, generation - 1);
-    GCGeneration* generationHeap = GENERATION_HEAP(generation);
+    GCGeneration* generationHeap = GET_GC_GENERATION(generation);
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc begin for generation %d\n", generation);
@@ -623,7 +623,7 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
 
 void freeObjects(VM* vm) {
     for (int i = 0; i < GC_GENERATION_TYPE_COUNT; i++) {
-        Obj* object = GENERATION_HEAP(i)->objects;
+        Obj* object = GET_GC_GENERATION(i)->objects;
         while (object != NULL) {
             Obj* next = object->next;
             freeObject(vm, object);
