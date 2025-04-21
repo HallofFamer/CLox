@@ -558,8 +558,12 @@ static void traceReferences(VM* vm, GCGenerationType generation) {
 }
 
 static void sweep(VM* vm, GCGenerationType generation) {
+    GCGeneration* currentHeap = GET_GC_GENERATION(generation);
+    GCGeneration* nextHeap = (generation >= GC_GENERATION_TYPE_PERMANENT) ? NULL : GET_GC_GENERATION(generation + 1);
+    if (nextHeap == NULL) return;
     Obj* previous = NULL;
-    Obj* object = GET_GC_GENERATION(generation)->objects;
+    Obj* object = currentHeap->objects;
+
     while (object != NULL) {
         if (object->isMarked) {
             object->isMarked = false;
@@ -573,7 +577,7 @@ static void sweep(VM* vm, GCGenerationType generation) {
                 previous->next = object;
             } 
             else {
-                GET_GC_GENERATION(generation)->objects = object;
+                currentHeap->objects = object;
             }
             freeObject(vm, unreached);
         }

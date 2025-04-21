@@ -15,7 +15,7 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass, GCGenera
     object->objectID = 0;
     object->shapeID = getDefaultShapeIDForObject(object);
 
-    GCGeneration* generationHeap = GENERATION_HEAP(generation);
+    GCGeneration* generationHeap = GET_GC_GENERATION(generation);
     object->next = generationHeap->objects;
     generationHeap->objects = object;
 
