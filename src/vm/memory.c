@@ -525,6 +525,13 @@ static void freeObject(VM* vm, Obj* object) {
     }
 }
 
+static void promoteObject(VM* vm, Obj* object, GCGenerationType generation) {
+    GCGeneration* currentHeap = GET_GC_GENERATION(generation);
+    GCGeneration* nextHeap = GET_GC_GENERATION(generation + 1);
+    object->next = nextHeap->objects;
+    nextHeap->objects = object;
+}
+
 static void markRoots(VM* vm, GCGenerationType generation) {
     for (Value* slot = vm->stack; slot < vm->stackTop; slot++) {
         markValue(vm, *slot, generation);
@@ -561,26 +568,21 @@ static void sweep(VM* vm, GCGenerationType generation) {
     GCGeneration* currentHeap = GET_GC_GENERATION(generation);
     GCGeneration* nextHeap = (generation >= GC_GENERATION_TYPE_PERMANENT) ? NULL : GET_GC_GENERATION(generation + 1);
     if (nextHeap == NULL) return;
-    Obj* previous = NULL;
     Obj* object = currentHeap->objects;
 
     while (object != NULL) {
         if (object->isMarked) {
             object->isMarked = false;
-            previous = object;
+            Obj* reached = object;
             object = object->next;
+            promoteObject(currentHeap, nextHeap, reached);
         } 
         else {
             Obj* unreached = object;
             object = object->next;
-            if (previous != NULL) {
-                previous->next = object;
-            } 
-            else {
-                currentHeap->objects = object;
-            }
             freeObject(vm, unreached);
         }
+        currentHeap->objects = object;
     }
 }
 

@@ -790,7 +790,6 @@ static bool setGenericInstanceVariableByName(VM* vm, Obj* object, ObjString* nam
 static bool setGenericInstanceVariable(VM* vm, Obj* object, Chunk* chunk, uint8_t byte, Value value) {
     InlineCache* inlineCache = &chunk->inlineCaches[byte];
     int shapeID = object->shapeID;
-    PROCESS_WRITE_BARRIER((Obj*)object, value);
 
     if (inlineCache->type == CACHE_IVAR && inlineCache->id == shapeID) {
 #ifdef DEBUG_TRACE_CACHE
@@ -898,6 +897,7 @@ bool setInstanceVariable(VM* vm, Value receiver, Chunk* chunk, uint8_t byte, Val
         return true;
     }
     else if (IS_OBJ(receiver)) {
+        PROCESS_WRITE_BARRIER(AS_OBJ(receiver), value);
         return setGenericInstanceVariable(vm, AS_OBJ(receiver), chunk, byte, value);
     }
     else {
