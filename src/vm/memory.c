@@ -11,14 +11,14 @@
 #pragma warning(disable : 33010)
 
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenerationType generation) {
-    GCGeneration* generationHeap = GET_GC_GENERATION(generation);
-    generationHeap->bytesAllocated += newSize - oldSize;
+    GCGeneration* currentHeap = GET_GC_GENERATION(generation);
+    currentHeap->bytesAllocated += newSize - oldSize;
     if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
         collectGarbage(vm, generation);
 #endif
 
-        if (generationHeap->bytesAllocated > generationHeap->heapSize) {
+        if (currentHeap->bytesAllocated > currentHeap->heapSize) {
             collectGarbage(vm, generation);
         }
     }
@@ -194,6 +194,88 @@ void markValue(VM* vm, Value value, GCGenerationType generation) {
 static void markArray(VM* vm, ValueArray* array, GCGenerationType generation) {
     for (int i = 0; i < array->count; i++) {
         markValue(vm, array->values[i], generation);
+    }
+}
+
+static size_t sizeOfObject(Obj* object) {
+    switch (object->type) {
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*)object;
+            return sizeof(ObjArray) + sizeof(Value) * array->elements.capacity;
+        }
+        case OBJ_BOUND_METHOD: 
+            return sizeof(ObjBoundMethod);
+        case OBJ_CLASS: {
+            ObjClass* _class = (ObjClass*)object;
+            return sizeof(ObjClass) + sizeof(Value) * _class->traits.capacity + sizeof(Value) * _class->fields.capacity
+                + sizeof(Entry) * _class->methods.capacity + sizeof(IDEntry) * _class->indexes.capacity; 
+        }
+        case OBJ_CLOSURE: {
+            ObjClosure* closure = (ObjClosure*)object;
+            return sizeof(ObjClosure) + sizeof(ObjUpvalue) * closure->upvalueCount;
+        }
+        case OBJ_DICTIONARY: {
+            ObjDictionary* dictionary = (ObjDictionary*)object;
+            return sizeof(ObjDictionary) + sizeof(ObjEntry) * dictionary->capacity;
+        }
+        case OBJ_ENTRY: 
+            return sizeof(ObjEntry);
+        case OBJ_EXCEPTION:
+            return sizeof(ObjException);
+        case OBJ_FILE:
+            return sizeof(ObjFile) + sizeof(uv_fs_t) * 4;
+        case OBJ_FRAME: {
+            return sizeof(ObjFrame);
+        }
+        case OBJ_FUNCTION: {
+            ObjFunction* function = (ObjFunction*)object;
+            return sizeof(ObjFunction) + sizeof(Chunk) + sizeof(uint8_t) * function->chunk.capacity + sizeof(int) * function->chunk.capacity
+                + sizeof(InlineCache) * function->chunk.identifiers.capacity + sizeof(Value) * function->chunk.constants.capacity
+                + sizeof(Value) * function->chunk.identifiers.capacity;
+        }
+        case OBJ_GENERATOR: 
+            return sizeof(ObjGenerator);
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*)object;
+            return sizeof(ObjInstance) + sizeof(Value) * instance->fields.capacity;
+        }
+        case OBJ_METHOD: 
+            return sizeof(ObjMethod);
+        case OBJ_MODULE: {
+            ObjModule* module = (ObjModule*)object;
+            return sizeof(ObjModule) + sizeof(Value) * module->valFields.capacity + sizeof(IDEntry) * module->valIndexes.capacity
+                + sizeof(Value) * module->varFields.capacity + sizeof(IDEntry) * module->varIndexes.capacity;
+        }
+        case OBJ_NAMESPACE: {
+            ObjNamespace* _namespace = (ObjNamespace*)object;
+            return sizeof(ObjNamespace) + sizeof(Value) * _namespace->values.capacity;
+        }
+        case OBJ_NATIVE_FUNCTION:
+            return sizeof(ObjNativeFunction);
+        case OBJ_NATIVE_METHOD:
+            return sizeof(ObjNativeMethod);
+        case OBJ_NODE:
+            return sizeof(ObjNode);
+        case OBJ_PROMISE: {
+            ObjPromise* promise = (ObjPromise*)object;
+            return sizeof(ObjPromise) + sizeof(Value) * promise->handlers.capacity;
+        }
+        case OBJ_RANGE:
+            return sizeof(ObjRange);
+        case OBJ_RECORD:
+            return sizeof(ObjRecord);
+        case OBJ_TIMER: {
+            ObjTimer* timer = (ObjTimer*)object;
+            return sizeof(ObjTimer) + sizeof(uv_timer_t) + sizeof(timer->timer->data);
+        }
+        case OBJ_UPVALUE:
+            return sizeof(ObjUpvalue);
+        case OBJ_VALUE_INSTANCE: {
+            ObjValueInstance* instance = (ObjValueInstance*)object;
+            return sizeof(ObjValueInstance) + sizeof(Value) * instance->fields.capacity;
+        }
+        default: 
+            return sizeof(Obj);
     }
 }
 
@@ -575,7 +657,7 @@ static void sweep(VM* vm, GCGenerationType generation) {
             object->isMarked = false;
             Obj* reached = object;
             object = object->next;
-            promoteObject(currentHeap, nextHeap, reached);
+            promoteObject(vm, reached, generation);
         } 
         else {
             Obj* unreached = object;

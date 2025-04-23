@@ -15,9 +15,9 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass, GCGenera
     object->objectID = 0;
     object->shapeID = getDefaultShapeIDForObject(object);
 
-    GCGeneration* generationHeap = GET_GC_GENERATION(generation);
-    object->next = generationHeap->objects;
-    generationHeap->objects = object;
+    GCGeneration* currentHeap = GET_GC_GENERATION(generation);
+    object->next = currentHeap->objects;
+    currentHeap->objects = object;
 
 #ifdef DEBUG_LOG_GC
     printf("%p allocate %zu for %d at generation %d\n", (void*)object, size, type, generation);
