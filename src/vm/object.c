@@ -347,6 +347,7 @@ void copyObjProperty(VM* vm, ObjInstance* fromObject, ObjInstance* toObject, cha
 void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
     toObject->obj.shapeID = fromObject->obj.shapeID;
     for (int i = 0; i < fromObject->fields.count; i++) {
+        PROCESS_WRITE_BARRIER((Obj*)toObject, fromObject->fields.values[i]);
         valueArrayWrite(vm, &toObject->fields, fromObject->fields.values[i]);
     }
 }

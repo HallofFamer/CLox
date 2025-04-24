@@ -612,6 +612,10 @@ static void promoteObject(VM* vm, Obj* object, GCGenerationType generation) {
     GCGeneration* nextHeap = GET_GC_GENERATION(generation + 1);
     object->next = nextHeap->objects;
     nextHeap->objects = object;
+
+    size_t size = sizeOfObject(object);
+    currentHeap->bytesAllocated -= size;
+    nextHeap->bytesAllocated += size;
 }
 
 static void markRoots(VM* vm, GCGenerationType generation) {
@@ -686,11 +690,13 @@ static void processRememberedSet(VM* vm, GCGenerationType generation) {
 
 void collectGarbage(VM* vm, GCGenerationType generation) {
     if (generation > 0) collectGarbage(vm, generation - 1);
-    GCGeneration* generationHeap = GET_GC_GENERATION(generation);
+    GCGeneration* currentHeap = GET_GC_GENERATION(generation);
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc begin for generation %d\n", generation);
-    size_t before = generationHeap->bytesAllocated;
+    GCGeneration* nextHeap = (generation >= GC_GENERATION_TYPE_PERMANENT) ? NULL : GET_GC_GENERATION(generation + 1);
+    size_t currentBefore = currentHeap->bytesAllocated;
+    size_t nextBefore = (nextHeap == NULL) ? 0 : nextHeap->bytesAllocated;
 #endif
 
     markRoots(vm, generation);
@@ -699,13 +705,21 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
     sweep(vm, generation);
     processRememberedSet(vm, generation);
 
-    if (generationHeap->bytesAllocated > generationHeap->heapSize >> 1) {
-        generationHeap->heapSize = generationHeap->bytesAllocated * vm->config.gcGrowthFactor;
+    if (currentHeap->bytesAllocated > currentHeap->heapSize >> 1) {
+        currentHeap->heapSize = currentHeap->bytesAllocated * vm->config.gcGrowthFactor;
     }
 
 #ifdef DEBUG_LOG_GC
     printf("-- gc end for generation %d\n", generation);
-    printf("   collected %zu bytes (from %zu to %zu) next at %zu\n", before - generationHeap->bytesAllocated, before, generationHeap->bytesAllocated, generationHeap->heapSize);
+    size_t nextBytesAllocated = (nextHeap == NULL) ? 0 : nextHeap->bytesAllocated;
+    size_t nextPromoted = nextBytesAllocated - nextBefore;
+    size_t currentFreed = currentBefore - nextPromoted - currentHeap->bytesAllocated;
+    printf("   collected %zu bytes, promoted %zu bytes\n", currentFreed, nextPromoted);
+    printf("   current heap uses %zu bytes, heap size %zu bytes\n", currentHeap->bytesAllocated, currentHeap->heapSize);
+
+    if (nextHeap != NULL) {
+        printf("   next heap uses %zu bytes, heap size %zu bytes\n", nextHeap->bytesAllocated, nextHeap->heapSize);
+    }
 #endif
 }
 
