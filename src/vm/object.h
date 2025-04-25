@@ -150,6 +150,7 @@ typedef struct {
 
 typedef Value (*NativeFunction)(VM* vm, int argCount, Value* args);
 typedef Value (*NativeMethod)(VM* vm, Value receiver, int argCount, Value* args);
+typedef size_t (*SizeFunction)(void* data);
 typedef void (*MarkFunction)(void* data, GCGenerationType generation);
 typedef void (*FreeFunction)(void* data);
 
@@ -209,6 +210,7 @@ typedef struct {
 typedef struct {
     Obj obj;
     void* data;
+    SizeFunction sizeFunction;
     MarkFunction markFunction;
     FreeFunction freeFunction;
     bool shouldFree;

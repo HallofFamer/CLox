@@ -262,6 +262,7 @@ ObjRange* newRange(VM* vm, int from, int to) {
 ObjRecord* newRecord(VM* vm, void* data) {
     ObjRecord* record = ALLOCATE_OBJ(ObjRecord, OBJ_RECORD, NULL);
     record->data = data;
+    record->sizeFunction = NULL;
     record->markFunction = NULL;
     record->freeFunction = NULL;
     record->shouldFree = true;
