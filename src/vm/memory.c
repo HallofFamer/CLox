@@ -262,8 +262,13 @@ static size_t sizeOfObject(Obj* object) {
         }
         case OBJ_RANGE:
             return sizeof(ObjRange);
-        case OBJ_RECORD:
-            return sizeof(ObjRecord);
+        case OBJ_RECORD: {
+            ObjRecord* record = (ObjRecord*)object;
+            if (record->sizeFunction) {
+                return sizeof(ObjRecord) + record->sizeFunction(record->data);
+            }
+            else return sizeof(ObjRecord);
+        }
         case OBJ_TIMER: {
             ObjTimer* timer = (ObjTimer*)object;
             return sizeof(ObjTimer) + sizeof(uv_timer_t) + sizeof(timer->timer->data);

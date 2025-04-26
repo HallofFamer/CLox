@@ -241,7 +241,10 @@ ObjPromise* newPromise(VM* vm, PromiseState state, Value value, Value executor){
     promise->id = ++vm->promiseCount;
     promise->state = state;
     promise->value = value;
-    if (state == PROMISE_REJECTED && IS_EXCEPTION(value)) promise->exception = AS_EXCEPTION(value);
+
+    if (state == PROMISE_REJECTED && IS_EXCEPTION(value)) {
+        promise->exception = AS_EXCEPTION(value);
+    }
     else promise->exception = NULL;
 
     promise->executor = executor;
@@ -282,7 +285,10 @@ ObjTimer* newTimer(VM* vm, ObjClosure* closure, int delay, int interval) {
         timer->id = 0;
         timer->isRunning = false;
     }
-    else throwNativeException(vm, "clox.std.lang.OutOfMemoryException", "Not enough memory to allocate timer object.");
+    else {
+        throwNativeException(vm, "clox.std.lang.OutOfMemoryException", "Not enough memory to allocate timer object.");
+    }
+
     return timer;
 }
 
