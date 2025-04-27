@@ -89,7 +89,7 @@ void freeGC(VM* vm) {
 }
 
 static GCRememberedEntry* findRememberedSetEntry(GCRememberedEntry* entries, int capacity, Obj* object) {
-    uint64_t hash = hashObject(object);
+    uint32_t hash = hashObject(object);
     uint32_t index = (uint32_t)hash & ((uint32_t)capacity - 1);
     for (;;) {
         GCRememberedEntry* entry = &entries[index];
@@ -117,7 +117,6 @@ static void rememberedSetAdjustCapacity(VM* vm, GCRememberedSet* rememberedSet, 
     for (int i = 0; i < rememberedSet->capacity; i++) {
         GCRememberedEntry* entry = &rememberedSet->entries[i];
         if (entry->object == NULL) continue;
-
         GCRememberedEntry* dest = findRememberedSetEntry(entries, capacity, entry->object);
         dest->object = entry->object;
         rememberedSet->count++;
@@ -468,11 +467,11 @@ static void freeObject(VM* vm, Obj* object) {
         case OBJ_ARRAY: {
             ObjArray* array = (ObjArray*)object;
             freeValueArray(vm, &array->elements);
-            FREE(ObjArray, object);
+            FREE(ObjArray, object, object->generation);
             break;
         }
         case OBJ_BOUND_METHOD: 
-            FREE(ObjBoundMethod, object);
+            FREE(ObjBoundMethod, object, object->generation);
             break;       
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
@@ -480,27 +479,27 @@ static void freeObject(VM* vm, Obj* object) {
             freeIDMap(vm, &klass->indexes);
             freeValueArray(vm, &klass->fields);
             freeTable(vm, &klass->methods);
-            FREE(ObjClass, object);
+            FREE(ObjClass, object, object->generation);
             break;
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
             FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount);
-            FREE(ObjClosure, object);
+            FREE(ObjClosure, object, object->generation);
             break;
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dict = (ObjDictionary*)object;
             FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
-            FREE(ObjDictionary, object);
+            FREE(ObjDictionary, object, object->generation);
             break;
         }
         case OBJ_ENTRY: {
-            FREE(ObjEntry, object);
+            FREE(ObjEntry, object, object->generation);
             break;
         }
         case OBJ_EXCEPTION: { 
-            FREE(ObjException, object);
+            FREE(ObjException, object, object->generation);
             break;
         }
         case OBJ_FILE: {
@@ -521,31 +520,31 @@ static void freeObject(VM* vm, Obj* object) {
                 uv_fs_req_cleanup(file->fsWrite);
                 free(file->fsWrite);
             }
-            FREE(ObjFile, object);
+            FREE(ObjFile, object, object->generation);
             break;
         }
         case OBJ_FRAME: {
-            FREE(ObjFrame, object);
+            FREE(ObjFrame, object, object->generation);
             break;
         }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*)object;
             freeChunk(vm, &function->chunk);
-            FREE(ObjFunction, object);
+            FREE(ObjFunction, object, object->generation);
             break;
         }
         case OBJ_GENERATOR: {
-            FREE(ObjGenerator, object);
+            FREE(ObjGenerator, object, object->generation);
             break; 
         }
         case OBJ_INSTANCE: {
             ObjInstance* instance = (ObjInstance*)object;
             freeValueArray(vm, &instance->fields);
-            FREE(ObjInstance, object);
+            FREE(ObjInstance, object, object->generation);
             break;
         }
         case OBJ_METHOD: {
-            FREE(ObjMethod, object);
+            FREE(ObjMethod, object, object->generation);
             break;
         }
         case OBJ_MODULE: {
@@ -554,59 +553,59 @@ static void freeObject(VM* vm, Obj* object) {
             freeValueArray(vm, &module->valFields);
             freeIDMap(vm, &module->varIndexes);
             freeValueArray(vm, &module->varFields);
-            FREE(ObjModule, object);
+            FREE(ObjModule, object, object->generation);
             break;
         }             
         case OBJ_NAMESPACE: { 
             ObjNamespace* namespace = (ObjNamespace*)object;
             freeTable(vm, &namespace->values);
-            FREE(ObjNamespace, object);
+            FREE(ObjNamespace, object, object->generation);
             break;
         }
         case OBJ_NATIVE_FUNCTION:
-            FREE(ObjNativeFunction, object);
+            FREE(ObjNativeFunction, object, object->generation);
             break;
         case OBJ_NATIVE_METHOD:
-            FREE(ObjNativeMethod, object);
+            FREE(ObjNativeMethod, object, object->generation);
             break;
         case OBJ_NODE: {
-            FREE(ObjNode, object);
+            FREE(ObjNode, object, object->generation);
             break;
         }
         case OBJ_PROMISE: {
             ObjPromise* promise = (ObjPromise*)object;
             freeValueArray(vm, &promise->handlers);
-            FREE(ObjPromise, object);
+            FREE(ObjPromise, object, object->generation);
             break;
         }
         case OBJ_RANGE: {
-            FREE(ObjRange, object);
+            FREE(ObjRange, object, object->generation);
             break;
         }
         case OBJ_RECORD: {
             ObjRecord* record = (ObjRecord*)object;
             if (record->freeFunction) record->freeFunction(record->data);
             else if(record->shouldFree) free(record->data);
-            FREE(ObjRecord, object);
+            FREE(ObjRecord, object, object->generation);
             break;
         }
         case OBJ_STRING: {
             ObjString* string = (ObjString*)object;
-            reallocate(vm, object, sizeof(ObjString) + string->length + 1, 0, GC_GENERATION_TYPE_EDEN);
+            reallocate(vm, object, sizeof(ObjString) + string->length + 1, 0, object->generation);
             break;
         } 
         case OBJ_TIMER: { 
             ObjTimer* timer = (ObjTimer*)object;
-            FREE(ObjTimer, object);
+            FREE(ObjTimer, object, object->generation);
             break;
         }
         case OBJ_UPVALUE:
-            FREE(ObjUpvalue, object);
+            FREE(ObjUpvalue, object, object->generation);
             break;
         case OBJ_VALUE_INSTANCE: { 
             ObjValueInstance* instance = (ObjValueInstance*)object;
             freeValueArray(vm, &instance->fields);
-            FREE(ObjValueInstance, object);
+            FREE(ObjValueInstance, object, object->generation);
             break;
         }
     }

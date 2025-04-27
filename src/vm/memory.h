@@ -45,7 +45,7 @@ struct GC {
 
 #define ALLOCATE_STRUCT(type) (type*)malloc(sizeof(type))
 
-#define FREE(type, pointer) reallocate(vm, pointer, sizeof(type), 0, GC_GENERATION_TYPE_EDEN)
+#define FREE(type, pointer, generation) reallocate(vm, pointer, sizeof(type), 0, generation)
 
 #define GROW_CAPACITY(capacity) \
     ((capacity) < 8 ? 8 : (capacity) * 2)
