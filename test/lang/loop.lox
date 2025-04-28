@@ -1,48 +1,48 @@
-namespace test.lang;
+namespace test.lang
 
-println("Looping even numbers from 0 to 10 using 'while': ");
-var i = 0;
+println("Looping even numbers from 0 to 10 using 'while': ")
+var i = 0
 while(i <= 10){
-    println(i.pow(2));
-	i = i + 2;
+    println(i.pow(2))
+	i = i + 2
 }
-println("");
+println("")
 
-println("Loop with Break statement using 'while', exiting loop if index > 5: ");
-var j = 0;
+println("Loop with Break statement using 'while', exiting loop if index > 5: ")
+var j = 0
 while(true){ 
-    if(j > 5) break;
-    println(j);
-    j = j + 1;
+    if(j > 5) break
+    println(j)
+    j = j + 1
 }
-println("");
+println("")
 
-println("Loop with Continue statement using 'for', skipping iteration if index % 3 = 0: ");
+println("Loop with Continue statement using 'for', skipping iteration if index % 3 = 0: ")
 for(var k : 0..10) { 
-    if(k % 3 == 0) continue;
-    println(k);
+    if(k % 3 == 0) continue
+    println(k)
 }
-println("");
+println("")
 
-println("Looping through a list of even numbers 2 to 10 using 'for-in': ");
+println("Looping through a list of even numbers 2 to 10 using 'for-in': ")
 for(var element : [2, 4, 6, 8, 10]){ 
-    println("Element: " + element.toString());
+    println("Element: " + element.toString())
 }
-println("");
+println("")
 
-println("Looping through a list of values using 'for-in' with index: ");
+println("Looping through a list of values using 'for-in' with index: ")
 for(var (index, value) : [2, 3.5, true, nil, "Hello World"]){ 
-    println("Element" + index.toString() + ": " + value.toString());
+    println("Element" + index.toString() + ": " + value.toString())
 }
-println("");
+println("")
 
-println("Looping through a string: ");
+println("Looping through a string: ")
 for(var char : "Hello World") { 
-    println("Char: " + char);
+    println("Char: " + char)
 }
-println("");
+println("")
 
-println("Looping through a dictionary using 'for-in' with key: ");
+println("Looping through a dictionary using 'for-in' with key: ")
 for(var (key, value) : ["name": "Joe Doe", "age": 40, "isAdmin": false]){ 
-    println(key.toString() + ": " + value.toString());
+    println(key.toString() + ": " + value.toString())
 }

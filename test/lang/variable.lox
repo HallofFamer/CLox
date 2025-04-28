@@ -1,74 +1,74 @@
-namespace test.lang;
+namespace test.lang
 
-val x = 0;
-println("Creating global immutable variable x: " + x.toString());
-// val x = 1;
-//println("Setting global immutable variable x to 1, this should raise an error.");
-var y = true;
-println("Creating global mutable variable y: " + y.toString());
-y = false;
-println("Setting global mutable variable y to " + y.toString());
-//var y = nil;
-//println("Redeclaring variable y, this should raise an error.");
-println("");
+val x = 0
+println("Creating global immutable variable x: " + x.toString())
+// val x = 1
+//println("Setting global immutable variable x to 1, this should raise an error.")
+var y = true
+println("Creating global mutable variable y: " + y.toString())
+y = false
+println("Setting global mutable variable y to " + y.toString())
+//var y = nil
+//println("Redeclaring variable y, this should raise an error.")
+println("")
 
 fun testLocals(){
-    val x1 = 5;
-    println("Creating immutable local variable x1: " + x1.toString());
-    var x2 = 10;
-    println("Creating mutable local variable x2: " + x2.toString());
-    println("Sum of two variables is: " + (x1 + x2).toString());
-    x2 = 20;
-    println("Setting local variable x2 to 20, and sum is: " + (x1 + x2).toString());
-    //x1 = 10;
-    //println("Setting local variable x1 to 10, this should raise an error.");
-    println("");
+    val x1 = 5
+    println("Creating immutable local variable x1: " + x1.toString())
+    var x2 = 10
+    println("Creating mutable local variable x2: " + x2.toString())
+    println("Sum of two variables is: " + (x1 + x2).toString())
+    x2 = 20
+    println("Setting local variable x2 to 20, and sum is: " + (x1 + x2).toString())
+    //x1 = 10
+    //println("Setting local variable x1 to 10, this should raise an error.")
+    println("")
 } 
-testLocals();
+testLocals()
 
 fun testUpvalues(){  
-    val x1 = 5;
-    println("Creating immutable captured upvalue x1: " + x1.toString());
-    var x2 = 10;
-    println("Creating mutable captured upvalue x2: " + x2.toString());
+    val x1 = 5
+    println("Creating immutable captured upvalue x1: " + x1.toString())
+    var x2 = 10
+    println("Creating mutable captured upvalue x2: " + x2.toString())
 
     fun testUpvalueInner(){ 
-        println("Sum of two variables is: " + (x1 + x2).toString());
-        x2 = 20;
-        println("Setting local variable x2 to 20, and sum is: " + (x1 + x2).toString());
-        //println("Setting local variable x1 to 10, this should raise an error.");
-        //x1 = 10;       
+        println("Sum of two variables is: " + (x1 + x2).toString())
+        x2 = 20
+        println("Setting local variable x2 to 20, and sum is: " + (x1 + x2).toString())
+        //println("Setting local variable x1 to 10, this should raise an error.")
+        //x1 = 10 
     }
-    testUpvalueInner();
-    println("");
+    testUpvalueInner()
+    println("")
 }
-testUpvalues();
+testUpvalues()
 
 fun testParameters(a, var b){ 
-    println("Parameters a = " + a.toString() + ", b = " + b.toString());
-    //a = 5;
-    //println("Setting parameter a to 5, this should raise an error.");
-    b = 10;
-    println("Setting paramter b to 10, this should work normally. Now b = " + b.toString());
+    println("Parameters a = " + a.toString() + ", b = " + b.toString())
+    //a = 5
+    //println("Setting parameter a to 5, this should raise an error.")
+    b = 10
+    println("Setting paramter b to 10, this should work normally. Now b = " + b.toString())
 }
-testParameters(2, 3);
+testParameters(2, 3)
 
 fun testVariadic(..v){
-   println("Variadic parameter v = " + v.toString());
-   //v = 0;
-   //println("Setting variadic v to 0, this should raise an error.");
+   println("Variadic parameter v = " + v.toString())
+   //v = 0
+   //println("Setting variadic v to 0, this should raise an error.")
 }
-testVariadic(1, 2, 3, 4, 5);
+testVariadic(1, 2, 3, 4, 5)
 
-//File = 5;
-//println("Trying to mutate a native class, this should raise an error.");
-//print = println;
-//println("Trying to mutate a native function, this should raise an error too.");
+//File = 5
+//println("Trying to mutate a native class, this should raise an error.")
+//print = println
+//println("Trying to mutate a native function, this should raise an error too.")
 
 class TestClass { }
 fun testFun() {}
 
-//TestClass = true;
-//println("Trying to mutate a user defined class, this should raise an error.");
-//testFun = fun(a, b){ return a + b; };
-//println("Trying to mutate a user defined function, this should raise an error too.");
+//TestClass = true
+//println("Trying to mutate a user defined class, this should raise an error.")
+//testFun = fun(a, b){ return a + b; }
+//println("Trying to mutate a user defined function, this should raise an error too.")

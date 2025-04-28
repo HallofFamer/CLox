@@ -1,14 +1,14 @@
-namespace test.lang;
+namespace test.lang
 
 class Nested { 
     method(){ 
         fun function(){ 
-            println(this);
+            println(this)
         }
 
-        function();
+        function()
     }
 }
 
-//print this;
-Nested().method();
+//print this
+Nested().method()

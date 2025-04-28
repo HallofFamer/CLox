@@ -1,36 +1,36 @@
-namespace test.lang;
+namespace test.lang
 
 class A { 
     method(){ 
-        println("A method");
+        println("A method")
     }
 
     toString(){ 
-        return "${super.toString()} of class ${this.getClassName()}";
+        return "${super.toString()} of class ${this.getClassName()}"
     }
 }
 
 class B extends A { 
     method(){ 
-        println("B method");
+        println("B method")
     }
 
     test(){
-        super.method();
+        super.method()
     }
 }
 
 class C extends B { }
 
-var a = A();
-var b = B();
-var c = C();
-c.test();
+var a = A()
+var b = B()
+var c = C()
+c.test()
 
-println(c.toString());
-println(c.instanceOf(C));
-println(c.instanceOf(B));
-println(c.instanceOf(A));
-println(c.instanceOf(Object));
-println(b.instanceOf(C));
-println(b.instanceOf(A));
+println(c.toString())
+println(c.instanceOf(C))
+println(c.instanceOf(B))
+println(c.instanceOf(A))
+println(c.instanceOf(Object))
+println(b.instanceOf(C))
+println(b.instanceOf(A))

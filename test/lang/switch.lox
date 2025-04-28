@@ -1,15 +1,15 @@
-namespace test.lang;
+namespace test.lang
 
-val x = 2;
+val x = 2
 switch(x) {
     case 1:
-        println("one");
+        println("one")
     case 2:
-        println("two");
+        println("two")
     case 3:
-        println("three");
+        println("three")
     default:
-        println("default");
+        println("default")
 }
 
-print("after");
+print("after")

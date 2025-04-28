@@ -1,13 +1,13 @@
-namespace test.lang;
+namespace test.lang
 
 class Oops { 
     __init__(){ 
         fun f(){ 
-            print("not a method");
+            println("not a method")
         }
-        this.field = f;
+        this.field = f
     }
 }
 
-var oops = Oops();
-oops.field();
+var oops = Oops()
+oops.field()

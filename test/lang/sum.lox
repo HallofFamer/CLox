@@ -1,7 +1,7 @@
-namespace test.lang;
+namespace test.lang
 
 fun sum(a, b, c) {
-    return a + b + c;
+    return a + b + c
 }
 
-println(4 + sum(5, 6, 7));
+println(4 + sum(5, 6, 7))
