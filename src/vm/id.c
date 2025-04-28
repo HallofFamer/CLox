@@ -4,15 +4,16 @@
 #include "id.h"
 #include "memory.h"
 
-void initIDMap(IDMap* idMap) {
+void initIDMap(IDMap* idMap, GCGenerationType generation) {
     idMap->count = 0;
     idMap->capacity = 0;
+    idMap->generation = generation;
     idMap->entries = NULL;
 }
 
 void freeIDMap(VM* vm, IDMap* idMap) {
     FREE_ARRAY(IDEntry, idMap->entries, idMap->capacity);
-    initIDMap(idMap);
+    initIDMap(idMap, idMap->generation);
 }
 
 static IDEntry* findIDEntry(IDEntry* entries, int capacity, ObjString* key) {

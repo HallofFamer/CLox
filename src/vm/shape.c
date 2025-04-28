@@ -11,8 +11,8 @@ static void initRootShape(Shape* shape) {
     shape->parentID = -1;
     shape->type = SHAPE_ROOT;
     shape->nextIndex = 0;
-    initIDMap(&shape->edges);
-    initIDMap(&shape->indexes);
+    initIDMap(&shape->edges, GC_GENERATION_TYPE_PERMANENT);
+    initIDMap(&shape->indexes, GC_GENERATION_TYPE_PERMANENT);
 
 #ifdef DEBUG_PRINT_SHAPE
     printf("Shape ID: %d, Parent ID: %d, shape type: %d, next index: %d\n\n", shape->id, shape->parentID, shape->type, shape->nextIndex);
@@ -142,8 +142,8 @@ int createShapeFromParent(VM* vm, int parentID, ObjString* edge) {
         .type = parentShape->nextIndex <= UINT4_MAX ? SHAPE_NORMAL : SHAPE_COMPLEX,
         .nextIndex = parentShape->nextIndex + 1
     };
-    initIDMap(&newShape.edges);
-    initIDMap(&newShape.indexes);
+    initIDMap(&newShape.edges, GC_GENERATION_TYPE_PERMANENT);
+    initIDMap(&newShape.indexes, GC_GENERATION_TYPE_PERMANENT);
 
     idMapAddAll(vm, &parentShape->indexes, &newShape.indexes);
     idMapSet(vm, &newShape.indexes, edge, parentShape->nextIndex);

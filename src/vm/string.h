@@ -9,8 +9,11 @@
 
 ObjString* createString(VM* vm, char* chars, int length, uint32_t hash, ObjClass* klass);
 ObjString* takeString(VM* vm, char* chars, int length);
+ObjString* takeStringPerma(VM* vm, char* chars, int length);
 ObjString* copyString(VM* vm, const char* chars, int length);
+ObjString* copyStringPerma(VM* vm, const char* chars, int length);
 ObjString* newString(VM* vm, const char* chars);
+ObjString* newStringPerma(VM* vm, const char* chars);
 ObjString* emptyString(VM* vm);
 ObjString* formattedString(VM* vm, const char* format, ...);
 

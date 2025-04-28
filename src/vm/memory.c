@@ -614,8 +614,34 @@ static void freeObject(VM* vm, Obj* object) {
 static void promoteObject(VM* vm, Obj* object, GCGenerationType generation) {
     GCGeneration* currentHeap = GET_GC_GENERATION(generation);
     GCGeneration* nextHeap = GET_GC_GENERATION(generation + 1);
+    object->generation++;
     object->next = nextHeap->objects;
     nextHeap->objects = object;
+
+    switch (object->type) {
+        case OBJ_CLASS: {
+            ObjClass* _class = (ObjClass*)object;
+            _class->indexes.generation++;
+            _class->methods.generation++;
+            break;
+        }
+        case OBJ_FUNCTION: {
+            ObjFunction* function = (ObjFunction*)object;
+            function->chunk.generation++;
+            break;
+        }
+        case OBJ_MODULE: {
+            ObjModule* module = (ObjModule*)object;
+            module->valIndexes.generation++;
+            module->varIndexes.generation++;
+        }
+        case OBJ_NAMESPACE: {
+            ObjNamespace* namespace = (ObjNamespace*)object;
+            namespace->values.generation++;
+        }
+        default:
+            break;
+    }
 
     size_t size = sizeOfObject(object);
     currentHeap->bytesAllocated -= size;

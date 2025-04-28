@@ -23,6 +23,7 @@ typedef struct {
 typedef struct {
     int count;
     int capacity;
+    GCGenerationType generation;
     IDEntry* entries;
 } IDMap;
 
@@ -32,7 +33,7 @@ typedef struct {
     ValueArray* slots;
 } GenericIDMap;
 
-void initIDMap(IDMap* idMap);
+void initIDMap(IDMap* idMap, GCGenerationType generation);
 void freeIDMap(VM* vm, IDMap* idMap);
 bool idMapGet(IDMap* idMap, ObjString* key, int* index);
 bool idMapSet(VM* vm, IDMap* idMap, ObjString* key, int index);

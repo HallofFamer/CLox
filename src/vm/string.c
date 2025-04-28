@@ -43,7 +43,24 @@ ObjString* takeString(VM* vm, char* chars, int length) {
     return string;
 }
 
+ObjString* takeStringPerma(VM* vm, char* chars, int length) {
+    ObjString* string = takeString(vm, chars, length);
+    string->obj.generation = GC_GENERATION_TYPE_PERMANENT;
+    return string;
+}
+
 ObjString* copyString(VM* vm, const char* chars, int length) {
+    uint32_t hash = hashString(chars, length);
+    ObjString* interned = tableFindString(&vm->strings, chars, length, hash);
+    if (interned != NULL) return interned;
+
+    char* heapChars = ALLOCATE(char, (size_t)length + 1, GC_GENERATION_TYPE_EDEN);
+    memcpy(heapChars, chars, length);
+    heapChars[length] = '\0';
+    return allocateString(vm, heapChars, length, hash);
+}
+
+ObjString* copyStringPerma(VM* vm, const char* chars, int length) {
     uint32_t hash = hashString(chars, length);
     ObjString* interned = tableFindString(&vm->strings, chars, length, hash);
     if (interned != NULL) return interned;
@@ -51,15 +68,22 @@ ObjString* copyString(VM* vm, const char* chars, int length) {
     char* heapChars = ALLOCATE(char, (size_t)length + 1, GC_GENERATION_TYPE_PERMANENT);
     memcpy(heapChars, chars, length);
     heapChars[length] = '\0';
-    return allocateString(vm, heapChars, length, hash);
+
+    ObjString* string = allocateString(vm, heapChars, length, hash);
+    string->obj.generation = GC_GENERATION_TYPE_PERMANENT;
+    return string;
 }
 
 ObjString* newString(VM* vm, const char* chars) {
     return copyString(vm, chars, (int)strlen(chars));
 }
 
+ObjString* newStringPerma(VM* vm, const char* chars) {
+    return copyStringPerma(vm, chars, (int)strlen(chars));
+}
+
 ObjString* emptyString(VM* vm) {
-    return copyString(vm, "", 0);
+    return copyStringPerma(vm, "", 0);
 }
 
 ObjString* formattedString(VM* vm, const char* format, ...) {
