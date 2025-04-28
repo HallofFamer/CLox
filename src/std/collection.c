@@ -852,7 +852,7 @@ LOX_METHOD(Dictionary, __init__) {
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    FREE_ARRAY(ObjEntry, self->entries, self->capacity);
+    FREE_ARRAY(ObjEntry, self->entries, self->capacity, self->entries->obj.generation);
     self->count = 0;
     self->capacity = 0;
     self->entries = NULL;
@@ -1813,7 +1813,7 @@ LOX_METHOD(Set, clear) {
     ASSERT_ARG_COUNT("Set::clear()", 0);
     ObjInstance* self = AS_INSTANCE(receiver);
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, self, "dict"));
-    FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
+    FREE_ARRAY(ObjEntry, dict->entries, dict->capacity, dict->entries->obj.generation);
     dict->count = 0;
     dict->capacity = 0;
     dict->entries = NULL;

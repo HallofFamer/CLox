@@ -45,7 +45,7 @@ void dictAdjustCapacity(VM* vm, ObjDictionary* dict, int capacity) {
         dict->count++;
     }
 
-    FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
+    FREE_ARRAY(ObjEntry, dict->entries, dict->capacity, dict->entries->obj.generation);
     dict->entries = entries;
     dict->capacity = capacity;
 }

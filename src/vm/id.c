@@ -12,7 +12,7 @@ void initIDMap(IDMap* idMap, GCGenerationType generation) {
 }
 
 void freeIDMap(VM* vm, IDMap* idMap) {
-    FREE_ARRAY(IDEntry, idMap->entries, idMap->capacity);
+    FREE_ARRAY(IDEntry, idMap->entries, idMap->capacity, idMap->generation);
     initIDMap(idMap, idMap->generation);
 }
 
@@ -55,7 +55,7 @@ static void idMapAdjustCapacity(VM* vm, IDMap* idMap, int capacity) {
         idMap->count++;
     }
 
-    FREE_ARRAY(IDEntry, idMap->entries, idMap->capacity);
+    FREE_ARRAY(IDEntry, idMap->entries, idMap->capacity, idMap->generation);
     idMap->entries = entries;
     idMap->capacity = capacity;
 }
@@ -97,7 +97,7 @@ void initGenericIDMap(VM* vm) {
 }
 
 void freeGenericIDMap(VM* vm, GenericIDMap* genericIDMap) {
-    FREE_ARRAY(ValueArray, genericIDMap->slots, genericIDMap->capacity);
+    FREE_ARRAY(ValueArray, genericIDMap->slots, genericIDMap->capacity, GC_GENERATION_TYPE_PERMANENT);
     genericIDMap->capacity = 0;
     genericIDMap->count = 0;
     genericIDMap->slots = NULL;
@@ -121,10 +121,10 @@ void appendToGenericIDMap(VM* vm, Obj* object) {
     if (genericIDMap->capacity < genericIDMap->count + 1) {
         uint64_t oldCapacity = genericIDMap->capacity;
         genericIDMap->capacity = GROW_CAPACITY(oldCapacity);
-        genericIDMap->slots = GROW_ARRAY(ValueArray, genericIDMap->slots, oldCapacity, genericIDMap->capacity);
+        genericIDMap->slots = GROW_ARRAY(ValueArray, genericIDMap->slots, oldCapacity, genericIDMap->capacity, GC_GENERATION_TYPE_PERMANENT);
     }
 
     ValueArray slots;
-    initValueArray(&slots);
+    initValueArray(&slots, GC_GENERATION_TYPE_PERMANENT);
     genericIDMap->slots[genericIDMap->count++] = slots;
 }

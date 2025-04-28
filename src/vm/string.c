@@ -35,11 +35,11 @@ ObjString* takeString(VM* vm, char* chars, int length) {
     uint32_t hash = hashString(chars, length);
     ObjString* interned = tableFindString(&vm->strings, chars, length, hash);
     if (interned != NULL) {
-        FREE_ARRAY(char, chars, (size_t)length + 1);
+        FREE_ARRAY(char, chars, (size_t)length + 1, interned->obj.generation);
         return interned;
     }
     ObjString* string = allocateString(vm, chars, length, hash);
-    FREE_ARRAY(char, chars, (size_t)length + 1);
+    FREE_ARRAY(char, chars, (size_t)length + 1, string->obj.generation);
     return string;
 }
 

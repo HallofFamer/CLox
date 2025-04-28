@@ -13,7 +13,7 @@ void initTable(Table* table, GCGenerationType generation) {
 }
 
 void freeTable(VM* vm, Table* table) {
-    FREE_ARRAY(Entry, table->entries, table->capacity);
+    FREE_ARRAY(Entry, table->entries, table->capacity, table->generation);
     initTable(table, table->generation);
 }
 
@@ -67,7 +67,7 @@ static void adjustCapacity(VM* vm, Table* table, int capacity) {
         table->count++;
     }
 
-    FREE_ARRAY(Entry, table->entries, table->capacity);
+    FREE_ARRAY(Entry, table->entries, table->capacity, table->generation);
     table->entries = entries;
     table->capacity = capacity;
 }

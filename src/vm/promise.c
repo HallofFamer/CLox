@@ -63,7 +63,7 @@ void promiseFulfill(VM* vm, ObjPromise* promise, Value value) {
     for (int i = 0; i < promise->handlers.count; i++) {
         promise->value = callReentrantMethod(vm, OBJ_VAL(promise), promise->handlers.values[i], promise->value);
     }
-    initValueArray(&promise->handlers);
+    initValueArray(&promise->handlers, promise->obj.generation);
     if (IS_CLOSURE(promise->onFinally)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onFinally, promise->value);
 }
 
@@ -108,7 +108,7 @@ void promiseThen(VM* vm, ObjPromise* promise, Value value) {
         ObjBoundMethod* handler = newBoundMethod(vm, OBJ_VAL(promise), promise->handlers.values[i]);
         callReentrantMethod(vm, OBJ_VAL(promise), handler->method, value);
     }
-    initValueArray(&promise->handlers);
+    initValueArray(&promise->handlers, promise->obj.generation);
 }
 
 ObjPromise* promiseWithFulfilled(VM* vm, Value value) {

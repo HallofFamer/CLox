@@ -7,17 +7,18 @@
 void initChunk(Chunk* chunk, GCGenerationType generation) {
     chunk->count = 0;
     chunk->capacity = 0;
+    chunk->generation = generation;
     chunk->code = NULL;
     chunk->lines = NULL;
     chunk->inlineCaches = NULL;
-    initValueArray(&chunk->constants);
-    initValueArray(&chunk->identifiers);
+    initValueArray(&chunk->constants, generation);
+    initValueArray(&chunk->identifiers, generation);
 }
 
 void freeChunk(VM* vm, Chunk* chunk) {
-    FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
-    FREE_ARRAY(int, chunk->lines, chunk->capacity);
-    FREE_ARRAY(InlineCache, chunk->inlineCaches, chunk->identifiers.capacity);
+    FREE_ARRAY(uint8_t, chunk->code, chunk->capacity, chunk->generation);
+    FREE_ARRAY(int, chunk->lines, chunk->capacity, chunk->generation);
+    FREE_ARRAY(InlineCache, chunk->inlineCaches, chunk->identifiers.capacity, chunk->generation);
     freeValueArray(vm, &chunk->constants);
     freeValueArray(vm, &chunk->identifiers);
     initChunk(chunk, chunk->generation);
@@ -27,8 +28,8 @@ void writeChunk(VM* vm, Chunk* chunk, uint8_t byte, int line) {
     if (chunk->capacity < chunk->count + 1) {
         int oldCapacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(oldCapacity);
-        chunk->code = GROW_ARRAY(uint8_t, chunk->code, oldCapacity, chunk->capacity);
-        chunk->lines = GROW_ARRAY(int, chunk->lines, oldCapacity, chunk->capacity);
+        chunk->code = GROW_ARRAY(uint8_t, chunk->code, oldCapacity, chunk->capacity, chunk->generation);
+        chunk->lines = GROW_ARRAY(int, chunk->lines, oldCapacity, chunk->capacity, chunk->generation);
     }
     
     chunk->code[chunk->count] = byte;
@@ -50,7 +51,7 @@ int addIdentifier(VM* vm, Chunk* chunk, Value value) {
 
     valueArrayWrite(vm, &chunk->identifiers, value);
     if (oldCapacity < chunk->identifiers.capacity) {
-        chunk->inlineCaches = GROW_ARRAY(InlineCache, chunk->inlineCaches, oldCapacity, chunk->identifiers.capacity);
+        chunk->inlineCaches = GROW_ARRAY(InlineCache, chunk->inlineCaches, oldCapacity, chunk->identifiers.capacity, chunk->generation);
     }
     InlineCache inlineCache = { .type = CACHE_NONE, .id = 0, .index = 0 };
     

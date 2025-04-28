@@ -97,7 +97,7 @@ void initShapeTree(VM* vm) {
 }
 
 void freeShapeTree(VM* vm, ShapeTree* shapeTree) {
-    FREE_ARRAY(Shape, shapeTree->list, shapeTree->capacity);
+    FREE_ARRAY(Shape, shapeTree->list, shapeTree->capacity, GC_GENERATION_TYPE_PERMANENT);
     shapeTree->list = NULL;
     shapeTree->count = 0;
     shapeTree->capacity = 0;
@@ -109,7 +109,7 @@ void appendToShapeTree(VM* vm, Shape* shape) {
     if (shapeTree->capacity < shapeTree->count + 1) {
         int oldCapacity = shapeTree->capacity;
         shapeTree->capacity = GROW_CAPACITY(oldCapacity);
-        shapeTree->list = GROW_ARRAY(Shape, shapeTree->list, oldCapacity, shapeTree->capacity);
+        shapeTree->list = GROW_ARRAY(Shape, shapeTree->list, oldCapacity, shapeTree->capacity, GC_GENERATION_TYPE_PERMANENT);
     }
 
     shapeTree->list[shapeTree->count] = *shape;

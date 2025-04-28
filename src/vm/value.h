@@ -152,12 +152,13 @@ static inline Value numToValue(double num) {
 typedef struct {
     int capacity;
     int count;
+    GCGenerationType generation;
     Value* values;
 } ValueArray;
 
 bool valuesEqual(Value a, Value b);
 char* valueToString(VM* vm, Value value);
-void initValueArray(ValueArray* array);
+void initValueArray(ValueArray* array, GCGenerationType generation);
 void freeValueArray(VM* vm, ValueArray* array);
 void valueArrayWrite(VM* vm, ValueArray* array, Value value);
 void valueArrayAddAll(VM* vm, ValueArray* from, ValueArray* to);

@@ -7,22 +7,23 @@
 #include "value.h"
 #include "../common/os.h"
 
-void initValueArray(ValueArray* array) {
+void initValueArray(ValueArray* array, GCGenerationType generation) {
     array->values = NULL;
     array->capacity = 0;
+    array->generation = generation;
     array->count = 0;
 }
 
 void freeValueArray(VM* vm, ValueArray* array) {
-    FREE_ARRAY(Value, array->values, array->capacity);
-    initValueArray(array);
+    FREE_ARRAY(Value, array->values, array->capacity, array->generation);
+    initValueArray(array, array->generation);
 }
 
 void valueArrayWrite(VM* vm, ValueArray* array, Value value) {
     if (array->capacity < array->count + 1) {
         int oldCapacity = array->capacity;
         array->capacity = GROW_CAPACITY(oldCapacity);
-        array->values = GROW_ARRAY(Value, array->values, oldCapacity, array->capacity);
+        array->values = GROW_ARRAY(Value, array->values, oldCapacity, array->capacity, array->generation);
     }
     array->values[array->count] = value;
     array->count++;
