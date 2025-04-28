@@ -183,10 +183,10 @@ void initVM(VM* vm) {
     vm->promiseCount = 0;
     vm->objectIndex = 0;
 
-    initTable(&vm->classes);
-    initTable(&vm->namespaces);
-    initTable(&vm->modules);
-    initTable(&vm->strings);
+    initTable(&vm->classes, GC_GENERATION_TYPE_PERMANENT);
+    initTable(&vm->namespaces, GC_GENERATION_TYPE_PERMANENT);
+    initTable(&vm->modules, GC_GENERATION_TYPE_PERMANENT);
+    initTable(&vm->strings, GC_GENERATION_TYPE_PERMANENT);
     initShapeTree(vm);
     initGenericIDMap(vm);
     initLoop(vm);

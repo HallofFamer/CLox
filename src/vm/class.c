@@ -33,10 +33,10 @@ void initClass(VM* vm, ObjClass* klass, ObjString* name, ObjClass* metaclass, Be
     }
     else klass->fullName = klass->name;
 
-    initValueArray(&klass->traits);
-    initIDMap(&klass->indexes);
-    initValueArray(&klass->fields);
-    initTable(&klass->methods);
+    initValueArray(&klass->traits, klass->obj.generation);
+    initIDMap(&klass->indexes, klass->obj.generation);
+    initValueArray(&klass->fields, klass->obj.generation);
+    initTable(&klass->methods, klass->obj.generation);
     pop(vm);
 }
 
@@ -64,10 +64,10 @@ void initTrait(VM* vm, ObjClass* trait, ObjString* name) {
     }
     else trait->fullName = trait->name;
 
-    initValueArray(&trait->traits);
-    initIDMap(&trait->indexes);
-    initValueArray(&trait->fields);
-    initTable(&trait->methods);
+    initValueArray(&trait->traits, trait->obj.generation);
+    initIDMap(&trait->indexes, trait->obj.generation);
+    initValueArray(&trait->fields, trait->obj.generation);
+    initTable(&trait->methods, trait->obj.generation);
     pop(vm);
 }
 
@@ -199,7 +199,7 @@ static void copyTraitsFromTable(VM* vm, ObjClass* klass, Table* table) {
 
 static void flattenTraits(VM* vm, ObjClass* klass, ValueArray* traits) {
     Table traitTable;
-    initTable(&traitTable);
+    initTable(&traitTable, klass->obj.generation);
 
     copyTraitsToTable(vm, traits, &traitTable);
     if (klass->superclass != NULL && klass->superclass->traits.count > 0) {

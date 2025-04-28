@@ -5,15 +5,16 @@
 #include "object.h"
 #include "table.h"
 
-void initTable(Table* table) {
+void initTable(Table* table, GCGenerationType generation) {
     table->count = 0;
     table->capacity = 0;
+    table->generation = generation;
     table->entries = NULL;
 }
 
 void freeTable(VM* vm, Table* table) {
     FREE_ARRAY(Entry, table->entries, table->capacity);
-    initTable(table);
+    initTable(table, table->generation);
 }
 
 static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {

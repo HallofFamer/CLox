@@ -28,7 +28,7 @@ Obj* allocateObject(VM* vm, size_t size, ObjType type, ObjClass* klass, GCGenera
 
 ObjArray* newArray(VM* vm) {
     ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY, vm->arrayClass);
-    initValueArray(&array->elements);
+    initValueArray(&array->elements, array->obj.generation);
     return array;
 }
 
@@ -153,7 +153,7 @@ ObjGenerator* newGenerator(VM* vm, ObjFrame* frame, ObjGenerator* outer) {
 
 ObjInstance* newInstance(VM* vm, ObjClass* klass) {
     ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE, klass);
-    initValueArray(&instance->fields);
+    initValueArray(&instance->fields, instance->obj.generation);
     return instance;
 }
 
@@ -170,10 +170,10 @@ ObjModule* newModule(VM* vm, ObjString* path) {
     module->closure = NULL;
     module->isNative = false;
 
-    initIDMap(&module->valIndexes);
-    initValueArray(&module->valFields);
-    initIDMap(&module->varIndexes);
-    initValueArray(&module->varFields);
+    initIDMap(&module->valIndexes, module->obj.generation);
+    initValueArray(&module->valFields, module->obj.generation);
+    initIDMap(&module->varIndexes, module->obj.generation);
+    initValueArray(&module->varFields, module->obj.generation);
 
     for (int i = 0; i < vm->langNamespace->values.capacity; i++) {
         Entry* entry = &vm->langNamespace->values.entries[i];
@@ -199,7 +199,7 @@ void initNamespace(VM* vm, ObjNamespace* namespace, ObjString* shortName, ObjNam
     }
     else namespace->fullName = namespace->shortName;
 
-    initTable(&namespace->values);
+    initTable(&namespace->values, namespace->obj.generation);
     pop(vm);
 }
 
@@ -251,7 +251,7 @@ ObjPromise* newPromise(VM* vm, PromiseState state, Value value, Value executor){
     promise->onCatch = NIL_VAL;
     promise->onFinally = NIL_VAL;
     promise->captures = newDictionary(vm);
-    initValueArray(&promise->handlers);
+    initValueArray(&promise->handlers, promise->obj.generation);
     return promise;
 }
 
@@ -303,7 +303,7 @@ ObjUpvalue* newUpvalue(VM* vm, Value* slot) {
 ObjValueInstance* newValueInstance(VM* vm, Value value, ObjClass* klass) {
     ObjValueInstance* valueInstance = ALLOCATE_OBJ(ObjValueInstance, OBJ_VALUE_INSTANCE, klass);
     valueInstance->value = value;
-    initValueArray(&valueInstance->fields);
+    initValueArray(&valueInstance->fields, valueInstance->obj.generation);
     return valueInstance;
 }
 

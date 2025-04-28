@@ -15,10 +15,11 @@ typedef struct {
 typedef struct {
     int count;
     int capacity;
+    GCGenerationType generation;
     Entry* entries;
 } Table;
 
-void initTable(Table* table);
+void initTable(Table* table, GCGenerationType generation);
 void freeTable(VM* vm, Table* table);
 bool tableGet(Table* table, ObjString* key, Value* value);
 bool tableSet(VM* vm, Table* table, ObjString* key, Value value);

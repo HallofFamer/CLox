@@ -421,7 +421,7 @@ static void initCompiler(CompilerV1* compiler, ParserV1* parser, CompilerV1* enc
     compiler->function = newFunction(parser->vm);
     compiler->function->isAsync = isAsync;
 
-    initIDMap(&compiler->indexes);
+    initIDMap(&compiler->indexes, GC_GENERATION_TYPE_PERMANENT);
     parser->vm->currentCompiler = compiler;
     if (type != TYPE_SCRIPT) {
         if (parser->previous.length == 3 && memcmp(parser->previous.start, "fun", 3) == 0) {

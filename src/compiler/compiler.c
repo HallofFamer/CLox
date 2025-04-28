@@ -8,6 +8,7 @@
 #include "resolver.h"
 #include "typechecker.h"
 #include "../vm/debug.h"
+#include "../vm/memory.h"
 
 typedef enum {
     COMPILE_TYPE_FUNCTION,
@@ -259,7 +260,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     if (type != COMPILE_TYPE_SCRIPT) {
         compiler->function->name = copyString(vm, name->start, name->length);
     }
-    initIDMap(&compiler->indexes);
+    initIDMap(&compiler->indexes, GC_GENERATION_TYPE_PERMANENT);
     vm->compiler = compiler;
 
     if (enclosing != NULL) {

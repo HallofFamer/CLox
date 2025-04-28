@@ -10,6 +10,7 @@
 #include "../vm/assert.h"
 #include "../vm/dict.h"
 #include "../vm/hash.h"
+#include "../vm/memory.h"
 #include "../vm/native.h"
 #include "../vm/object.h"
 #include "../vm/string.h"
