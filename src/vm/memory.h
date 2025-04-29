@@ -22,6 +22,7 @@ typedef struct {
 typedef struct {
     int count;
     int capacity;
+    GCGenerationType generation;
     GCRememberedEntry* entries;
 } GCRememberedSet;
 
@@ -50,12 +51,12 @@ struct GC {
 #define GROW_CAPACITY(capacity) \
     ((capacity) < 8 ? 8 : (capacity) * 2)
 
-#define GROW_ARRAY(type, pointer, oldCount, newCount) \
+#define GROW_ARRAY(type, pointer, oldCount, newCount, generation) \
     (type*)reallocate(vm, pointer, sizeof(type) * (oldCount), \
-        sizeof(type) * (newCount), GC_GENERATION_TYPE_EDEN)
+        sizeof(type) * (newCount), generation)
 
-#define FREE_ARRAY(type, pointer, oldCount) \
-    reallocate(vm, pointer, sizeof(type) * (oldCount), 0, GC_GENERATION_TYPE_EDEN)
+#define FREE_ARRAY(type, pointer, oldCount, generation) \
+    reallocate(vm, pointer, sizeof(type) * (oldCount), 0, generation)
 
 #define GET_GC_GENERATION(generation) vm->gc->generations[generation]
 

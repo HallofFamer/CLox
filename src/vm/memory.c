@@ -33,15 +33,16 @@ void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenera
     return result;
 }
 
-static void initGCRememberedSet(GCRememberedSet* rememberedSet) {
+static void initGCRememberedSet(GCRememberedSet* rememberedSet, GCGenerationType generation) {
     rememberedSet->capacity = 0;
     rememberedSet->count = 0;
+    rememberedSet->generation = generation;
     rememberedSet->entries = NULL;
 }
 
-static void freeGCRememeberedSet(VM* vm, GCRememberedSet* rememberedSet) {
-    FREE_ARRAY(GCRememberedEntry, rememberedSet->entries, rememberedSet->capacity);
-    initGCRememberedSet(rememberedSet);
+static void freeGCRememeberedSet(VM* vm, GCRememberedSet* remSet) {
+    FREE_ARRAY(GCRememberedEntry, remSet->entries, remSet->capacity, remSet->generation);
+    initGCRememberedSet(remSet, remSet->generation);
 }
 
 static void initGCGenerations(GC* gc, size_t heapSizes[]) {
@@ -52,7 +53,7 @@ static void initGCGenerations(GC* gc, size_t heapSizes[]) {
             gc->generations[i]->heapSize = heapSizes[i]; 
             gc->generations[i]->objects = NULL;
             gc->generations[i]->type = i;
-            initGCRememberedSet(&gc->generations[i]->remSet);
+            initGCRememberedSet(&gc->generations[i]->remSet, i);
         }
         else {
             fprintf(stderr, "Not enough memory to allocate heaps for garbage collector.");
@@ -62,7 +63,7 @@ static void initGCGenerations(GC* gc, size_t heapSizes[]) {
 }
 
 static void freeGCGenerations(VM* vm) {
-    for (int i = 0; i <= GC_GENERATION_TYPE_PERMANENT; i++) {
+    for (int i = 0; i < GC_GENERATION_TYPE_COUNT; i++) {
         freeGCRememeberedSet(vm, &vm->gc->generations[i]->remSet);
         free(vm->gc->generations[i]);
     }
@@ -107,34 +108,34 @@ static bool rememberedSetGetObject(GCRememberedSet* rememberedSet, Obj* object) 
     return true;
 }
 
-static void rememberedSetAdjustCapacity(VM* vm, GCRememberedSet* rememberedSet, int capacity) {
-    GCRememberedEntry* entries = ALLOCATE(GCRememberedEntry, capacity, GC_GENERATION_TYPE_EDEN);
+static void rememberedSetAdjustCapacity(VM* vm, GCRememberedSet* remSet, int capacity) {
+    GCRememberedEntry* entries = ALLOCATE(GCRememberedEntry, capacity, remSet->generation);
     for (int i = 0; i < capacity; i++) {
         entries[i].object = NULL;
     }
 
-    rememberedSet->count = 0;
-    for (int i = 0; i < rememberedSet->capacity; i++) {
-        GCRememberedEntry* entry = &rememberedSet->entries[i];
+    remSet->count = 0;
+    for (int i = 0; i < remSet->capacity; i++) {
+        GCRememberedEntry* entry = &remSet->entries[i];
         if (entry->object == NULL) continue;
         GCRememberedEntry* dest = findRememberedSetEntry(entries, capacity, entry->object);
         dest->object = entry->object;
-        rememberedSet->count++;
+        remSet->count++;
     }
 
-    FREE_ARRAY(GCRememberedEntry, rememberedSet->entries, rememberedSet->capacity);
-    rememberedSet->entries = entries;
-    rememberedSet->capacity = capacity;
+    FREE_ARRAY(GCRememberedEntry, remSet->entries, remSet->capacity, remSet->generation);
+    remSet->entries = entries;
+    remSet->capacity = capacity;
 }
 
-static bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* object) {
+static bool rememberedSetPutObject(VM* vm, GCRememberedSet* remSet, Obj* object) {
     ENSURE_OBJECT_ID(object);
-    if (rememberedSet->count + 1 > rememberedSet->capacity * TABLE_MAX_LOAD) {
-        int capacity = GROW_CAPACITY(rememberedSet->capacity);
-        rememberedSetAdjustCapacity(vm, rememberedSet, capacity);
+    if (remSet->count + 1 > remSet->capacity * TABLE_MAX_LOAD) {
+        int capacity = GROW_CAPACITY(remSet->capacity);
+        rememberedSetAdjustCapacity(vm, remSet, capacity);
     }
 
-    GCRememberedEntry* entry = findRememberedSetEntry(rememberedSet->entries, rememberedSet->capacity, object);
+    GCRememberedEntry* entry = findRememberedSetEntry(remSet->entries, remSet->capacity, object);
     bool isNewObject = entry->object == NULL;
     if (isNewObject) {
 #ifdef DEBUG_LOG_GC
@@ -142,7 +143,7 @@ static bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* 
         printValue(OBJ_VAL(object));
         printf("\n");
 #endif
-        rememberedSet->count++;
+        remSet->count++;
     }
 
     entry->object = object;
@@ -150,14 +151,14 @@ static bool rememberedSetPutObject(VM* vm, GCRememberedSet* rememberedSet, Obj* 
 }
 
 void addToRememberedSet(VM* vm, Obj* object, GCGenerationType generation) {
-    GCRememberedSet* rememberedSet = &vm->gc->generations[generation]->remSet;
-    rememberedSetPutObject(vm, rememberedSet, object);
+    GCRememberedSet* remSet = &vm->gc->generations[generation]->remSet;
+    rememberedSetPutObject(vm, remSet, object);
 }
 
 void markRememberedSet(VM* vm, GCGenerationType generation) {
-    GCRememberedSet* rememberedSet = &vm->gc->generations[generation]->remSet;
-    for (int i = 0; i < rememberedSet->capacity; i++) {
-        GCRememberedEntry* entry = &rememberedSet->entries[i];
+    GCRememberedSet* remSet = &vm->gc->generations[generation]->remSet;
+    for (int i = 0; i < remSet->capacity; i++) {
+        GCRememberedEntry* entry = &remSet->entries[i];
         markObject(vm, entry->object, generation);
     }
 }
@@ -484,13 +485,13 @@ static void freeObject(VM* vm, Obj* object) {
         }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*)object;
-            FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount);
+            FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount, closure->obj.generation);
             FREE(ObjClosure, object, object->generation);
             break;
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dict = (ObjDictionary*)object;
-            FREE_ARRAY(ObjEntry, dict->entries, dict->capacity);
+            FREE_ARRAY(ObjEntry, dict->entries, dict->capacity, dict->entries->obj.generation);
             FREE(ObjDictionary, object, object->generation);
             break;
         }
