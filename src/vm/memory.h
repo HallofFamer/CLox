@@ -72,9 +72,9 @@ void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenera
 GC* newGC(VM* vm);
 void freeGC(VM* vm);
 void addToRememberedSet(VM* vm, Obj* object, GCGenerationType generation);
-void markRememberedSet(VM* vm, GCGenerationType generation);
 void markObject(VM* vm, Obj* object, GCGenerationType generation);
 void markValue(VM* vm, Value value, GCGenerationType generation);
+void markRememberedSet(VM* vm, GCGenerationType generation);
 void collectGarbage(VM* vm, GCGenerationType generation);
 void freeObjects(VM* vm);
 

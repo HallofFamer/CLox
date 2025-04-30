@@ -155,14 +155,6 @@ void addToRememberedSet(VM* vm, Obj* object, GCGenerationType generation) {
     rememberedSetPutObject(vm, remSet, object);
 }
 
-void markRememberedSet(VM* vm, GCGenerationType generation) {
-    GCRememberedSet* remSet = &vm->gc->generations[generation]->remSet;
-    for (int i = 0; i < remSet->capacity; i++) {
-        GCRememberedEntry* entry = &remSet->entries[i];
-        markObject(vm, entry->object, generation);
-    }
-}
-
 void markObject(VM* vm, Obj* object, GCGenerationType generation) {
     if (object == NULL || object->generation > generation || object->isMarked) return;
 
@@ -194,6 +186,14 @@ void markValue(VM* vm, Value value, GCGenerationType generation) {
 static void markArray(VM* vm, ValueArray* array, GCGenerationType generation) {
     for (int i = 0; i < array->count; i++) {
         markValue(vm, array->values[i], generation);
+    }
+}
+
+void markRememberedSet(VM* vm, GCGenerationType generation) {
+    GCRememberedSet* remSet = &vm->gc->generations[generation]->remSet;
+    for (int i = 0; i < remSet->capacity; i++) {
+        GCRememberedEntry* entry = &remSet->entries[i];
+        markObject(vm, entry->object, generation);
     }
 }
 
@@ -620,25 +620,48 @@ static void promoteObject(VM* vm, Obj* object, GCGenerationType generation) {
     nextHeap->objects = object;
 
     switch (object->type) {
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*)object;
+            array->elements.generation++;
+            break;
+        }
         case OBJ_CLASS: {
             ObjClass* _class = (ObjClass*)object;
+            _class->traits.generation++;
             _class->indexes.generation++;
+            _class->fields.generation++;
             _class->methods.generation++;
             break;
         }
         case OBJ_FUNCTION: {
             ObjFunction* function = (ObjFunction*)object;
             function->chunk.generation++;
+            function->chunk.constants.generation++;
+            function->chunk.identifiers.generation++;
+            break;
+        }
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*)object;
+            instance->fields.generation++;
             break;
         }
         case OBJ_MODULE: {
             ObjModule* module = (ObjModule*)object;
             module->valIndexes.generation++;
+            module->valFields.generation++;
             module->varIndexes.generation++;
+            module->varFields.generation++;
+            break;
         }
         case OBJ_NAMESPACE: {
             ObjNamespace* namespace = (ObjNamespace*)object;
             namespace->values.generation++;
+            break;
+        }
+        case OBJ_VALUE_INSTANCE: {
+            ObjValueInstance* valueInstance = (ObjValueInstance*)object;
+            valueInstance->fields.generation++;
+            break;
         }
         default:
             break;
