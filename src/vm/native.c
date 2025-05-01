@@ -31,7 +31,7 @@ LOX_FUNCTION(gc) {
     ASSERT_ARG_COUNT("gc(generation)", 1);
     ASSERT_ARG_TYPE("gc(generation)", 0, Int);
     int generation = AS_INT(args[0]);
-    ASSERT_INDEX_WITHIN_BOUNDS("gc(generation)", generation, 0, 3, 0);
+    ASSERT_INDEX_WITHIN_BOUNDS("gc(generation)", generation, 0, 2, 0);
     collectGarbage(vm, generation);
     RETURN_NIL;
 }

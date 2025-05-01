@@ -13,7 +13,7 @@
 void* reallocate(VM* vm, void* pointer, size_t oldSize, size_t newSize, GCGenerationType generation) {
     GCGeneration* currentHeap = GET_GC_GENERATION(generation);
     currentHeap->bytesAllocated += newSize - oldSize;
-    if (newSize > oldSize) {
+    if (newSize > oldSize && generation < GC_GENERATION_TYPE_PERMANENT) {
 #ifdef DEBUG_STRESS_GC
         collectGarbage(vm, generation);
 #endif
@@ -755,7 +755,6 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
 
     markRoots(vm, generation);
     traceReferences(vm, generation);
-    tableRemoveWhite(&vm->strings);
     sweep(vm, generation);
     processRememberedSet(vm, generation);
 
