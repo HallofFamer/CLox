@@ -9,8 +9,8 @@
 #include "string.h"
 #include "vm.h"
 
-static ObjString* allocateString(VM* vm, char* chars, int length, uint32_t hash) {
-    ObjString* string = ALLOCATE_STRING(length, vm->stringClass);
+static ObjString* allocateString(VM* vm, char* chars, int length, uint32_t hash, GCGenerationType generation) {
+    ObjString* string = ALLOCATE_STRING_GEN(length, vm->stringClass, generation);
     string->length = length;
     string->hash = hash;
 
@@ -38,14 +38,20 @@ ObjString* takeString(VM* vm, char* chars, int length) {
         FREE_ARRAY(char, chars, (size_t)length + 1, interned->obj.generation);
         return interned;
     }
-    ObjString* string = allocateString(vm, chars, length, hash);
+    ObjString* string = allocateString(vm, chars, length, hash, GC_GENERATION_TYPE_EDEN);
     FREE_ARRAY(char, chars, (size_t)length + 1, string->obj.generation);
     return string;
 }
 
 ObjString* takeStringPerma(VM* vm, char* chars, int length) {
-    ObjString* string = takeString(vm, chars, length);
-    string->obj.generation = GC_GENERATION_TYPE_PERMANENT;
+    uint32_t hash = hashString(chars, length);
+    ObjString* interned = tableFindString(&vm->strings, chars, length, hash);
+    if (interned != NULL) {
+        FREE_ARRAY(char, chars, (size_t)length + 1, GC_GENERATION_TYPE_PERMANENT);
+        return interned;
+    }
+    ObjString* string = allocateString(vm, chars, length, hash, GC_GENERATION_TYPE_PERMANENT);
+    FREE_ARRAY(char, chars, (size_t)length + 1, string->obj.generation);
     return string;
 }
 
@@ -57,7 +63,7 @@ ObjString* copyString(VM* vm, const char* chars, int length) {
     char* heapChars = ALLOCATE(char, (size_t)length + 1, GC_GENERATION_TYPE_EDEN);
     memcpy(heapChars, chars, length);
     heapChars[length] = '\0';
-    return allocateString(vm, heapChars, length, hash);
+    return allocateString(vm, heapChars, length, hash, GC_GENERATION_TYPE_EDEN);
 }
 
 ObjString* copyStringPerma(VM* vm, const char* chars, int length) {
@@ -68,10 +74,7 @@ ObjString* copyStringPerma(VM* vm, const char* chars, int length) {
     char* heapChars = ALLOCATE(char, (size_t)length + 1, GC_GENERATION_TYPE_PERMANENT);
     memcpy(heapChars, chars, length);
     heapChars[length] = '\0';
-
-    ObjString* string = allocateString(vm, heapChars, length, hash);
-    string->obj.generation = GC_GENERATION_TYPE_PERMANENT;
-    return string;
+    return allocateString(vm, heapChars, length, hash, GC_GENERATION_TYPE_PERMANENT);
 }
 
 ObjString* newString(VM* vm, const char* chars) {
