@@ -206,7 +206,7 @@ ObjClass* defineNativeTrait(VM* vm, const char* name) {
 }
 
 ObjNamespace* defineNativeNamespace(VM* vm, const char* name, ObjNamespace* enclosing) {
-    ObjString* shortName = newString(vm, name);
+    ObjString* shortName = newStringPerma(vm, name);
     push(vm, OBJ_VAL(shortName));
     ObjNamespace* nativeNamespace = newNamespace(vm, shortName, enclosing);
     push(vm, OBJ_VAL(nativeNamespace));

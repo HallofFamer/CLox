@@ -17,7 +17,7 @@
 #define ALLOCATE_OBJ_GEN(type, objectType, objectClass, generation) (type*)allocateObject(vm, sizeof(type), objectType, objectClass, generation)
 #define ALLOCATE_CLASS(classClass) ALLOCATE_OBJ(ObjClass, OBJ_CLASS, classClass)
 #define ALLOCATE_CLOSURE(closureClass) ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE, closureClass)
-#define ALLOCATE_NAMESPACE(namespaceClass) ALLOCATE_OBJ(ObjNamespace, OBJ_NAMESPACE, namespaceClass)
+#define ALLOCATE_NAMESPACE(namespaceClass) ALLOCATE_OBJ_GEN(ObjNamespace, OBJ_NAMESPACE, namespaceClass, GC_GENERATION_TYPE_PERMANENT)
 
 #define OBJ_TYPE(value)             (AS_OBJ(value)->type)
 #define OBJ_KLASS(value)            (AS_OBJ(value)->klass)
