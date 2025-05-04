@@ -89,7 +89,7 @@ ObjClass* defineNativeClass(VM* vm, const char* name) {
 }
 
 void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, NativeFunction function, ...) {
-    ObjString* functionName = newString(vm, name);
+    ObjString* functionName = newStringPerma(vm, name);
     push(vm, OBJ_VAL(functionName));
     push(vm, OBJ_VAL(newNativeFunction(vm, functionName, arity, isAsync, function)));
     tableSet(vm, &vm->rootNamespace->values, AS_STRING(vm->stack[0]), vm->stack[1]);
@@ -113,7 +113,7 @@ void defineNativeFunction(VM* vm, const char* name, int arity, bool isAsync, Nat
 }
 
 void defineNativeMethod(VM* vm, ObjClass* klass, const char* name, int arity, bool isAsync, NativeMethod method, ...) {
-    ObjString* methodName = newString(vm, name);
+    ObjString* methodName = newStringPerma(vm, name);
     push(vm, OBJ_VAL(methodName));
     ObjNativeMethod* nativeMethod = newNativeMethod(vm, klass, methodName, arity, isAsync, method);
     push(vm, OBJ_VAL(nativeMethod));

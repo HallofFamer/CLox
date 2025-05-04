@@ -210,7 +210,7 @@ ObjNamespace* newNamespace(VM* vm, ObjString* shortName, ObjNamespace* enclosing
 }
 
 ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, bool isAsync, NativeFunction function) {
-    ObjNativeFunction* nativeFunction = ALLOCATE_OBJ(ObjNativeFunction, OBJ_NATIVE_FUNCTION, vm->functionClass);
+    ObjNativeFunction* nativeFunction = ALLOCATE_OBJ_GEN(ObjNativeFunction, OBJ_NATIVE_FUNCTION, vm->functionClass, GC_GENERATION_TYPE_PERMANENT);
     nativeFunction->name = name;
     nativeFunction->arity = arity;
     nativeFunction->isAsync = isAsync;
@@ -219,7 +219,7 @@ ObjNativeFunction* newNativeFunction(VM* vm, ObjString* name, int arity, bool is
 }
 
 ObjNativeMethod* newNativeMethod(VM* vm, ObjClass* klass, ObjString* name, int arity, bool isAsync, NativeMethod method) {
-    ObjNativeMethod* nativeMethod = ALLOCATE_OBJ(ObjNativeMethod, OBJ_NATIVE_METHOD, vm->methodClass);
+    ObjNativeMethod* nativeMethod = ALLOCATE_OBJ_GEN(ObjNativeMethod, OBJ_NATIVE_METHOD, vm->methodClass, GC_GENERATION_TYPE_PERMANENT);
     nativeMethod->klass = klass;
     nativeMethod->name = name;
     nativeMethod->arity = arity;
