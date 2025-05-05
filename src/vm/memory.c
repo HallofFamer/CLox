@@ -161,6 +161,7 @@ void markObject(VM* vm, Obj* object, GCGenerationType generation) {
 #ifdef DEBUG_LOG_GC
     printf("%p mark ", (void*)object);
     printValue(OBJ_VAL(object));
+    printf(" at generation %d.", object->generation);
     printf("\n");
 #endif
 
@@ -461,7 +462,7 @@ static void blackenObject(VM* vm, Obj* object, GCGenerationType generation) {
 
 static void freeObject(VM* vm, Obj* object) {
 #ifdef DEBUG_LOG_GC
-    printf("%p free type %d\n", (void*)object, object->type);
+    printf("%p free type %d at generation %d\n", (void*)object, object->type, object->generation);
 #endif
 
     switch (object->type) {
@@ -491,7 +492,7 @@ static void freeObject(VM* vm, Obj* object) {
         }
         case OBJ_DICTIONARY: {
             ObjDictionary* dict = (ObjDictionary*)object;
-            FREE_ARRAY(ObjEntry, dict->entries, dict->capacity, dict->entries->obj.generation);
+            FREE_ARRAY(ObjEntry, dict->entries, dict->capacity, dict->obj.generation);
             FREE(ObjDictionary, object, object->generation);
             break;
         }
