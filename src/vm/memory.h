@@ -8,13 +8,6 @@
 
 #define GC_GENERATION_TYPE_COUNT 4
 
-enum GCGenerationType {
-    GC_GENERATION_TYPE_EDEN,
-    GC_GENERATION_TYPE_YOUNG,
-    GC_GENERATION_TYPE_OLD,
-    GC_GENERATION_TYPE_PERMANENT
-};
-
 typedef struct {
     Obj* object;
 } GCRememberedEntry;
