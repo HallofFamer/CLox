@@ -258,7 +258,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->function->isAsync = isAsync;
 
     if (type != COMPILE_TYPE_SCRIPT) {
-        compiler->function->name = copyString(vm, name->start, name->length);
+        compiler->function->name = copyStringPerma(vm, name->start, name->length);
     }
     initIDMap(&compiler->indexes, GC_GENERATION_TYPE_PERMANENT);
     vm->compiler = compiler;
@@ -1189,7 +1189,7 @@ static void compileWhileStatement(Compiler* compiler, Ast* ast) {
 
 static void compileYieldStatement(Compiler* compiler, Ast* ast) {
     yield(compiler, ast);
-    emitByte(compiler, OP_POP);
+    if (!ast->modifier.isYieldFrom) emitByte(compiler, OP_POP);
 }
 
 static void compileStatement(Compiler* compiler, Ast* ast) {

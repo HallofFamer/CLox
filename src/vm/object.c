@@ -195,7 +195,7 @@ void initNamespace(VM* vm, ObjNamespace* namespace, ObjString* shortName, ObjNam
     if (namespace->enclosing != NULL && !namespace->enclosing->isRoot) {
         char chars[UINT8_MAX];
         int length = sprintf_s(chars, UINT8_MAX, "%s.%s", namespace->enclosing->fullName->chars, shortName->chars);
-        namespace->fullName = copyString(vm, chars, length);
+        namespace->fullName = copyStringPerma(vm, chars, length);
     }
     else namespace->fullName = namespace->shortName;
 
