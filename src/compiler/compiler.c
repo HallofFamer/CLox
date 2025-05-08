@@ -254,12 +254,7 @@ static void initCompiler(VM* vm, Compiler* compiler, Compiler* enclosing, Compil
     compiler->isAsync = isAsync;
     compiler->debugCode = debugCode;
     compiler->hadError = false;
-    compiler->function = newFunction(vm);
-    compiler->function->isAsync = isAsync;
-
-    if (type != COMPILE_TYPE_SCRIPT) {
-        compiler->function->name = copyStringPerma(vm, name->start, name->length);
-    }
+    compiler->function = newFunction(vm, (type == COMPILE_TYPE_SCRIPT) ? NULL : copyStringPerma(vm, name->start, name->length), isAsync);
     initIDMap(&compiler->indexes, GC_GENERATION_TYPE_PERMANENT);
     vm->compiler = compiler;
 
@@ -332,7 +327,7 @@ static uint8_t makeIdentifier(Compiler* compiler, Value value) {
 static uint8_t identifierConstant(Compiler* compiler, Token* name) {
     const char* start = name->start[0] != '`' ? name->start : name->start + 1;
     int length = name->start[0] != '`' ? name->length : name->length - 2;
-    return makeIdentifier(compiler, OBJ_VAL(copyString(compiler->vm, start, length)));
+    return makeIdentifier(compiler, OBJ_VAL(copyStringPerma(compiler->vm, start, length)));
 }
 
 static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
@@ -340,7 +335,7 @@ static ObjString* identifierName(Compiler* compiler, uint8_t arg) {
 }
 
 static SymbolItem* findSymbolItem(Compiler* compiler, SymbolTable* symtab, Token token) {
-    ObjString* name = copyString(compiler->vm, token.start, token.length);
+    ObjString* name = copyStringPerma(compiler->vm, token.start, token.length);
     SymbolItem* item = symbolTableGet(symtab, name);
     return (item != NULL) ? item : findSymbolItem(compiler, symtab->parent, token);
 }
@@ -426,7 +421,7 @@ static int discardLocals(Compiler* compiler) {
 }
 
 static void invokeMethod(Compiler* compiler, int args, const char* name, int length) {
-    int slot = makeIdentifier(compiler, OBJ_VAL(copyString(compiler->vm, name, length)));
+    int slot = makeIdentifier(compiler, OBJ_VAL(copyStringPerma(compiler->vm, name, length)));
     emitByte(compiler, OP_INVOKE);
     emitByte(compiler, slot);
     emitByte(compiler, args);
@@ -495,7 +490,7 @@ static void number(Compiler* compiler, Token token) {
 
 static void string(Compiler* compiler, Token token) {
     char* string = tokenToCString(token);
-    emitConstant(compiler, OBJ_VAL(takeString(compiler->vm, string, token.length)));
+    emitConstant(compiler, OBJ_VAL(takeStringPerma(compiler->vm, string, token.length)));
 }
 
 static void getVariable(Compiler* compiler, SymbolItem* item) {
@@ -1284,7 +1279,7 @@ static void compileNamespaceDeclaration(Compiler* compiler, Ast* ast) {
     while (namespaceDepth < identifiers->children->count) {
         Ast* identifier = astGetChild(identifiers, namespaceDepth);
         compiler->currentToken = identifier->token;
-        ObjString* name = copyString(compiler->vm, identifier->token.start, identifier->token.length);
+        ObjString* name = copyStringPerma(compiler->vm, identifier->token.start, identifier->token.length);
         emitBytes(compiler, OP_NAMESPACE, makeIdentifier(compiler, OBJ_VAL(name)));
         namespaceDepth++;
     }

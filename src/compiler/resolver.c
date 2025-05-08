@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -135,7 +136,7 @@ static int nextSymbolTableIndex(Resolver* resolver) {
 }
 
 static ObjString* createSymbol(Resolver* resolver, Token token) {
-    return copyString(resolver->vm, token.start, token.length);
+    return copyStringPerma(resolver->vm, token.start, token.length);
 }
 
 static ObjString* getSymbolFullName(Resolver* resolver, Token token) {
@@ -145,7 +146,7 @@ static ObjString* getSymbolFullName(Resolver* resolver, Token token) {
     fullName[resolver->currentNamespace->length] = '.';
     memcpy(fullName + resolver->currentNamespace->length + 1, token.start, token.length);
     fullName[length] = '\0';
-    return takeString(resolver->vm, fullName, length);
+    return takeStringPerma(resolver->vm, fullName, length);
 }
 
 static TypeInfo* getTypeForSymbol(Resolver* resolver, Token token) {
@@ -1196,7 +1197,7 @@ void resolveAst(Resolver* resolver, Ast* ast) {
     }
 }
 
-static void resolveChild(Resolver* resolver, Ast* ast, int index) {
+void resolveChild(Resolver* resolver, Ast* ast, int index) {
     Ast* child = astGetChild(ast, index);
     child->symtab = ast->symtab;
     resolver->currentToken = child->token;

@@ -418,17 +418,17 @@ static void initCompiler(CompilerV1* compiler, ParserV1* parser, CompilerV1* enc
     compiler->innermostLoopScopeDepth = 0;
 
     compiler->isAsync = isAsync;
-    compiler->function = newFunction(parser->vm);
-    compiler->function->isAsync = isAsync;
-
-    initIDMap(&compiler->indexes, GC_GENERATION_TYPE_PERMANENT);
-    parser->vm->currentCompiler = compiler;
+    ObjString* name = NULL;
     if (type != TYPE_SCRIPT) {
         if (parser->previous.length == 3 && memcmp(parser->previous.start, "fun", 3) == 0) {
-            compiler->function->name = copyString(parser->vm, "", 0);
+            name = copyStringPerma(parser->vm, "", 0);
         }
-        else compiler->function->name = copyString(parser->vm, parser->previous.start, parser->previous.length);
+        else name = copyStringPerma(parser->vm, parser->previous.start, parser->previous.length);
     }
+
+    compiler->function = newFunction(parser->vm, name, isAsync);
+    initIDMap(&compiler->indexes, GC_GENERATION_TYPE_PERMANENT);
+    parser->vm->currentCompiler = compiler;
 
     LocalV1* local = &compiler->locals[compiler->localCount++];
     local->depth = 0;
@@ -505,7 +505,7 @@ static uint8_t makeIdentifier(CompilerV1* compiler, Value value) {
 static uint8_t identifierConstant(CompilerV1* compiler, TokenV1* name) {
     const char* start = name->start[0] != '`' ? name->start : name->start + 1;
     int length = name->start[0] != '`' ? name->length : name->length - 2;
-    return makeIdentifier(compiler, OBJ_VAL(copyString(compiler->parser->vm, start, length)));
+    return makeIdentifier(compiler, OBJ_VAL(copyStringPerma(compiler->parser->vm, start, length)));
 }
 
 static ObjString* identifierName(CompilerV1* compiler, uint8_t arg) {
@@ -645,7 +645,7 @@ static int discardLocals(CompilerV1* compiler) {
 }
 
 static void invokeMethod(CompilerV1* compiler, int args, const char* name, int length) {
-    int slot = makeIdentifier(compiler, OBJ_VAL(copyString(compiler->parser->vm, name, length)));
+    int slot = makeIdentifier(compiler, OBJ_VAL(copyStringPerma(compiler->parser->vm, name, length)));
     emitByte(compiler, OP_INVOKE);
     emitByte(compiler, slot);
     emitByte(compiler, args);
@@ -885,7 +885,7 @@ static void or_(CompilerV1* compiler, bool canAssign) {
 static void string(CompilerV1* compiler, bool canAssign) {
     int length = 0;
     char* string = parseString(compiler->parser, &length);
-    emitConstant(compiler, OBJ_VAL(takeString(compiler->parser->vm, string, length)));
+    emitConstant(compiler, OBJ_VAL(takeStringPerma(compiler->parser->vm, string, length)));
 }
 
 static void interpolation(CompilerV1* compiler, bool canAssign) {
@@ -1035,7 +1035,7 @@ static void trait(CompilerV1* compiler, bool canAssign) {
 
 static void namespace_(CompilerV1* compiler, bool canAssign) {
     consume(compiler->parser, TOKEN_IDENTIFIER_V1, "Expect Namespace identifier.");
-    ObjString* name = copyString(compiler->parser->vm, compiler->parser->previous.start, compiler->parser->previous.length);
+    ObjString* name = copyStringPerma(compiler->parser->vm, compiler->parser->previous.start, compiler->parser->previous.length);
     emitBytes(compiler, OP_NAMESPACE, makeIdentifier(compiler, OBJ_VAL(name)));
 }
 

@@ -1,8 +1,10 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "typechecker.h"
+#include "../common/os.h"
 #include "../vm/native.h"
 #include "../vm/vm.h"
 
@@ -71,6 +73,8 @@ void initTypeChecker(VM* vm, TypeChecker* typeChecker, bool debugTypetab) {
     typeChecker->stringType = getNativeType(vm, "String");
     typeChecker->classType = getNativeType(vm, "Class");
     typeChecker->functionType = getNativeType(vm, "Function");
+    typeChecker->namespaceType = getNativeType(vm, "Namespace");
+    typeChecker->traitType = getNativeType(vm, "Trait");
     typeChecker->voidType = getNativeType(vm, "void");
 
     typeChecker->debugTypetab = debugTypetab;
@@ -78,7 +82,7 @@ void initTypeChecker(VM* vm, TypeChecker* typeChecker, bool debugTypetab) {
 }
 
 static ObjString* createSymbol(TypeChecker* typeChecker, Token token) {
-    return copyString(typeChecker->vm, token.start, token.length);
+    return copyStringPerma(typeChecker->vm, token.start, token.length);
 }
 
 static TypeInfo* getClassType(TypeChecker* typeChecker, ObjString* shortName, SymbolTable* symtab) {
@@ -105,13 +109,13 @@ static TypeInfo* getClassType(TypeChecker* typeChecker, ObjString* shortName, Sy
 }
 
 static void defineAstType(TypeChecker* typeChecker, Ast* ast, const char* name, SymbolItem* item) {
-    ObjString* typeName = newString(typeChecker->vm, name);
+    ObjString* typeName = newStringPerma(typeChecker->vm, name);
     ast->type = getNativeType(typeChecker->vm, name);
     if (item != NULL) item->type = ast->type;
 }
 
 static bool hasAstType(TypeChecker* typeChecker, Ast* ast, const char* name) {
-    ObjString* typeName = newString(typeChecker->vm, name);
+    ObjString* typeName = newStringPerma(typeChecker->vm, name);
     TypeInfo* type = typeTableGet(typeChecker->vm->typetab, typeName);
     return isSubtypeOfType(ast->type, type);
 }
@@ -254,7 +258,7 @@ static void inferAstTypeFromBinaryOperator(TypeChecker* typeChecker, Ast* ast, S
     Ast* arg = astGetChild(ast, 1);
     if (receiver->type == NULL || arg->type == NULL) return;
 
-    ObjString* methodName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    ObjString* methodName = copyStringPerma(typeChecker->vm, ast->token.start, ast->token.length);
     TypeInfo* baseType = typeTableMethodLookup(receiver->type, methodName);
     if (baseType == NULL) return;
 
@@ -351,7 +355,7 @@ static void inferAstTypeFromCall(TypeChecker* typeChecker, Ast* ast) {
 
         TypeInfo* classType = getClassType(typeChecker, className, ast->symtab);
         if (classType == NULL) return;
-        ObjString* initializerName = newString(typeChecker->vm, "__init__");
+        ObjString* initializerName = newStringPerma(typeChecker->vm, "__init__");
         TypeInfo* initializerType = typeTableMethodLookup(classType, initializerName);
 
         if (initializerType != NULL) {
@@ -415,7 +419,7 @@ static void inferAstTypeFromSubscriptGet(TypeChecker* typeChecker, Ast* ast) {
         ast->type = typeChecker->objectType;
     }
     else {
-        TypeInfo* baseType = typeTableMethodLookup(receiver->type, newString(typeChecker->vm, "[]"));
+        TypeInfo* baseType = typeTableMethodLookup(receiver->type, newStringPerma(typeChecker->vm, "[]"));
         if (baseType == NULL) return;
         CallableTypeInfo* methodType = AS_CALLABLE_TYPE(baseType);
         if (methodType->paramTypes->count == 0) return;
@@ -448,7 +452,7 @@ static void inferAstTypeFromSubscriptSet(TypeChecker* typeChecker, Ast* ast) {
         ast->type = typeChecker->nilType;
     }
     else {
-        TypeInfo* baseType = typeTableMethodLookup(receiver->type, newString(typeChecker->vm, "[]="));
+        TypeInfo* baseType = typeTableMethodLookup(receiver->type, newStringPerma(typeChecker->vm, "[]="));
         if (baseType == NULL) return;
         CallableTypeInfo* methodType = AS_CALLABLE_TYPE(baseType);
         if (methodType->paramTypes->count == 0) return;
@@ -486,7 +490,7 @@ static void function(TypeChecker* typeChecker, Ast* ast, CallableTypeInfo* calle
 
 static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
     ClassTypeChecker classTypeChecker;
-    ObjString* shortName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    ObjString* shortName = copyStringPerma(typeChecker->vm, ast->token.start, ast->token.length);
     ObjString* fullName = getClassFullName(typeChecker->vm, shortName, typeChecker->currentNamespace);
     TypeInfo* behaviorType = typeTableGet(typeChecker->vm->typetab, fullName);
 
@@ -497,7 +501,7 @@ static void behavior(TypeChecker* typeChecker, BehaviorType type, Ast* ast) {
     if (type == BEHAVIOR_CLASS) {
         Ast* superclass = astGetChild(ast, childIndex);
         typeCheckChild(typeChecker, ast, childIndex);
-        ObjString* superclassName = copyString(typeChecker->vm, superclass->token.start, superclass->token.length);
+        ObjString* superclassName = copyStringPerma(typeChecker->vm, superclass->token.start, superclass->token.length);
         SymbolItem* superclassItem = symbolTableLookup(ast->symtab, superclassName);
         childIndex++;
 
@@ -555,7 +559,7 @@ static void typeCheckArray(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckAssign(TypeChecker* typeChecker, Ast* ast) {
-    ObjString* name = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    ObjString* name = copyStringPerma(typeChecker->vm, ast->token.start, ast->token.length);
     SymbolItem* item = symbolTableLookup(ast->symtab, name);
     if (item != NULL) typeCheckChild(typeChecker, ast, 0);
     defineAstType(typeChecker, ast, "Nil", NULL);
@@ -594,7 +598,7 @@ static void typeCheckDictionary(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckFunction(TypeChecker* typeChecker, Ast* ast) {
-    ObjString* name = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    ObjString* name = copyStringPerma(typeChecker->vm, ast->token.start, ast->token.length);
     TypeInfo* calleeType = typeTableGet(typeChecker->vm->typetab, name);
     function(typeChecker, ast, calleeType == NULL ? NULL : AS_CALLABLE_TYPE(calleeType), ast->modifier.isAsync, ast->modifier.isClass);
 }
@@ -645,7 +649,7 @@ static void typeCheckOr(TypeChecker* typeChecker, Ast* ast) {
 }
 
 static void typeCheckParam(TypeChecker* typeChecker, Ast* ast) {
-    ObjString* name = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    ObjString* name = copyStringPerma(typeChecker->vm, ast->token.start, ast->token.length);
     SymbolItem* item = symbolTableLookup(ast->symtab, name);
     item->type = ast->type;
 }
@@ -676,7 +680,7 @@ static void typeCheckSubscriptSet(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckSuperGet(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* receiver = astGetChild(ast, 0);
-    ObjString* property = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    ObjString* property = copyStringPerma(typeChecker->vm, ast->token.start, ast->token.length);
     if (receiver->type == NULL) return;
 
     TypeInfo* superType = AS_BEHAVIOR_TYPE(receiver->type)->superclassType;
@@ -822,11 +826,11 @@ static void typeCheckCaseStatement(TypeChecker* typeChecker, Ast* ast) {
 static void typeCheckCatchStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* exceptionVar = astGetChild(ast, 0);
-    ObjString* exceptionClassName = copyString(typeChecker->vm, ast->token.start, ast->token.length);
+    ObjString* exceptionClassName = copyStringPerma(typeChecker->vm, ast->token.start, ast->token.length);
     exceptionVar->type = getClassType(typeChecker, exceptionClassName, NULL);
 
     Ast* blk = astGetChild(ast, 1);
-    ObjString* exceptionVarName = copyString(typeChecker->vm, exceptionVar->token.start, exceptionVar->token.length);
+    ObjString* exceptionVarName = copyStringPerma(typeChecker->vm, exceptionVar->token.start, exceptionVar->token.length);
     SymbolItem* exceptionItem = symbolTableLookup(blk->symtab, exceptionVarName);
     exceptionItem->type = exceptionVar->type;
     typeCheckChild(typeChecker, ast, 1);
@@ -927,19 +931,18 @@ static void typeCheckUsingStatement(TypeChecker* typeChecker, Ast* ast) {
     Ast* _namespace = astGetChild(ast, 0);
     int namespaceDepth = astNumChild(_namespace);
     ObjString* fullName = astCreateQualifiedName(typeChecker->vm, ast);
-    TypeInfo* namespaceType = getNativeType(typeChecker->vm, "Namespace");
 
     for (int i = 0; i < namespaceDepth - 1; i++) {
         Ast* subNamespace = astGetChild(_namespace, i);
-        subNamespace->type = namespaceType;
+        subNamespace->type = typeChecker->namespaceType;
     }
 
     TypeInfo* classType = typeTableGet(typeChecker->vm->typetab, fullName);
     if (classType == NULL) return;
     Ast* child = (astNumChild(ast) > 1) ? astGetChild(ast, 1) : astLastChild(_namespace);
-    ObjString* shortName = copyString(typeChecker->vm, child->token.start, child->token.length);
+    ObjString* shortName = copyStringPerma(typeChecker->vm, child->token.start, child->token.length);
 
-    if (classType->category == TYPE_CATEGORY_TRAIT) child->type = getNativeType(typeChecker->vm, "Trait");
+    if (classType->category == TYPE_CATEGORY_TRAIT) child->type = typeChecker->traitType;
     else child->type = typeTableGet(typeChecker->vm->typetab, getMetaclassNameFromClass(typeChecker->vm, fullName));
     SymbolItem* item = symbolTableLookup(child->symtab, shortName);
     if (item->type == NULL) item->type = child->type;
@@ -1036,7 +1039,7 @@ static void typeCheckFunDeclaration(TypeChecker* typeChecker, Ast* ast) {
 
 static void typeCheckMethodDeclaration(TypeChecker* typeChecker, Ast* ast) {
     SymbolItem* item = symbolTableLookup(ast->symtab, createSymbol(typeChecker, ast->token));
-    ObjString* name = copyString(typeChecker->vm, item->token.start, item->token.length);
+    ObjString* name = copyStringPerma(typeChecker->vm, item->token.start, item->token.length);
     defineAstType(typeChecker, ast, "Method", item);
 
     if (!typeChecker->currentClass->isAnonymous) {

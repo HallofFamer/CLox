@@ -22,6 +22,8 @@ typedef struct {
     TypeInfo* stringType;
     TypeInfo* classType;
     TypeInfo* functionType;
+    TypeInfo* namespaceType;
+    TypeInfo* traitType;
     TypeInfo* voidType;
 
     bool debugTypetab;

@@ -115,7 +115,7 @@ ObjString* astCreateQualifiedName(VM* vm, Ast* ast) {
         identifier->symtab = identifiers->symtab;
         length += identifier->token.length + 1;
     }
-    return copyString(vm, start, length);
+    return copyStringPerma(vm, start, length);
 }
 
 static void astOutputIndent(int indentLevel) {
