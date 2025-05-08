@@ -644,7 +644,7 @@ LOX_METHOD(PromiseClass, reject) {
     ASSERT_ARG_TYPE("Promise class::reject(exception)", 0, Exception);
     ObjClass* klass = AS_CLASS(receiver);
     Value reject;
-    tableGet(&klass->methods, copyString(vm, "reject", 6), &reject);
+    tableGet(&klass->methods, copyStringPerma(vm, "reject", 6), &reject);
     ObjPromise* promise = newPromise(vm, PROMISE_REJECTED, NIL_VAL, reject);
     promise->obj.klass = klass;
     promise->exception = AS_EXCEPTION(args[0]);

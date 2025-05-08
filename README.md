@@ -64,8 +64,7 @@ https://github.com/munificent/craftinginterpreters
 - Fix reentrancy problem with CLox, calling Lox closures in C API becomes possible.
 - Most runtime errors in VM interpreter loop replaced with Exceptions that can be caught at runtime.
 - Inline caching for VM optimization, as well as implementation of Shape(Hidden Class) for better instance variable representation.
-
-
+- Upgraded the mark and sweep GC with a generational GC which has multiple regions for objects of various generations, which leads to GC running faster when marking/freeing objects. 
 ## Roadmap
 
 ### CLox v1.1.0
@@ -126,19 +125,19 @@ https://github.com/munificent/craftinginterpreters
 - Multi-pass compiler with abstract syntax tree, semantic analyzer(resolver), symbol table, type checker, and generation of bytecode by walking AST. 
 - Optional static typing support for function/method parameters and return values, types only exist at compile time and are erased at runtime. 
 - Semicolon inference as well as basic type inference for immutable local/global variables. 
-- Replace the naive mark and sweep GC with a generational GC which has multiple regions for objects of various 'ages'.  
+- Replace the old mark and sweep GC with a generational GC which has multiple regions for objects of various generations.  
 
 ### CLox 2.1.0
 - Extend parser with infinite lookahead, allowing qualified names to be used for function/method signature, class/trait declaration and catch statement.
 - Dedicated syntax for declaring function types and metaclass types, enabling anonymous functions/lambda to be typed. 
 - Allow declaration of object properties outside of class initializer, which also enables optional static typing.
-- Refactor classes in the existing standard library to use generics(in `clox.std` parent package), such as `Array<T>` and `Promise<T>`.
+- Redesign of Iterator/Enumerator API for ease of use and implementation of iterable types.
 
 ### CLox 2.2.0
 - Enhanced type system with basic support for generics/parametric polymorphism.
 - `type` keyword used as declaration of type alias, useful for complex generic types.
 - Capability of saving bytecode into disk as .loxo file, which can be loaded later for faster compilation.
-- Redesign of Iterator/Enumerator API for ease of use and implementation of iterable types.
+- Refactor classes in the existing standard library to use generics(in `clox.std` parent package), such as `Array<T>` and `Promise<T>`.
 
 ### CLox 2.3.0
 - Additional type system enhancement for union types, with `|` operator on types such as `String | Number`.

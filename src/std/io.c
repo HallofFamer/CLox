@@ -559,7 +559,7 @@ LOX_METHOD(FileWriteStream, writeLineAsync) {
     ObjFile* file = getFileProperty(vm, AS_INSTANCE(receiver), "file");
     if (!file->isOpen) RETURN_PROMISE_EX(clox.std.io.IOException, "Cannot write line to stream because file is already closed.");
     loadFileWrite(vm, file);
-    ObjPromise* promise = fileWriteAsync(vm, file, copyString(vm, "\n", 1), fileOnWrite);
+    ObjPromise* promise = fileWriteAsync(vm, file, copyStringPerma(vm, "\n", 1), fileOnWrite);
     if (promise == NULL) RETURN_PROMISE_EX(clox.std.io.IOException, "Failed to write to IO stream.");
     RETURN_OBJ(promise);
 }
@@ -578,7 +578,7 @@ LOX_METHOD(FileWriteStream, writeSpaceAsync) {
     if (!file->isOpen) RETURN_PROMISE_EX(clox.std.io.IOException, "Cannot write space to stream because file is already closed.");
     loadFileWrite(vm, file);
 
-    ObjPromise* promise = fileWriteAsync(vm, file, copyString(vm, " ", 1), fileOnWrite);
+    ObjPromise* promise = fileWriteAsync(vm, file, copyStringPerma(vm, " ", 1), fileOnWrite);
     if (promise == NULL) RETURN_PROMISE_EX(clox.std.io.IOException, "Failed to write to IO stream.");
     RETURN_OBJ(promise);
 }

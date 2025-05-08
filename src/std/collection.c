@@ -109,7 +109,7 @@ static int dictFindIndex(ObjDictionary* dict, Value key) {
 }
 
 static ObjString* dictToString(VM* vm, ObjDictionary* dict) {
-    if (dict->count == 0) return copyString(vm, "[]", 2);
+    if (dict->count == 0) return copyStringPerma(vm, "[]", 2);
     else {
         char string[UINT8_MAX] = "";
         string[0] = '[';
@@ -313,7 +313,7 @@ static int linkSearchElement(VM* vm, ObjInstance* linkedList, Value element) {
 
 static ObjString* linkToString(VM* vm, ObjInstance* linkedList) {
     int size = AS_INT(getObjProperty(vm, linkedList, "length"));
-    if (size == 0) return copyString(vm, "[]", 2);
+    if (size == 0) return copyStringPerma(vm, "[]", 2);
     else {
         char string[UINT8_MAX] = "";
         string[0] = '[';
@@ -369,7 +369,7 @@ static ObjInstance* setCopy(VM* vm, ObjInstance* original) {
 
 static ObjString* setToString(VM* vm, ObjInstance* set) {
     ObjDictionary* dict = AS_DICTIONARY(getObjProperty(vm, set, "dict"));
-    if (dict->count == 0) return copyString(vm, "[]", 2);
+    if (dict->count == 0) return copyStringPerma(vm, "[]", 2);
     else {
         char string[UINT8_MAX] = "";
         string[0] = '[';
@@ -852,7 +852,7 @@ LOX_METHOD(Dictionary, __init__) {
 LOX_METHOD(Dictionary, clear) {
     ASSERT_ARG_COUNT("Dictionary::clear()", 0);
     ObjDictionary* self = AS_DICTIONARY(receiver);
-    FREE_ARRAY(ObjEntry, self->entries, self->capacity, self->entries->obj.generation);
+    FREE_ARRAY(ObjEntry, self->entries, self->capacity, self->obj.generation);
     self->count = 0;
     self->capacity = 0;
     self->entries = NULL;
@@ -2224,7 +2224,7 @@ void registerCollectionPackage(VM* vm) {
 
     bindSuperclass(vm, vm->rangeClass, listClass);
     vm->rangeClass->classType = OBJ_RANGE;
-    DEF_INTERCEPTOR(vm->rangeClass, Range, INTERCEPTOR_INIT, __init__, 2);
+    DEF_INTERCEPTOR(vm->rangeClass, Range, INTERCEPTOR_INIT, __init__, 2, RETURN_TYPE(clox.std.collection.Range), PARAM_TYPE(Int), PARAM_TYPE(Int));
     DEF_METHOD(vm->rangeClass, Range, add, 1, RETURN_TYPE(Bool), PARAM_TYPE(Object));
     DEF_METHOD(vm->rangeClass, Range, addAll, 1, RETURN_TYPE(void), PARAM_TYPE(clox.std.collection.Collection));
     DEF_METHOD(vm->rangeClass, Range, clone, 0, RETURN_TYPE(clox.std.collection.Range));

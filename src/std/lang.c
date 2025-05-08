@@ -1766,7 +1766,7 @@ static void bindNamespaceClass(VM* vm) {
 }
 
 static ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behavior) {
-    ObjString* className = newString(vm, name);
+    ObjString* className = newStringPerma(vm, name);
     push(vm, OBJ_VAL(className));
     ObjClass* nativeClass = createClass(vm, className, NULL, behavior);
     nativeClass->isNative = true;
@@ -1781,7 +1781,7 @@ static ObjClass* defineSpecialClass(VM* vm, const char* name, BehaviorType behav
 }
 
 static ObjNamespace* defineRootNamespace(VM* vm) {
-    ObjString* name = newString(vm, "");
+    ObjString* name = newStringPerma(vm, "");
     push(vm, OBJ_VAL(name));
     ObjNamespace* rootNamespace = newNamespace(vm, name, NULL);
     rootNamespace->isRoot = true;
