@@ -161,7 +161,6 @@ void markObject(VM* vm, Obj* object, GCGenerationType generation) {
 #ifdef DEBUG_LOG_GC
     printf("%p mark ", (void*)object);
     printValue(OBJ_VAL(object));
-    printf(" at generation %d.", object->generation);
     printf("\n");
 #endif
 
@@ -194,8 +193,15 @@ void markRememberedSet(VM* vm, GCGenerationType generation) {
     GCRememberedSet* remSet = &vm->gc->generations[generation]->remSet;
     for (int i = 0; i < remSet->capacity; i++) {
         GCRememberedEntry* entry = &remSet->entries[i];
-        markObject(vm, entry->object, generation);
+        markObject(vm, entry->object, GC_GENERATION_TYPE_PERMANENT);
     }
+}
+
+static void markModule(VM* vm, GCGenerationType generation) {
+    markIDMap(vm, &vm->currentModule->valIndexes, generation);
+    markArray(vm, &vm->currentModule->valFields, generation);
+    markIDMap(vm, &vm->currentModule->varIndexes, generation);
+    markArray(vm, &vm->currentModule->varFields, generation);
 }
 
 static size_t sizeOfObject(Obj* object) {
@@ -690,12 +696,9 @@ static void markRoots(VM* vm, GCGenerationType generation) {
         markObject(vm, (Obj*)generator, generation);
     }
 
-    markTable(vm, &vm->classes, generation);
-    markTable(vm, &vm->namespaces, generation);
-    markTable(vm, &vm->modules, generation);
+    markModule(vm, generation);
     markRememberedSet(vm, generation);
     markCompilerRoots(vm);
-    markObject(vm, (Obj*)vm->initString, generation);
 }
 
 static void traceReferences(VM* vm, GCGenerationType generation) {
@@ -735,6 +738,7 @@ static void processRememberedSet(VM* vm, GCGenerationType generation) {
     for (int i = 0; i < currentRemSet->capacity; i++) {
         GCRememberedEntry* entry = &currentRemSet->entries[i];
         if (entry->object != NULL) {
+            entry->object->isMarked = false;
             if (entry->object->generation > generation + 1) {
                 rememberedSetPutObject(vm, nextRemSet, entry->object);
             }
@@ -756,6 +760,7 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
 
     markRoots(vm, generation);
     traceReferences(vm, generation);
+    tableRemoveWhite(&vm->strings);
     sweep(vm, generation);
     processRememberedSet(vm, generation);
 

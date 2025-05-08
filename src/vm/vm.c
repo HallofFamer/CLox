@@ -191,8 +191,8 @@ void initVM(VM* vm) {
     initGenericIDMap(vm);
     initLoop(vm);
 
-    vm->initString = copyString(vm, "__init__", 8);
-    vm->voidString = copyString(vm, "void", 4);
+    vm->initString = copyStringPerma(vm, "__init__", 8);
+    vm->voidString = copyStringPerma(vm, "void", 4);
     TypeInfo* voidType = newTypeInfo(0, sizeof(TypeInfo), TYPE_CATEGORY_VOID, vm->voidString, vm->voidString);
     typeTableSet(vm->typetab, vm->voidString, voidType);
     vm->runningGenerator = NULL;
@@ -255,7 +255,7 @@ static void concatenate(VM* vm) {
     ObjString* a = AS_STRING(peek(vm, 1));
 
     int length = a->length + b->length;
-    char* chars = ALLOCATE(char, length + 1, GC_GENERATION_TYPE_PERMANENT);
+    char* chars = ALLOCATE(char, length + 1, GC_GENERATION_TYPE_EDEN);
     memcpy(chars, a->chars, a->length);
     memcpy(chars + a->length, b->chars, b->length);
     chars[length] = '\0';
@@ -325,7 +325,7 @@ static Value createObject(VM* vm, ObjClass* klass, int argCount) {
         case OBJ_ARRAY: return OBJ_VAL(newArray(vm));
         case OBJ_BOUND_METHOD: return OBJ_VAL(newBoundMethod(vm, NIL_VAL, NIL_VAL));
         case OBJ_CLASS: return OBJ_VAL(ALLOCATE_CLASS(klass));
-        case OBJ_CLOSURE: return OBJ_VAL(ALLOCATE_CLOSURE(klass));
+        case OBJ_CLOSURE: return OBJ_VAL(ALLOCATE_CLOSURE(klass, GC_GENERATION_TYPE_EDEN));
         case OBJ_DICTIONARY: return OBJ_VAL(newDictionary(vm));
         case OBJ_ENTRY: return OBJ_VAL(newEntry(vm, NIL_VAL, NIL_VAL));
         case OBJ_EXCEPTION: return OBJ_VAL(newException(vm, emptyString(vm), klass));
@@ -501,7 +501,7 @@ static bool callValue(VM* vm, Value callee, int argCount) {
     }
 
     ObjClass* klass = getObjClass(vm, callee);
-    ObjString* name = copyString(vm, "()", 2);
+    ObjString* name = copyStringPerma(vm, "()", 2);
     Value method;
     if (!tableGet(&klass->methods, name, &method)) { 
         throwNativeException(vm, "clox.std.lang.MethodNotFoundException", "Undefined operator method '%s' on class %s.", name->chars, klass->fullName->chars);
@@ -554,7 +554,7 @@ static bool invokeOperator(VM* vm, ObjString* op, int arity) {
     Value receiver = peek(vm, arity);
     ObjClass* klass = getObjClass(vm, receiver);
     Value method;
-
+    
     if (!tableGet(&klass->methods, op, &method)) {
         throwNativeException(vm, "clox.std.lang.MethodNotFoundException", "Undefined operator method '%s' on class %s.", op->chars, klass->fullName->chars);
         return false;
@@ -655,7 +655,7 @@ InterpretResult run(VM* vm) {
 
 #define OVERLOAD_OP(op, arity) \
     do { \
-        ObjString* opName = newString(vm, #op); \
+        ObjString* opName = newStringPerma(vm, #op); \
         if (!invokeOperator(vm, opName, arity)) { \
             return INTERPRET_RUNTIME_ERROR; \
         } \
@@ -939,7 +939,7 @@ InterpretResult run(VM* vm) {
             case OP_EQUAL: {
                 if (IS_NUMBER(peek(vm, 0)) && IS_NUMBER(peek(vm, 1))) BINARY_NUMBER_OP(BOOL_VAL, == );
                 else {
-                    ObjString* op = copyString(vm, "==", 2);
+                    ObjString* op = copyStringPerma(vm, "==", 2);
                     if (!invokeOperator(vm, op, 1)) {
                         Value b = pop(vm);
                         Value a = pop(vm);
@@ -1307,6 +1307,11 @@ InterpretResult run(VM* vm) {
                     interceptOnThrow(vm, receiver, name, OBJ_VAL(exception));
                     LOAD_FRAME();
                 }
+
+                for (int i = 0; i <= frame->closure->function->arity + 1; i++) {
+                    pop(vm);
+                }
+                push(vm, value);
 
                 if (propagateException(vm)) {
                     LOAD_FRAME();

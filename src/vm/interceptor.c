@@ -43,7 +43,7 @@ bool hasInterceptableMethod(VM* vm, Value receiver, ObjString* name) {
 bool interceptBeforeGet(VM* vm, Value receiver, ObjString* name) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__beforeGet__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__beforeGet__"), &interceptor)) {
         callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name));
         return true;
     }
@@ -53,7 +53,7 @@ bool interceptBeforeGet(VM* vm, Value receiver, ObjString* name) {
 bool interceptAfterGet(VM* vm, Value receiver, ObjString* name, Value value) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__afterGet__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__afterGet__"), &interceptor)) {
         Value result = callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name), value);
         push(vm, result);
         return true;
@@ -64,7 +64,7 @@ bool interceptAfterGet(VM* vm, Value receiver, ObjString* name, Value value) {
 bool interceptBeforeSet(VM* vm, Value receiver, ObjString* name, Value value) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__beforeSet__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__beforeSet__"), &interceptor)) {
         Value result = callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name), value);
         push(vm, result);
         return true;
@@ -75,7 +75,7 @@ bool interceptBeforeSet(VM* vm, Value receiver, ObjString* name, Value value) {
 bool interceptAfterSet(VM* vm, Value receiver, ObjString* name) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__afterSet__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__afterSet__"), &interceptor)) {
         callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name));
         return true;
     }
@@ -102,7 +102,7 @@ static void unloadInterceptorArguments(VM* vm, ObjArray* args) {
 bool interceptOnInvoke(VM* vm, Value receiver, ObjString* name, int argCount) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__onInvoke__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__onInvoke__"), &interceptor)) {
         ObjArray* args = loadInterceptorArguments(vm, argCount);
         callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name), OBJ_VAL(args));
         unloadInterceptorArguments(vm, args);
@@ -114,7 +114,7 @@ bool interceptOnInvoke(VM* vm, Value receiver, ObjString* name, int argCount) {
 bool interceptOnReturn(VM* vm, Value receiver, ObjString* name, Value result) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__onReturn__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__onReturn__"), &interceptor)) {
         Value result2 = callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name), result);
         push(vm, result2);
         return true;
@@ -125,7 +125,7 @@ bool interceptOnReturn(VM* vm, Value receiver, ObjString* name, Value result) {
 bool interceptOnThrow(VM* vm, Value receiver, ObjString* name, Value exception) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__onThrow__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__onThrow__"), &interceptor)) {
         Value exception2 = callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name), exception);
         push(vm, exception2);
         return true;
@@ -136,7 +136,7 @@ bool interceptOnThrow(VM* vm, Value receiver, ObjString* name, Value exception) 
 bool interceptOnYield(VM* vm, Value receiver, ObjString* name, Value result) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__onYield__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__onYield__"), &interceptor)) {
         Value result2 = callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name), result);
         pop(vm);
         push(vm, result2);
@@ -148,7 +148,7 @@ bool interceptOnYield(VM* vm, Value receiver, ObjString* name, Value result) {
 bool interceptOnAwait(VM* vm, Value receiver, ObjString* name, Value result) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__onAwait__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__onAwait__"), &interceptor)) {
         Value result2 = callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name), result);
         pop(vm);
         if (!IS_PROMISE(result2)) result2 = OBJ_VAL(promiseWithFulfilled(vm, result));
@@ -161,7 +161,7 @@ bool interceptOnAwait(VM* vm, Value receiver, ObjString* name, Value result) {
 bool interceptUndefinedGet(VM* vm, Value receiver, ObjString* name) {
     ObjClass* klass = getObjClass(vm, receiver);
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__undefinedGet__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__undefinedGet__"), &interceptor)) {
         callReentrantMethod(vm, receiver, interceptor, OBJ_VAL(name));
         return true;
     }
@@ -170,7 +170,7 @@ bool interceptUndefinedGet(VM* vm, Value receiver, ObjString* name) {
 
 bool interceptUndefinedInvoke(VM* vm, ObjClass* klass, ObjString* name, int argCount) {
     Value interceptor;
-    if (tableGet(&klass->methods, newString(vm, "__undefinedInvoke__"), &interceptor)) {
+    if (tableGet(&klass->methods, newStringPerma(vm, "__undefinedInvoke__"), &interceptor)) {
         ObjArray* args = loadInterceptorArguments(vm, argCount);
         push(vm, OBJ_VAL(name));
         push(vm, OBJ_VAL(args));

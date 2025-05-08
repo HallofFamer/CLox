@@ -111,6 +111,7 @@ ObjString* locateSourceDirectory(VM* vm, ObjString* shortName, ObjNamespace* enc
     int length = enclosingNamespace->fullName->length + shortName->length + 1;
     char* heapChars = ALLOCATE(char, length + 1, GC_GENERATION_TYPE_PERMANENT);
     int offset = 0;
+
     while (offset < enclosingNamespace->fullName->length) {
         char currentChar = enclosingNamespace->fullName->chars[offset];
         heapChars[offset] = (currentChar == '.') ? '/' : currentChar;
@@ -141,12 +142,12 @@ ObjString* locateSourceDirectoryFromFullName(VM* vm, ObjString* fullName) {
 }
 
 InterpretResult runModule(VM* vm, ObjModule* module, bool isRootModule) {
+    push(vm, OBJ_VAL(module->closure));
     if (module->closure->function->isAsync) {
         Value result = runGeneratorAsync(vm, OBJ_VAL(module->closure), newArray(vm));
         return result ? INTERPRET_OK : INTERPRET_RUNTIME_ERROR;
     }
     else {
-        push(vm, OBJ_VAL(module->closure));
         callClosure(vm, module->closure, 0);
         if (!isRootModule) vm->apiStackDepth++;
         InterpretResult result = run(vm);

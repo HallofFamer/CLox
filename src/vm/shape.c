@@ -20,42 +20,42 @@ static void initRootShape(Shape* shape) {
 }
 
 static void createDefaultShapes(VM* vm) {
-    int shapeIDLength = createShapeFromParent(vm, 0, newString(vm, "length"));
+    int shapeIDLength = createShapeFromParent(vm, 0, newStringPerma(vm, "length"));
     defaultShapeIDs[OBJ_ARRAY] = shapeIDLength;
 
-    int shapeIDReceiver = createShapeFromParent(vm, 0, newString(vm, "receiver"));
-    int shapeIDBoundMethod = createShapeFromParent(vm, shapeIDReceiver, newString(vm, "method"));
+    int shapeIDReceiver = createShapeFromParent(vm, 0, newStringPerma(vm, "receiver"));
+    int shapeIDBoundMethod = createShapeFromParent(vm, shapeIDReceiver, newStringPerma(vm, "method"));
     defaultShapeIDs[OBJ_BOUND_METHOD] = shapeIDBoundMethod;
 
     defaultShapeIDs[OBJ_CLASS] = 0;
 
-    int shapeIDName = createShapeFromParent(vm, 0, newString(vm, "name"));
-    int shapeIDClosure = createShapeFromParent(vm, shapeIDName, newString(vm, "arity"));
+    int shapeIDName = createShapeFromParent(vm, 0, newStringPerma(vm, "name"));
+    int shapeIDClosure = createShapeFromParent(vm, shapeIDName, newStringPerma(vm, "arity"));
     defaultShapeIDs[OBJ_CLOSURE] = shapeIDClosure;
 
     defaultShapeIDs[OBJ_DICTIONARY] = shapeIDLength;
 
-    int shapeIDKey = createShapeFromParent(vm, 0, newString(vm, "key"));
-    int shapeIDEntry = createShapeFromParent(vm, shapeIDKey, newString(vm, "value"));
+    int shapeIDKey = createShapeFromParent(vm, 0, newStringPerma(vm, "key"));
+    int shapeIDEntry = createShapeFromParent(vm, shapeIDKey, newStringPerma(vm, "value"));
     defaultShapeIDs[OBJ_ENTRY] = shapeIDEntry;
 
-    int shapeIDMessage = createShapeFromParent(vm, 0, newString(vm, "message"));
-    int shapeIDException = createShapeFromParent(vm, shapeIDMessage, newString(vm, "stacktrace"));
+    int shapeIDMessage = createShapeFromParent(vm, 0, newStringPerma(vm, "message"));
+    int shapeIDException = createShapeFromParent(vm, shapeIDMessage, newStringPerma(vm, "stacktrace"));
     defaultShapeIDs[OBJ_EXCEPTION] = shapeIDException;
 
-    int shapeIDMode = createShapeFromParent(vm, shapeIDName, newString(vm, "mode"));
-    int shapeIDFile = createShapeFromParent(vm, shapeIDMode, newString(vm, "isOpen"));
+    int shapeIDMode = createShapeFromParent(vm, shapeIDName, newStringPerma(vm, "mode"));
+    int shapeIDFile = createShapeFromParent(vm, shapeIDMode, newStringPerma(vm, "isOpen"));
     defaultShapeIDs[OBJ_FILE] = shapeIDFile;
     defaultShapeIDs[OBJ_FRAME] = -1;
     defaultShapeIDs[OBJ_FUNCTION] = -1;
 
-    int shapeIDState = createShapeFromParent(vm, 0, newString(vm, "state"));
-    int shapeIDValue = createShapeFromParent(vm, shapeIDState, newString(vm, "value"));
-    int shapeIDOuter = createShapeFromParent(vm, shapeIDValue, newString(vm, "outer"));
+    int shapeIDState = createShapeFromParent(vm, 0, newStringPerma(vm, "state"));
+    int shapeIDValue = createShapeFromParent(vm, shapeIDState, newStringPerma(vm, "value"));
+    int shapeIDOuter = createShapeFromParent(vm, shapeIDValue, newStringPerma(vm, "outer"));
     defaultShapeIDs[OBJ_GENERATOR] = shapeIDOuter;
     defaultShapeIDs[OBJ_INSTANCE] = 0;
 
-    int shapeIDMethod = createShapeFromParent(vm, shapeIDClosure, newString(vm, "behavior"));
+    int shapeIDMethod = createShapeFromParent(vm, shapeIDClosure, newStringPerma(vm, "behavior"));
     defaultShapeIDs[OBJ_METHOD] = shapeIDMethod;
 
     defaultShapeIDs[OBJ_MODULE] = -1;
@@ -63,23 +63,23 @@ static void createDefaultShapes(VM* vm) {
     defaultShapeIDs[OBJ_NATIVE_FUNCTION] = -1;
     defaultShapeIDs[OBJ_NATIVE_METHOD] = -1;
 
-    int shapeIDElement = createShapeFromParent(vm, 0, newString(vm, "element"));
-    int shapeIDNode1 = createShapeFromParent(vm, shapeIDElement, newString(vm, "prev"));
-    int shapeIDNode2 = createShapeFromParent(vm, shapeIDNode1, newString(vm, "next"));
+    int shapeIDElement = createShapeFromParent(vm, 0, newStringPerma(vm, "element"));
+    int shapeIDNode1 = createShapeFromParent(vm, shapeIDElement, newStringPerma(vm, "prev"));
+    int shapeIDNode2 = createShapeFromParent(vm, shapeIDNode1, newStringPerma(vm, "next"));
     defaultShapeIDs[OBJ_NODE] = shapeIDNode2;
 
-    int shapeIDID = createShapeFromParent(vm, shapeIDValue, newString(vm, "id"));
+    int shapeIDID = createShapeFromParent(vm, shapeIDValue, newStringPerma(vm, "id"));
     defaultShapeIDs[OBJ_PROMISE] = shapeIDID;
 
-    int shapeIDFrom = createShapeFromParent(vm, 0, newString(vm, "from"));
-    int shapeIDRange = createShapeFromParent(vm, shapeIDFrom, newString(vm, "to"));
+    int shapeIDFrom = createShapeFromParent(vm, 0, newStringPerma(vm, "from"));
+    int shapeIDRange = createShapeFromParent(vm, shapeIDFrom, newStringPerma(vm, "to"));
     defaultShapeIDs[OBJ_RANGE] = shapeIDRange;
 
     defaultShapeIDs[OBJ_RECORD] = -1;
     defaultShapeIDs[OBJ_STRING] = shapeIDLength;
 
-    int shapeIDID2 = createShapeFromParent(vm, 0, newString(vm, "id"));
-    int shapeIDIsRunning = createShapeFromParent(vm, shapeIDID2, newString(vm, "isRunning"));
+    int shapeIDID2 = createShapeFromParent(vm, 0, newStringPerma(vm, "id"));
+    int shapeIDIsRunning = createShapeFromParent(vm, shapeIDID2, newStringPerma(vm, "isRunning"));
     defaultShapeIDs[OBJ_TIMER] = shapeIDIsRunning;
 
     defaultShapeIDs[OBJ_UPVALUE] = -1;

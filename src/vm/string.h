@@ -17,6 +17,7 @@ ObjString* newString(VM* vm, const char* chars);
 ObjString* newStringPerma(VM* vm, const char* chars);
 ObjString* emptyString(VM* vm);
 ObjString* formattedString(VM* vm, const char* format, ...);
+ObjString* formattedStringPerma(VM* vm, const char* format, ...);
 
 ObjString* capitalizeString(VM* vm, ObjString* string);
 ObjString* concatenateString(VM* vm, ObjString* string, ObjString* string2, const char* separator);

@@ -75,7 +75,7 @@ LOX_FUNCTION(read) {
 }
 
 ObjClass* defineNativeClass(VM* vm, const char* name) {
-    ObjString* className = newString(vm, name);
+    ObjString* className = newStringPerma(vm, name);
     push(vm, OBJ_VAL(className));
     ObjClass* nativeClass = newClass(vm, className, OBJ_INSTANCE);
     nativeClass->isNative = true;
@@ -192,7 +192,7 @@ void defineNativeInterceptor(VM* vm, ObjClass* klass, InterceptorType type, int 
 }
 
 ObjClass* defineNativeTrait(VM* vm, const char* name) {
-    ObjString* traitName = newString(vm, name);
+    ObjString* traitName = newStringPerma(vm, name);
     push(vm, OBJ_VAL(traitName));
     ObjClass* nativeTrait = createTrait(vm, traitName);
     nativeTrait->isNative = true;
@@ -226,7 +226,7 @@ ObjClass* defineNativeException(VM* vm, const char* name, ObjClass* superClass) 
 
 ObjClass* getNativeClass(VM* vm, const char* fullName) {
     Value klass;
-    tableGet(&vm->classes, newString(vm, fullName), &klass);
+    tableGet(&vm->classes, newStringPerma(vm, fullName), &klass);
     if (!IS_CLASS(klass)) {
         runtimeError(vm, "Class %s is undefined.", fullName);
         exit(70);
@@ -236,7 +236,7 @@ ObjClass* getNativeClass(VM* vm, const char* fullName) {
 
 TypeInfo* getNativeType(VM* vm, const char* name) {
     if (name == NULL) return NULL;
-    ObjString* shortName = newString(vm, name);
+    ObjString* shortName = newStringPerma(vm, name);
     ObjString* fullName = NULL;
     TypeInfo* type = typeTableGet(vm->typetab, shortName);
 
@@ -259,7 +259,7 @@ TypeInfo* getNativeType(VM* vm, const char* name) {
 
 ObjNativeFunction* getNativeFunction(VM* vm, const char* name) {
     Value function;
-    tableGet(&vm->rootNamespace->values, newString(vm, name), &function);
+    tableGet(&vm->rootNamespace->values, newStringPerma(vm, name), &function);
     if (!IS_NATIVE_FUNCTION(function)) {
         runtimeError(vm, "Native function '%s' is undefined.", name);
         exit(70);
@@ -269,7 +269,7 @@ ObjNativeFunction* getNativeFunction(VM* vm, const char* name) {
 
 ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
     Value method;
-    tableGet(&klass->methods, newString(vm, name), &method);
+    tableGet(&klass->methods, newStringPerma(vm, name), &method);
     if (!IS_NATIVE_METHOD(method)) {
         runtimeError(vm, "Native method '%s::%s' is undefined.", klass->name->chars, name);
         exit(70);
@@ -279,7 +279,7 @@ ObjNativeMethod* getNativeMethod(VM* vm, ObjClass* klass, const char* name) {
 
 ObjNamespace* getNativeNamespace(VM* vm, const char* name) {
     Value namespace;
-    tableGet(&vm->namespaces, newString(vm, name), &namespace);
+    tableGet(&vm->namespaces, newStringPerma(vm, name), &namespace);
     if (!IS_NAMESPACE(namespace)) {
         runtimeError(vm, "Namespace '%s' is undefined.", name);
         exit(70);
@@ -288,7 +288,7 @@ ObjNamespace* getNativeNamespace(VM* vm, const char* name) {
 }
 
 SymbolItem* insertGlobalSymbolTable(VM* vm, const char* symbolName, TypeInfo* type) {
-    ObjString* symbol = newString(vm, symbolName);
+    ObjString* symbol = newStringPerma(vm, symbolName);
     SymbolItem* item = newSymbolItemWithType(syntheticToken(symbolName), SYMBOL_CATEGORY_GLOBAL, SYMBOL_STATE_ACCESSED, false, type);
     symbolTableSet(vm->symtab, symbol, item);
     return item;

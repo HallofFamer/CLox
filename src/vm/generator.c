@@ -93,7 +93,7 @@ Value stepGenerator(VM* vm, ObjGenerator* generator, Value arg) {
             Value step = getObjMethod(vm, OBJ_VAL(generator), "step");
             ObjBoundMethod* stepMethod = newBoundMethod(vm, OBJ_VAL(generator), step);
             Value then = getObjMethod(vm, OBJ_VAL(promise), "then");
-            return callReentrantMethod(vm, OBJ_VAL(promise), then, OBJ_VAL(stepMethod));
+            return callReentrantMethod(vm, OBJ_VAL(promise), then, OBJ_VAL(stepMethod));       
         }
     }
 }
@@ -102,10 +102,10 @@ Value runGeneratorAsync(VM* vm, Value callee, ObjArray* arguments) {
     ObjGenerator* generator = newGenerator(vm, NULL, NULL);
     push(vm, OBJ_VAL(generator));
     initGenerator(vm, generator, callee, arguments);
+    pop(vm);
 
     for (int i = 0; i < arguments->elements.count; i++) {
         pop(vm);
     }
-    pop(vm);
     return stepGenerator(vm, generator, NIL_VAL);
 }

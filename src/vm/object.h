@@ -15,8 +15,8 @@
 
 #define ALLOCATE_OBJ(type, objectType, objectClass) (type*)allocateObject(vm, sizeof(type), objectType, objectClass, GC_GENERATION_TYPE_EDEN)
 #define ALLOCATE_OBJ_GEN(type, objectType, objectClass, generation) (type*)allocateObject(vm, sizeof(type), objectType, objectClass, generation)
-#define ALLOCATE_CLASS(classClass) ALLOCATE_OBJ(ObjClass, OBJ_CLASS, classClass)
-#define ALLOCATE_CLOSURE(closureClass) ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE, closureClass)
+#define ALLOCATE_CLASS(classClass) ALLOCATE_OBJ_GEN(ObjClass, OBJ_CLASS, classClass, GC_GENERATION_TYPE_PERMANENT)
+#define ALLOCATE_CLOSURE(closureClass, generation) ALLOCATE_OBJ_GEN(ObjClosure, OBJ_CLOSURE, closureClass, generation)
 #define ALLOCATE_NAMESPACE(namespaceClass) ALLOCATE_OBJ_GEN(ObjNamespace, OBJ_NAMESPACE, namespaceClass, GC_GENERATION_TYPE_PERMANENT)
 
 #define OBJ_TYPE(value)             (AS_OBJ(value)->type)
@@ -351,7 +351,7 @@ ObjEntry* newEntry(VM* vm, Value key, Value value);
 ObjException* newException(VM* vm, ObjString* message, ObjClass* klass);
 ObjFile* newFile(VM* vm, ObjString* name);
 ObjFrame* newFrame(VM* vm, CallFrame* callFrame);
-ObjFunction* newFunction(VM* vm);
+ObjFunction* newFunction(VM* vm, ObjString* name, bool isAsync);
 ObjGenerator* newGenerator(VM* vm, ObjFrame* frame, ObjGenerator* outer);
 ObjInstance* newInstance(VM* vm, ObjClass* klass);
 ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure);

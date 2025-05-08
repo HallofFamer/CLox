@@ -46,7 +46,7 @@ ObjClass* newClass(VM* vm, ObjString* name, ObjType classType) {
         exit(70);
     }
 
-    ObjString* metaclassName = formattedString(vm, "%s class", name->chars);
+    ObjString* metaclassName = formattedStringPerma(vm, "%s class", name->chars);
     ObjClass* metaclass = createClass(vm, metaclassName, vm->metaclassClass, BEHAVIOR_METACLASS);
     metaclass->classType = OBJ_CLASS;
     push(vm, OBJ_VAL(metaclass));
@@ -72,7 +72,7 @@ void initClosure(VM* vm, ObjClosure* closure, ObjFunction* function) {
 }
 
 ObjClosure* newClosure(VM* vm, ObjFunction* function) {
-    ObjClosure* closure = ALLOCATE_CLOSURE(vm->functionClass);
+    ObjClosure* closure = ALLOCATE_CLOSURE(vm->functionClass, function->obj.generation);
     initClosure(vm, closure, function);
     return closure;
 }
@@ -130,13 +130,16 @@ ObjFrame* newFrame(VM* vm, CallFrame* callFrame) {
     return frame;
 }
 
-ObjFunction* newFunction(VM* vm) {
-    ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION, NULL);
+ObjFunction* newFunction(VM* vm, ObjString* name, bool isAsync) {
+    bool isAnonymous = (name != NULL) && (name->length == 0 || name->chars[0] == '{' || strcmp(name->chars, "fun") == 0);
+    GCGenerationType generation = isAnonymous ? GC_GENERATION_TYPE_EDEN : GC_GENERATION_TYPE_PERMANENT;
+    ObjFunction* function = ALLOCATE_OBJ_GEN(ObjFunction, OBJ_FUNCTION, NULL, generation);
+
     function->arity = 0;
     function->upvalueCount = 0;
     function->isGenerator = false;
-    function->isAsync = false;
-    function->name = NULL;
+    function->isAsync = isAsync;
+    function->name = name;
     initChunk(&function->chunk, function->obj.generation);
     return function;
 }
@@ -158,14 +161,14 @@ ObjInstance* newInstance(VM* vm, ObjClass* klass) {
 }
 
 ObjMethod* newMethod(VM* vm, ObjClass* behavior, ObjClosure* closure) {
-    ObjMethod* method = ALLOCATE_OBJ(ObjMethod, OBJ_METHOD, vm->methodClass);
+    ObjMethod* method = ALLOCATE_OBJ_GEN(ObjMethod, OBJ_METHOD, vm->methodClass, GC_GENERATION_TYPE_PERMANENT);
     method->behavior = behavior;
     method->closure = closure;
     return method;
 }
 
 ObjModule* newModule(VM* vm, ObjString* path) {
-    ObjModule* module = ALLOCATE_OBJ(ObjModule, OBJ_MODULE, NULL);
+    ObjModule* module = ALLOCATE_OBJ_GEN(ObjModule, OBJ_MODULE, NULL, GC_GENERATION_TYPE_PERMANENT);
     module->path = path;
     module->closure = NULL;
     module->isNative = false;
@@ -310,7 +313,7 @@ ObjValueInstance* newValueInstance(VM* vm, Value value, ObjClass* klass) {
 Value getObjProperty(VM* vm, ObjInstance* object, char* name) {
     IDMap* idMap = getShapeIndexes(vm, object->obj.shapeID);
     int index;
-    idMapGet(idMap, newString(vm, name), &index);
+    idMapGet(idMap, newStringPerma(vm, name), &index);
     return object->fields.values[index];
 }
 
@@ -325,7 +328,7 @@ Value getObjPropertyByIndex(VM* vm, ObjInstance* object, int index) {
 void setObjProperty(VM* vm, ObjInstance* object, char* name, Value value) {
     PROCESS_WRITE_BARRIER((Obj*)object, value);
     IDMap* idMap = getShapeIndexes(vm, object->obj.shapeID);
-    ObjString* key = newString(vm, name);
+    ObjString* key = newStringPerma(vm, name);
     int index;
     push(vm, OBJ_VAL(key));
 
@@ -362,7 +365,7 @@ void copyObjProperties(VM* vm, ObjInstance* fromObject, ObjInstance* toObject) {
 Value getObjMethod(VM* vm, Value object, char* name) {
     ObjClass* klass = getObjClass(vm, object);
     Value method;
-    if (!tableGet(&klass->methods, newString(vm, name), &method)) {
+    if (!tableGet(&klass->methods, newStringPerma(vm, name), &method)) {
         runtimeError(vm, "Method %s::%s does not exist.", klass->name->chars, name);
         exit(70);
     }

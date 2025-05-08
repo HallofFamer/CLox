@@ -93,7 +93,7 @@ bool valueArraysEqual(ValueArray* aArray, ValueArray* bArray) {
 }
 
 ObjString* valueArrayToString(VM* vm, ValueArray* array) {
-    if (array->count == 0) return copyString(vm, "[]", 2);
+    if (array->count == 0) return copyStringPerma(vm, "[]", 2);
     else {
         char string[UINT8_MAX] = "";
         string[0] = '[';

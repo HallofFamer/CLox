@@ -98,6 +98,15 @@ ObjString* formattedString(VM* vm, const char* format, ...) {
     return copyString(vm, chars, length);
 }
 
+ObjString* formattedStringPerma(VM* vm, const char* format, ...) {
+    char chars[UINT8_MAX];
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(chars, UINT8_MAX, format, args);
+    va_end(args);
+    return copyStringPerma(vm, chars, length);
+}
+
 static void capitalizeFirstIndex(VM* vm, char* source, char* target, int length) {
     if (length == 1) target[0] = (char)toupper(source[0]);
     else {

@@ -29,7 +29,7 @@ void initClass(VM* vm, ObjClass* klass, ObjString* name, ObjClass* metaclass, Be
     if (!klass->namespace->isRoot) {
         char chars[UINT8_MAX];
         int length = sprintf_s(chars, UINT8_MAX, "%s.%s", klass->namespace->fullName->chars, klass->name->chars);
-        klass->fullName = copyString(vm, chars, length);
+        klass->fullName = copyStringPerma(vm, chars, length);
     }
     else klass->fullName = klass->name;
 
@@ -60,7 +60,7 @@ void initTrait(VM* vm, ObjClass* trait, ObjString* name) {
     if (!trait->namespace->isRoot) {
         char chars[UINT8_MAX];
         int length = sprintf_s(chars, UINT8_MAX, "%s.%s", trait->namespace->fullName->chars, trait->name->chars);
-        trait->fullName = copyString(vm, chars, length);
+        trait->fullName = copyStringPerma(vm, chars, length);
     }
     else trait->fullName = trait->name;
 
@@ -91,8 +91,8 @@ ObjString* getClassNameFromMetaclass(VM* vm, ObjString* metaclassName) {
 }
 
 ObjString* getMetaclassNameFromClass(VM* vm, ObjString* className) {
-    if (strstr(className->chars, " class") != NULL) return copyString(vm, "Metaclass", 9);
-    return concatenateString(vm, className, newString(vm, "class"), " ");
+    if (strstr(className->chars, " class") != NULL) return copyStringPerma(vm, "Metaclass", 9);
+    return concatenateString(vm, className, newStringPerma(vm, "class"), " ");
 }
 
 ObjString* getClassFullName(VM* vm, ObjString* shortName, ObjString* currentNamespace) {
@@ -240,7 +240,7 @@ void bindTraits(VM* vm, int numTraits, ObjClass* klass, ...) {
 
 Value getClassProperty(VM* vm, ObjClass* klass, char* name) {
     int index;
-    if (!idMapGet(&klass->indexes, newString(vm, name), &index)) {
+    if (!idMapGet(&klass->indexes, newStringPerma(vm, name), &index)) {
         runtimeError(vm, "Class property %s does not exist for class %s", name, klass->fullName->chars);
         return NIL_VAL;
     }
@@ -249,7 +249,7 @@ Value getClassProperty(VM* vm, ObjClass* klass, char* name) {
 
 void setClassProperty(VM* vm, ObjClass* klass, char* name, Value value) {
     PROCESS_WRITE_BARRIER((Obj*)klass, value);
-    ObjString* propertyName = newString(vm, name);
+    ObjString* propertyName = newStringPerma(vm, name);
     int index;
     if (!idMapGet(&klass->indexes, propertyName, &index)) {
         index = klass->fields.count;
