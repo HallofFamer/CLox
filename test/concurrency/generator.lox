@@ -34,11 +34,11 @@ class MultiGenerator {
     }
 
     middle(arg, arg2){ 
-        println("Middle Generator starts...");
-        yield arg;
-        yield from this.inner(2, 3);
-        yield arg2;
-        println("Middle Generator ends...");
+        println("Middle Generator starts...")
+        yield arg
+        yield from this.inner(2, 3)
+        yield arg2
+        println("Middle Generator ends...")
     }
 
     outer(arg, arg2){ 

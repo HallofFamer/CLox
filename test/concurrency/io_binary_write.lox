@@ -1,17 +1,17 @@
-namespace test.concurrency;
-using clox.std.io.BinaryWriteStream;
-using clox.std.io.File;
+namespace test.concurrency
+using clox.std.io.BinaryWriteStream
+using clox.std.io.File
 
-println("Creating a binary write stream.");
-val binaryWriter = await File.openAsync("test/others/binary_output.bin", "wb");
-print("Successfully opened: ");
-println(binaryWriter);
+println("Creating a binary write stream.")
+val binaryWriter = await File.openAsync("test/others/binary_output.bin", "wb")
+print("Successfully opened: ")
+println(binaryWriter)
 
-print("Now write to a binary file with the following bytes: ");
-val bytes = [5, 37, 0, 88, 255, 12];
-println(bytes);
-await binaryWriter.writeBytesAsync(bytes);
+print("Now write to a binary file with the following bytes: ")
+val bytes = [5, 37, 0, 88, 255, 12]
+println(bytes)
+await binaryWriter.writeBytesAsync(bytes)
 
-println("Closing write stream for file.");
-await binaryWriter.closeAsync();
-println("Write stream has been closed.");
+println("Closing write stream for file.")
+await binaryWriter.closeAsync()
+println("Write stream has been closed.")

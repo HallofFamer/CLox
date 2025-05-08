@@ -1,19 +1,19 @@
-namespace test.concurrency;
-using clox.std.io.BinaryReadStream;
-using clox.std.io.File;
+namespace test.concurrency
+using clox.std.io.BinaryReadStream
+using clox.std.io.File
 
-println("Creating a binary read stream.");
-val binaryReader = await File.openAsync("test/others/binary_input.bin", "rb");
-print("Successfully opened: ");
-println(binaryReader);
+println("Creating a binary read stream.")
+val binaryReader = await File.openAsync("test/others/binary_input.bin", "rb")
+print("Successfully opened: ")
+println(binaryReader)
 
-print("Now reading next byte: ");
-println(await binaryReader.readAsync());
-print("Then read next 2 bytes: ");
-println(await binaryReader.readBytesAsync(2));
-print("Then read last 3 bytes: ");
-println(await binaryReader.readBytesAsync(3));
+print("Now reading next byte: ")
+println(await binaryReader.readAsync())
+print("Then read next 2 bytes: ")
+println(await binaryReader.readBytesAsync(2))
+print("Then read last 3 bytes: ")
+println(await binaryReader.readBytesAsync(3))
 
-println("Closing read stream for file.");
-await binaryReader.closeAsync();
-println("Read stream has been closed.");
+println("Closing read stream for file.")
+await binaryReader.closeAsync()
+println("Read stream has been closed.")

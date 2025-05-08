@@ -1,17 +1,17 @@
-namespace test.concurrency;
-using clox.std.util.Promise;
-using clox.std.util.Timer;
+namespace test.concurrency
+using clox.std.util.Promise
+using clox.std.util.Timer
 
 val promise = Promise({|fulfill, reject|
-    Timer.timeout({ fulfill("hello world"); }, 2000);
-});
+    Timer.timeout({ fulfill("hello world") }, 2000)
+})
 
 val promise2 = Promise({|fulfill, reject|
-    Timer.timeout({ fulfill("hello world 2"); }, 1000);
-});
+    Timer.timeout({ fulfill("hello world 2") }, 1000)
+})
 
-println("Promise created: ${promise}");
-promise.then({|value| println("Promise fulfilled: ${value}"); })
-       .catch({|exception| println("promise failed: ${exception.message}"); });
-promise2.then({|value| println("Promise2 fulfilled: ${value}"); })
-        .catch({|exception| println("promise2 failed: ${exception.message}"); });
+println("Promise created: ${promise}")
+promise.then({|value| println("Promise fulfilled: ${value}") })
+       .catch({|exception| println("promise failed: ${exception.message}") })
+promise2.then({|value| println("Promise2 fulfilled: ${value}") })
+        .catch({|exception| println("promise2 failed: ${exception.message}") })

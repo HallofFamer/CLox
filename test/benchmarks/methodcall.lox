@@ -1,31 +1,31 @@
-namespace test.benchmarks;
+namespace test.benchmarks
 
 class Zoo {
   __init__() {
-    this.aardvark = 1;
-    this.baboon   = 1;
-    this.cat      = 1;
-    this.donkey   = 1;
-    this.elephant = 1;
-    this.fox      = 1;
+    this.aardvark = 1
+    this.baboon   = 1
+    this.cat      = 1
+    this.donkey   = 1
+    this.elephant = 1
+    this.fox      = 1
   }
-  ant()    { return this.aardvark; }
-  banana() { return this.baboon; }
-  tuna()   { return this.cat; }
-  hay()    { return this.donkey; }
-  grass()  { return this.elephant; }
-  mouse()  { return this.fox; }
+  ant()    { return this.aardvark }
+  banana() { return this.baboon }
+  tuna()   { return this.cat }
+  hay()    { return this.donkey }
+  grass()  { return this.elephant }
+  mouse()  { return this.fox }
 }
 
-val zoo = Zoo();
-var sum = 0;
-val start = clock();
+val zoo = Zoo()
+var sum = 0
+val start = clock()
 while (sum < 10000000) {
-    sum = sum + zoo.ant() + zoo.banana() + zoo.tuna() + zoo.hay() + zoo.grass() + zoo.mouse();
+    sum = sum + zoo.ant() + zoo.banana() + zoo.tuna() + zoo.hay() + zoo.grass() + zoo.mouse()
 }
 
-print("Time taken for method calls: ");
-print(clock() - start);
-println(" seconds");
-println("Sum: " + sum.toString());
-println("");
+print("Time taken for method calls: ")
+print(clock() - start)
+println(" seconds")
+println("Sum: " + sum.toString())
+println("")

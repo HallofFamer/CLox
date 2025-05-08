@@ -1,26 +1,29 @@
-namespace test.concurrency;
-using clox.std.net.HTTPClient;
-using clox.std.util.Promise;
+namespace test.concurrency
+using clox.std.net.HTTPClient
+using clox.std.util.Promise
 
-val client = HTTPClient();
-print("Initializing HTTP Client: ");
-println(client);
-println("");
+val client = HTTPClient()
+print("Initializing HTTP Client: ")
+println(client)
+println("")
 
-println("Downloading sample file 1:");
-await client.downloadAsync("https://filesamples.com/samples/document/txt/sample1.txt", "test/others/file_downloaded_1.txt");
-println("Successfully downloaded file 1.");
-println("");
+println("Downloading sample file 1:")
+val start = clock()
+await client.downloadAsync("https://filesamples.com/samples/document/txt/sample1.txt", "test/others/file_downloaded_1.txt")
+println("Successfully downloaded file 1.")
+println("")
 
-println("Downloading sample file 2:");
-await client.downloadAsync("https://filesamples.com/samples/document/txt/sample2.txt", "test/others/file_downloaded_2.txt");
-println("Successfully downloaded file 2.");
-println("");
+println("Downloading sample file 2:")
+await client.downloadAsync("https://filesamples.com/samples/document/txt/sample2.txt", "test/others/file_downloaded_2.txt")
+println("Successfully downloaded file 2.")
+println("")
 
-println("Downloading sample file 3:");
-await client.downloadAsync("https://filesamples.com/samples/document/txt/sample3.txt", "test/others/file_downloaded_3.txt");
-println("Successfully downloaded file 3.");
-println("");
+println("Downloading sample file 3:")
+await client.downloadAsync("https://filesamples.com/samples/document/txt/sample3.txt", "test/others/file_downloaded_3.txt")
+val end = clock()
+println("Successfully downloaded file 3.")
+println("")
 
-println("Closing HTTP Client... ");
-client.close();
+println("Downloaded all 3 files after ${end - start} seconds")
+println("Closing HTTP Client... ")
+client.close()

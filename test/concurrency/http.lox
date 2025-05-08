@@ -1,54 +1,54 @@
-namespace test.concurrency;
-using clox.std.net.HTTPClient;
-using clox.std.net.HTTPRequest;
-using clox.std.net.URL;
+namespace test.concurrency
+using clox.std.net.HTTPClient
+using clox.std.net.HTTPRequest
+using clox.std.net.URL
 
-val client = HTTPClient();
-print("Initializing HTTP Client: ");
-println(client);
-println("");
+val client = HTTPClient()
+print("Initializing HTTP Client: ")
+println(client)
+println("")
 
-println("Sending async get request to example.com: ");
-val response = await client.getAsync(URL.parse("https://example.com"));
-print("Status: ");
-println(response.status);
-print("Cookies: ");
-println(response.cookies);
-print("Content Type: ");
-println(response.contentType);
-println("Content: ");
-println(response.content);
-println("");
+println("Sending async get request to example.com: ")
+val response = await client.getAsync(URL.parse("https://example.com"))
+print("Status: ")
+println(response.status)
+print("Cookies: ")
+println(response.cookies)
+print("Content Type: ")
+println(response.contentType)
+println("Content: ")
+println(response.content)
+println("")
 
-println("Sending async post request to httpbin.com: ");
-val response2 = await client.postAsync("https://httpbin.org/post", ["name" : "Ordland", "age": 35, "location" : "United States"]);
-print("Status: ");
-println(response2.status);
-print("Cookies: ");
-println(response2.cookies);
-print("Content Type: ");
-println(response2.contentType);
-println("Content: ");
-println(response2.content);
-println("");
+println("Sending async post request to httpbin.com: ")
+val response2 = await client.postAsync("https://httpbin.org/post", ["name" : "Ordland", "age": 35, "location" : "United States"])
+print("Status: ")
+println(response2.status)
+print("Cookies: ")
+println(response2.cookies)
+print("Content Type: ")
+println(response2.contentType)
+println("Content: ")
+println(response2.content)
+println("")
 
-println("Sending async put request to httpbin.com: ");
-val response3 = await client.putAsync("https://httpbin.org/put", ["id": 521, "name" : "Ordland", "age": 35, "location" : "United States"]);
-print("Status: ");
-println(response3.status);
-print("Cookies: ");
-println(response3.cookies);
-print("Content Type: ");
-println(response3.contentType);
-println("Content: ");
-println(response3.content);
-println("");
+println("Sending async put request to httpbin.com: ")
+val response3 = await client.putAsync("https://httpbin.org/put", ["id": 521, "name" : "Ordland", "age": 35, "location" : "United States"])
+print("Status: ")
+println(response3.status)
+print("Cookies: ")
+println(response3.cookies)
+print("Content Type: ")
+println(response3.contentType)
+println("Content: ")
+println(response3.content)
+println("")
 
-println("Sending async delete request to httpbin.com: ");
-val response4 = await client.deleteAsync("https://httpbin.org/delete");
-print("Status: ");
-println(response4.status);
-print("Cookies: ");
+println("Sending async delete request to httpbin.com: ")
+val response4 = await client.deleteAsync("https://httpbin.org/delete")
+print("Status: ")
+println(response4.status)
+print("Cookies: ")
 println(response4.cookies);
 print("Content Type: ");
 println(response4.contentType);
@@ -61,29 +61,29 @@ val response5 = await client.patchAsync("https://httpbin.org/patch", ["name" : "
 print("Status: ");
 println(response5.status);
 print("Cookies: ");
-println(response5.cookies);
-print("Content Type: ");
-println(response5.contentType);
-println("Content: ");
-println(response5.content);
-println("");
+println(response5.cookies)
+print("Content Type: ")
+println(response5.contentType)
+println("Content: ")
+println(response5.content)
+println("")
 
-println("Creating a HTTPRequest object: ");
-val request = HTTPRequest("https://httpbin.org/post", HTTPRequest.httpPOST, ["Accept": "*/*", "Content-Type": "application/json"], ["name" : "Ordland", "age": 34, "location" : "United States"]);
-println(request.toString());
-println("");
+println("Creating a HTTPRequest object: ")
+val request = HTTPRequest("https://httpbin.org/post", HTTPRequest.httpPOST, ["Accept": "*/*", "Content-Type": "application/json"], ["name" : "Ordland", "age": 34, "location" : "United States"])
+println(request.toString())
+println("")
 
-println("Sending generic HTTP request to example.com: ");
-val response6 = await client.sendAsync(request);
-print("Status: ");
-println(response6.status);
-print("Cookies: ");
-println(response6.cookies);
-print("Content Type: ");
-println(response6.contentType);
-println("Content: ");
-println(response6.content);
-println("");
+println("Sending generic HTTP request to example.com: ")
+val response6 = await client.sendAsync(request)
+print("Status: ")
+println(response6.status)
+print("Cookies: ")
+println(response6.cookies)
+print("Content Type: ")
+println(response6.contentType)
+println("Content: ")
+println(response6.content)
+println("")
 
-println("Closing HTTP Client... ");
-client.close();
+println("Closing HTTP Client... ")
+client.close()

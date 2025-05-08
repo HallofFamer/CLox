@@ -1,23 +1,23 @@
-namespace test.concurrency;
-using clox.std.util.Promise;
-using clox.std.util.Timer;
+namespace test.concurrency
+using clox.std.util.Promise
+using clox.std.util.Timer
 
 val promise = Promise({|fulfill, reject|
-    Timer.timeout({ fulfill("Hello."); }, 500);
+    Timer.timeout({ fulfill("Hello.") }, 500)
 });
 
-println("Promise created: ${promise}");
-promise.then({|value| 
-           println("First Promise fulfilled: ${value}"); 
-           Promise({|fulfill, reject| Timer.timeout({ fulfill("Nice to meet you."); }, 1000); });
+println("Promise created: ${promise}")
+promise.then({|value|
+           println("First Promise fulfilled: ${value}")
+           Promise({|fulfill, reject| Timer.timeout({ fulfill("Nice to meet you.") }, 1000) })
        })
-       .then({|value| 
-           println("Second Promise fulfilled: ${value}");
-           Promise({|fulfill, reject| Timer.timeout({ fulfill("How are you doing?"); }, 1500); });
+       .then({|value|
+           println("Second Promise fulfilled: ${value}")
+           Promise({|fulfill, reject| Timer.timeout({ fulfill("How are you doing?") }, 1500) })
        })
        .then({|value| 
            println("Third Promise fulfilled: ${value}");
-           Promise({|fulfill, reject| Timer.timeout({ fulfill("Goodbye."); }, 2000); });
+           Promise({|fulfill, reject| Timer.timeout({ fulfill("Goodbye.") }, 2000) })
        })
-       .then({|value| println("Last Promise fulfilled: ${value}"); })
-       .catch({|exception| println("promise failed: ${exception.message}"); });
+       .then({|value| println("Last Promise fulfilled: ${value}") })
+       .catch({|exception| println("promise failed: ${exception.message}"); })

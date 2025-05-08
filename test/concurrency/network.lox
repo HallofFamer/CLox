@@ -1,38 +1,38 @@
-namespace test.concurrency;
-using clox.std.net;
-using clox.std.util.Promise;
+namespace test.concurrency
+using clox.std.net
+using clox.std.util.Promise
 
-val ip = net.IPAddress("127.0.0.1");
-println("IP Address: " + ip.toString());
-println("IP is v4: " + ip.isIPV4().toString());
-print("IP to array: ");
-println(ip.toArray());
+val ip = net.IPAddress("127.0.0.1")
+println("IP Address: " + ip.toString())
+println("IP is v4: " + ip.isIPV4().toString())
+print("IP to array: ")
+println(ip.toArray())
 
-val ip2 = net.IPAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
-println("IP2 Address: " + ip2.toString());
-println("IP2 is v6: " + ip2.isIPV6().toString());
-print("IP2 to array: ");
-println(ip2.toArray());
-println("");
+val ip2 = net.IPAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+println("IP2 Address: " + ip2.toString())
+println("IP2 is v6: " + ip2.isIPV6().toString())
+print("IP2 to array: ")
+println(ip2.toArray())
+println("")
 
-val domain = net.Domain("google.com");
-println("Domain name: ${domain.toString()}");
-val domain2 = net.Domain("facebook.com");
-println("Domain2 name: ${domain2.toString()}");
-val promiseD1 = domain.getIPAddressesAsync();
-val promiseD2 = domain2.getIPAddressesAsync();
+val domain = net.Domain("google.com")
+println("Domain name: ${domain.toString()}")
+val domain2 = net.Domain("facebook.com")
+println("Domain2 name: ${domain2.toString()}")
+val promiseD1 = domain.getIPAddressesAsync()
+val promiseD2 = domain2.getIPAddressesAsync()
 Promise.all([promiseD1, promiseD2])
        .then({|addresses| 
            addresses.eachIndex({|index, address| 
-               println("Domain IPs for Domain ${index + 1}: ${address}");
-           });
+               println("Domain IPs for Domain ${index + 1}: ${address}")
+           })
        })
-       .catch({|exception| println("promise all failed: ${exception.message}"); });
+       .catch({|exception| println("promise all failed: ${exception.message}") })
 
-val ip3 = net.IPAddress("204.15.11.70");
-println("IP3 address: ${ip3.toString()}");
+val ip3 = net.IPAddress("204.15.11.70")
+println("IP3 address: ${ip3.toString()}")
 ip3.getDomainAsync()
    .then({|domain| 
-       println("IP3 host: ${domain}");
+       println("IP3 host: ${domain}")
    })
-   .catch({|exception| println("Error: ${exception.message}"); });
+   .catch({|exception| println("Error: ${exception.message}") })

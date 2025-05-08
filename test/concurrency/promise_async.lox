@@ -1,26 +1,26 @@
-namespace test.concurrency;
-using clox.std.io.File;
+namespace test.concurrency
+using clox.std.io.File
 
 class FileReader { 
     
     async readAsync(String url) { 
-        val fileReader = await File.openAsync(url, "r");
-        print("Successfully opened: ");
-        println(fileReader);
-        println("Now reading the entire file: ");
-        println("");
+        val fileReader = await File.openAsync(url, "r")
+        print("Successfully opened: ")
+        println(fileReader)
+        println("Now reading the entire file: ")
+        println("")
 
-        val text = await fileReader.readToEndAsync();
-        println(text);
-        println("");
-        println("Closing read stream for file.");
+        val text = await fileReader.readToEndAsync()
+        println(text)
+        println("")
+        println("Closing read stream for file.")
     
-        await fileReader.closeAsync();
-        println("Read stream has been closed.");
+        await fileReader.closeAsync()
+        println("Read stream has been closed.")
     }
 }
 
-val fileReader = FileReader();
-println("Start reading file...\n");
-await fileReader.readAsync("test/others/file_input.txt");
-println("\nFinished reading file...");
+val fileReader = FileReader()
+println("Start reading file...\n")
+await fileReader.readAsync("test/others/file_input.txt")
+println("\nFinished reading file...")
