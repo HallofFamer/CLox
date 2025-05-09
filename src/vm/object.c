@@ -185,6 +185,7 @@ ObjModule* newModule(VM* vm, ObjString* path) {
             valueArrayWrite(vm, &module->valFields, entry->value);
         }
     }
+    
     tableSet(vm, &vm->modules, path, NIL_VAL);
     return module;
 }
@@ -253,8 +254,11 @@ ObjPromise* newPromise(VM* vm, PromiseState state, Value value, Value executor){
     promise->executor = executor;
     promise->onCatch = NIL_VAL;
     promise->onFinally = NIL_VAL;
+    push(vm, OBJ_VAL(promise));
+
     promise->captures = newDictionary(vm);
     initValueArray(&promise->handlers, promise->obj.generation);
+    pop(vm);
     return promise;
 }
 

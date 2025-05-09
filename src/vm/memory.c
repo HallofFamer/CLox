@@ -168,6 +168,7 @@ void markObject(VM* vm, Obj* object, GCGenerationType generation) {
     if (vm->gc->grayCapacity < vm->gc->grayCount + 1) {
         vm->gc->grayCapacity = GROW_CAPACITY(vm->gc->grayCapacity);
         Obj** grayStack = (Obj**)realloc(vm->gc->grayStack, sizeof(Obj*) * vm->gc->grayCapacity);
+
         if (grayStack == NULL) {
             fprintf(stderr, "Not enough memory to allocate for GC gray stack.");
             exit(74);
@@ -197,7 +198,7 @@ void markRememberedSet(VM* vm, GCGenerationType generation) {
     }
 }
 
-static void markModule(VM* vm, GCGenerationType generation) {
+static void markGlobals(VM* vm, GCGenerationType generation) {
     markIDMap(vm, &vm->currentModule->valIndexes, generation);
     markArray(vm, &vm->currentModule->valFields, generation);
     markIDMap(vm, &vm->currentModule->varIndexes, generation);
@@ -696,7 +697,7 @@ static void markRoots(VM* vm, GCGenerationType generation) {
         markObject(vm, (Obj*)generator, generation);
     }
 
-    markModule(vm, generation);
+    markGlobals(vm, generation);
     markRememberedSet(vm, generation);
     markCompilerRoots(vm);
 }
