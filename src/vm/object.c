@@ -94,8 +94,10 @@ ObjEntry* newEntry(VM* vm, Value key, Value value) {
 
 ObjException* newException(VM* vm, ObjString* message, ObjClass* klass) {
     ObjException* exception = ALLOCATE_OBJ(ObjException, OBJ_EXCEPTION, klass);
+    push(vm, OBJ_VAL(exception));
     exception->message = message;
     exception->stacktrace = newArray(vm);
+    pop(vm);
     return exception;
 }
 

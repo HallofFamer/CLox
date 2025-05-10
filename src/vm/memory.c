@@ -190,19 +190,19 @@ static void markArray(VM* vm, ValueArray* array, GCGenerationType generation) {
     }
 }
 
+static void markGlobals(VM* vm, GCGenerationType generation) {
+    markIDMap(vm, &vm->currentModule->valIndexes, generation);
+    markArray(vm, &vm->currentModule->valFields, generation);
+    markIDMap(vm, &vm->currentModule->varIndexes, generation);
+    markArray(vm, &vm->currentModule->varFields, generation);
+}
+
 void markRememberedSet(VM* vm, GCGenerationType generation) {
     GCRememberedSet* remSet = &vm->gc->generations[generation]->remSet;
     for (int i = 0; i < remSet->capacity; i++) {
         GCRememberedEntry* entry = &remSet->entries[i];
         markObject(vm, entry->object, GC_GENERATION_TYPE_PERMANENT);
     }
-}
-
-static void markGlobals(VM* vm, GCGenerationType generation) {
-    markIDMap(vm, &vm->currentModule->valIndexes, generation);
-    markArray(vm, &vm->currentModule->valFields, generation);
-    markIDMap(vm, &vm->currentModule->varIndexes, generation);
-    markArray(vm, &vm->currentModule->varFields, generation);
 }
 
 static size_t sizeOfObject(Obj* object) {
