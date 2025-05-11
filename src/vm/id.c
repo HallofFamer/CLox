@@ -38,7 +38,7 @@ bool idMapGet(IDMap* idMap, ObjString* key, int* index) {
 }
 
 static void idMapAdjustCapacity(VM* vm, IDMap* idMap, int capacity) {
-    IDEntry* entries = ALLOCATE(IDEntry, capacity, GC_GENERATION_TYPE_EDEN);
+    IDEntry* entries = ALLOCATE(IDEntry, capacity, idMap->generation);
     for (int i = 0; i < capacity; i++) {
         entries[i].key = NULL;
         entries[i].value = -1;

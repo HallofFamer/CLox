@@ -11,8 +11,8 @@
 
 static ObjString* createBehaviorName(VM* vm, BehaviorType behaviorType, ObjClass* superclass) {
     unsigned long currentTimeStamp = (unsigned long)time(NULL);
-    if (behaviorType == BEHAVIOR_TRAIT) return formattedString(vm, "Trait@%x", currentTimeStamp);
-    else return formattedString(vm, "%s@%x", superclass->name->chars, currentTimeStamp);
+    if (behaviorType == BEHAVIOR_TRAIT) return formattedStringPerma(vm, "Trait@%x", currentTimeStamp);
+    else return formattedStringPerma(vm, "%s@%x", superclass->name->chars, currentTimeStamp);
 }
 
 void initClass(VM* vm, ObjClass* klass, ObjString* name, ObjClass* metaclass, BehaviorType behaviorType) {
