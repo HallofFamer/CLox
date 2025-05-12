@@ -4,6 +4,9 @@ This document explains the design decisions behind the implemented features of C
 ## Why everything is an object? 
 Besides the fact that Lox is an OO language, having everything as an object adds a level of consistency. In lesser OO languages such as C++ and Java, programmers have to be aware of the difference between objects and primitive values, and some features work only for objects or primitive values, while this is unnecessary in better OO languages such as Smalltalk and Ruby.
 
+## Why is Lox standard library implemented in C? 
+Lox is not a fully statically typed language like C++ or Java, even with optional typing it is performance is still nowhere near compiled languages. Implementing standard library in C guarantees faster native functions/methods, also there are certain features that cannot be implemented in Lox itself, such as IO. 
+
 ## What are non-local returns and how are they useful? 
 CLox's lambda expressions use non-local returns, this allows return from the lambda's enclosing function/method instead of just the lambda itself. Non-local return is a valuable feature that allows exiting a function/method that cannot be done otherwise, a feature I've missed a lot when using Javascript's anonymous/arrow functions.
 

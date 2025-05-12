@@ -951,7 +951,7 @@ static void resolveSwitchStatement(Resolver* resolver, Ast* ast) {
         resolveChild(resolver, caseList, i);
     }
 
-    if (astNumChild(caseList) > 2) {
+    if (astNumChild(ast) > 2) {
         resolveChild(resolver, ast, 2);
     }
     resolver->switchDepth--;
