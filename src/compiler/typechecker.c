@@ -906,7 +906,7 @@ static void typeCheckSwitchStatement(TypeChecker* typeChecker, Ast* ast) {
         typeCheckChild(typeChecker, caseList, i);
     }
 
-    if (astNumChild(caseList) > 2) {
+    if (astNumChild(ast) > 2) {
         typeCheckChild(typeChecker, ast, 2);
     }
 }
