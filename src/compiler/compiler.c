@@ -162,12 +162,12 @@ static void patchAddress(Compiler* compiler, int offset) {
     currentChunk(compiler)->code[offset + 1] = currentChunk(compiler)->count & 0xff;
 }
 
-static void initClassCompiler(Compiler* compiler, ClassCompiler* klass, Token name, BehaviorType type) {
-    klass->enclosing = compiler->currentClass;
-    klass->name = name;
-    klass->type = type;
-    klass->superclass = compiler->rootClass;
-    compiler->currentClass = klass;
+static void initClassCompiler(Compiler* compiler, ClassCompiler* _class, Token name, BehaviorType type) {
+    _class->enclosing = compiler->currentClass;
+    _class->name = name;
+    _class->type = type;
+    _class->superclass = compiler->rootClass;
+    compiler->currentClass = _class;
 }
 
 static void endClassCompiler(Compiler* compiler) {

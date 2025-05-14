@@ -8,7 +8,6 @@
 typedef enum {
     PREC_NONE,
     PREC_ASSIGNMENT,
-    PREC_COND,
     PREC_OR,
     PREC_AND,
     PREC_EQUALITY,
@@ -822,7 +821,7 @@ static Ast* parseInfix(Parser* parser, Precedence precedence, Ast* left, bool ca
         left = infixRule(parser, parser->previous, left, canAssign);
     }
 
-    if (canAssign && match(parser, TOKEN_EQUAL)) {
+    if (!canAssign && match(parser, TOKEN_EQUAL)) {
         parseErrorAtPrevious(parser, "Invalid assignment target.");
     }
     return left;
