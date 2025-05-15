@@ -406,7 +406,7 @@ static Ast* question(Parser* parser, Token token, Ast* left, bool canAssign) {
         expr = call(parser, token, left, canAssign);
     }
     else if (match(parser, TOKEN_QUESTION) || match(parser, TOKEN_COLON)) {
-        expr = nil(parser, token, left, canAssign);
+        expr = nil(parser, parser->previous, left, canAssign);
     }
 
     if (expr != NULL) expr->modifier.isOptional = true;
@@ -884,17 +884,28 @@ static Ast* forStatement(Parser* parser) {
     Token token = parser->previous;
     Ast* stmt = emptyAst(AST_STMT_FOR, token);
     consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
-    consume(parser, TOKEN_VAR, "Expect 'var' keyword after '(' in for loop.");
+
+    if (!match(parser, TOKEN_VAL) && !match(parser, TOKEN_VAR)) {
+        parseErrorAtCurrent(parser, "Expect 'val' or 'var' keyword after '(' in for loop.");
+    }
+    bool isMutable = (parser->previous.type == TOKEN_VAR);
     Ast* decl = emptyAst(AST_LIST_VAR, parser->previous);
 
     if (match(parser, TOKEN_LEFT_PAREN)) { 
-        astAppendChild(decl, identifier(parser, "Expect first variable name after '('."));
+        Ast* key = identifier(parser, "Expect first variable name after '('.");
+        key->modifier.isMutable = isMutable;
+        astAppendChild(decl, key);
         consume(parser, TOKEN_COMMA, "Expect ',' after first variable declaration.");
-        astAppendChild(decl, identifier(parser, "Expect second variable name after ','."));
+        
+        Ast* value = identifier(parser, "Expect second variable name after ','.");
+        value->modifier.isMutable = isMutable;
+        astAppendChild(decl, value);
         consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after second variable declaration.");
     }
     else {
-        astAppendChild(decl, identifier(parser, "Expect variable name after 'var'."));
+        Ast* element = identifier(parser, "Expect variable name after 'var'.");
+        element->modifier.isMutable = isMutable;
+        astAppendChild(decl, element);
     }
 
     consume(parser, TOKEN_COLON, "Expect ':' after variable name.");

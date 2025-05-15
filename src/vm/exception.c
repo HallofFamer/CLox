@@ -11,6 +11,8 @@ bool propagateException(VM* vm) {
     ObjException* exception = AS_EXCEPTION(peek(vm, 0));
     while (vm->frameCount > 0) {
         CallFrame* frame = &vm->frames[vm->frameCount - 1];
+        Value value = peek(vm, 0);
+
         for (int i = frame->handlerCount; i > 0; i--) {
             ExceptionHandler handler = frame->handlerStack[i - 1];
             if (isObjInstanceOf(vm, OBJ_VAL(exception), handler.exceptionClass)) {
@@ -23,6 +25,12 @@ bool propagateException(VM* vm) {
                 return true;
             }
         }
+
+        for (int i = 0; i <= frame->closure->function->arity + 1; i++) {
+            pop(vm);
+        }
+        //if (vm->stack == vm->stackTop) push(vm, OBJ_VAL(vm->currentModule->closure));
+        push(vm, value);
         vm->frameCount--;
     }
 
