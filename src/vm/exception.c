@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "exception.h"
 #include "native.h"
 #include "vm.h"
-#include "exception.h"
 
-bool propagateException(VM* vm) {
+bool propagateException(VM* vm, bool isPromise) {
     ObjException* exception = AS_EXCEPTION(peek(vm, 0));
     while (vm->frameCount > 0) {
         CallFrame* frame = &vm->frames[vm->frameCount - 1];
@@ -17,6 +17,7 @@ bool propagateException(VM* vm) {
             ExceptionHandler handler = frame->handlerStack[i - 1];
             if (isObjInstanceOf(vm, OBJ_VAL(exception), handler.exceptionClass)) {
                 frame->ip = &frame->closure->function->chunk.code[handler.handlerAddress];
+                if (isPromise) run(vm);
                 return true;
             }
             else if (handler.finallyAddress != UINT16_MAX) {
@@ -29,7 +30,6 @@ bool propagateException(VM* vm) {
         for (int i = 0; i <= frame->closure->function->arity + 1; i++) {
             pop(vm);
         }
-        //if (vm->stack == vm->stackTop) push(vm, OBJ_VAL(vm->currentModule->closure));
         push(vm, value);
         vm->frameCount--;
     }
@@ -118,7 +118,15 @@ ObjException* throwException(VM* vm, ObjClass* exceptionClass, const char* forma
     ObjException* exception = newException(vm, message, exceptionClass);
     exception->stacktrace = stacktrace;
     push(vm, OBJ_VAL(exception));
-    if (!propagateException(vm)) exit(70);
+    if (!propagateException(vm, false)) exit(70);
+    else return exception;
+}
+
+ObjException* throwPromiseException(VM* vm, ObjPromise* promise) {
+    ObjException* exception = promise->exception;
+    exception->stacktrace = getStackTrace(vm);
+    push(vm, OBJ_VAL(exception));
+    if (!propagateException(vm, true)) exit(70);
     else return exception;
 }
 
@@ -135,6 +143,6 @@ ObjException* throwNativeException(VM* vm, const char* exceptionClassName, const
     ObjException* exception = newException(vm, message, exceptionClass);
     exception->stacktrace = stacktrace;
     push(vm, OBJ_VAL(exception));
-    if (!propagateException(vm)) exit(70);
+    if (!propagateException(vm, false)) exit(70);
     else return exception;
 }
