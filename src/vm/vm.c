@@ -484,7 +484,7 @@ Value callGenerator(VM* vm, ObjGenerator* generator) {
     loadGeneratorFrame(vm, generator);
     InterpretResult result = run(vm);
     if (result == INTERPRET_RUNTIME_ERROR) exit(70);
-    vm->runningGenerator = outer;
+    if(vm->runningGenerator->frame->closure->function->name != NULL) vm->runningGenerator = outer;
     return pop(vm);
 }
 
@@ -1308,12 +1308,7 @@ InterpretResult run(VM* vm) {
                     LOAD_FRAME();
                 }
 
-                for (int i = 0; i <= frame->closure->function->arity + 1; i++) {
-                    pop(vm);
-                }
-                push(vm, value);
-
-                if (propagateException(vm)) {
+                if (propagateException(vm, false)) {
                     LOAD_FRAME();
                     break;
                 }
@@ -1343,7 +1338,7 @@ InterpretResult run(VM* vm) {
                 break;
             case OP_FINALLY: {
                 frame->handlerCount--;
-                if (propagateException(vm)) {
+                if (propagateException(vm, false)) {
                     LOAD_FRAME();
                     break;
                 }

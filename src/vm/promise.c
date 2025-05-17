@@ -100,6 +100,7 @@ void promiseReject(VM* vm, ObjPromise* promise, Value exception) {
     promise->state = PROMISE_REJECTED;
     promise->exception = AS_EXCEPTION(exception);
     if (IS_CLOSURE(promise->onCatch)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onCatch, exception);
+    else throwPromiseException(vm, promise);
     if (IS_CLOSURE(promise->onFinally)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onFinally, promise->value);
 }
 
