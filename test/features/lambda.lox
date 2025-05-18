@@ -6,7 +6,7 @@ var square = fun(a){
 print("Using anonymous function for square(2): ")
 println(square(2))
 print("Invoke anonymous function pow(2, 3) directly: ")
-fun(a, b){ println(a.pow(b)); }(2, 3)
+fun(a, b){ println(a.pow(b)) }(2, 3)
 print("Class of anonymous function: ")
 println(square.getClassName())
 print("Arity of anonymous function: ")
@@ -18,7 +18,7 @@ var calculate = fun(n, operation){
     return operation(n)
 }
 print("Higher order function multiply(2, 3): ")
-println(calculate(2, fun(a){ return a * 3; }))
+println(calculate(2, fun(a){ return a * 3 }))
 var curry = fun(x){
     return fun(y){
         return x * y

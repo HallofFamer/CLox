@@ -1,41 +1,41 @@
-namespace test.features;
+namespace test.features
 
-println("Iterating over Int 5: ");
-5.timesRepeat({|i| print(i.toString() + " "); });
-println("");
-println("Iterating from Int 5 to 10: ");
-5.upTo(10, {|i| print(i.toString() + " "); });
-println("");
-println("");
+println("Iterating over Int 5: ")
+5.timesRepeat({|i| print(i.toString() + " ") })
+println("")
+println("Iterating from Int 5 to 10: ")
+5.upTo(10, {|i| print(i.toString() + " ") })
+println("")
+println("")
 
-var array = [2, 3.5, true, "Hello World"];
-println("Enumerating array with each method: ");
-array.each({|element| println("Element: " + element.toString()); });
-println("");
+var array = [2, 3.5, true, "Hello World"]
+println("Enumerating array with each method: ")
+array.each({|element| println("Element: " + element.toString()) })
+println("")
 
-var selected = array.select({|x| x.instanceOf(Number); });
-println("Selecting elements that are numbers: ");
-println(selected);
+var selected = array.select({|x| x.instanceOf(Number) })
+println("Selecting elements that are numbers: ")
+println(selected)
 
-var rejected = array.reject({|x| x.instanceOf(Number); });
-println("Rejecting elements that are numbers: ");
-println(rejected);
-println("");
+var rejected = array.reject({|x| x.instanceOf(Number) })
+println("Rejecting elements that are numbers: ")
+println(rejected)
+println("")
 
-var array2 = [1, 2, 3, 4, 5];
-println("Enumerating a number array with index: ");
-array2.eachIndex({|index, element| println("Element " + index.toString() + ": " + element.toString()); });
-println("");
+var array2 = [1, 2, 3, 4, 5]
+println("Enumerating a number array with index: ")
+array2.eachIndex({|index, element| println("Element " + index.toString() + ": " + element.toString()) })
+println("")
 
-println("Collect a number array by square: ");
-println(array2.collect({|x| x * x; }));
-println("Detecting first even number: ");
-println(array2.detect({|x| x.isEven(); }));
-println("");
+println("Collect a number array by square: ")
+println(array2.collect({|x| x * x }))
+println("Detecting first even number: ")
+println(array2.detect({|x| x.isEven() }))
+println("")
 
-var dict = ["US": "United States", "CA": "Canada", "EU": "Europe", "JP": "Japan", "RU": "Russia"];
-println("Enumerating a dictionary of countries: ");
-dict.each({|key, value| println("Key: " + key + ", Value: " + value.toString()); });
-println("Select countries with length 6: ");
-var dict2 = dict.select({|key, value| value.length() == 6; });
-println(dict2);
+var dict = ["US": "United States", "CA": "Canada", "EU": "Europe", "JP": "Japan", "RU": "Russia"]
+println("Enumerating a dictionary of countries: ")
+dict.each({|key, value| println("Key: " + key + ", Value: " + value.toString()) })
+println("Select countries with length 6: ")
+var dict2 = dict.select({|key, value| value.length() == 6 })
+println(dict2)

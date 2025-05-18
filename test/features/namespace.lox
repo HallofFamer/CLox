@@ -1,16 +1,16 @@
-namespace test.features;
-using clox.std.collection;
-using clox.std.util.Date;
-using clox.std.util.UUID as ID;
-using test.features;
+namespace test.features
+using clox.std.collection
+using clox.std.util.Date
+using clox.std.util.UUID as ID
+using test.features
 
-println(collection);
-println(collection.Array);
-println(Date);
-println(ID);
-println(features.Fraction);
+println(collection)
+println(collection.Array)
+println(Date)
+println(ID)
+println(features.Fraction)
 
-val frac = features.Fraction(3, 6);
-println(frac.toString());
-val frac2 = frac.reduce();
-println(frac2.toString());
+val frac = features.Fraction(3, 6)
+println(frac.toString())
+val frac2 = frac.reduce()
+println(frac2.toString())

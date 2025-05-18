@@ -1,93 +1,93 @@
-namespace test.features;
+namespace test.features
 
 class Complex { 
 
     __init__(Number real, Number imaginary){ 
-        this.real = real;
-        this.imaginary = imaginary;
+        this.real = real
+        this.imaginary = imaginary
     }
 
     Bool isReal(){ 
-        return this.imaginary == 0;
+        return this.imaginary == 0
     }
 
     Complex +(Complex that){
-        return this.getClass()(this.real + that.real, this.imaginary + that.imaginary);
+        return this.getClass()(this.real + that.real, this.imaginary + that.imaginary)
     } 
 
     Complex -(Complex that){ 
-        return this.getClass()(this.real - that.real, this.imaginary - that.imaginary);
+        return this.getClass()(this.real - that.real, this.imaginary - that.imaginary)
     }
 
     Complex *(Complex that){ 
-        val real = this.real * that.real - this.imaginary * that.imaginary;
-        val imaginary = this.real * that.imaginary + this.imaginary * that.real;
-        return this.getClass()(real, imaginary);
+        val real = this.real * that.real - this.imaginary * that.imaginary
+        val imaginary = this.real * that.imaginary + this.imaginary * that.real
+        return this.getClass()(real, imaginary)
     }
 
     Complex /(Complex that){ 
-        val denominator = that.real * that.real + that.imaginary * that.imaginary;
-        val real = (this.real * that.real + this.imaginary * that.imaginary) / denominator;
-        val imaginary = (this.real * that.imaginary - this.imaginary * that.real) / denominator;
-        return this.getClass()(real, imaginary);
+        val denominator = that.real * that.real + that.imaginary * that.imaginary
+        val real = (this.real * that.real + this.imaginary * that.imaginary) / denominator
+        val imaginary = (this.real * that.imaginary - this.imaginary * that.real) / denominator
+        return this.getClass()(real, imaginary)
     }
 
     Bool ==(Object that){ 
-        if (!that.instanceOf(Complex)) return false;
-        return (this.real == that.real) and (this.imaginary == that.imaginary);
+        if (!that.instanceOf(Complex)) return false
+        return (this.real == that.real) and (this.imaginary == that.imaginary)
     }
 
     Bool >(Complex that){ 
-        return (this.real.hypot(this.imaginary)) > (that.real.hypot(that.imaginary));
+        return (this.real.hypot(this.imaginary)) > (that.real.hypot(that.imaginary))
     }
 
     Bool <(Complex that){ 
-        return (this.real.hypot(this.imaginary)) < (that.real.hypot(that.imaginary));
+        return (this.real.hypot(this.imaginary)) < (that.real.hypot(that.imaginary))
     }
 
     Number [](String key) { 
-        if (key == "real") return this.real;
-        if (key == "imaginary") return this.imaginary;
-        throw UnsupportedOperationException("Only real and imaginary keys are supported."); 
+        if (key == "real") return this.real
+        if (key == "imaginary") return this.imaginary
+        throw UnsupportedOperationException("Only real and imaginary keys are supported.")
     }
 
     []=(String key, Numbeer value) {
-        if (key == "real") this.real = value;
-        if (key == "imaginary") this.imaginary = value;
-        throw UnsupportedOperationException("Only real and imaginary keys are supported.");        
+        if (key == "real") this.real = value
+        if (key == "imaginary") this.imaginary = value
+        throw UnsupportedOperationException("Only real and imaginary keys are supported.") 
     }
 
     String toString(){ 
         if(this.real == 0){ 
-            if(this.imaginary == 0) return "0";
-            else return this.imaginary.toString() + "i";
+            if(this.imaginary == 0) return "0"
+            else return this.imaginary.toString() + "i"
         }
-        else if(this.imaginary == 0) return this.real.toString();
+        else if(this.imaginary == 0) return this.real.toString()
         else{ 
-            var iSign = "";
-            if(this.imaginary > 0) iSign = "+"; 
-            return this.real.toString() + iSign + this.imaginary.toString() + "i";
+            var iSign = ""
+            if(this.imaginary > 0) iSign = "+"
+            return this.real.toString() + iSign + this.imaginary.toString() + "i"
         }
     }
 }
 
-val c1 = Complex(3, 8);
-val c2 = Complex(1, 2);
-print("Creating complex number c1: ");
-println(c1.toString());
-print("Creating complex number c2: ");
-println(c2.toString());
-print("Comparing c1 == c2: ");
-println(c1 == c2);
-print("Comparing c1 > c2: ");
-println(c1 > c2);
-print("Comparing c1 < c2: ");
-println(c1 < c2);
-print("Computing c1 + c2: ");
-println((c1 + c2).toString());
-print("Computing c1 - c2: ");
-println((c1 - c2).toString());
-print("Computing c1 * c2: ");
-println((c1 * c2).toString());
-print("Computing c1 / c2: ");
-println((c1 / c2).toString());
+val c1 = Complex(3, 8)
+val c2 = Complex(1, 2)
+print("Creating complex number c1: ")
+println(c1.toString())
+print("Creating complex number c2: ")
+println(c2.toString())
+print("Comparing c1 == c2: ")
+println(c1 == c2)
+print("Comparing c1 > c2: ")
+println(c1 > c2)
+print("Comparing c1 < c2: ")
+println(c1 < c2)
+print("Computing c1 + c2: ")
+println((c1 + c2).toString())
+print("Computing c1 - c2: ")
+println((c1 - c2).toString())
+print("Computing c1 * c2: ")
+println((c1 * c2).toString())
+print("Computing c1 / c2: ")
+println((c1 / c2).toString())

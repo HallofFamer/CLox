@@ -1,54 +1,54 @@
-namespace test.features;
-using clox.std.collection.Array;
+namespace test.features
+using clox.std.collection.Array
 
-var array = [];
-print("Creating empty array: ");
-println(array);
-var array2 = Array();
-print("Two empty arrays are equal: ");
-println(array.equals(array2));
-println("");
+var array = []
+print("Creating empty array: ")
+println(array)
+var array2 = Array()
+print("Two empty arrays are equal: ")
+println(array.equals(array2))
+println("")
 
-print("Adding elements 2, 3.5, true and 'Hello World': ");
-array.add(2);
-array.add(3.5);
-array[2] = true;
-array[3] = "Hello World";
-println(array);
-print("Testing array equality again: ");
-println(array.equals(array2));
-print("Creating another array using literal: ");
-var array3 = [1 + 1, 3.5, true, "hello World".capitalize()];
-println(array3);
-print("The first and last array are equal: ");
-println(array.equals(array3));
-println("");
+print("Adding elements 2, 3.5, true and 'Hello World': ")
+array.add(2)
+array.add(3.5)
+array[2] = true
+array[3] = "Hello World"
+println(array)
+print("Testing array equality again: ")
+println(array.equals(array2))
+print("Creating another array using literal: ")
+var array3 = [1 + 1, 3.5, true, "hello World".capitalize()]
+println(array3)
+print("The first and last array are equal: ")
+println(array.equals(array3))
+println("")
 
-print("Getting element at index 3: ");
-println(array.getAt(3));
-print("Index of element 'true': ");
-println(array.indexOf(true));
-println("");
+print("Getting element at index 3: ")
+println(array.getAt(3))
+print("Index of element 'true': ")
+println(array.indexOf(true))
+println("")
 
-print("Setting element false at index 2: ");
-array[2] = false;
-println(array.toString());
-print("Inserting element nil at index 3: ");
-array.insertAt(3, nil);
-println(array.toString());
-println("");
+print("Setting element false at index 2: ")
+array[2] = false
+println(array.toString())
+print("Inserting element nil at index 3: ")
+array.insertAt(3, nil)
+println(array.toString())
+println("")
 
-print("Remove element at index 1: ");
-var element = array.removeAt(1);
-println(element.toString());
-print("Current array is: ");
-println(array.toString());
-print("Clearing array: ");
-array.clear();
-println(array.toString());
-println("");
+print("Remove element at index 1: ")
+var element = array.removeAt(1)
+println(element.toString())
+print("Current array is: ")
+println(array.toString())
+print("Clearing array: ")
+array.clear()
+println(array.toString())
+println("")
 
-var array4 = Array.fromElements(1, 2, 3, 4, 5);
-println("Creating an array from class methods: " + array4.toString());
-print("New array contains element 2: ");
-println(array4.contains(2));
+var array4 = Array.fromElements(1, 2, 3, 4, 5)
+println("Creating an array from class methods: " + array4.toString())
+print("New array contains element 2: ")
+println(array4.contains(2))

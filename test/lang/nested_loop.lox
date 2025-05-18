@@ -14,8 +14,8 @@ while (i < 10) {
 println("")
 
 println("Testing Nested loop using 'for':")
-for (var i : 1..5) { 
-    for (var j : 1..5) { 
+for (val i : 1..5) { 
+    for (val j : 1..5) { 
         println("The result of ${i} ^ ${j} is: ${i.pow(j)}")
     }
     println("")

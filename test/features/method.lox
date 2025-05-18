@@ -1,35 +1,35 @@
-namespace test.features;
+namespace test.features
 
 class Scone { 
     topping(first, second){ 
-        println("Scone with " + first + " and " + second);
+        println("Scone with " + first + " and " + second)
     }
 }
 
-print("Acquiring method object for: ");
-var method = Scone.getMethod("topping");
-println(method.name());
-print("Arity of method is: ");
-println(method.arity());
-print("Method belongs to: ");
-println(method.behavior());
-print("Method is native: ");
-println(method.isNative());
-print("Method is variadic: ");
-println(method.isVariadic());
-println("");
+print("Acquiring method object for: ")
+var method = Scone.getMethod("topping")
+println(method.name())
+print("Arity of method is: ")
+println(method.arity())
+print("Method belongs to: ")
+println(method.behavior())
+print("Method is native: ")
+println(method.isNative())
+print("Method is variadic: ")
+println(method.isVariadic())
+println("")
 
-var scone = Scone();
-println("Bound method to receiver: ");
-var boundMethod = method.bind(scone);
-println(boundMethod.toString());
-println("Invoking bound method: ");
-boundMethod("berries", "cream");
-println("");
+var scone = Scone()
+println("Bound method to receiver: ")
+var boundMethod = method.bind(scone)
+println(boundMethod.toString())
+println("Invoking bound method: ")
+boundMethod("berries", "cream")
+println("")
 
-println("Getting method dict from Object: ");
-var methods = Object.methods();
-//println("");
+println("Getting method dict from Object: ")
+var methods = Object.methods()
+//println("")
 for(var (name, method) : methods){
-   println("Method " + method.behavior().name() + "::" + name + ", arity: " + method.arity().toString());
+   println("Method " + method.behavior().name() + "::" + name + ", arity: " + method.arity().toString())
 }

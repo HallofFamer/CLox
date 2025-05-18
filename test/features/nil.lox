@@ -1,38 +1,38 @@
-namespace test.features;
+namespace test.features
 
 class Street { 
     __init__(name, apartment, unit){ 
-        this.name = name;
-        this.apartment = apartment;
-        this.unit = unit;
+        this.name = name
+        this.apartment = apartment
+        this.unit = unit
     }
 }
 
 class Area { 
     __init__(city, state, country, zipcode){ 
-        this.city = city;
-        this.state = state;
-        this.country = country;
-        this.zipcode = zipcode;
+        this.city = city
+        this.state = state
+        this.country = country
+        this.zipcode = zipcode
     }
 }
  
 class Address { 
     __init__(){ 
-        this.street = nil;
-        this.area = nil;
+        this.street = nil
+        this.area = nil
     }
 }
 
-val address = Address();
-address.street = Street("Broadway", 1681, nil);
-address.area = Area("New York", "ny", "United State", 10018);
-val address2 = Address();
-print("State for address: ");
-println(address.area?.state?.toUppercase());
-print("State for address 2: ");
-println(address2.area?.state?.toUppercase());
-print("Zipcode for address: ");
-println(address.area?.zipcode ?? "00000");
-print("Zipcode for address 2: ");
-println(address2.area?.zipcode ?? "00000");
+val address = Address()
+address.street = Street("Broadway", 1681, nil)
+address.area = Area("New York", "ny", "United State", 10018)
+val address2 = Address()
+print("State for address: ")
+println(address.area?.state?.toUppercase())
+print("State for address 2: ")
+println(address2.area?.state?.toUppercase())
+print("Zipcode for address: ")
+println(address.area?.zipcode ?? "00000")
+print("Zipcode for address 2: ")
+println(address2.area?.zipcode ?? "00000")

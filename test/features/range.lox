@@ -1,25 +1,25 @@
-namespace test.features;
+namespace test.features
 
-var range = 0..4;
-println("Creating an instance of Range class: (" + range.from().toString() + ".." +range.to().toString() + ")");
-print("Length of Range: ");
-println(range.length());
-print("Range contains value 2: ");
-println(range.contains(2));
-print("Range element at index 3: ");
-println(range.getAt(3));
-println("");
+var range = 0..4
+println("Creating an instance of Range class: (" + range.from().toString() + ".." +range.to().toString() + ")")
+print("Length of Range: ")
+println(range.length())
+print("Range contains value 2: ")
+println(range.contains(2))
+print("Range element at index 3: ")
+println(range.getAt(3))
+println("")
 
-println("Looping through Range: ");
+println("Looping through Range: ")
 for(var n : range){ 
-    println(n);
+    println(n)
 }
-println("");
+println("")
 
-println("Looping through Range again with step 2: ");
+println("Looping through Range again with step 2: ")
 range.step(2, fun(n){ 
-    println(n);
-});
+    println(n)
+})
 
-print("Convert Range to Array: ");
-println(range.toArray());
+print("Convert Range to Array: ")
+println(range.toArray())

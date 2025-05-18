@@ -1,32 +1,25 @@
-namespace test.features;
-using clox.std.collection.Array;
+namespace test.features
+using clox.std.collection.Array
 
 class Fraction {
 
-    __init__(numerator, denominator){
-        this.validateNumbers(numerator, denominator);
-        this.numerator = numerator;
-        this.denominator = denominator;
-    }
-
-    validateNumbers(numerator, denominator){
-        if(!numerator.instanceOf(Int) or !denominator.instanceOf(Int)){
-            throw IllegalArgumentException("Numerator and Denominator must be integers.");
-        }
-        
+    __init__(Int numerator, Int denominator){
         if(denominator == 0){
-            throw IllegalArgumentException("Denominator of a Fraction object cannot be 0.");
+            throw IllegalArgumentException("Denominator of a Fraction object cannot be 0.")
         }
+
+        this.numerator = numerator
+        this.denominator = denominator
     }
 
-    reduce(){
-        val gcd = this.numerator.gcd(this.denominator);
-        val numerator = this.numerator / gcd;
-        val denominator = this.denominator / gcd;
-        return Fraction(numerator.toInt(), denominator.toInt());
+    Fraction reduce(){
+        val gcd = this.numerator.gcd(this.denominator)
+        val numerator = this.numerator / gcd
+        val denominator = this.denominator / gcd
+        return Fraction(numerator.toInt(), denominator.toInt())
     }
 
-    toString(){
-        return this.numerator.toString() + "/" + this.denominator.toString();
+    String toString(){
+        return this.numerator.toString() + "/" + this.denominator.toString()
     }
 }

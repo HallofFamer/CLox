@@ -1,130 +1,129 @@
-namespace test.features;
-using clox.std.collection.LinkedList;
+namespace test.features
+using clox.std.collection.LinkedList
 
-println("Testing reentrancy for methods on Int class...");
-println("");
-val n = 5;
-println("Loop and print number from 0 to 4");
-n.timesRepeat({|i| println("Current integer: " + i.toString()); });
-println("");
+println("Testing reentrancy for methods on Int class...")
+println("")
+val n = 5
+println("Loop and print number from 0 to 4")
+n.timesRepeat({|i| println("Current integer: " + i.toString()) })
+println("")
 
-val n2 = 10;
-println("Loop from number " + n.toString() + " up to " + n2.toString());
-n.upTo(n2, {|i| println("Current integer: " + i.toString()); });
-println("");
+val n2 = 10
+println("Loop from number " + n.toString() + " up to " + n2.toString())
+n.upTo(n2, {|i| println("Current integer: " + i.toString()) })
+println("")
 
-val n3 = 0;
-println("Loop from number " + n.toString() + " down to " + n3.toString());
-n.downTo(n3, {|i| println("Current integer: " + i.toString()); });
-println("");
+val n3 = 0
+println("Loop from number " + n.toString() + " down to " + n3.toString())
+n.downTo(n3, {|i| println("Current integer: " + i.toString()) })
+println("")
 
-println("Reentrancy test passed for Int class.");
-println("");
+println("Reentrancy test passed for Int class.")
+println("")
 
 
-println("Testing reentrancy for methods on Number class...");
-println("");
-val d = 1.5;
-val d2 = 3.6;
-val step = 0.3;
-println("Loop from " + d.toString() + " to " + d2.toString() + " with step size " + step.toString());
+println("Testing reentrancy for methods on Number class...")
+println("")
+val d = 1.5
+val d2 = 3.6
+val step = 0.3
+println("Loop from " + d.toString() + " to " + d2.toString() + " with step size " + step.toString())
 
-d.step(d2, step, {|i| println("Current number: " + i.toString()); });
-println("");
+d.step(d2, step, {|i| println("Current number: " + i.toString()) })
+println("")
 
-println("Reentrancy test passed for Number class.");
-println("");
+println("Reentrancy test passed for Number class.")
+println("")
 
-println("Testing reentrancy for methods on Array class...");
-println("");
-val array = [1, 2, 3, 4, 5];
-println("Multiply each element by 2: ");
+println("Testing reentrancy for methods on Array class...")
+println("")
+val array = [1, 2, 3, 4, 5]
+println("Multiply each element by 2: ")
 
-val mul = 2;
+val mul = 2
 array.each(fun(e){ 
-    print("Element: ");
-    println(e * mul);
-});
-println("");
+    print("Element: ")
+    println(e * mul)
+})
+println("")
 
-println("Square each element with index: ");
+println("Square each element with index: ")
 array.eachIndex(fun(i, e){ 
-    print("Element at index " + i.toString() + ": ");
-    println(e * e);
+    print("Element at index " + i.toString() + ": ")
+    println(e * e)
 });
+println("")
+
+print("Collect elements into a new array with sqaured values: ")
+println(array.collect(fun(e) { return e * e }))
+
+print("Detect first even number: ")
+println(array.detect(fun(e) { return e.isEven() }))
+
+print("Select odd numbers from array: ")
+println(array.select(fun(e) { return e.isOdd() }))
+
+print("Reject odd numbers from array: ")
+println(array.reject(fun(e) { return e.isOdd() }))
+println("")
+
+println("Reentrancy test passed for Array class.")
+println("")
+
+println("Testing reentrancy for methods on Dictionary class...")
+println("")
+val dict = ["US": "United States", "CA": "Canada", "EU": "Europe", "JP": "Japan", "RU": "Russia"]
+
+println("Looping through Dictionary: ")
+dict.each({|key, value| println("Key: " + key.toString() + ", Value: " + value.toString()) })
+println("")
+
+println("Collect entries with capitalized values: ")
+println(dict.collect(fun(k, v) { return v.toUppercase() }))
+println("")
+
+println("Detect first value with length greater than 6: ")
+println(dict.detect(fun(k, v) { return v.length() > 6 }))
+println("")
+
+println("Select entries with length 6: ")
+println(dict.select(fun(k, v) { return v.length() == 6 }))
+println("")
+
+println("Reject entries with length 6: ")
+println(dict.reject(fun(k, v) { return v.length() == 6 }))
+println("")
+
+println("Reentrancy test passed for Dictionary class.")
+println("")
+
+println("Testing reentrancy for methods on LinkedList class...")
+println("")
+
+var list = LinkedList()
+list.add(2)
+list.add(3.5)
+list.addAll([true, nil, "Hello World"])
+
+println("Looping through LinkedList: ")
+list.each({|e| println("Element: " + e.toString()) })
 println("");
 
-/*
-print("Collect elements into a new array with sqaured values: ");
-println(array.collect(fun(e) { return e * e; }));
-
-print("Detect first even number: ");
-println(array.detect(fun(e) { return e.isEven(); }));
-
-print("Select odd numbers from array: ");
-println(array.select(fun(e) { return e.isOdd(); }));
-
-print("Reject odd numbers from array: ");
-println(array.reject(fun(e) { return e.isOdd(); }));
+println("Collect elements with capitalized string values: ")
+println(list.collect(fun(e) { return e.toString().toUppercase() }).toString())
 println("");
 
-println("Reentrancy test passed for Array class.");
-println("");
-*/
-println("Testing reentrancy for methods on Dictionary class...");
-println("");
-val dict = ["US": "United States", "CA": "Canada", "EU": "Europe", "JP": "Japan", "RU": "Russia"];
+println("Detect with first non-numeric element: ")
+println(list.detect(fun(e) { return !e.instanceOf(Number) }))
+println("")
 
-println("Looping through Dictionary: ");
-dict.each({|key, value| println("Key: " + key.toString() + ", Value: " + value.toString()); });
-println("");
+println("Select numeric elements: ")
+println(list.select(fun(e) { return e.instanceOf(Number) }).toString())
+println("")
 
-println("Collect entries with capitalized values: ");
-println(dict.collect(fun(k, v) { return v.toUppercase(); }));
-println("");
+println("Reject numeric elements: ")
+println(list.reject(fun(e) { return e.instanceOf(Number) }).toString())
+println("")
 
-println("Detect first value with length greater than 6: ");
-println(dict.detect(fun(k, v) { return v.length() > 6; }));
-println("");
-
-println("Select entries with length 6: ");
-println(dict.select(fun(k, v) { return v.length() == 6; }));
-println("");
-
-println("Reject entries with length 6: ");
-println(dict.reject(fun(k, v) { return v.length() == 6; }));
-println("");
-
-println("Reentrancy test passed for Dictionary class.");
-println("");
-
-println("Testing reentrancy for methods on LinkedList class...");
-println("");
-
-var list = LinkedList();
-list.add(2);
-list.add(3.5);
-list.addAll([true, nil, "Hello World"]);
-
-println("Looping through LinkedList: ");
-list.each({|e| println("Element: " + e.toString()); });
-println("");
-
-println("Collect elements with capitalized string values: ");
-println(list.collect(fun(e) { return e.toString().toUppercase(); }).toString());
-println("");
-
-println("Detect with first non-numeric element: ");
-println(list.detect(fun(e) { return !e.instanceOf(Number); }));
-println("");
-
-println("Select numeric elements: ");
-println(list.select(fun(e) { return e.instanceOf(Number); }).toString());
-println("");
-
-println("Reject numeric elements: ");
-println(list.reject(fun(e) { return e.instanceOf(Number); }).toString());
-println("");
-
-println("Reentrancy test passed for LinkedList class.");
-println("");
+println("Reentrancy test passed for LinkedList class.")
+println("")

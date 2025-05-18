@@ -12,7 +12,7 @@ catch(RuntimeException e) {
 finally { 
     println("Finally clean up...")
 }
-println("");
+println("")
 
 println("Testing handling native exception: ")
 try { 

@@ -1,81 +1,81 @@
-namespace test.features;
+namespace test.features
 
 class InterceptObject {   
 
     __init__() { 
-        this.definedProperty = "property";
+        this.definedProperty = "property"
     }
 
     definedMethod(arg, arg2){ 
-        println("Invoking method: definedMethod with arguments: ${arg}, ${arg2}.");
-        return "defined method";
+        println("Invoking method: definedMethod with arguments: ${arg}, ${arg2}.")
+        return "defined method"
     }
 
     throwMethod(arg, arg2) {
-        throw Exception("Invoking method: throwMethod with arguments: ${arg}, ${arg2}");
+        throw Exception("Invoking method: throwMethod with arguments: ${arg}, ${arg2}")
     }
 
     __beforeGet__(name) { 
-        println("Before getting value of property ${name}.");
+        println("Before getting value of property ${name}.")
     }
 
     __afterGet__(name, value) { 
-        println("After getting value of property ${name}: ${value}.");
-        return "new ${value}";
+        println("After getting value of property ${name}: ${value}.")
+        return "new ${value}"
     }
 
     __beforeSet__(name, value) { 
-        println("Before Set property ${name} to value ${value}");
-        return "${value} new";
+        println("Before Set property ${name} to value ${value}")
+        return "${value} new"
     }
 
     __afterSet__(name) { 
-        println("After setting value of property ${name}");
+        println("After setting value of property ${name}")
     }
 
     __onInvoke__(name, args) { 
-        println("Before invoking method: ${name} with ${args.length} arguments: ${args.toString()}.");
+        println("Before invoking method: ${name} with ${args.length} arguments: ${args.toString()}.")
     }
 
     __onReturn__(name, result) { 
-        println("After invoking method: ${name} with return value ${result}.");
-        return "${result} new";
+        println("After invoking method: ${name} with return value ${result}.")
+        return "${result} new"
     }
 
     __onThrow__(name, exception) { 
-        println("Invoking method: ${name} with exception thrown: ${exception}");
-        val newException = IllegalArgumentException(exception.message);
-        newException.stacktrace = exception.stacktrace;
-        return newException;
+        println("Invoking method: ${name} with exception thrown: ${exception}")
+        val newException = IllegalArgumentException(exception.message)
+        newException.stacktrace = exception.stacktrace
+        return newException
     }
   
     __undefinedGet__(name) { 
-        println("Accessing undefined property: ${name}.");
+        println("Accessing undefined property: ${name}.")
     }
 
     __undefinedInvoke__(name, args){ 
-        println("Invoking undefined method: ${name} with ${args.length} arguments: ${args.toString()}.");
-        return "undefined method";
+        println("Invoking undefined method: ${name} with ${args.length} arguments: ${args.toString()}.")
+        return "undefined method"
     }
 }
 
-val intercept = InterceptObject();
-println("Testing interceptor methods for property get: ");
-println(intercept.definedProperty);
-intercept.undefinedProperty;
-println("");
+val intercept = InterceptObject()
+println("Testing interceptor methods for property get: ")
+println(intercept.definedProperty)
+intercept.undefinedProperty
+println("")
 
-println("Testing interceptor methods for property set: ");
-intercept.definedProperty = "property 2";
-println(intercept.definedProperty);
-println("");
-println("Testing interceptor methods for method invocation: ");
-intercept.definedMethod("Hello", true);
-intercept.undefinedMethod(0, 2, 4);
+println("Testing interceptor methods for property set: ")
+intercept.definedProperty = "property 2"
+println(intercept.definedProperty)
+println("")
+println("Testing interceptor methods for method invocation: ")
+intercept.definedMethod("Hello", true)
+intercept.undefinedMethod(0, 2, 4)
 
 try{
-    intercept.throwMethod(1.5, false);
+    intercept.throwMethod(1.5, false)
 }
 catch(Exception e) { 
-    println("Exception caught: ${e}");
+    println("Exception caught: ${e}")
 }

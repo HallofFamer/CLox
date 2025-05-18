@@ -1,133 +1,133 @@
-namespace test.features;
+namespace test.features
 
 trait TVehicle { 
 
     Bool isMoving(){ 
-        return this.speed > 0;
+        return this.speed > 0
     }
 
-    drive(Number speed){ 
-        this.speed = speed;
+    void drive(Number speed){ 
+        this.speed = speed
     }
 
-    accelerate(Number dSpeed){ 
-        this.speed = this.speed + dSpeed;
+    void accelerate(Number dSpeed){ 
+        this.speed = this.speed + dSpeed
     } 
 
-    stop(){ 
-        this.speed = 0;
+    void stop(){ 
+        this.speed = 0
     }
 }
 
-println("Trait: " + TVehicle.toString());
-print("TVehicle is trait: ");
-println(TVehicle.isTrait());
-print("TVehicle is class: ");
-println(TVehicle.isClass());
-print("TVehicle has method 'drive': ");
-println(TVehicle.hasMethod("drive"));
-print("TVehicle has method 'carry': ");
-println(TVehicle.hasMethod("carry"));
-print("Class of TVehicle: ");
-println(TVehicle.getClass());
-print("Class of Trait: ");
-println(TVehicle.getClass().getClass());
-print("Class of Trait class: ");
-println(TVehicle.getClass().getClass().getClass());
-print("Superclass of Trait: ");
-println(TVehicle.getClass().superclass());
-println("");
+println("Trait: " + TVehicle.toString())
+print("TVehicle is trait: ")
+println(TVehicle.isTrait())
+print("TVehicle is class: ")
+println(TVehicle.isClass())
+print("TVehicle has method 'drive': ")
+println(TVehicle.hasMethod("drive"))
+print("TVehicle has method 'carry': ")
+println(TVehicle.hasMethod("carry"))
+print("Class of TVehicle: ")
+println(TVehicle.getClass())
+print("Class of Trait: ")
+println(TVehicle.getClass().getClass())
+print("Class of Trait class: ")
+println(TVehicle.getClass().getClass().getClass())
+print("Superclass of Trait: ")
+println(TVehicle.getClass().superclass())
+println("")
 
 trait TTruck with TVehicle { 
 
-    carry(Number dLoad) { 
-        if(this.isMoving()) this.stop();
-        this.load = this.load + dLoad;
+    void carry(Number dLoad) { 
+        if(this.isMoving()) this.stop()
+        this.load = this.load + dLoad
     }
 
-    offload(){ 
-        this.load = 0;
+    void offload(){ 
+        this.load = 0
     }
 }
 
-println("Trait: " + TTruck.toString());
-print("TTruck has method 'drive': ");
-println(TTruck.hasMethod("drive"));
-print("TTruck has method 'carry': ");
-println(TTruck.hasMethod("carry"));
-println("");
+println("Trait: " + TTruck.toString())
+print("TTruck has method 'drive': ")
+println(TTruck.hasMethod("drive"))
+print("TTruck has method 'carry': ")
+println(TTruck.hasMethod("carry"))
+println("")
 
 class Vehicle with TVehicle { 
 
     __init__(String color, Number speed){ 
-        this.color = color;
-        this.speed = speed;
+        this.color = color
+        this.speed = speed
     }
 
     String toString(){ 
-        val message = this.color + " " + this.getClassName().toLowercase();
-        if(this.isMoving()) return message + " is moving at " + this.speed.toString() + " mph";
-        else return message + " is stationary";
+        val message = this.color + " " + this.getClassName().toLowercase()
+        if(this.isMoving()) return message + " is moving at " + this.speed.toString() + " mph"
+        else return message + " is stationary"
     }
 }
 
-val vehicle = Vehicle("blue", 40);
-println("Creating vehicle... ");
-println(vehicle.toString());
-println("Vehicle color: " + vehicle.color);
-println("Vehicle speed: " + vehicle.speed.toString());
-print("Vehicle is moving: ");
-println(vehicle.isMoving());
-println("Accelerate Vehicle by 10mph: ");
-vehicle.accelerate(10);
-println(vehicle.toString());
-print("Vehicle is instance of class Vehicle: ");
-println(vehicle.instanceOf(Vehicle));
-print("Vehicle is instance of trait TVehicle: ");
-println(vehicle.instanceOf(TVehicle));
-print("Vehicle is instance of trait TTruck: ");
-println(vehicle.instanceOf(TTruck));
-println("");
+val vehicle = Vehicle("blue", 40)
+println("Creating vehicle... ")
+println(vehicle.toString())
+println("Vehicle color: " + vehicle.color)
+println("Vehicle speed: " + vehicle.speed.toString())
+print("Vehicle is moving: ")
+println(vehicle.isMoving())
+println("Accelerate Vehicle by 10mph: ")
+vehicle.accelerate(10)
+println(vehicle.toString())
+print("Vehicle is instance of class Vehicle: ")
+println(vehicle.instanceOf(Vehicle))
+print("Vehicle is instance of trait TVehicle: ")
+println(vehicle.instanceOf(TVehicle))
+print("Vehicle is instance of trait TTruck: ")
+println(vehicle.instanceOf(TTruck))
+println("")
 
 class Truck extends Vehicle with TTruck { 
 
     __init__(String color, Number speed, Number load) { 
-        super.__init__(color, speed);
-        this.load = load;
+        super.__init__(color, speed)
+        this.load = load
     }
 
     String toString(){ 
-        val message = this.load.toString() + " ton " + this.color + " truck";
-        if(this.isMoving()) return message + " is moving at " + this.speed.toString() + " mph";
-        else return message + " is stationary";
+        val message = this.load.toString() + " ton " + this.color + " truck"
+        if(this.isMoving()) return message + " is moving at " + this.speed.toString() + " mph"
+        else return message + " is stationary"
     }
 }
 
-val truck = Truck("white", 30, 5);
-println("Creating truck... ");
-println(truck.toString());
-println("Truck color: " + truck.color);
-println("Truck load: " + truck.load.toString());
-print("Vehicle is moving: ");
-println(truck.isMoving());
-println("Adding 3 ton load to truck: ");
-truck.carry(3);
-println(truck.toString());
-print("Truck is an instance of class Truck: ");
-println(truck.instanceOf(Truck));
-print("Truck is instance of trait TTruck: ");
-println(truck.instanceOf(TTruck));
-print("Truck is instance of class Vehicle: ");
-println(truck.instanceOf(Vehicle));
-print("Truck is instance of trait TVehicle: ");
-println(truck.instanceOf(TVehicle));
-println("");
+val truck = Truck("white", 30, 5)
+println("Creating truck... ")
+println(truck.toString())
+println("Truck color: " + truck.color)
+println("Truck load: " + truck.load.toString())
+print("Vehicle is moving: ")
+println(truck.isMoving())
+println("Adding 3 ton load to truck: ")
+truck.carry(3)
+println(truck.toString())
+print("Truck is an instance of class Truck: ")
+println(truck.instanceOf(Truck))
+print("Truck is instance of trait TTruck: ")
+println(truck.instanceOf(TTruck))
+print("Truck is instance of class Vehicle: ")
+println(truck.instanceOf(Vehicle))
+print("Truck is instance of trait TVehicle: ")
+println(truck.instanceOf(TVehicle))
+println("")
 
-print("Number implements trait TComparable: ");
-println(Number.traits().contains(TComparable));
-print("Int is instance of trait TComparable: ");
-println(2.instanceOf(TComparable));
-print("Float is instance of trait TComparable: ");
-println(3.5.instanceOf(TComparable));
-print("Bool is instance of trait TComparable: ");
-println(true.instanceOf(TComparable));
+print("Number implements trait TComparable: ")
+println(Number.traits().contains(TComparable))
+print("Int is instance of trait TComparable: ")
+println(2.instanceOf(TComparable))
+print("Float is instance of trait TComparable: ")
+println(3.5.instanceOf(TComparable))
+print("Bool is instance of trait TComparable: ")
+println(true.instanceOf(TComparable))

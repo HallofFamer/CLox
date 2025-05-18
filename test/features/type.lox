@@ -39,4 +39,3 @@ println(calc.sumInt(1, 2))
 
 printSum(1.5, 2.6)
 calc.printSum(2, 4)
-gc(0)

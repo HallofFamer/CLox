@@ -1,74 +1,74 @@
-namespace test.features;
+namespace test.features
 
-val s = "Hello World";
-print("Create string object s: ");
-println(s);
-print("Class of string object is: ");
-println(s.getClass().name());
-print("Metaclass of string object is: ");
-println(s.getClass().getClass().name());
-print("Class of String metaclass is: ");
-println(s.getClass().getClass().getClass().name());
-print("Class of Metaclass is: ");
-println(s.getClass().getClass().getClass().getClass().name());
-print("Class of Metaclass class is: ");
-println(s.getClass().getClass().getClass().getClass().getClass().name());
-println("");
+val s = "Hello World"
+print("Create string object s: ")
+println(s)
+print("Class of string object is: ")
+println(s.getClass().name())
+print("Metaclass of string object is: ")
+println(s.getClass().getClass().name())
+print("Class of String metaclass is: ")
+println(s.getClass().getClass().getClass().name())
+print("Class of Metaclass is: ")
+println(s.getClass().getClass().getClass().getClass().name())
+print("Class of Metaclass class is: ")
+println(s.getClass().getClass().getClass().getClass().getClass().name())
+println("")
 
 class Point { 
 
     __init__(Int x, Int y){      
-        this.x = x;
-        this.y = y;
+        this.x = x
+        this.y = y
     }
 
     class Point getHorizontal(Int x){ 
-        return this(x, 0);
+        return this(x, 0)
     }
 
     class Point getVertical(Int y){ 
-        return this(0, y);
+        return this(0, y)
     }
 
     Number distance(Point p){ 
-        return ((this.x - p.x).pow(2) + (this.y - p.y).pow(2)).sqrt();
+        return ((this.x - p.x).pow(2) + (this.y - p.y).pow(2)).sqrt()
     } 
 
     String toString(){ 
-        return "(" + this.x.toString() + ", " + this.y.toString() + ")";
+        return "(" + this.x.toString() + ", " + this.y.toString() + ")"
     }
 }
 
-Point.origin = Point(0, 0);
+Point.origin = Point(0, 0)
 
-val p = Point(1, 2);
-println("Create point object p: " + p.toString());
-val p2 = Point(4, 6);
-println("Creating point object p2: " + p2.toString());
-print("Distance between p and p2 is: ");
-println(p.distance(p2));
-println("Point at origin: " + Point.origin.toString());
-println("Creating horizontal point object: " + Point.getHorizontal(2).toString());
-println("Creating horizontal point object: " + Point.getVertical(3).toString());
-println("");
+val p = Point(1, 2)
+println("Create point object p: " + p.toString())
+var p2 = Point(4, 6)
+println("Creating point object p2: " + p2.toString())
+print("Distance between p and p2 is: ")
+println(p.distance(p2))
+println("Point at origin: " + Point.origin.toString())
+println("Creating horizontal point object: " + Point.getHorizontal(2).toString())
+println("Creating horizontal point object: " + Point.getVertical(3).toString())
+println("")
 
-print("Class of point object is: ");
-println(p.getClass().name());
-print("Metaclass of point object is: ");
-println(p.getClass().getClass().name());
-print("Class of Point metaclass is: ");
-println(p.getClass().getClass().getClass().name());
-print("Superclass of Point metaclass is: ");
-println(p.getClass().getClass().superclass().name());
-print("Superclass of Object metaclass is: ");
-println(p.getClass().getClass().superclass().superclass().name());
-print("Superclass of Class is: ");
-println(p.getClass().getClass().superclass().superclass().superclass().name());
-print("Superclass of Metaclass is: ");
-println(Metaclass.superclass().name());
-print("Superclass of Metaclass class is: ");
-println(Metaclass.getClass().superclass().name());
-print("Superclass of Behavior is: ");
-println(Metaclass.superclass().superclass().name());
-print("Superclass of Behavior class is: ");
-println(Metaclass.getClass().superclass().superclass().name());
+print("Class of point object is: ")
+println(p.getClass().name())
+print("Metaclass of point object is: ")
+println(p.getClass().getClass().name())
+print("Class of Point metaclass is: ")
+println(p.getClass().getClass().getClass().name())
+print("Superclass of Point metaclass is: ")
+println(p.getClass().getClass().superclass().name())
+print("Superclass of Object metaclass is: ")
+println(p.getClass().getClass().superclass().superclass().name())
+print("Superclass of Class is: ")
+println(p.getClass().getClass().superclass().superclass().superclass().name())
+print("Superclass of Metaclass is: ")
+println(Metaclass.superclass().name())
+print("Superclass of Metaclass class is: ")
+println(Metaclass.getClass().superclass().name())
+print("Superclass of Behavior is: ")
+println(Metaclass.superclass().superclass().name())
+print("Superclass of Behavior class is: ")
+println(Metaclass.getClass().superclass().superclass().name())

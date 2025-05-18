@@ -18,31 +18,31 @@ while(true){
 println("")
 
 println("Loop with Continue statement using 'for', skipping iteration if index % 3 = 0: ")
-for(var k : 0..10) { 
+for(val k : 0..10) { 
     if(k % 3 == 0) continue
     println(k)
 }
 println("")
 
 println("Looping through a list of even numbers 2 to 10 using 'for-in': ")
-for(var element : [2, 4, 6, 8, 10]){ 
+for(val element : [2, 4, 6, 8, 10]){ 
     println("Element: " + element.toString())
 }
 println("")
 
 println("Looping through a list of values using 'for-in' with index: ")
-for(var (index, value) : [2, 3.5, true, nil, "Hello World"]){ 
+for(val (index, value) : [2, 3.5, true, nil, "Hello World"]){ 
     println("Element" + index.toString() + ": " + value.toString())
 }
 println("")
 
 println("Looping through a string: ")
-for(var char : "Hello World") { 
+for(val char : "Hello World") { 
     println("Char: " + char)
 }
 println("")
 
 println("Looping through a dictionary using 'for-in' with key: ")
-for(var (key, value) : ["name": "Joe Doe", "age": 40, "isAdmin": false]){ 
+for(val (key, value) : ["name": "Joe Doe", "age": 40, "isAdmin": false]){ 
     println(key.toString() + ": " + value.toString())
 }
