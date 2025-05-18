@@ -4,7 +4,7 @@ options { tokenVocab = LoxLexer; }
 program: declaration* EOF;
 declaration: classDecl | funDecl | namespaceDecl | traitDecl | varDecl | statement;
 classDecl: CLASS IDENTIFIER classBody;
-funDecl: FUN function;
+funDecl: (FUN | IDENTIFIER | VOID) function;
 namespaceDecl: NAMESPACE IDENTIFIER (DOT IDENTIFIER)*;
 traitDecl: TRAIT IDENTIFIER traitBody;
 varDecl: (VAL | VAR) IDENTIFIER (EQ expression)? SEMICOLON;
@@ -24,7 +24,7 @@ switchStmt: SWITCH caseStmt* (DEFAULT COLON statement)?
 tryStmt: TRY statement catchStmt (FINALLY statement)?
 usingStmt: USING IDENTIFIER (DOT IDENTIFIER)*;
 whileStmt: WHILE LPAREN expression RPAREN statement;
-yieldStmt: YIELD expression SEMICOLON;
+yieldStmt: YIELD FROM? expression SEMICOLON;
 block: LBRACE declaration* RBRACE;
 
 expression: assignment;
