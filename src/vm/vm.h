@@ -55,7 +55,6 @@ typedef struct {
 
     const char* gcType;
     size_t gcHeapSize;
-    size_t gcGrowthFactor;
     bool gcStressMode;
 
     size_t gcEdenHeapSize;
@@ -129,12 +128,6 @@ struct VM {
     ObjModule* currentModule;
     ObjUpvalue* openUpvalues;
     uint64_t objectIndex;
-};
-
-enum InterpretResult {
-    INTERPRET_OK,
-    INTERPRET_COMPILE_ERROR,
-    INTERPRET_RUNTIME_ERROR
 };
 
 static inline bool isFalsey(Value value) {

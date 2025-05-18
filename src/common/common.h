@@ -20,7 +20,6 @@
 #define MAX_CASES 256
 
 typedef struct VM VM;
-typedef enum InterpretResult InterpretResult;
 typedef struct CallFrame CallFrame;
 typedef struct CompilerV1 CompilerV1;
 typedef struct ClassCompilerV1 ClassCompilerV1;
@@ -33,5 +32,11 @@ typedef enum {
     GC_GENERATION_TYPE_OLD,
     GC_GENERATION_TYPE_PERMANENT
 } GCGenerationType;
+
+typedef enum {
+    INTERPRET_OK,
+    INTERPRET_COMPILE_ERROR,
+    INTERPRET_RUNTIME_ERROR
+} InterpretResult;
 
 #endif // !clox_common_h

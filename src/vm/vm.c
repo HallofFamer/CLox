@@ -135,9 +135,6 @@ static int parseConfiguration(void* data, const char* section, const char* name,
     else if (HAS_CONFIG("gc", "gcHeapSize")) {
         config->gcHeapSize = (size_t)atol(value);
     }
-    else if (HAS_CONFIG("gc", "gcGrowthFactor")) {       
-        config->gcGrowthFactor = (size_t)atol(value);
-    }
     else if (HAS_CONFIG("gc", "gcStressMode")) {
         config->gcStressMode = (bool)atoi(value);
     }
@@ -159,8 +156,8 @@ static int parseConfiguration(void* data, const char* section, const char* name,
 
 static void initConfiguration(VM* vm) {
     Configuration config;
-    int iniParsed = ini_parse("clox.ini", parseConfiguration, &config);
-    ABORT_IFTRUE(iniParsed < 0, "Can't load 'clox.ini' configuration file...\n");
+    int iniParsed = ini_parse("lox2.ini", parseConfiguration, &config);
+    ABORT_IFTRUE(iniParsed < 0, "Can't load 'lox2.ini' configuration file...\n");
     vm->config = config;
 }
 

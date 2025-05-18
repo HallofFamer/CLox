@@ -17,7 +17,13 @@ bool propagateException(VM* vm, bool isPromise) {
             ExceptionHandler handler = frame->handlerStack[i - 1];
             if (isObjInstanceOf(vm, OBJ_VAL(exception), handler.exceptionClass)) {
                 frame->ip = &frame->closure->function->chunk.code[handler.handlerAddress];
-                if (isPromise) run(vm);
+                if (isPromise) {
+                    pop(vm);
+                    push(vm, OBJ_VAL(vm->runningGenerator));
+                    push(vm, OBJ_VAL(vm->runningGenerator));
+                    push(vm, value);
+                    run(vm);
+                }
                 return true;
             }
             else if (handler.finallyAddress != UINT16_MAX) {

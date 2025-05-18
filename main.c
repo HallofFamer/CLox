@@ -10,17 +10,38 @@
 #include "src/vm/vm.h"
 
 static void repl(VM* vm) {
-    printf("REPL for CLox version %s\n", vm->config.version);
-    vm->currentModule = newModule(vm, emptyString(vm));
-    char line[1024];
+    printf("REPL for Lox2 version %s\n", vm->config.version);
+    if (vm->currentModule == NULL) {
+        vm->currentModule = newModule(vm, emptyString(vm));
+    }
+
+    char code[1024];
+    size_t totalLength = 0;
+    char line[64];
+
     for (;;) {
         printf("> ");
+        char* result = fgets(line, sizeof(line), stdin);
+        size_t lineLength = strcspn(line, "\n");
 
-        if (!fgets(line, sizeof(line), stdin)) {
+        if (!result) {
             printf("\n");
             break;
         }
-        interpret(vm, line);
+        else {
+            memcpy(code + totalLength, line, lineLength);
+            totalLength += lineLength;
+
+            if (line[strcspn(line, "\n") - 1] == '\\') {
+                code[totalLength - 1] = '\n';
+            }
+            else {
+                code[totalLength] = '\0';
+                interpret(vm, code);
+                memset(code, 0, sizeof(code));
+                totalLength = 0;
+            }
+        }
     }
 }
 

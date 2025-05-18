@@ -765,10 +765,6 @@ void collectGarbage(VM* vm, GCGenerationType generation) {
     sweep(vm, generation);
     processRememberedSet(vm, generation);
 
-    if (currentHeap->bytesAllocated > currentHeap->heapSize >> 1) {
-        currentHeap->heapSize = currentHeap->bytesAllocated * vm->config.gcGrowthFactor;
-    }
-
 #ifdef DEBUG_LOG_GC
     printf("-- gc end for generation %d\n", generation);
     size_t nextBytesAllocated = (nextHeap == NULL) ? 0 : nextHeap->bytesAllocated;
