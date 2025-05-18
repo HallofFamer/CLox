@@ -227,10 +227,13 @@ static char* parseString(Parser* parser, int* length) {
                     i++;
                     break;
                 }
-                default: target[j] = source[i];
+                default: 
+                    target[j] = source[i];
             }
         }
-        else target[j] = source[i];
+        else {
+            target[j] = source[i];
+        }
         i++;
         j++;
     }

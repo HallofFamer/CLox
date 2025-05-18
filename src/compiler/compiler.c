@@ -657,9 +657,8 @@ static void compileAwait(Compiler* compiler, Ast* ast) {
 static void compileBinary(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
     compileChild(compiler, ast, 1);
-    TokenSymbol operatorType = ast->token.type;
     
-    switch (operatorType) {
+    switch (ast->token.type) {
         case TOKEN_BANG_EQUAL:        emitBytes(compiler, OP_EQUAL, OP_NOT); break;
         case TOKEN_EQUAL_EQUAL:       emitByte(compiler, OP_EQUAL); break;
         case TOKEN_GREATER:           emitByte(compiler, OP_GREATER); break;
@@ -839,8 +838,7 @@ static void compileTrait(Compiler* compiler, Ast* ast) {
 
 static void compileUnary(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
-    TokenSymbol operatorType = ast->token.type;
-    switch (operatorType) {
+    switch (ast->token.type) {
         case TOKEN_BANG: emitByte(compiler, OP_NOT); break;
         case TOKEN_MINUS: emitByte(compiler, OP_NEGATE); break;
         default: return;

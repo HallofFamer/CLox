@@ -72,14 +72,14 @@ static ResolverModifier resolverInitModifier() {
     return modifier;
 }
 
-static void initClassResolver(Resolver* resolver, ClassResolver* klass, Token name, int scopeDepth, BehaviorType type) {
-    klass->enclosing = resolver->currentClass;
-    klass->name = name;
-    klass->symtab = NULL;
-    klass->scopeDepth = scopeDepth;
-    klass->isAnonymous = (name.length == 1 && name.start[0] == '@');
-    klass->type = type;
-    resolver->currentClass = klass;
+static void initClassResolver(Resolver* resolver, ClassResolver* _class, Token name, int scopeDepth, BehaviorType type) {
+    _class->enclosing = resolver->currentClass;
+    _class->name = name;
+    _class->symtab = NULL;
+    _class->scopeDepth = scopeDepth;
+    _class->isAnonymous = (name.length == 1 && name.start[0] == '@');
+    _class->type = type;
+    resolver->currentClass = _class;
 }
 
 static void endClassResolver(Resolver* resolver) {
@@ -1117,12 +1117,12 @@ static void resolveMethodDeclaration(Resolver* resolver, Ast* ast) {
     ObjString* name = createSymbol(resolver, item->token);
 
     if (!resolver->currentClass->isAnonymous) {
-        BehaviorTypeInfo* klass = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
+        BehaviorTypeInfo* _class = AS_BEHAVIOR_TYPE(getTypeForSymbol(resolver, resolver->currentClass->name));
         if (ast->modifier.isClass) {
-            klass = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassNameFromClass(resolver->vm, klass->baseType.fullName)));
+            _class = AS_BEHAVIOR_TYPE(typeTableGet(resolver->vm->typetab, getMetaclassNameFromClass(resolver->vm, _class->baseType.fullName)));
         }
 
-        CallableTypeInfo* methodType = typeTableInsertCallable(klass->methods, TYPE_CATEGORY_METHOD, name, NULL);
+        CallableTypeInfo* methodType = typeTableInsertCallable(_class->methods, TYPE_CATEGORY_METHOD, name, NULL);
         setFunctionTypeModifier(ast, methodType);
         if (astNumChild(ast) > 2) {
             Ast* returnType = astGetChild(ast, 2);

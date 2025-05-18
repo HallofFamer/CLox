@@ -827,7 +827,7 @@ static void typeCheckCatchStatement(TypeChecker* typeChecker, Ast* ast) {
     typeCheckChild(typeChecker, ast, 0);
     Ast* exceptionVar = astGetChild(ast, 0);
     ObjString* exceptionClassName = copyStringPerma(typeChecker->vm, ast->token.start, ast->token.length);
-    exceptionVar->type = getClassType(typeChecker, exceptionClassName, NULL);
+    exceptionVar->type = getClassType(typeChecker, exceptionClassName, ast->symtab);
 
     Ast* blk = astGetChild(ast, 1);
     ObjString* exceptionVarName = copyStringPerma(typeChecker->vm, exceptionVar->token.start, exceptionVar->token.length);
