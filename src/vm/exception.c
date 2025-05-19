@@ -17,13 +17,7 @@ bool propagateException(VM* vm, bool isPromise) {
             ExceptionHandler handler = frame->handlerStack[i - 1];
             if (isObjInstanceOf(vm, OBJ_VAL(exception), handler.exceptionClass)) {
                 frame->ip = &frame->closure->function->chunk.code[handler.handlerAddress];
-                if (isPromise) {
-                    pop(vm);
-                    push(vm, OBJ_VAL(vm->runningGenerator));
-                    push(vm, OBJ_VAL(vm->runningGenerator));
-                    push(vm, value);
-                    run(vm);
-                }
+                if (isPromise && frame->closure->function->isAsync) run(vm);
                 return true;
             }
             else if (handler.finallyAddress != UINT16_MAX) {
@@ -131,6 +125,11 @@ ObjException* throwException(VM* vm, ObjClass* exceptionClass, const char* forma
 ObjException* throwPromiseException(VM* vm, ObjPromise* promise) {
     ObjException* exception = promise->exception;
     exception->stacktrace = getStackTrace(vm);
+    CallFrame* frame = &vm->frames[vm->frameCount - 1];
+    if (frame->closure->function->isAsync) {
+        push(vm, OBJ_VAL(vm->runningGenerator));
+        push(vm, OBJ_VAL(vm->runningGenerator));
+    }
     push(vm, OBJ_VAL(exception));
     if (!propagateException(vm, true)) exit(70);
     else return exception;

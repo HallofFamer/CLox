@@ -210,6 +210,8 @@ void freeVM(VM* vm) {
     freeShapeTree(vm, &vm->shapes);
     freeGenericIDMap(vm, &vm->genericIDMap);
     vm->initString = NULL;
+    vm->runningGenerator = NULL;
+
     freeSymbolTable(vm->symtab);
     freeTypeTable(vm->typetab);
     freeObjects(vm);
