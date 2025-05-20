@@ -99,6 +99,9 @@ ObjPromise* promiseRace(VM* vm, ObjClass* klass, ObjArray* promises) {
 void promiseReject(VM* vm, ObjPromise* promise, Value exception) {
     promise->state = PROMISE_REJECTED;
     promise->exception = AS_EXCEPTION(exception);
+    CallFrame* frame = &vm->frames[vm->frameCount - 1];
+    if (frame->closure->function->isAsync) push(vm, OBJ_VAL(vm->runningGenerator));
+
     if (IS_CLOSURE(promise->onCatch)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onCatch, exception);
     else throwPromiseException(vm, promise);
     if (IS_CLOSURE(promise->onFinally)) callReentrantMethod(vm, OBJ_VAL(promise), promise->onFinally, promise->value);

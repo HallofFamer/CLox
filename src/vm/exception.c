@@ -126,10 +126,7 @@ ObjException* throwPromiseException(VM* vm, ObjPromise* promise) {
     ObjException* exception = promise->exception;
     exception->stacktrace = getStackTrace(vm);
     CallFrame* frame = &vm->frames[vm->frameCount - 1];
-    if (frame->closure->function->isAsync) {
-        push(vm, OBJ_VAL(vm->runningGenerator));
-        push(vm, OBJ_VAL(vm->runningGenerator));
-    }
+    if (frame->closure->function->isAsync) push(vm, OBJ_VAL(vm->runningGenerator));
     push(vm, OBJ_VAL(exception));
     if (!propagateException(vm, true)) exit(70);
     else return exception;
