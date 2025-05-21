@@ -1,5 +1,5 @@
 {
-  "name": "clox",
+  "name": "lox2",
   "version": "2.0.0",
   "dependencies": [
     "curl", "libuv"
