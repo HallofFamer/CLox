@@ -1014,7 +1014,6 @@ static void compileFinallyStatement(Compiler* compiler, Ast* ast) {
     compileChild(compiler, ast, 0);
     compiler->currentTry->finallyJump = emitJump(compiler, OP_JUMP_IF_FALSE);
 
-    emitByte(compiler, OP_POP);
     emitByte(compiler, OP_FINALLY);
     patchJump(compiler, compiler->currentTry->finallyJump);
     emitByte(compiler, OP_POP);
