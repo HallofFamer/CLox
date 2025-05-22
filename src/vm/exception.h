@@ -16,7 +16,7 @@ ObjArray* getStackTrace(VM* vm);
 ObjException* createException(VM* vm, ObjClass* exceptionClass, const char* format, ...);
 ObjException* createNativeException(VM* vm, const char* exceptionClassName, const char* format, ...);
 ObjException* throwException(VM* vm, ObjClass* exceptionClass, const char* format, ...);
-ObjException* throwPromiseException(VM* vm, ObjPromise* promise);
 ObjException* throwNativeException(VM* vm, const char* exceptionClassName, const char* format, ...);
+ObjException* throwPromiseException(VM* vm, ObjPromise* promise);
 
 #endif // !clox_exception_h

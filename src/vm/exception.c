@@ -39,6 +39,13 @@ bool propagateException(VM* vm, bool isPromise) {
             pop(vm);
         }
         push(vm, value);
+
+        if (frame->closure->function->isGenerator || frame->closure->function->isAsync) {
+            vm->runningGenerator->state = GENERATOR_RETURN;
+            vm->runningGenerator->value = OBJ_VAL(exception);
+            vm->runningGenerator = vm->runningGenerator->outer;
+        }
+
         vm->frameCount--;
     }
 
@@ -130,16 +137,6 @@ ObjException* throwException(VM* vm, ObjClass* exceptionClass, const char* forma
     else return exception;
 }
 
-ObjException* throwPromiseException(VM* vm, ObjPromise* promise) {
-    ObjException* exception = promise->exception;
-    exception->stacktrace = getStackTrace(vm);
-    CallFrame* frame = &vm->frames[vm->frameCount - 1];
-    if (frame->closure->function->isAsync) push(vm, OBJ_VAL(vm->runningGenerator));
-    push(vm, OBJ_VAL(exception));
-    if (!propagateException(vm, true)) exit(70);
-    else return exception;
-}
-
 ObjException* throwNativeException(VM* vm, const char* exceptionClassName, const char* format, ...) { 
     ObjClass* exceptionClass = getNativeClass(vm, exceptionClassName);
     char chars[UINT8_MAX];
@@ -154,5 +151,15 @@ ObjException* throwNativeException(VM* vm, const char* exceptionClassName, const
     exception->stacktrace = stacktrace;
     push(vm, OBJ_VAL(exception));
     if (!propagateException(vm, false)) exit(70);
+    else return exception;
+}
+
+ObjException* throwPromiseException(VM* vm, ObjPromise* promise) {
+    ObjException* exception = promise->exception;
+    exception->stacktrace = getStackTrace(vm);
+    CallFrame* frame = &vm->frames[vm->frameCount - 1];
+    if (frame->closure->function->isAsync) push(vm, OBJ_VAL(vm->runningGenerator));
+    push(vm, OBJ_VAL(exception));
+    if (!propagateException(vm, true)) exit(70);
     else return exception;
 }
