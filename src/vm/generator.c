@@ -109,3 +109,7 @@ Value runGeneratorAsync(VM* vm, Value callee, ObjArray* arguments) {
     }
     return stepGenerator(vm, generator, NIL_VAL);
 }
+
+bool isMainAsyncGenerator(VM* vm, ObjGenerator* generator) {
+    return (vm->frameCount == 0 && generator != NULL && generator->frame->closure->function->name == NULL);
+}
