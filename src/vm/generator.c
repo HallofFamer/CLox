@@ -89,6 +89,7 @@ Value stepGenerator(VM* vm, ObjGenerator* generator, Value arg) {
     else {
         ObjPromise* promise = IS_PROMISE(generator->value) ? AS_PROMISE(generator->value) : newPromise(vm, PROMISE_FULFILLED, generator->value, NIL_VAL);
         if (generator->state == GENERATOR_RETURN) return OBJ_VAL(promise);
+        else if (generator->state == GENERATOR_THROW && vm->frameCount == 0) exit(0);
         else {
             Value step = getObjMethod(vm, OBJ_VAL(generator), "step");
             ObjBoundMethod* stepMethod = newBoundMethod(vm, OBJ_VAL(generator), step);

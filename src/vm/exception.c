@@ -41,7 +41,7 @@ bool propagateException(VM* vm, bool isPromise) {
         push(vm, value);
 
         if (frame->closure->function->isGenerator || frame->closure->function->isAsync) {
-            vm->runningGenerator->state = GENERATOR_RETURN;
+            vm->runningGenerator->state = GENERATOR_THROW;
             vm->runningGenerator->value = OBJ_VAL(exception);
             vm->runningGenerator = vm->runningGenerator->outer;
         }
@@ -158,6 +158,7 @@ ObjException* throwPromiseException(VM* vm, ObjPromise* promise) {
     ObjException* exception = promise->exception;
     exception->stacktrace = getStackTrace(vm);
     CallFrame* frame = &vm->frames[vm->frameCount - 1];
+
     if (frame->closure->function->isAsync) push(vm, OBJ_VAL(vm->runningGenerator));
     push(vm, OBJ_VAL(exception));
     if (!propagateException(vm, true)) exit(70);
